@@ -2,7 +2,6 @@ package bgpipe
 
 import (
 	"fmt"
-	"net/netip"
 	"os"
 	"strings"
 
@@ -15,12 +14,8 @@ type Bgpipe struct {
 	Flags *pflag.FlagSet
 	Koanf *koanf.Koanf
 
+	Args  [][]string
 	Steps []Step
-}
-
-var NewStepFunc = map[string]func(*Bgpipe) Step{
-	"tcp-connect": NewTcpConnect,
-	"connect":     NewTcpConnect,
 }
 
 func (b *Bgpipe) Init() error {
@@ -34,65 +29,75 @@ func (b *Bgpipe) Init() error {
 		return err
 	}
 
-	// parse step by step in CLI args
+	// parse steps and their args
 	args := f.Args()
-	steps := 0
 	for len(args) > 0 {
 		// skip empty steps
 		if args[0] == "--" {
 			args = args[1:]
 			continue
-		} else {
-			steps++
 		}
 
-		// is an IP address (+port)?
+		// is args[0] a special value, or command name?
 		var cmd string
-		if _, err := netip.ParseAddrPort(args[0]); err == nil {
-			cmd = "tcp-connect"
-		} else if _, err := netip.ParseAddr(args[0]); err == nil {
-			cmd = "tcp-connect"
-		} else {
+		switch {
+		case IsAddr(args[0]):
+			cmd = "connect"
+		case IsFile(args[0]):
+			cmd = "file" // TODO: stat -> mrt / exec / json / etc.
+		}
+
+		// not a special value? find the end of args
+		var end int
+		if cmd == "" {
 			cmd = args[0]
 			args = args[1:]
-		}
-
-		// lookup and create step s
-		newfunc, ok := NewStepFunc[cmd]
-		if !ok {
-			return fmt.Errorf("step %d: invalid command '%s'", steps, cmd)
-		}
-		s := newfunc(b)
-
-		// find the end of args
-		var end int
-		var inopt bool
-		for end = 1; end < len(args); end++ {
-			if args[end] == "--" {
-				break
-			} else if args[end][0] == '-' {
-				inopt = strings.IndexByte(args[end], '=') == -1
-			} else if inopt {
-				inopt = false
-			} else {
-				break
+			for end = 0; end < len(args); end++ {
+				if args[end] == "--" {
+					break
+				}
+			}
+		} else { // some heuristics to find the end:
+			var inopt bool
+			for end = 1; end < len(args); end++ {
+				if args[end] == "--" {
+					break
+				} else if args[end][0] == '-' {
+					inopt = strings.IndexByte(args[end], '=') == -1
+				} else if inopt {
+					inopt = false
+				} else {
+					break
+				}
 			}
 		}
 
-		// init
-		sargs := append([]string{cmd}, args[:end]...)
-		err := s.Init(steps, sargs)
-		if err != nil {
-			return fmt.Errorf("step %d %s: init failed: %w", steps, sargs, err)
+		// lookup cmd
+		pos := len(b.Steps)
+		newfunc, ok := NewStepFuncs[cmd]
+		if !ok {
+			return fmt.Errorf("step[%d]: invalid command '%s'", pos, cmd)
 		}
 
-		// next step
-		if args[end] == "--" {
-			args = args[end+1:]
-		} else {
-			args = args[end:]
+		// store
+		b.Steps = append(b.Steps, newfunc(b, pos))
+		b.Args = append(b.Args, args[:end])
+
+		// next
+		args = args[end:]
+	}
+
+	// initialize
+	for pos, s := range b.Steps {
+		err := s.Init(b.Args[pos])
+		if err != nil {
+			return fmt.Errorf("step[%d]: init failed: %w", pos, err)
 		}
 	}
+
+	// TODO: export step flags to koanf
+	// TODO: config file
+	// TODO: env?
 
 	// convert to koanf for convenience
 	b.Koanf = koanf.New(".")
