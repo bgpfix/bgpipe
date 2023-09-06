@@ -2,14 +2,16 @@ package bgpipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpfix/util"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/spf13/pflag"
 	"golang.org/x/sys/unix"
@@ -19,14 +21,14 @@ type TcpConnect struct {
 	StepBase
 
 	p      *pipe.Pipe
+	rhs    bool
 	target string
 	dialer net.Dialer
-	conn   net.Conn
 }
 
-func NewTcpConnect(b *Bgpipe, cmd string, pos int) Step {
+func NewTcpConnect(b *Bgpipe, cmd string, idx int) Step {
 	tc := new(TcpConnect)
-	tc.base(b, cmd, pos)
+	tc.base(b, cmd, idx)
 	return tc
 }
 
@@ -50,19 +52,35 @@ func (tc *TcpConnect) ParseArgs(args []string) error {
 	}
 	tc.k.Set("target", f.Arg(0))
 
-	fmt.Printf("%s %d %s:\n%s\n", tc.cmd, tc.pos, args, tc.k.Sprint())
 	return nil
 }
 
-func (tc *TcpConnect) Attach(p *pipe.Pipe) error {
-	// store pipe
+func (tc *TcpConnect) Prepare(p *pipe.Pipe) error {
+	// store the pipe
 	tc.p = p
+
+	// talking to LHS or RHS?
+	switch tc.idx {
+	case 0:
+		tc.rhs = false // the default case
+	case tc.b.Last:
+		tc.rhs = true
+	default:
+		return fmt.Errorf("must be either the first or the last step")
+	}
 
 	// prepare the target
 	tc.target = tc.k.String("target")
 	if len(tc.target) == 0 {
 		return fmt.Errorf("no target defined")
 	}
+
+	// friendly logger
+	id := fmt.Sprintf("[%d] %s", tc.idx, tc.target)
+	if tc.rhs {
+		id += " (RHS)"
+	}
+	tc.Logger = tc.b.With().Str("step", id).Logger()
 
 	// has port number?
 	_, _, err := net.SplitHostPort(tc.target)
@@ -104,22 +122,64 @@ func (tc *TcpConnect) Attach(p *pipe.Pipe) error {
 	return nil
 }
 
-func (tc *TcpConnect) Run() (err error) {
+func (tc *TcpConnect) Start() error {
 	// derive the context
 	timeout := tc.k.Duration("timeout")
 	ctx, cancel := context.WithTimeout(tc.b.ctx, timeout)
 	defer cancel()
 
 	// connect
-	tc.Info().Stringer("timeout", timeout).Msgf("dialing %s", tc.target)
-	tc.conn, err = tc.dialer.DialContext(ctx, "tcp", tc.target)
+	tc.Info().Stringer("timeout", timeout).Msg("connecting")
+	conn, err := tc.dialer.DialContext(ctx, "tcp", tc.target)
 	if err != nil {
-		return fmt.Errorf("could not dial the target: %w", err)
+		return fmt.Errorf("could not connect: %w", err)
 	}
 	tc.Debug().Msg("connected")
 
-	// FIXME
-	util.CopyThrough(tc.p, tc.conn, nil)
+	// src / dst
+	src := tc.p.Tx
+	dst := tc.p.Rx
+	if tc.rhs {
+		dst, src = src, dst
+	}
 
-	return nil
+	// variables for reader / writer
+	var wg sync.WaitGroup
+	var rn, wn int64
+	var rerr, werr error
+
+	// read from conn
+	wg.Add(1)
+	go func() {
+		rn, rerr = io.Copy(dst, conn)
+		if rerr != nil {
+			conn.Close()
+		}
+		dst.CloseInput()
+		wg.Done()
+	}()
+
+	// write to conn
+	wg.Add(1)
+	go func() {
+		wn, werr = io.Copy(conn, src)
+		if werr != nil {
+			conn.Close()
+		}
+		dst.CloseInput()
+		wg.Done()
+	}()
+
+	// wait
+	wg.Wait()
+
+	// report
+	log := tc.With().Int64("read", rn).Int64("wrote", wn).Logger()
+	if err := errors.Join(rerr, werr); err != nil {
+		log.Error().Err(err).Msg("connection error")
+		return err
+	} else {
+		log.Info().Msg("connection closed")
+		return nil
+	}
 }

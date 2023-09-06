@@ -11,7 +11,7 @@ import (
 // Step represents one step in a bgpfix pipe.
 // It must represent all config in a koanf instance.
 type Step interface {
-	// Name returns step command name.
+	// Name returns human-friendly name.
 	Name() string
 
 	// GetKoanf returns step koanf.
@@ -23,15 +23,16 @@ type Step interface {
 	// ParseArgs parses given CLI args into koanf.
 	ParseArgs(args []string) error
 
-	// Attach prepares to work in given bgpfix pipe p.
-	Attach(p *pipe.Pipe) error
+	// Prepare checks config and attaches to pipe p.
+	Prepare(p *pipe.Pipe) error
 
-	// Run is started after the pipe starts.
-	Run() error
+	// Start is run as a goroutine after the pipe starts.
+	// Returning a non-nil error stops the whole pipe.
+	Start() error
 }
 
-// NewStepFunc returns a new Step for name cmd and position pos.
-type NewStepFunc func(b *Bgpipe, cmd string, pos int) Step
+// NewStepFunc returns a new Step for name cmd and position idx.
+type NewStepFunc func(b *Bgpipe, cmd string, idx int) Step
 
 // NewStepFuncs maps step commands to corresponding NewStepFunc
 var NewStepFuncs = map[string]NewStepFunc{
@@ -43,22 +44,21 @@ type StepBase struct {
 	zerolog.Logger
 	b   *Bgpipe
 	cmd string
-	pos int
+	idx int
 	k   *koanf.Koanf
 }
 
-func (sb *StepBase) base(b *Bgpipe, cmd string, pos int) {
+func (sb *StepBase) base(b *Bgpipe, cmd string, idx int) {
 	sb.b = b
 	sb.cmd = cmd
-	sb.pos = pos
+	sb.idx = idx
 	sb.k = koanf.New(".")
 
-	stepname := fmt.Sprintf("%s[%d]", cmd, pos)
-	sb.Logger = b.With().Str("step", stepname).Logger()
+	sb.Logger = b.With().Str("step", sb.Name()).Logger()
 }
 
 func (sb *StepBase) Name() string {
-	return sb.cmd
+	return fmt.Sprintf("[%d] %s", sb.idx, sb.cmd)
 }
 
 func (sb *StepBase) GetKoanf() *koanf.Koanf {

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/v2"
@@ -21,14 +22,18 @@ type Bgpipe struct {
 	ctx    context.Context
 	cancel context.CancelCauseFunc
 
-	Koanf *koanf.Koanf
-	Pipe  *pipe.Pipe
-	Steps []Step // pipe steps
+	Koanf *koanf.Koanf // global config
+	Pipe  *pipe.Pipe   // bgpfix pipe
+	Steps []Step       // pipe steps
+	Last  int          // idx of the last step
+
+	eg  *errgroup.Group // errgroup running the steps
+	egx context.Context // eg context
 }
 
-func NewBgpipe(ctx context.Context) *Bgpipe {
+func NewBgpipe() *Bgpipe {
 	b := new(Bgpipe)
-	b.ctx, b.cancel = context.WithCancelCause(ctx)
+	b.ctx, b.cancel = context.WithCancelCause(context.Background())
 	b.Logger = log.Logger
 	return b
 }
@@ -41,44 +46,69 @@ func (b *Bgpipe) Run() error {
 	}
 
 	// prepare the pipe
-	if err := b.Attach(); err != nil {
-		b.Fatal().Err(err).Msg("could not setup the pipe")
+	if err := b.Prepare(); err != nil {
+		b.Fatal().Err(err).Msg("could not prepare")
 		return err
 	}
 
 	// run the pipe
-	group, gctx := errgroup.WithContext(b.ctx)
-	for _, step := range b.Steps {
-		group.Go(step.Run)
-	}
+	b.eg, b.egx = errgroup.WithContext(b.ctx)
+	b.Pipe.Start() // will call b.OnStart
 
-	// block until done
-	<-gctx.Done()
-	b.cancel(nil) // TODO?
+	// block until anything under eg stops
+	<-b.egx.Done()
+	b.cancel(fmt.Errorf("shutdown")) // stop the rest, if needed
 
-	// any errors?
-	if err := group.Wait(); err != nil {
-		b.Fatal().Err(err).Msg("could not run the pipe")
+	// report
+	if err := b.eg.Wait(); err != nil {
+		b.Fatal().Err(err).Msg("fatal error")
 		return err
 	}
 
 	return nil
 }
 
-func (b *Bgpipe) Attach() error {
+func (b *Bgpipe) OnStart(_ *pipe.Pipe, _ *pipe.Event) bool {
+	// start all steps inside eg
+	for _, step := range b.Steps {
+		b.eg.Go(step.Start)
+	}
+
+	// needed to cancel egx when all steps finish without an error
+	go b.eg.Wait()
+
+	return true
+}
+
+// FIXME
+var printbuf []byte
+
+func (b *Bgpipe) print(p *pipe.Pipe, m *msg.Msg) {
+	printbuf = m.ToJSON(printbuf[:0])
+	printbuf = append(printbuf, '\n')
+	os.Stdout.Write(printbuf)
+}
+
+func (b *Bgpipe) Prepare() error {
 	// create a new BGP pipe
-	p := pipe.NewPipe(b.ctx)
-	po := &p.Options
+	b.Pipe = pipe.NewPipe(b.ctx)
+	po := &b.Pipe.Options
 	po.Logger = b.Logger
 	po.Tstamp = true
 
-	// attach steps
-	for pos, step := range b.Steps {
-		err := step.Attach(p)
+	// prepare steps
+	for _, step := range b.Steps {
+		err := step.Prepare(b.Pipe)
 		if err != nil {
-			return fmt.Errorf("%s[%d]: %w", step.Name(), pos, err)
+			return fmt.Errorf("%s: %w", step.Name(), err)
 		}
 	}
+
+	// attach to pipe.EVENT_START
+	po.OnStart(b.OnStart)
+
+	// FIXME
+	po.OnTxRxLast(b.print)
 
 	return nil
 }
@@ -97,6 +127,13 @@ func (b *Bgpipe) Configure() error {
 	err := b.ParseArgs(os.Args[1:])
 	if err != nil {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
+	}
+
+	// at least one step defined?
+	if len(b.Steps) == 0 {
+		return fmt.Errorf("need at least 1 pipe step")
+	} else {
+		b.Last = len(b.Steps) - 1
 	}
 
 	// FIXME: analyze the config and decide if OK and a speaker needed
@@ -121,7 +158,7 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 
 	// parse steps and their args
 	args = f.Args()
-	for pos := 0; len(args) > 0; pos++ {
+	for idx := 0; len(args) > 0; idx++ {
 		// skip empty steps
 		if args[0] == "--" {
 			args = args[1:]
@@ -134,7 +171,7 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 		case IsAddr(args[0]):
 			cmd = "connect"
 		case IsFile(args[0]):
-			cmd = "file" // TODO: stat -> mrt / exec / json / etc.
+			cmd = "file" // FIXME: stat -> mrt / exec / json / etc.
 		}
 
 		// not a special value? find the end of args
@@ -166,8 +203,8 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 
 		// already defined?
 		var s Step
-		if pos < len(b.Steps) {
-			s = b.Steps[pos]
+		if idx < len(b.Steps) {
+			s = b.Steps[idx]
 		}
 
 		// create new instance and store?
@@ -175,13 +212,13 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 			// cmd valid?
 			newfunc, ok := NewStepFuncs[cmd]
 			if !ok {
-				return fmt.Errorf("step[%d]: invalid command '%s'", pos, cmd)
+				return fmt.Errorf("[%d]: invalid step '%s'", idx, cmd)
 			}
-			s = newfunc(b, cmd, pos)
+			s = newfunc(b, cmd, idx)
 
 			// store
-			if pos < len(b.Steps) {
-				b.Steps[pos] = s
+			if idx < len(b.Steps) {
+				b.Steps[idx] = s
 			} else {
 				b.Steps = append(b.Steps, s)
 			}
@@ -190,7 +227,7 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 		// parse step args
 		err := s.ParseArgs(args[:end])
 		if err != nil {
-			return fmt.Errorf("%s[%d]: %w", cmd, pos, err)
+			return fmt.Errorf("%s: %w", s.Name(), err)
 		}
 
 		// next args
