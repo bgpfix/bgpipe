@@ -8,16 +8,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Step represents one step in a bgpfix pipe.
+// Stage represents one stage in a bgpfix pipe.
 // It must represent all config in a koanf instance.
-type Step interface {
+type Stage interface {
 	// Name returns human-friendly name.
 	Name() string
 
-	// GetKoanf returns step koanf.
+	// GetKoanf returns stage koanf.
 	GetKoanf() *koanf.Koanf
 
-	// SetKoanf overwrites step koanf.
+	// SetKoanf overwrites stage koanf.
 	SetKoanf(k *koanf.Koanf)
 
 	// ParseArgs parses given CLI args into koanf.
@@ -31,16 +31,16 @@ type Step interface {
 	Start() error
 }
 
-// NewStepFunc returns a new Step for name cmd and position idx.
-type NewStepFunc func(b *Bgpipe, cmd string, idx int) Step
+// NewStageFunc returns a new Stage for name cmd and position idx.
+type NewStageFunc func(b *Bgpipe, cmd string, idx int) Stage
 
-// NewStepFuncs maps step commands to corresponding NewStepFunc
-var NewStepFuncs = map[string]NewStepFunc{
+// NewStageFuncs maps stage commands to corresponding NewStageFunc
+var NewStageFuncs = map[string]NewStageFunc{
 	"connect": NewTcpConnect,
 }
 
-// StepBase provides a building block for Step implementations
-type StepBase struct {
+// StageBase provides a building block for Stage implementations
+type StageBase struct {
 	zerolog.Logger
 	b   *Bgpipe
 	cmd string
@@ -48,23 +48,23 @@ type StepBase struct {
 	k   *koanf.Koanf
 }
 
-func (sb *StepBase) base(b *Bgpipe, cmd string, idx int) {
+func (sb *StageBase) base(b *Bgpipe, cmd string, idx int) {
 	sb.b = b
 	sb.cmd = cmd
 	sb.idx = idx
 	sb.k = koanf.New(".")
 
-	sb.Logger = b.With().Str("step", sb.Name()).Logger()
+	sb.Logger = b.With().Str("stage", sb.Name()).Logger()
 }
 
-func (sb *StepBase) Name() string {
+func (sb *StageBase) Name() string {
 	return fmt.Sprintf("[%d] %s", sb.idx, sb.cmd)
 }
 
-func (sb *StepBase) GetKoanf() *koanf.Koanf {
+func (sb *StageBase) GetKoanf() *koanf.Koanf {
 	return sb.k
 }
 
-func (sb *StepBase) SetKoanf(k *koanf.Koanf) {
+func (sb *StageBase) SetKoanf(k *koanf.Koanf) {
 	sb.k = k
 }

@@ -22,12 +22,12 @@ type Bgpipe struct {
 	ctx    context.Context
 	cancel context.CancelCauseFunc
 
-	Koanf *koanf.Koanf // global config
-	Pipe  *pipe.Pipe   // bgpfix pipe
-	Steps []Step       // pipe steps
-	Last  int          // idx of the last step
+	Koanf  *koanf.Koanf // global config
+	Pipe   *pipe.Pipe   // bgpfix pipe
+	Stages []Stage      // pipe stages
+	Last   int          // idx of the last stage
 
-	eg  *errgroup.Group // errgroup running the steps
+	eg  *errgroup.Group // errgroup running the stages
 	egx context.Context // eg context
 }
 
@@ -69,12 +69,12 @@ func (b *Bgpipe) Run() error {
 }
 
 func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
-	// start all steps inside eg
-	for _, step := range b.Steps {
-		b.eg.Go(step.Start)
+	// start all stages inside eg
+	for _, stage := range b.Stages {
+		b.eg.Go(stage.Start)
 	}
 
-	// needed to cancel egx when all steps finish without an error
+	// needed to cancel egx when all stages finish without an error
 	go b.eg.Wait()
 
 	return true
@@ -97,11 +97,11 @@ func (b *Bgpipe) Prepare() error {
 	po.Logger = b.Logger
 	po.Tstamp = true
 
-	// prepare steps
-	for _, step := range b.Steps {
-		err := step.Prepare(b.Pipe)
+	// prepare stages
+	for _, stage := range b.Stages {
+		err := stage.Prepare(b.Pipe)
 		if err != nil {
-			return fmt.Errorf("%s: %w", step.Name(), err)
+			return fmt.Errorf("%s: %w", stage.Name(), err)
 		}
 	}
 
@@ -130,11 +130,11 @@ func (b *Bgpipe) Configure() error {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
 	}
 
-	// at least one step defined?
-	if len(b.Steps) == 0 {
-		return fmt.Errorf("need at least 1 pipe step")
+	// at least one stage defined?
+	if len(b.Stages) == 0 {
+		return fmt.Errorf("need at least 1 pipe stage")
 	} else {
-		b.Last = len(b.Steps) - 1
+		b.Last = len(b.Stages) - 1
 	}
 
 	// FIXME: analyze the config and decide if OK and a speaker needed
@@ -157,16 +157,16 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 	// export flags into koanf
 	b.Koanf.Load(posflag.Provider(f, ".", b.Koanf), nil)
 
-	// parse steps and their args
+	// parse stages and their args
 	args = f.Args()
 	for idx := 0; len(args) > 0; idx++ {
-		// skip empty steps
+		// skip empty stages
 		if args[0] == "--" {
 			args = args[1:]
 			continue
 		}
 
-		// is args[0] a special value, or generic step command name?
+		// is args[0] a special value, or generic stage command name?
 		var cmd string
 		switch {
 		case IsAddr(args[0]):
@@ -203,29 +203,29 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 		}
 
 		// already defined?
-		var s Step
-		if idx < len(b.Steps) {
-			s = b.Steps[idx]
+		var s Stage
+		if idx < len(b.Stages) {
+			s = b.Stages[idx]
 		}
 
 		// create new instance and store?
 		if s == nil {
 			// cmd valid?
-			newfunc, ok := NewStepFuncs[cmd]
+			newfunc, ok := NewStageFuncs[cmd]
 			if !ok {
-				return fmt.Errorf("[%d]: invalid step '%s'", idx, cmd)
+				return fmt.Errorf("[%d]: invalid stage '%s'", idx, cmd)
 			}
 			s = newfunc(b, cmd, idx)
 
 			// store
-			if idx < len(b.Steps) {
-				b.Steps[idx] = s
+			if idx < len(b.Stages) {
+				b.Stages[idx] = s
 			} else {
-				b.Steps = append(b.Steps, s)
+				b.Stages = append(b.Stages, s)
 			}
 		}
 
-		// parse step args
+		// parse stage args
 		err := s.ParseArgs(args[:end])
 		if err != nil {
 			return fmt.Errorf("%s: %w", s.Name(), err)

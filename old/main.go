@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"net"
 	"net/netip"
 	"os"
@@ -18,7 +17,6 @@ import (
 	"github.com/bgpfix/bgpfix/speaker"
 	"github.com/bgpfix/bgpfix/util"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -34,27 +32,13 @@ var (
 )
 
 func main() {
-	// flag.Parse()
-	// fmt.Printf("%s\n", flag.Args())
-	// return
 
-	var b bgpipe.Bgpipe
-	if err := b.Init(); err != nil {
-		log.Fatal().Err(err).Msg("bgpipe init failed")
-	}
-
-	fmt.Printf("args: %s\nkoanf %s\n", b.Flags.Args(), b.Koanf.Sprint())
+	b := bgpipe.NewBgpipe(context.Background())
+	b.Run()
 
 	return
 
 	flag.Parse()
-
-	// logging
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.DateTime,
-	})
 
 	// has arguments?
 	args := flag.Args()

@@ -18,7 +18,7 @@ import (
 )
 
 type TcpConnect struct {
-	StepBase
+	StageBase
 
 	p      *pipe.Pipe
 	rhs    bool
@@ -26,7 +26,7 @@ type TcpConnect struct {
 	dialer net.Dialer
 }
 
-func NewTcpConnect(b *Bgpipe, cmd string, idx int) Step {
+func NewTcpConnect(b *Bgpipe, cmd string, idx int) Stage {
 	tc := new(TcpConnect)
 	tc.base(b, cmd, idx)
 	return tc
@@ -66,7 +66,7 @@ func (tc *TcpConnect) Prepare(p *pipe.Pipe) error {
 	case tc.b.Last:
 		tc.rhs = true
 	default:
-		return fmt.Errorf("must be either the first or the last step")
+		return fmt.Errorf("must be either the first or the last stage")
 	}
 
 	// prepare the target
@@ -80,7 +80,7 @@ func (tc *TcpConnect) Prepare(p *pipe.Pipe) error {
 	if tc.rhs {
 		id += " (RHS)"
 	}
-	tc.Logger = tc.b.With().Str("step", id).Logger()
+	tc.Logger = tc.b.With().Str("stage", id).Logger()
 
 	// has port number?
 	_, _, err := net.SplitHostPort(tc.target)
