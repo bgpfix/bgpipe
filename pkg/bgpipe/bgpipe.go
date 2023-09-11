@@ -68,7 +68,7 @@ func (b *Bgpipe) Run() error {
 	return nil
 }
 
-func (b *Bgpipe) OnStart(_ *pipe.Pipe, _ *pipe.Event) bool {
+func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 	// start all steps inside eg
 	for _, step := range b.Steps {
 		b.eg.Go(step.Start)
@@ -83,10 +83,11 @@ func (b *Bgpipe) OnStart(_ *pipe.Pipe, _ *pipe.Event) bool {
 // FIXME
 var printbuf []byte
 
-func (b *Bgpipe) print(p *pipe.Pipe, m *msg.Msg) {
+func (b *Bgpipe) print(m *msg.Msg) pipe.Action {
 	printbuf = m.ToJSON(printbuf[:0])
 	printbuf = append(printbuf, '\n')
 	os.Stdout.Write(printbuf)
+	return pipe.ACTION_CONTINUE
 }
 
 func (b *Bgpipe) Prepare() error {
@@ -108,7 +109,7 @@ func (b *Bgpipe) Prepare() error {
 	po.OnStart(b.OnStart)
 
 	// FIXME
-	po.OnTxRxLast(b.print)
+	po.OnLast(b.print, msg.DST_X)
 
 	return nil
 }

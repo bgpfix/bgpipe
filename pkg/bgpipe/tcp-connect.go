@@ -136,11 +136,11 @@ func (tc *TcpConnect) Start() error {
 	}
 	tc.Debug().Msg("connected")
 
-	// src / dst
-	src := tc.p.Tx
-	dst := tc.p.Rx
+	// direction?
+	input := tc.p.R
+	output := tc.p.L
 	if tc.rhs {
-		dst, src = src, dst
+		input, output = output, input
 	}
 
 	// variables for reader / writer
@@ -151,22 +151,22 @@ func (tc *TcpConnect) Start() error {
 	// read from conn
 	wg.Add(1)
 	go func() {
-		rn, rerr = io.Copy(dst, conn)
+		rn, rerr = io.Copy(input, conn)
 		if rerr != nil {
 			conn.Close()
 		}
-		dst.CloseInput()
+		input.CloseInput()
 		wg.Done()
 	}()
 
 	// write to conn
 	wg.Add(1)
 	go func() {
-		wn, werr = io.Copy(conn, src)
+		wn, werr = io.Copy(conn, output)
 		if werr != nil {
 			conn.Close()
 		}
-		dst.CloseInput()
+		input.CloseInput()
 		wg.Done()
 	}()
 
