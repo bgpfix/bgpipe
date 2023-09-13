@@ -37,6 +37,8 @@ type NewStageFunc func(b *Bgpipe, cmd string, idx int) Stage
 // NewStageFuncs maps stage commands to corresponding NewStageFunc
 var NewStageFuncs = map[string]NewStageFunc{
 	"connect": NewTcpConnect,
+	"tcp":     NewTcpConnect,
+	"mrt":     NewMrt,
 }
 
 // StageBase provides a building block for Stage implementations
