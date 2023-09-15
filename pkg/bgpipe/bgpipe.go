@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -18,10 +19,12 @@ type Bgpipe struct {
 	ctx    context.Context
 	cancel context.CancelCauseFunc
 
-	Koanf  *koanf.Koanf // global config
-	Pipe   *pipe.Pipe   // bgpfix pipe
-	Stages []Stage      // pipe stages
-	Last   int          // idx of the last stage
+	Pipe *pipe.Pipe   // bgpfix pipe
+	K    *koanf.Koanf // shortcut to b.Koanf[0]
+
+	Stage []Stage        // stage implementations, [0] is not used
+	Koanf []*koanf.Koanf // stage configs, [0] is root
+	Last  int            // idx of the last stage
 
 	eg  *errgroup.Group // errgroup running the stages
 	egx context.Context // eg context
@@ -30,7 +33,21 @@ type Bgpipe struct {
 func NewBgpipe() *Bgpipe {
 	b := new(Bgpipe)
 	b.ctx, b.cancel = context.WithCancelCause(context.Background())
-	b.Logger = log.Logger
+
+	// default logger
+	b.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		TimeFormat: time.DateTime,
+	})
+
+	// pipe
+	b.Pipe = pipe.NewPipe(b.ctx)
+	b.Pipe.Options.Logger = &b.Logger
+
+	// stages
+	b.Stage = make([]Stage, 1)        // [0] is not used
+	b.Koanf = make([]*koanf.Koanf, 1) // [0] is root
+
 	return b
 }
 
@@ -52,6 +69,7 @@ func (b *Bgpipe) Run() error {
 	b.Pipe.Start() // will call b.OnStart
 
 	// block until anything under eg stops
+	// FIXME: allow for stages to exit with nil errors just fine
 	<-b.egx.Done()
 	b.cancel(fmt.Errorf("shutdown")) // stop the rest, if needed
 
@@ -64,15 +82,86 @@ func (b *Bgpipe) Run() error {
 	return nil
 }
 
-func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
-	// FIXME: only if there is no sink at R
-	if len(b.Stages) == 1 {
-		b.Pipe.R.CloseOutput()
+func (b *Bgpipe) Prepare() error {
+	// prepare stages
+	for idx, s := range b.Stage {
+		if s == nil {
+			continue
+		}
+
+		// direction
+		k := b.Koanf[idx]
+		left, right := k.Bool("left"), k.Bool("right")
+		switch idx {
+		case 1: // first
+			if left {
+				return fmt.Errorf("%s: invalid L direction for first stage", s.Name())
+			}
+			k.Set("right", true)
+		case b.Last:
+			if right {
+				return fmt.Errorf("%s: invalid R direction for last stage", s.Name())
+			}
+			k.Set("left", true)
+		default:
+			if left || right {
+				// ok, take it
+			} else {
+				k.Set("right", true) // by default send to R
+			}
+		}
+
+		// needs raw access?
+		if s.IsRaw() && idx != 1 && idx != b.Last {
+			return fmt.Errorf("%s: must be either the first or the last stage", s.Name())
+		}
+
+		// init
+		err := s.Init()
+		if err != nil {
+			return fmt.Errorf("%s: %w", s.Name(), err)
+		}
+		b.Debug().
+			Interface("koanf", b.Koanf[idx].All()).
+			Msgf("initialized %s", s.Name())
 	}
 
+	// attach to pipe
+	po := &b.Pipe.Options
+
+	// pipe.EVENT_START
+	po.OnStart(b.OnStart)
+
+	// FIXME
+	po.OnMsgLast(b.print, msg.DST_LR)
+
+	return nil
+}
+
+func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 	// start all stages inside eg
-	for _, stage := range b.Stages {
-		b.eg.Go(stage.Start)
+	var lread, rread bool // has L/R reader?
+	for _, s := range b.Stage {
+		if s == nil {
+			continue
+		}
+		b.eg.Go(s.Start)
+
+		l, r := s.IsReader()
+		if l {
+			lread = true
+		}
+		if r {
+			rread = true
+		}
+	}
+
+	// nothing reading the pipe end?
+	if !lread {
+		b.Pipe.L.CloseOutput()
+	}
+	if !rread {
+		b.Pipe.R.CloseOutput()
 	}
 
 	// needed to cancel egx when all stages finish without an error
@@ -89,27 +178,4 @@ func (b *Bgpipe) print(m *msg.Msg) pipe.Action {
 	printbuf = append(printbuf, '\n')
 	os.Stdout.Write(printbuf)
 	return pipe.ACTION_CONTINUE
-}
-
-func (b *Bgpipe) Prepare() error {
-	// create a new BGP pipe
-	b.Pipe = pipe.NewPipe(b.ctx)
-	po := &b.Pipe.Options
-	po.Logger = b.Logger
-
-	// prepare stages
-	for _, stage := range b.Stages {
-		err := stage.Prepare(b.Pipe)
-		if err != nil {
-			return fmt.Errorf("%s: %w", stage.Name(), err)
-		}
-	}
-
-	// attach to pipe.EVENT_START
-	po.OnStart(b.OnStart)
-
-	// FIXME
-	po.OnMsgLast(b.print, msg.DST_X)
-
-	return nil
 }

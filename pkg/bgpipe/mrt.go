@@ -6,61 +6,39 @@ import (
 	"os"
 
 	"github.com/bgpfix/bgpfix/mrt"
-	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/knadh/koanf/providers/posflag"
 	"github.com/spf13/pflag"
 )
 
 type Mrt struct {
-	StageBase
+	Base
 
 	br    *mrt.BgpReader
 	fpath string
 }
 
-func NewMrt(b *Bgpipe, cmd string, idx int) Stage {
-	tc := new(Mrt)
-	tc.base(b, cmd, idx)
-	return tc
+func NewMrt(b *Base) Stage {
+	return &Mrt{Base: *b}
 }
 
-func (m *Mrt) ParseArgs(args []string) error {
-	// setup and parse flags
-	f := pflag.NewFlagSet("mrt", pflag.ContinueOnError)
-	if err := f.Parse(args); err != nil {
-		return err
-	}
-
-	// merge flags into koanf
-	m.k.Load(posflag.Provider(f, ".", m.k), nil)
-
-	// rewrite args
-	for i, arg := range f.Args() {
-		m.Info().Msgf("arg[%d] = %s", i, arg)
-		m.k.Set(fmt.Sprintf("arg[%d]", i), arg)
-	}
-
-	return nil
+func (s *Mrt) AddFlags(f *pflag.FlagSet) (usage string, names []string) {
+	usage = "PATH\nProvides MRT file reader, with uncompression if needed."
+	names = []string{"path"}
+	return
 }
 
-func (m *Mrt) Prepare(p *pipe.Pipe) error {
+func (s *Mrt) Init() error {
 	// check the source file
-	m.fpath = m.k.String("arg[0]")
-	if len(m.fpath) == 0 {
-		return errors.New("needs 1 argument with the source file")
+	s.fpath = s.K.String("path")
+	if len(s.fpath) == 0 {
+		return errors.New("needs source file path")
 	}
-	_, err := os.Stat(m.fpath)
+	_, err := os.Stat(s.fpath)
 	if err != nil {
 		return fmt.Errorf("could not stat the source file: %w", err)
 	}
 
-	// by default, send to R
-	dir := p.R
-	if m.idx > 0 && m.idx == m.b.Last {
-		dir = p.L
-	}
-
-	m.br = mrt.NewBgpReader(m.b.ctx, &m.Logger, dir)
+	// MRT-BGP reader writing to s.Input().In
+	s.br = mrt.NewBgpReader(s.B.ctx, &s.Logger, s.Input())
 	return nil
 }
 

@@ -12,85 +12,63 @@ import (
 	"unsafe"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/knadh/koanf/providers/posflag"
 	"github.com/spf13/pflag"
 	"golang.org/x/sys/unix"
 )
 
 type TcpConnect struct {
-	StageBase
+	Base
 
-	p      *pipe.Pipe
-	rhs    bool
 	target string
 	dialer net.Dialer
 }
 
-func NewTcpConnect(b *Bgpipe, cmd string, idx int) Stage {
-	tc := new(TcpConnect)
-	tc.base(b, cmd, idx)
-	return tc
+func NewTcpConnect(b *Base) Stage {
+	return &TcpConnect{Base: *b}
 }
 
-func (tc *TcpConnect) ParseArgs(args []string) error {
-	// setup flags
-	f := pflag.NewFlagSet("tcp-connect", pflag.ContinueOnError)
+func (s *TcpConnect) IsReader() (L, R bool) {
+	return s.K.Bool("right"), s.K.Bool("left")
+}
+
+func (s *TcpConnect) IsWriter() (L, R bool) {
+	return s.K.Bool("left"), s.K.Bool("right")
+}
+
+func (s *TcpConnect) IsRaw() bool {
+	return true
+}
+
+func (s *TcpConnect) AddFlags(f *pflag.FlagSet) (usage string, names []string) {
 	f.Duration("timeout", 60*time.Second, "connect timeout")
 	f.String("md5", "", "TCP MD5 password")
-
-	// parse flags
-	if err := f.Parse(args); err != nil {
-		return err
-	}
-
-	// merge flags into koanf
-	tc.k.Load(posflag.Provider(f, ".", tc.k), nil)
-
-	// we need 1 target
-	if f.NArg() != 1 {
-		return fmt.Errorf("needs 1 argument with the target")
-	}
-	tc.k.Set("target", f.Arg(0))
-
-	return nil
+	names = []string{"target"}
+	return
 }
 
-func (tc *TcpConnect) Prepare(p *pipe.Pipe) error {
-	// store the pipe
-	tc.p = p
-
-	// talking to LHS or RHS?
-	switch tc.idx {
-	case 0:
-		tc.rhs = false // the default case
-	case tc.b.Last:
-		tc.rhs = true
-	default:
-		return fmt.Errorf("must be either the first or the last stage")
-	}
-
-	// prepare the target
-	tc.target = tc.k.String("target")
-	if len(tc.target) == 0 {
+func (s *TcpConnect) Init() error {
+	// check config
+	s.target = s.K.String("target")
+	if len(s.target) == 0 {
 		return fmt.Errorf("no target defined")
 	}
 
-	// friendly logger
-	id := fmt.Sprintf("[%d] %s", tc.idx, tc.target)
-	if tc.rhs {
-		id += " (RHS)"
+	// log id
+	if s.IsFirst() {
+		s.SetLogId(fmt.Sprintf("[%d] tcp %s (LHS)", s.idx, s.target))
+	} else {
+		s.SetLogId(fmt.Sprintf("[%d] tcp %s (RHS)", s.idx, s.target))
 	}
-	tc.Logger = tc.b.With().Str("stage", id).Logger()
 
-	// has port number?
-	_, _, err := net.SplitHostPort(tc.target)
+	// target needs a port number?
+	_, _, err := net.SplitHostPort(s.target)
 	if err != nil {
-		tc.target += ":179" // best-effort try
+		s.target += ":179" // best-effort try
 	}
 
 	// setup TCP MD5?
-	if md5pass := tc.k.String("md5"); len(md5pass) > 0 {
-		tc.dialer.Control = func(net, _ string, c syscall.RawConn) error {
+	if md5pass := s.K.String("md5"); len(md5pass) > 0 {
+		s.dialer.Control = func(net, _ string, c syscall.RawConn) error {
 			// setup tcp sig
 			var key [80]byte
 			l := copy(key[:], md5pass)
@@ -122,64 +100,52 @@ func (tc *TcpConnect) Prepare(p *pipe.Pipe) error {
 	return nil
 }
 
-func (tc *TcpConnect) Start() error {
+func (s *TcpConnect) Start() error {
 	// derive the context
-	timeout := tc.k.Duration("timeout")
-	ctx, cancel := context.WithTimeout(tc.b.ctx, timeout)
+	timeout := s.K.Duration("timeout")
+	ctx, cancel := context.WithTimeout(s.B.ctx, timeout)
 	defer cancel()
 
 	// connect
-	tc.Info().Stringer("timeout", timeout).Msg("connecting")
-	conn, err := tc.dialer.DialContext(ctx, "tcp", tc.target)
+	s.Info().Stringer("timeout", timeout).Msg("connecting")
+	conn, err := s.dialer.DialContext(ctx, "tcp", s.target)
 	if err != nil {
 		return fmt.Errorf("could not connect: %w", err)
 	}
-	tc.Debug().Msg("connected")
-
-	// direction?
-	input := tc.p.R
-	output := tc.p.L
-	if tc.rhs {
-		input, output = output, input
-	}
+	s.Debug().Msg("connected")
 
 	// variables for reader / writer
 	var wg sync.WaitGroup
 	var rn, wn int64
 	var rerr, werr error
 
-	// read from conn
+	// read from conn -> write to s.Input
 	wg.Add(1)
-	go func() {
+	go func(input *pipe.Direction) {
 		rn, rerr = io.Copy(input, conn)
 		if rerr != nil {
 			conn.Close()
 		}
 		input.CloseInput()
 		wg.Done()
-	}()
+	}(s.Input())
 
-	// write to conn
+	// read from s.Output -> write to conn
 	wg.Add(1)
-	go func() {
+	go func(output *pipe.Direction) {
 		wn, werr = io.Copy(conn, output)
 		if werr != nil {
 			conn.Close()
 		}
-		input.CloseInput()
 		wg.Done()
-	}()
+	}(s.Output())
 
 	// wait
 	wg.Wait()
 
 	// report
-	log := tc.With().Int64("read", rn).Int64("wrote", wn).Logger()
-	if err := errors.Join(rerr, werr); err != nil {
-		log.Error().Err(err).Msg("connection error")
-		return err
-	} else {
-		log.Info().Msg("connection closed")
-		return nil
-	}
+	s.Error().Err(errors.Join(rerr, werr)).
+		Int64("read", rn).Int64("wrote", wn).
+		Msg("connection closed")
+	return nil
 }

@@ -4,36 +4,30 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 )
 
 func (b *Bgpipe) Configure() error {
-	b.Koanf = koanf.New(".")
-
-	// hard-coded defaults
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	b.Logger = log.Output(zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.DateTime,
-	})
+	// root config
+	b.K = koanf.New(".")
+	b.Koanf[0] = b.K
 
 	// parse CLI args
-	err := b.ParseArgs(os.Args[1:])
+	err := b.cfgFromArgs(os.Args[1:])
 	if err != nil {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
 	}
 
+	// TODO
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	// at least one stage defined?
-	if len(b.Stages) == 0 {
-		return fmt.Errorf("need at least 1 pipe stage")
-	} else {
-		b.Last = len(b.Stages) - 1
+	if len(b.Stage) < 2 {
+		return fmt.Errorf("need at least 1 stage")
 	}
 
 	// FIXME: analyze the config and decide if OK and a speaker needed
@@ -41,24 +35,22 @@ func (b *Bgpipe) Configure() error {
 	return nil
 }
 
-func (b *Bgpipe) ParseArgs(args []string) error {
-	// setup CLI flag parser
+func (b *Bgpipe) cfgFromArgs(args []string) error {
+	// global CLI flags
 	f := pflag.NewFlagSet("bgpipe", pflag.ExitOnError)
 	f.SetInterspersed(false)
 	f.String("out", "both", "stdout output control (both/tx/rx/none)")
 	f.String("in", "tx", "stdin input control (tx/rx/none)")
-
-	// parse CLI flags
 	if err := f.Parse(args); err != nil {
 		return err
 	}
 
 	// export flags into koanf
-	b.Koanf.Load(posflag.Provider(f, ".", b.Koanf), nil)
+	b.K.Load(posflag.Provider(f, ".", b.K), nil)
 
 	// parse stages and their args
 	args = f.Args()
-	for idx := 0; len(args) > 0; idx++ {
+	for idx := 1; len(args) > 0; idx++ {
 		// skip empty stages
 		if args[0] == "--" {
 			args = args[1:]
@@ -69,12 +61,12 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 		var cmd string
 		switch {
 		case IsAddr(args[0]):
-			cmd = "connect"
+			cmd = "tcp"
 		case IsFile(args[0]):
 			cmd = "mrt" // FIXME: stat -> mrt / exec / json / etc.
 		}
 
-		// not a special value? find the end of args
+		// not a special value? find the end of its args
 		var end int
 		if cmd == "" {
 			cmd = args[0]
@@ -101,36 +93,47 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 			}
 		}
 
-		// already defined?
-		var s Stage
-		if idx < len(b.Stages) {
-			s = b.Stages[idx]
+		// get s
+		s, err := b.AddStage(idx, cmd)
+		if err != nil {
+			return err
 		}
 
-		// create new instance and store?
-		if s == nil {
-			// cmd valid?
-			newfunc, ok := NewStageFuncs[cmd]
-			if !ok {
-				return fmt.Errorf("[%d]: invalid stage '%s'", idx, cmd)
-			}
-			s = newfunc(b, cmd, idx)
+		// setup flags
+		sf := pflag.NewFlagSet(cmd, pflag.ExitOnError)
+		sf.SortFlags = false
+		sf.BoolP("left", "L", false, "L direction")
+		sf.BoolP("right", "R", false, "R direction")
+		usage, names := s.AddFlags(sf)
 
-			// store
-			if idx < len(b.Stages) {
-				b.Stages[idx] = s
-			} else {
-				b.Stages = append(b.Stages, s)
-			}
+		// override usage
+		if len(usage) == 0 {
+			usage = strings.ToUpper(strings.Join(names, " "))
+		}
+		sf.Usage = func() {
+			fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n", cmd, usage)
+			fmt.Fprint(os.Stderr, sf.FlagUsages())
 		}
 
 		// parse stage args
-		err := s.ParseArgs(args[:end])
-		if err != nil {
+		if err := sf.Parse(args[:end]); err != nil {
 			return fmt.Errorf("%s: %w", s.Name(), err)
 		}
+		sargs := sf.Args()
 
-		// next args
+		// export to koanf
+		sk := b.Koanf[idx]
+		sk.Load(posflag.Provider(sf, ".", sk), nil)
+		sk.Set("args", sargs)
+		for i, name := range names {
+			if i < len(sargs) {
+				sk.Set(name, sargs[i])
+			} else {
+				break
+			}
+		}
+
+		// next stage
 		args = args[end:]
 	}
 
