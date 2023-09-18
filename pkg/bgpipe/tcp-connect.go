@@ -16,14 +16,14 @@ import (
 )
 
 type TcpConnect struct {
-	*Stage2
+	*Stage
 
 	target string
 	dialer net.Dialer
 }
 
-func NewTcpConnect(parent *Stage2) StageValue {
-	s := &TcpConnect{Stage2: parent}
+func NewTcpConnect(parent *Stage) StageValue {
+	s := &TcpConnect{Stage: parent}
 
 	s.Flags.Duration("timeout", 60*time.Second, "connect timeout")
 	s.Flags.String("md5", "", "TCP MD5 password")

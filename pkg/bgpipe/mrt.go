@@ -9,14 +9,14 @@ import (
 )
 
 type Mrt struct {
-	*Stage2
+	*Stage
 
 	fpath string
 	br    *mrt.BgpReader
 }
 
-func NewMrt(parent *Stage2) StageValue {
-	s := &Mrt{Stage2: parent}
+func NewMrt(parent *Stage) StageValue {
+	s := &Mrt{Stage: parent}
 	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
 	s.Argnames = []string{"path"}
 	return s

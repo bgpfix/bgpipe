@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// Stage2 represents a bgpipe stage
-type Stage2 struct {
+// Stage represents a bgpipe stage
+type Stage struct {
 	zerolog.Logger
 	StageValue
 
@@ -46,18 +46,18 @@ type StageValue interface {
 }
 
 // NewStageFunc returns a new Stage for name cmd and position idx.
-type NewStage2Func func(s *Stage2) StageValue
+type NewStageFunc func(s *Stage) StageValue
 
 // NewStageFuncs maps stage commands to corresponding NewStageFunc
-var NewStage2Funcs = map[string]NewStage2Func{
+var NewStageFuncs = map[string]NewStageFunc{
 	"connect": NewTcpConnect,
 	"tcp":     NewTcpConnect,
 	"mrt":     NewMrt,
 }
 
 // NewStage adds and returns a new stage at idx for cmd,
-// or returns the existing instance if it's for the same cmd.
-func (b *Bgpipe) NewStage(idx int, cmd string) (*Stage2, error) {
+// or returns an existing instance if it's for the same cmd.
+func (b *Bgpipe) NewStage(idx int, cmd string) (*Stage, error) {
 	// already there? check cmd
 	if idx < len(b.Stage2) {
 		if s := b.Stage2[idx]; s != nil {
@@ -70,13 +70,13 @@ func (b *Bgpipe) NewStage(idx int, cmd string) (*Stage2, error) {
 	}
 
 	// cmd valid?
-	newfunc, ok := NewStage2Funcs[cmd]
+	newfunc, ok := NewStageFuncs[cmd]
 	if !ok {
 		return nil, fmt.Errorf("[%d] %s: %w", idx, cmd, ErrStageCmd)
 	}
 
 	// create new stage
-	s := &Stage2{}
+	s := &Stage{}
 	s.B = b
 	s.P = b.Pipe
 	s.K = koanf.New(".")
@@ -104,13 +104,13 @@ func (b *Bgpipe) NewStage(idx int, cmd string) (*Stage2, error) {
 }
 
 // SetName updates s.Name and s.Logger
-func (s *Stage2) SetName(name string) {
+func (s *Stage) SetName(name string) {
 	s.Name = name
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 }
 
 // ParseArgs parses CLI flags and arguments, exporting to K
-func (s *Stage2) ParseArgs(args []string) error {
+func (s *Stage) ParseArgs(args []string) error {
 	// override s.Flags.Usage?
 	if s.Flags.Usage == nil {
 		if len(s.Usage) == 0 {
@@ -143,7 +143,7 @@ func (s *Stage2) ParseArgs(args []string) error {
 	return nil
 }
 
-func (s *Stage2) Prepare() error {
+func (s *Stage) Prepare() error {
 	k := s.K
 
 	// check direction settings
@@ -187,19 +187,19 @@ func (s *Stage2) Prepare() error {
 	return nil
 }
 
-func (s *Stage2) Errorf(format string, a ...any) error {
+func (s *Stage) Errorf(format string, a ...any) error {
 	return fmt.Errorf(s.Name+": "+format, a...)
 }
 
-func (s *Stage2) IsFirst() bool {
+func (s *Stage) IsFirst() bool {
 	return s.Idx == 0
 }
 
-func (s *Stage2) IsLast() bool {
+func (s *Stage) IsLast() bool {
 	return s.Idx == s.B.Last
 }
 
-func (s *Stage2) Input() *pipe.Direction {
+func (s *Stage) Input() *pipe.Direction {
 	if s.K.Bool("left") {
 		return s.P.L
 	} else {
@@ -207,7 +207,7 @@ func (s *Stage2) Input() *pipe.Direction {
 	}
 }
 
-func (s *Stage2) Output() *pipe.Direction {
+func (s *Stage) Output() *pipe.Direction {
 	if s.K.Bool("left") {
 		return s.P.R
 	} else {

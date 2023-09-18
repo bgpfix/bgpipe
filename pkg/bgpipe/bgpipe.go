@@ -21,7 +21,7 @@ type Bgpipe struct {
 
 	K      *koanf.Koanf // global config
 	Pipe   *pipe.Pipe   // bgpfix pipe
-	Stage2 []*Stage2    // pipe stages
+	Stage2 []*Stage     // pipe stages
 	Last   int          // idx of the last stage
 
 	eg  *errgroup.Group // errgroup running the stages
