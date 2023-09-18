@@ -122,7 +122,7 @@ func (s *TcpConnect) Start() error {
 		wg.Done()
 	}(s.Input())
 
-	// read from s.Output -> write to conn
+	// write to conn <- read from s.Output
 	wg.Add(1)
 	go func(output *pipe.Direction) {
 		wn, werr = io.Copy(conn, output)

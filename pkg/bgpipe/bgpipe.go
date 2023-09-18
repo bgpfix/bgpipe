@@ -99,7 +99,10 @@ func (b *Bgpipe) Prepare() error {
 	po := &b.Pipe.Options
 
 	// pipe.EVENT_START
-	po.OnStart(b.OnStart)
+	po.OnStart(b.OnStart) // pipe.EVENT_START
+	if !b.K.Bool("perr") {
+		po.OnParseError(b.OnParseError) // pipe.EVENT_PARSE
+	}
 
 	// TODO: scan through the pipe, decide
 
@@ -120,8 +123,8 @@ func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 
 		// is reader?
 		if s.IsReader {
-			lread = lread || s.K.Bool("left")
-			rread = rread || s.K.Bool("right")
+			lread = lread || s.K.Bool("right")
+			rread = rread || s.K.Bool("left")
 		}
 
 		// TODO: wait for OPEN?
@@ -130,15 +133,26 @@ func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 
 	// nothing reading the pipe end?
 	if !lread {
+		b.Debug().Msg("closing L output (no readers)")
 		b.Pipe.L.CloseOutput()
 	}
 	if !rread {
+		b.Debug().Msg("closing R output (no readers)")
 		b.Pipe.R.CloseOutput()
 	}
 
 	// needed to cancel egx when all stages finish without an error
 	go b.eg.Wait()
 
+	return true
+}
+
+// OnParseError is called when the pipe sees a message it cant parse
+func (b *Bgpipe) OnParseError(ev *pipe.Event) bool {
+	b.Error().
+		Str("msg", ev.Msg.String()).
+		Err(ev.Value.(error)).
+		Msg("message parse error")
 	return true
 }
 

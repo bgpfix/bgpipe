@@ -12,7 +12,7 @@ type Mrt struct {
 	*Stage
 
 	fpath string
-	br    *mrt.BgpReader
+	br    *mrt.Reader
 }
 
 func NewMrt(parent *Stage) StageValue {
@@ -34,7 +34,7 @@ func (s *Mrt) Prepare() error {
 	}
 
 	// MRT-BGP reader writing to s.Input().In
-	s.br = mrt.NewBgpReader(s.B.ctx, &s.Logger, s.Input())
+	s.br = mrt.NewReader(s.B.ctx, &s.Logger, s.Input())
 	return nil
 }
 
@@ -44,6 +44,8 @@ func (s *Mrt) Start() error {
 		return fmt.Errorf("reading from %s failed: %w", s.fpath, err)
 	}
 
-	s.Info().Int64("read", n).Msg("reading finished")
+	s.Info().
+		Int64("read", n).Interface("stats", &s.br.Stats).
+		Msg("reading finished")
 	return nil
 }
