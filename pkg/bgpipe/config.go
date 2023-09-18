@@ -6,16 +6,11 @@ import (
 	"strings"
 
 	"github.com/knadh/koanf/providers/posflag"
-	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 )
 
 func (b *Bgpipe) Configure() error {
-	// root config
-	b.K = koanf.New(".")
-	b.Koanf[0] = b.K
-
 	// parse CLI args
 	err := b.cfgFromArgs(os.Args[1:])
 	if err != nil {
@@ -26,7 +21,7 @@ func (b *Bgpipe) Configure() error {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	// at least one stage defined?
-	if len(b.Stage) < 2 {
+	if len(b.Stage2) == 0 {
 		return fmt.Errorf("need at least 1 stage")
 	}
 
@@ -50,7 +45,7 @@ func (b *Bgpipe) cfgFromArgs(args []string) error {
 
 	// parse stages and their args
 	args = f.Args()
-	for idx := 1; len(args) > 0; idx++ {
+	for idx := 0; len(args) > 0; idx++ {
 		// skip empty stages
 		if args[0] == "--" {
 			args = args[1:]
@@ -94,43 +89,14 @@ func (b *Bgpipe) cfgFromArgs(args []string) error {
 		}
 
 		// get s
-		s, err := b.AddStage(idx, cmd)
+		s, err := b.NewStage(idx, cmd)
 		if err != nil {
 			return err
 		}
 
-		// setup flags
-		sf := pflag.NewFlagSet(cmd, pflag.ExitOnError)
-		sf.SortFlags = false
-		sf.BoolP("left", "L", false, "L direction")
-		sf.BoolP("right", "R", false, "R direction")
-		usage, names := s.AddFlags(sf)
-
-		// override usage
-		if len(usage) == 0 {
-			usage = strings.ToUpper(strings.Join(names, " "))
-		}
-		sf.Usage = func() {
-			fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n", cmd, usage)
-			fmt.Fprint(os.Stderr, sf.FlagUsages())
-		}
-
 		// parse stage args
-		if err := sf.Parse(args[:end]); err != nil {
-			return fmt.Errorf("%s: %w", s.Name(), err)
-		}
-		sargs := sf.Args()
-
-		// export to koanf
-		sk := b.Koanf[idx]
-		sk.Load(posflag.Provider(sf, ".", sk), nil)
-		sk.Set("args", sargs)
-		for i, name := range names {
-			if i < len(sargs) {
-				sk.Set(name, sargs[i])
-			} else {
-				break
-			}
+		if err := s.ParseArgs(args[:end]); err != nil {
+			return fmt.Errorf("%s: %w", s.Name, err)
 		}
 
 		// next stage

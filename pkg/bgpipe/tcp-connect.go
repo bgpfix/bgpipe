@@ -12,53 +12,45 @@ import (
 	"unsafe"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/spf13/pflag"
 	"golang.org/x/sys/unix"
 )
 
 type TcpConnect struct {
-	Base
+	*Stage2
 
 	target string
 	dialer net.Dialer
 }
 
-func NewTcpConnect(b *Base) Stage {
-	return &TcpConnect{Base: *b}
+func NewTcpConnect(parent *Stage2) StageValue {
+	s := &TcpConnect{Stage2: parent}
+
+	s.Flags.Duration("timeout", 60*time.Second, "connect timeout")
+	s.Flags.String("md5", "", "TCP MD5 password")
+	s.Argnames = []string{"target"}
+
+	// setup I/O
+	s.IsRawReader = true
+	s.IsRawWriter = true
+
+	return s
 }
 
-func (s *TcpConnect) IsReader() (L, R bool) {
-	return s.K.Bool("right"), s.K.Bool("left")
-}
-
-func (s *TcpConnect) IsWriter() (L, R bool) {
-	return s.K.Bool("left"), s.K.Bool("right")
-}
-
-func (s *TcpConnect) IsRaw() bool {
-	return true
-}
-
-func (s *TcpConnect) AddFlags(f *pflag.FlagSet) (usage string, names []string) {
-	f.Duration("timeout", 60*time.Second, "connect timeout")
-	f.String("md5", "", "TCP MD5 password")
-	names = []string{"target"}
-	return
-}
-
-func (s *TcpConnect) Init() error {
+func (s *TcpConnect) Prepare() error {
 	// check config
 	s.target = s.K.String("target")
 	if len(s.target) == 0 {
 		return fmt.Errorf("no target defined")
 	}
 
-	// log id
+	// friendly name
+	name := fmt.Sprintf("[%d] tcp %s", s.Idx, s.target)
 	if s.IsFirst() {
-		s.SetLogId(fmt.Sprintf("[%d] tcp %s (LHS)", s.idx, s.target))
+		name += " (LHS)"
 	} else {
-		s.SetLogId(fmt.Sprintf("[%d] tcp %s (RHS)", s.idx, s.target))
+		name += " (RHS)"
 	}
+	s.SetName(name)
 
 	// target needs a port number?
 	_, _, err := net.SplitHostPort(s.target)

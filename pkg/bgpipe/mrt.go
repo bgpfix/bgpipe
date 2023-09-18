@@ -6,35 +6,31 @@ import (
 	"os"
 
 	"github.com/bgpfix/bgpfix/mrt"
-	"github.com/spf13/pflag"
 )
 
 type Mrt struct {
-	Base
+	*Stage2
 
-	br    *mrt.BgpReader
 	fpath string
+	br    *mrt.BgpReader
 }
 
-func NewMrt(b *Base) Stage {
-	return &Mrt{Base: *b}
+func NewMrt(parent *Stage2) StageValue {
+	s := &Mrt{Stage2: parent}
+	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
+	s.Argnames = []string{"path"}
+	return s
 }
 
-func (s *Mrt) AddFlags(f *pflag.FlagSet) (usage string, names []string) {
-	usage = "PATH\nProvides MRT file reader, with uncompression if needed."
-	names = []string{"path"}
-	return
-}
-
-func (s *Mrt) Init() error {
-	// check the source file
+func (s *Mrt) Prepare() error {
 	s.fpath = s.K.String("path")
 	if len(s.fpath) == 0 {
 		return errors.New("needs source file path")
 	}
+
 	_, err := os.Stat(s.fpath)
 	if err != nil {
-		return fmt.Errorf("could not stat the source file: %w", err)
+		return err
 	}
 
 	// MRT-BGP reader writing to s.Input().In
@@ -42,13 +38,12 @@ func (s *Mrt) Init() error {
 	return nil
 }
 
-func (m *Mrt) Start() error {
-	n, err := m.br.ReadFromPath(m.fpath)
+func (s *Mrt) Start() error {
+	n, err := s.br.ReadFromPath(s.fpath)
 	if err != nil {
-		m.Error().Err(err).Msg("reading failed")
-		return err
+		return fmt.Errorf("reading from %s failed: %w", s.fpath, err)
 	}
 
-	m.Info().Int64("read", n).Msg("reading finished")
+	s.Info().Int64("read", n).Msg("reading finished")
 	return nil
 }

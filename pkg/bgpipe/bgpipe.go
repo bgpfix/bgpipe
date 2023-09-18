@@ -19,12 +19,10 @@ type Bgpipe struct {
 	ctx    context.Context
 	cancel context.CancelCauseFunc
 
-	Pipe *pipe.Pipe   // bgpfix pipe
-	K    *koanf.Koanf // shortcut to b.Koanf[0]
-
-	Stage []Stage        // stage implementations, [0] is not used
-	Koanf []*koanf.Koanf // stage configs, [0] is root
-	Last  int            // idx of the last stage
+	K      *koanf.Koanf // global config
+	Pipe   *pipe.Pipe   // bgpfix pipe
+	Stage2 []*Stage2    // pipe stages
+	Last   int          // idx of the last stage
 
 	eg  *errgroup.Group // errgroup running the stages
 	egx context.Context // eg context
@@ -44,9 +42,8 @@ func NewBgpipe() *Bgpipe {
 	b.Pipe = pipe.NewPipe(b.ctx)
 	b.Pipe.Options.Logger = &b.Logger
 
-	// stages
-	b.Stage = make([]Stage, 1)        // [0] is not used
-	b.Koanf = make([]*koanf.Koanf, 1) // [0] is root
+	// global config
+	b.K = koanf.New(".")
 
 	return b
 }
@@ -84,46 +81,18 @@ func (b *Bgpipe) Run() error {
 
 func (b *Bgpipe) Prepare() error {
 	// prepare stages
-	for idx, s := range b.Stage {
+	for _, s := range b.Stage2 {
 		if s == nil {
 			continue
 		}
 
-		// direction
-		k := b.Koanf[idx]
-		left, right := k.Bool("left"), k.Bool("right")
-		switch idx {
-		case 1: // first
-			if left {
-				return fmt.Errorf("%s: invalid L direction for first stage", s.Name())
-			}
-			k.Set("right", true)
-		case b.Last:
-			if right {
-				return fmt.Errorf("%s: invalid R direction for last stage", s.Name())
-			}
-			k.Set("left", true)
-		default:
-			if left || right {
-				// ok, take it
-			} else {
-				k.Set("right", true) // by default send to R
-			}
+		if err := s.Prepare(); err != nil {
+			return s.Errorf("%w", err)
+		} else {
+			b.Debug().
+				Interface("koanf", s.K.All()).
+				Msgf("initialized %s", s.Name)
 		}
-
-		// needs raw access?
-		if s.IsRaw() && idx != 1 && idx != b.Last {
-			return fmt.Errorf("%s: must be either the first or the last stage", s.Name())
-		}
-
-		// init
-		err := s.Init()
-		if err != nil {
-			return fmt.Errorf("%s: %w", s.Name(), err)
-		}
-		b.Debug().
-			Interface("koanf", b.Koanf[idx].All()).
-			Msgf("initialized %s", s.Name())
 	}
 
 	// attach to pipe
@@ -132,28 +101,31 @@ func (b *Bgpipe) Prepare() error {
 	// pipe.EVENT_START
 	po.OnStart(b.OnStart)
 
+	// TODO: scan through the pipe, decide
+
 	// FIXME
 	po.OnMsgLast(b.print, msg.DST_LR)
 
 	return nil
 }
 
+// OnStart is called after the bgpfix pipe starts
 func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 	// start all stages inside eg
 	var lread, rread bool // has L/R reader?
-	for _, s := range b.Stage {
+	for _, s := range b.Stage2 {
 		if s == nil {
 			continue
 		}
-		b.eg.Go(s.Start)
 
-		l, r := s.IsReader()
-		if l {
-			lread = true
+		// is reader?
+		if s.IsReader {
+			lread = lread || s.K.Bool("left")
+			rread = rread || s.K.Bool("right")
 		}
-		if r {
-			rread = true
-		}
+
+		// TODO: wait for OPEN?
+		b.eg.Go(s.Start)
 	}
 
 	// nothing reading the pipe end?
