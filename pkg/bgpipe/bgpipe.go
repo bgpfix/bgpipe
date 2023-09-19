@@ -2,16 +2,16 @@ package bgpipe
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"sync"
 	"time"
 
+	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 )
 
 type Bgpipe struct {
@@ -24,8 +24,10 @@ type Bgpipe struct {
 	Stage2 []*Stage     // pipe stages
 	Last   int          // idx of the last stage
 
-	eg  *errgroup.Group // errgroup running the stages
-	egx context.Context // eg context
+	wg_lwrite sync.WaitGroup // stages that write to pipe L
+	wg_lread  sync.WaitGroup // stages that read from pipe L
+	wg_rwrite sync.WaitGroup // stages that write to pipe R
+	wg_rread  sync.WaitGroup // stages that read from pipe R
 }
 
 func NewBgpipe() *Bgpipe {
@@ -61,25 +63,28 @@ func (b *Bgpipe) Run() error {
 		return err
 	}
 
-	// run the pipe
-	b.eg, b.egx = errgroup.WithContext(b.ctx)
+	// run the pipe and block till end
 	b.Pipe.Start() // will call b.OnStart
+	b.Pipe.Wait()
 
-	// block until anything under eg stops
-	// FIXME: allow for stages to exit with nil errors just fine
-	<-b.egx.Done()
-	b.cancel(fmt.Errorf("shutdown")) // stop the rest, if needed
-
-	// report
-	if err := b.eg.Wait(); err != nil {
+	// any errors on the global context?
+	if err := context.Cause(b.ctx); err != nil {
 		b.Fatal().Err(err).Msg("fatal error")
 		return err
 	}
 
+	// successfully finished
 	return nil
 }
 
 func (b *Bgpipe) Prepare() error {
+	// shortcuts
+	var (
+		k  = b.K
+		p  = b.Pipe
+		po = &p.Options
+	)
+
 	// prepare stages
 	for _, s := range b.Stage2 {
 		if s == nil {
@@ -89,24 +94,26 @@ func (b *Bgpipe) Prepare() error {
 		if err := s.Prepare(); err != nil {
 			return s.Errorf("%w", err)
 		} else {
-			b.Debug().
-				Interface("koanf", s.K.All()).
-				Msgf("initialized %s", s.Name)
+			b.Debug().Interface("koanf", s.K.All()).Msgf("initialized %s", s.Name)
 		}
 	}
 
-	// attach to pipe
-	po := &b.Pipe.Options
+	// force 2-byte ASNs?
+	if k.Bool("short-asn") {
+		p.Caps.Set(caps.CAP_AS4, nil) // ban CAP_AS4
+	} else {
+		p.Caps.Use(caps.CAP_AS4) // use CAP_AS4 by default
+	}
 
-	// pipe.EVENT_START
+	// attach to events
 	po.OnStart(b.OnStart) // pipe.EVENT_START
-	if !b.K.Bool("perr") {
+	// TODO: EVENT_ESTABLISHED, EVENT_OPEN_*
+	if !k.Bool("perr") {
 		po.OnParseError(b.OnParseError) // pipe.EVENT_PARSE
 	}
 
-	// TODO: scan through the pipe, decide
-
 	// FIXME
+	// TODO: scan through the pipe, decide if needs automatic stdin/stdout
 	po.OnMsgLast(b.print, msg.DST_LR)
 
 	return nil
@@ -114,36 +121,60 @@ func (b *Bgpipe) Prepare() error {
 
 // OnStart is called after the bgpfix pipe starts
 func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
-	// start all stages inside eg
-	var lread, rread bool // has L/R reader?
+	// go through all stages
 	for _, s := range b.Stage2 {
 		if s == nil {
 			continue
 		}
 
-		// is reader?
-		if s.IsReader {
-			lread = lread || s.K.Bool("right")
-			rread = rread || s.K.Bool("left")
+		// kick waitgroups
+		if s.IsLReader() {
+			b.wg_lread.Add(1)
+		}
+		if s.IsLWriter() {
+			b.wg_lwrite.Add(1)
+		}
+		if s.IsRReader() {
+			b.wg_rread.Add(1)
+		}
+		if s.IsRWriter() {
+			b.wg_rwrite.Add(1)
 		}
 
-		// TODO: wait for OPEN?
-		b.eg.Go(s.Start)
+		// TODO: support waiting for OPEN (L/R/LR) or ESTABLISH or FIRST_MSG?
+		go s.Start()
 	}
 
-	// nothing reading the pipe end?
-	if !lread {
+	// wait for L/R writers
+	go func() {
+		b.wg_lwrite.Wait()
+		b.Debug().Msg("closing L input (no writers)")
+		b.Pipe.L.CloseInput()
+	}()
+	go func() {
+		b.wg_rwrite.Wait()
+		b.Debug().Msg("closing R input (no writers)")
+		b.Pipe.R.CloseInput()
+	}()
+
+	// wait for L/R readers
+	go func() {
+		b.wg_lread.Wait()
 		b.Debug().Msg("closing L output (no readers)")
 		b.Pipe.L.CloseOutput()
-	}
-	if !rread {
+	}()
+	go func() {
+		b.wg_rread.Wait()
 		b.Debug().Msg("closing R output (no readers)")
 		b.Pipe.R.CloseOutput()
-	}
+	}()
 
-	// needed to cancel egx when all stages finish without an error
-	go b.eg.Wait()
+	return true
+}
 
+func (b *Bgpipe) OnStop(ev *pipe.Event) bool {
+	b.Info().Msg("pipe stopped")
+	b.cancel(nil)
 	return true
 }
 

@@ -19,6 +19,8 @@ func NewMrt(parent *Stage) StageValue {
 	s := &Mrt{Stage: parent}
 	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
 	s.Argnames = []string{"path"}
+
+	s.IsRawWriter = true
 	return s
 }
 
@@ -34,7 +36,7 @@ func (s *Mrt) Prepare() error {
 	}
 
 	// MRT-BGP reader writing to s.Input().In
-	s.br = mrt.NewReader(s.B.ctx, &s.Logger, s.Input())
+	s.br = mrt.NewReader(s.B.ctx, &s.Logger, s.Dst())
 	return nil
 }
 

@@ -29,6 +29,8 @@ type Stage struct {
 	Usage    string         // CLI stage s.Usage string
 	Argnames []string       // CLI argument names for exporting to K
 
+	IsLeft      bool // operates on L direction?
+	IsRight     bool // operates on R direction?
 	IsReader    bool // reads Direction.Out?
 	IsRawReader bool // uses Direction.Read?
 	IsWriter    bool // writes Direction.In?
@@ -41,7 +43,7 @@ type StageValue interface {
 	Prepare() error
 
 	// Start is run as a goroutine after the pipe starts.
-	// Returning a non-nil error stops the whole pipe.
+	// Returning a non-nil error results in a fatal error.
 	Start() error
 }
 
@@ -143,6 +145,7 @@ func (s *Stage) ParseArgs(args []string) error {
 	return nil
 }
 
+// Prepare wraps StageValue.Prepare and adds some logic around config
 func (s *Stage) Prepare() error {
 	k := s.K
 
@@ -152,19 +155,20 @@ func (s *Stage) Prepare() error {
 		if left {
 			return ErrFirstL
 		}
-		k.Set("right", true)
+		s.IsRight = true // force R direction
 
 	case s.IsLast():
 		if right {
 			return ErrLastR
 		}
-		k.Set("left", true)
+		s.IsLeft = true // force L direction
 
 	default:
 		if left || right {
-			// ok, take it
+			s.IsLeft = left
+			s.IsRight = right
 		} else {
-			k.Set("right", true) // by default send to R
+			s.IsRight = true // by default send to R
 		}
 	}
 
@@ -187,6 +191,47 @@ func (s *Stage) Prepare() error {
 	return nil
 }
 
+// Start starts StageValue.Start and waits till finish.
+// Cancels the main bgpipe context on error.
+// Respects b.wg_* waitgroups.
+func (s *Stage) Start() {
+	b := s.B
+
+	err := s.StageValue.Start()
+	if err != nil {
+		b.cancel(s.Errorf("%w", err))
+	}
+	if s.IsLReader() {
+		b.wg_lread.Done()
+	}
+	if s.IsLWriter() {
+		b.wg_lwrite.Done()
+	}
+	if s.IsRReader() {
+		b.wg_rread.Done()
+	}
+	if s.IsRWriter() {
+		b.wg_rwrite.Done()
+	}
+}
+
+func (s *Stage) IsLReader() bool {
+	return s.IsRight && s.IsReader
+}
+
+func (s *Stage) IsRReader() bool {
+	return s.IsLeft && s.IsReader
+}
+
+func (s *Stage) IsLWriter() bool {
+	return s.IsLeft && s.IsWriter
+}
+
+func (s *Stage) IsRWriter() bool {
+	return s.IsRight && s.IsWriter
+}
+
+// Errorf wraps fmt.Errorf and adds a prefix with the stage name
 func (s *Stage) Errorf(format string, a ...any) error {
 	return fmt.Errorf(s.Name+": "+format, a...)
 }
@@ -199,16 +244,18 @@ func (s *Stage) IsLast() bool {
 	return s.Idx == s.B.Last
 }
 
-func (s *Stage) Input() *pipe.Direction {
-	if s.K.Bool("left") {
+// Dst returns the pipe direction which the stage should write to
+func (s *Stage) Dst() *pipe.Direction {
+	if s.IsLeft {
 		return s.P.L
 	} else {
 		return s.P.R
 	}
 }
 
-func (s *Stage) Output() *pipe.Direction {
-	if s.K.Bool("left") {
+// Src returns the pipe direction which the stage should read from
+func (s *Stage) Src() *pipe.Direction {
+	if s.IsLeft {
 		return s.P.R
 	} else {
 		return s.P.L

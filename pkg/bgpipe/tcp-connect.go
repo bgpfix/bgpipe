@@ -113,31 +113,28 @@ func (s *TcpConnect) Start() error {
 
 	// read from conn -> write to s.Input
 	wg.Add(1)
-	go func(input *pipe.Direction) {
-		rn, rerr = io.Copy(input, conn)
+	go func(dir *pipe.Direction) {
+		rn, rerr = io.Copy(dir, conn)
 		if rerr != nil {
 			conn.Close()
 		}
-		input.CloseInput()
+		dir.CloseInput()
 		wg.Done()
-	}(s.Input())
+	}(s.Dst())
 
 	// write to conn <- read from s.Output
 	wg.Add(1)
-	go func(output *pipe.Direction) {
-		wn, werr = io.Copy(conn, output)
+	go func(dir *pipe.Direction) {
+		wn, werr = io.Copy(conn, dir)
 		if werr != nil {
 			conn.Close()
 		}
 		wg.Done()
-	}(s.Output())
+	}(s.Src())
 
-	// wait
+	// wait and report
 	wg.Wait()
+	s.Info().Int64("read", rn).Int64("wrote", wn).Msg("connection closed")
 
-	// report
-	s.Error().Err(errors.Join(rerr, werr)).
-		Int64("read", rn).Int64("wrote", wn).
-		Msg("connection closed")
-	return nil
+	return errors.Join(rerr, werr)
 }

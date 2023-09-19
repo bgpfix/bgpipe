@@ -36,7 +36,9 @@ func (b *Bgpipe) cfgFromArgs(args []string) error {
 	f.SetInterspersed(false)
 	f.String("out", "both", "stdout output control (both/tx/rx/none)")
 	f.String("in", "tx", "stdin input control (tx/rx/none)")
+
 	f.Bool("perr", false, "silently drop parse error messages")
+	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 	if err := f.Parse(args); err != nil {
 		return err
 	}
