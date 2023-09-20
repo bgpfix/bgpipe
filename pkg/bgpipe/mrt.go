@@ -9,14 +9,14 @@ import (
 )
 
 type Mrt struct {
-	*Stage
+	*StageBase
 
 	fpath string
 	br    *mrt.Reader
 }
 
-func NewMrt(parent *Stage) StageValue {
-	s := &Mrt{Stage: parent}
+func NewMrt(parent *StageBase) Stage {
+	s := &Mrt{StageBase: parent}
 	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
 	s.Argnames = []string{"path"}
 
@@ -36,7 +36,7 @@ func (s *Mrt) Prepare() error {
 	}
 
 	// MRT-BGP reader writing to s.Input().In
-	s.br = mrt.NewReader(s.B.ctx, &s.Logger, s.Dst())
+	s.br = mrt.NewReader(s.B.ctx, &s.Logger, s.Upstream())
 	return nil
 }
 

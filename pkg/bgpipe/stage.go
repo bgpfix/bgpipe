@@ -12,10 +12,10 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// Stage represents a bgpipe stage
-type Stage struct {
+// StageBase represents a bgpipe stage base
+type StageBase struct {
 	zerolog.Logger
-	StageValue
+	Stage
 
 	B *Bgpipe      // parent
 	P *pipe.Pipe   // bgpfix pipe
@@ -29,17 +29,25 @@ type Stage struct {
 	Usage    string         // CLI stage s.Usage string
 	Argnames []string       // CLI argument names for exporting to K
 
-	IsLeft      bool // operates on L direction?
-	IsRight     bool // operates on R direction?
+	// set by StageBase.Prepare
+
+	IsLeft  bool // operates on L direction?
+	IsRight bool // operates on R direction?
+	IsFirst bool // is the first stage in pipe? (L peer)
+	IsLast  bool // is the last stage in pipe? (R peer)
+
+	// set by Stage.Prepare
+
 	IsReader    bool // reads Direction.Out?
 	IsRawReader bool // uses Direction.Read?
 	IsWriter    bool // writes Direction.In?
 	IsRawWriter bool // uses Direction.Write?
 }
 
-// StageValue implements the actual work
-type StageValue interface {
+// Stage implements a bgpipe stage
+type Stage interface {
 	// Prepare checks config and prepares for Start.
+	// It should modify parent's Is(Raw)Reader/Writer settings.
 	Prepare() error
 
 	// Start is run as a goroutine after the pipe starts.
@@ -47,22 +55,23 @@ type StageValue interface {
 	Start() error
 }
 
-// NewStageFunc returns a new Stage for name cmd and position idx.
-type NewStageFunc func(s *Stage) StageValue
+// NewStageFunc returns a new Stage for given parent base
+type NewStageFunc func(base *StageBase) Stage
 
 // NewStageFuncs maps stage commands to corresponding NewStageFunc
 var NewStageFuncs = map[string]NewStageFunc{
 	"connect": NewTcpConnect,
 	"tcp":     NewTcpConnect,
 	"mrt":     NewMrt,
+	"speaker": NewSpeaker,
 }
 
 // NewStage adds and returns a new stage at idx for cmd,
 // or returns an existing instance if it's for the same cmd.
-func (b *Bgpipe) NewStage(idx int, cmd string) (*Stage, error) {
+func (b *Bgpipe) NewStage(idx int, cmd string) (*StageBase, error) {
 	// already there? check cmd
-	if idx < len(b.Stage2) {
-		if s := b.Stage2[idx]; s != nil {
+	if idx < len(b.Stages) {
+		if s := b.Stages[idx]; s != nil {
 			if cmd == "" || s.Cmd == cmd {
 				return s, nil
 			} else {
@@ -78,7 +87,7 @@ func (b *Bgpipe) NewStage(idx int, cmd string) (*Stage, error) {
 	}
 
 	// create new stage
-	s := &Stage{}
+	s := &StageBase{}
 	s.B = b
 	s.P = b.Pipe
 	s.K = koanf.New(".")
@@ -93,26 +102,25 @@ func (b *Bgpipe) NewStage(idx int, cmd string) (*Stage, error) {
 	s.Flags.BoolP("right", "R", false, "R direction")
 
 	// create sv
-	s.StageValue = newfunc(s)
+	s.Stage = newfunc(s)
 
 	// store
-	for idx >= len(b.Stage2) {
-		b.Stage2 = append(b.Stage2, nil)
+	for idx >= len(b.Stages) {
+		b.Stages = append(b.Stages, nil)
 	}
-	b.Stage2[idx] = s
-	b.Last = len(b.Stage2) - 1
+	b.Stages[idx] = s
 
 	return s, nil
 }
 
 // SetName updates s.Name and s.Logger
-func (s *Stage) SetName(name string) {
+func (s *StageBase) SetName(name string) {
 	s.Name = name
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 }
 
 // ParseArgs parses CLI flags and arguments, exporting to K
-func (s *Stage) ParseArgs(args []string) error {
+func (s *StageBase) ParseArgs(args []string) error {
 	// override s.Flags.Usage?
 	if s.Flags.Usage == nil {
 		if len(s.Usage) == 0 {
@@ -145,35 +153,33 @@ func (s *Stage) ParseArgs(args []string) error {
 	return nil
 }
 
-// Prepare wraps StageValue.Prepare and adds some logic around config
-func (s *Stage) Prepare() error {
+// Prepare wraps Stage.Prepare and adds some logic around config
+func (s *StageBase) Prepare() error {
 	k := s.K
 
 	// check direction settings
-	switch left, right := k.Bool("left"), k.Bool("right"); {
-	case s.IsFirst():
-		if left {
+	s.IsLeft, s.IsRight = k.Bool("left"), k.Bool("right")
+	switch s.Idx {
+	case 0:
+		if s.IsLeft {
 			return ErrFirstL
 		}
 		s.IsRight = true // force R direction
-
-	case s.IsLast():
-		if right {
+		s.IsFirst = true
+	case len(s.B.Stages) - 1:
+		if s.IsRight {
 			return ErrLastR
 		}
 		s.IsLeft = true // force L direction
-
+		s.IsLast = true
 	default:
-		if left || right {
-			s.IsLeft = left
-			s.IsRight = right
-		} else {
+		if !(s.IsLeft || s.IsRight) {
 			s.IsRight = true // by default send to R
 		}
 	}
 
 	// call child prepare
-	if err := s.StageValue.Prepare(); err != nil {
+	if err := s.Stage.Prepare(); err != nil {
 		return err
 	}
 
@@ -183,7 +189,7 @@ func (s *Stage) Prepare() error {
 
 	// needs raw access?
 	if s.IsRawReader || s.IsRawWriter {
-		if !s.IsFirst() && !s.IsLast() {
+		if !(s.IsFirst || s.IsLast) {
 			return ErrFirstOrLast
 		}
 	}
@@ -191,13 +197,13 @@ func (s *Stage) Prepare() error {
 	return nil
 }
 
-// Start starts StageValue.Start and waits till finish.
+// Start starts Stage.Start and waits till finish.
 // Cancels the main bgpipe context on error.
 // Respects b.wg_* waitgroups.
-func (s *Stage) Start() {
+func (s *StageBase) Start() {
 	b := s.B
 
-	err := s.StageValue.Start()
+	err := s.Stage.Start()
 	if err != nil {
 		b.cancel(s.Errorf("%w", err))
 	}
@@ -215,37 +221,33 @@ func (s *Stage) Start() {
 	}
 }
 
-func (s *Stage) IsLReader() bool {
-	return s.IsRight && s.IsReader
-}
-
-func (s *Stage) IsRReader() bool {
-	return s.IsLeft && s.IsReader
-}
-
-func (s *Stage) IsLWriter() bool {
+// IsLReader returns true iff the stage is supposed to write L.In
+func (s *StageBase) IsLWriter() bool {
 	return s.IsLeft && s.IsWriter
 }
 
-func (s *Stage) IsRWriter() bool {
+// IsRWriter returns true iff the stage is supposed to write R.In
+func (s *StageBase) IsRWriter() bool {
 	return s.IsRight && s.IsWriter
 }
 
+// IsLReader returns true iff the stage is supposed to read L.Out
+func (s *StageBase) IsLReader() bool {
+	return s.IsRight && s.IsReader
+}
+
+// IsLReader returns true iff the stage is supposed to read R.Out
+func (s *StageBase) IsRReader() bool {
+	return s.IsLeft && s.IsReader
+}
+
 // Errorf wraps fmt.Errorf and adds a prefix with the stage name
-func (s *Stage) Errorf(format string, a ...any) error {
+func (s *StageBase) Errorf(format string, a ...any) error {
 	return fmt.Errorf(s.Name+": "+format, a...)
 }
 
-func (s *Stage) IsFirst() bool {
-	return s.Idx == 0
-}
-
-func (s *Stage) IsLast() bool {
-	return s.Idx == s.B.Last
-}
-
-// Dst returns the pipe direction which the stage should write to
-func (s *Stage) Dst() *pipe.Direction {
+// Upstream returns the direction which the stage should write to, if its unidirectional
+func (s *StageBase) Upstream() *pipe.Direction {
 	if s.IsLeft {
 		return s.P.L
 	} else {
@@ -253,8 +255,8 @@ func (s *Stage) Dst() *pipe.Direction {
 	}
 }
 
-// Src returns the pipe direction which the stage should read from
-func (s *Stage) Src() *pipe.Direction {
+// Downstream returns the direction which the stage should read from, if its unidirectional
+func (s *StageBase) Downstream() *pipe.Direction {
 	if s.IsLeft {
 		return s.P.R
 	} else {

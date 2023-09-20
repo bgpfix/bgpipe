@@ -21,8 +21,7 @@ type Bgpipe struct {
 
 	K      *koanf.Koanf // global config
 	Pipe   *pipe.Pipe   // bgpfix pipe
-	Stage2 []*Stage     // pipe stages
-	Last   int          // idx of the last stage
+	Stages []*StageBase // pipe stages
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L
@@ -86,7 +85,7 @@ func (b *Bgpipe) Prepare() error {
 	)
 
 	// prepare stages
-	for _, s := range b.Stage2 {
+	for _, s := range b.Stages {
 		if s == nil {
 			continue
 		}
@@ -122,7 +121,7 @@ func (b *Bgpipe) Prepare() error {
 // OnStart is called after the bgpfix pipe starts
 func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 	// go through all stages
-	for _, s := range b.Stage2 {
+	for _, s := range b.Stages {
 		if s == nil {
 			continue
 		}
@@ -182,7 +181,7 @@ func (b *Bgpipe) OnStop(ev *pipe.Event) bool {
 func (b *Bgpipe) OnParseError(ev *pipe.Event) bool {
 	b.Error().
 		Str("msg", ev.Msg.String()).
-		Err(ev.Value.(error)).
+		Err(ev.Error).
 		Msg("message parse error")
 	return true
 }

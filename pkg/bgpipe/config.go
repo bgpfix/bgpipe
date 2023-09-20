@@ -21,7 +21,7 @@ func (b *Bgpipe) Configure() error {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	// at least one stage defined?
-	if len(b.Stage2) == 0 {
+	if len(b.Stages) == 0 {
 		return fmt.Errorf("need at least 1 stage")
 	}
 

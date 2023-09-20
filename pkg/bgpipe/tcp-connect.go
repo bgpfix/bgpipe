@@ -16,14 +16,14 @@ import (
 )
 
 type TcpConnect struct {
-	*Stage
+	*StageBase
 
 	target string
 	dialer net.Dialer
 }
 
-func NewTcpConnect(parent *Stage) StageValue {
-	s := &TcpConnect{Stage: parent}
+func NewTcpConnect(parent *StageBase) Stage {
+	s := &TcpConnect{StageBase: parent}
 
 	s.Flags.Duration("timeout", 60*time.Second, "connect timeout")
 	s.Flags.String("md5", "", "TCP MD5 password")
@@ -45,7 +45,7 @@ func (s *TcpConnect) Prepare() error {
 
 	// friendly name
 	name := fmt.Sprintf("[%d] tcp %s", s.Idx, s.target)
-	if s.IsFirst() {
+	if s.IsFirst {
 		name += " (LHS)"
 	} else {
 		name += " (RHS)"
@@ -120,7 +120,7 @@ func (s *TcpConnect) Start() error {
 		}
 		dir.CloseInput()
 		wg.Done()
-	}(s.Dst())
+	}(s.Upstream())
 
 	// write to conn <- read from s.Output
 	wg.Add(1)
@@ -130,7 +130,7 @@ func (s *TcpConnect) Start() error {
 			conn.Close()
 		}
 		wg.Done()
-	}(s.Src())
+	}(s.Downstream())
 
 	// wait and report
 	wg.Wait()
