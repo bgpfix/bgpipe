@@ -2,7 +2,9 @@ package bgpipe
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -83,6 +85,25 @@ func (b *Bgpipe) Prepare() error {
 		p  = b.Pipe
 		po = &p.Options
 	)
+
+	// at least one stage defined?
+	if len(b.Stages) == 0 {
+		return fmt.Errorf("need at least 1 stage")
+	}
+
+	// reverse?
+	if k.Bool("reverse") {
+		slices.Reverse(b.Stages)
+		for idx, s := range b.Stages {
+			if s != nil {
+				s.Idx = idx
+				s.SetName(fmt.Sprintf("[%d] %s", idx, s.Cmd))
+			}
+		}
+		left, right := k.Bool("left"), k.Bool("right")
+		k.Set("left", right)
+		k.Set("right", left)
+	}
 
 	// prepare stages
 	for _, s := range b.Stages {

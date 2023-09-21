@@ -20,13 +20,6 @@ func (b *Bgpipe) Configure() error {
 	// TODO
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
-	// at least one stage defined?
-	if len(b.Stages) == 0 {
-		return fmt.Errorf("need at least 1 stage")
-	}
-
-	// FIXME: analyze the config and decide if OK and a speaker needed
-
 	return nil
 }
 

@@ -159,7 +159,7 @@ func (s *StageBase) Prepare() error {
 	k := s.K
 	s.Debug().Interface("koanf", k.All()).Msg("preparing")
 
-	// check direction settings
+	// double-check direction settings
 	s.IsLeft, s.IsRight = k.Bool("left"), k.Bool("right")
 	switch s.Idx {
 	case 0:
@@ -178,9 +178,6 @@ func (s *StageBase) Prepare() error {
 		if !(s.IsLeft || s.IsRight) {
 			s.IsRight = true // by default send to R
 		}
-	}
-	if s.B.K.Bool("reverse") {
-		s.IsLeft, s.IsRight = s.IsRight, s.IsLeft
 	}
 
 	// call child prepare
