@@ -38,10 +38,10 @@ type StageBase struct {
 
 	// set by Stage.Prepare
 
-	IsReader    bool // reads Direction.Out?
-	IsRawReader bool // uses Direction.Read?
-	IsWriter    bool // writes Direction.In?
-	IsRawWriter bool // uses Direction.Write?
+	IsReader       bool // reads pipe.Direction.Out?
+	IsStreamReader bool // needs pipe.Direction.Read?
+	IsWriter       bool // writes pipe.Direction.In?
+	IsStreamWriter bool // needs pipe.Direction.Write?
 }
 
 // Stage implements a bgpipe stage
@@ -100,6 +100,7 @@ func (b *Bgpipe) NewStage(idx int, cmd string) (*StageBase, error) {
 	s.Flags.SortFlags = false
 	s.Flags.BoolP("left", "L", false, "L direction")
 	s.Flags.BoolP("right", "R", false, "R direction")
+	s.Flags.Bool("wait", false, "wait for ESTABLISHED")
 
 	// create sv
 	s.Stage = newfunc(s)
@@ -156,6 +157,7 @@ func (s *StageBase) ParseArgs(args []string) error {
 // Prepare wraps Stage.Prepare and adds some logic around config
 func (s *StageBase) Prepare() error {
 	k := s.K
+	s.Debug().Interface("koanf", k.All()).Msg("preparing")
 
 	// check direction settings
 	s.IsLeft, s.IsRight = k.Bool("left"), k.Bool("right")
@@ -177,6 +179,9 @@ func (s *StageBase) Prepare() error {
 			s.IsRight = true // by default send to R
 		}
 	}
+	if s.B.K.Bool("reverse") {
+		s.IsLeft, s.IsRight = s.IsRight, s.IsLeft
+	}
 
 	// call child prepare
 	if err := s.Stage.Prepare(); err != nil {
@@ -184,11 +189,11 @@ func (s *StageBase) Prepare() error {
 	}
 
 	// fix I/O settings
-	s.IsReader = s.IsReader || s.IsRawReader
-	s.IsWriter = s.IsWriter || s.IsRawWriter
+	s.IsReader = s.IsReader || s.IsStreamReader
+	s.IsWriter = s.IsWriter || s.IsStreamWriter
 
-	// needs raw access?
-	if s.IsRawReader || s.IsRawWriter {
+	// needs stream access?
+	if s.IsStreamReader || s.IsStreamWriter {
 		if !(s.IsFirst || s.IsLast) {
 			return ErrFirstOrLast
 		}
@@ -201,12 +206,14 @@ func (s *StageBase) Prepare() error {
 // Cancels the main bgpipe context on error.
 // Respects b.wg_* waitgroups.
 func (s *StageBase) Start() {
-	b := s.B
+	s.Debug().Msg("starting")
 
+	b := s.B
 	err := s.Stage.Start()
 	if err != nil {
 		b.cancel(s.Errorf("%w", err))
 	}
+
 	if s.IsLReader() {
 		b.wg_lread.Done()
 	}

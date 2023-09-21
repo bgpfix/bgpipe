@@ -20,7 +20,7 @@ func NewMrt(parent *StageBase) Stage {
 	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
 	s.Argnames = []string{"path"}
 
-	s.IsRawWriter = true
+	s.IsWriter = true
 	return s
 }
 

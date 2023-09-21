@@ -92,8 +92,6 @@ func (b *Bgpipe) Prepare() error {
 
 		if err := s.Prepare(); err != nil {
 			return s.Errorf("%w", err)
-		} else {
-			b.Debug().Interface("koanf", s.K.All()).Msgf("initialized %s", s.Name)
 		}
 	}
 
@@ -105,15 +103,16 @@ func (b *Bgpipe) Prepare() error {
 	}
 
 	// attach to events
-	po.OnStart(b.OnStart) // pipe.EVENT_START
-	// TODO: EVENT_ESTABLISHED, EVENT_OPEN_*
+	po.OnStart(b.OnStart)
+	po.OnEstablished(b.OnEstablished)
 	if !k.Bool("perr") {
 		po.OnParseError(b.OnParseError) // pipe.EVENT_PARSE
 	}
 
 	// FIXME
 	// TODO: scan through the pipe, decide if needs automatic stdin/stdout
-	po.OnMsgLast(b.print, msg.DST_LR)
+	po.OnMsgLast(b.printL, msg.DST_L)
+	po.OnMsgLast(b.printR, msg.DST_R)
 
 	return nil
 }
@@ -141,7 +140,9 @@ func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 		}
 
 		// TODO: support waiting for OPEN (L/R/LR) or ESTABLISH or FIRST_MSG?
-		go s.Start()
+		if !s.K.Bool("wait") {
+			go s.Start()
+		}
 	}
 
 	// wait for L/R writers
@@ -168,7 +169,20 @@ func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 		b.Pipe.R.CloseOutput()
 	}()
 
-	return true
+	return false
+}
+func (b *Bgpipe) OnEstablished(ev *pipe.Event) bool {
+	for _, s := range b.Stages {
+		if s == nil {
+			continue
+		}
+
+		if s.K.Bool("wait") {
+			go s.Start()
+		}
+	}
+
+	return false
 }
 
 func (b *Bgpipe) OnStop(ev *pipe.Event) bool {
@@ -187,11 +201,18 @@ func (b *Bgpipe) OnParseError(ev *pipe.Event) bool {
 }
 
 // FIXME
-var printbuf []byte
+var bufL, bufR []byte
 
-func (b *Bgpipe) print(m *msg.Msg) pipe.Action {
-	printbuf = m.ToJSON(printbuf[:0])
-	printbuf = append(printbuf, '\n')
-	os.Stdout.Write(printbuf)
+func (b *Bgpipe) printL(m *msg.Msg) pipe.Action {
+	bufL = m.ToJSON(bufL[:0])
+	bufL = append(bufL, '\n')
+	os.Stdout.Write(bufL)
+	return pipe.ACTION_CONTINUE
+}
+
+func (b *Bgpipe) printR(m *msg.Msg) pipe.Action {
+	bufR = m.ToJSON(bufR[:0])
+	bufR = append(bufR, '\n')
+	os.Stdout.Write(bufR)
 	return pipe.ACTION_CONTINUE
 }

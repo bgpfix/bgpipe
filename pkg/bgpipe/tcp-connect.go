@@ -2,16 +2,13 @@ package bgpipe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net"
-	"sync"
 	"syscall"
 	"time"
 	"unsafe"
 
-	"github.com/bgpfix/bgpfix/pipe"
 	"golang.org/x/sys/unix"
 )
 
@@ -30,8 +27,8 @@ func NewTcpConnect(parent *StageBase) Stage {
 	s.Argnames = []string{"target"}
 
 	// setup I/O
-	s.IsRawReader = true
-	s.IsRawWriter = true
+	s.IsStreamReader = true
+	s.IsStreamWriter = true
 
 	return s
 }
@@ -100,41 +97,57 @@ func (s *TcpConnect) Start() error {
 
 	// connect
 	s.Info().Stringer("timeout", timeout).Msg("connecting")
+	at := time.Now()
 	conn, err := s.dialer.DialContext(ctx, "tcp", s.target)
 	if err != nil {
 		return fmt.Errorf("could not connect: %w", err)
 	}
-	s.Debug().Msg("connected")
+
+	// connected
+	msec := time.Since(at).Milliseconds()
+	s.Debug().Int64("msec", msec).Msg("connected")
+	defer conn.Close()
 
 	// variables for reader / writer
-	var wg sync.WaitGroup
-	var rn, wn int64
-	var rerr, werr error
+	type retval struct {
+		n   int64
+		err error
+	}
+	rch := make(chan retval, 1)
+	wch := make(chan retval, 1)
 
 	// read from conn -> write to s.Input
-	wg.Add(1)
-	go func(dir *pipe.Direction) {
-		rn, rerr = io.Copy(dir, conn)
-		if rerr != nil {
-			conn.Close()
-		}
-		dir.CloseInput()
-		wg.Done()
-	}(s.Upstream())
+	go func() {
+		n, err := io.Copy(s.Upstream(), conn)
+		rch <- retval{n, err}
+	}()
 
 	// write to conn <- read from s.Output
-	wg.Add(1)
-	go func(dir *pipe.Direction) {
-		wn, werr = io.Copy(conn, dir)
-		if werr != nil {
-			conn.Close()
+	go func() {
+		n, err := io.Copy(conn, s.Downstream())
+		wch <- retval{n, err}
+	}()
+
+	// wait for error on any side, or both sides EOF
+	var read, wrote int64
+	running := 2
+	for running > 0 {
+		select {
+		case r := <-rch:
+			read = r.n
+			running--
+			if r.err != nil && r.err != io.EOF {
+				return r.err
+			}
+		case w := <-wch:
+			wrote = w.n
+			running--
+			if w.err != nil && w.err != io.EOF {
+				return w.err
+			}
 		}
-		wg.Done()
-	}(s.Downstream())
+	}
 
-	// wait and report
-	wg.Wait()
-	s.Info().Int64("read", rn).Int64("wrote", wn).Msg("connection closed")
-
-	return errors.Join(rerr, werr)
+	s.Info().Int64("read", read).Int64("wrote", wrote).Msg("connection closed")
+	return nil
 }
