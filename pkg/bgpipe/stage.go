@@ -25,9 +25,9 @@ type StageBase struct {
 	Cmd  string // stage command name
 	Name string // human-friendly stage name
 
-	Flags    *pflag.FlagSet // CLI flags
-	Usage    string         // CLI stage s.Usage string
-	Argnames []string       // CLI argument names for exporting to K
+	Flags *pflag.FlagSet // CLI flags
+	Usage string         // CLI stage s.Usage string
+	Args  []string       // CLI argument names for exporting to K
 
 	// set by StageBase.Prepare
 
@@ -66,9 +66,9 @@ var NewStageFuncs = map[string]NewStageFunc{
 	"speaker": NewSpeaker,
 }
 
-// NewStage adds and returns a new stage at idx for cmd,
+// GetStage adds and returns a new stage at idx for cmd,
 // or returns an existing instance if it's for the same cmd.
-func (b *Bgpipe) NewStage(idx int, cmd string) (*StageBase, error) {
+func (b *Bgpipe) GetStage(idx int, cmd string) (*StageBase, error) {
 	// already there? check cmd
 	if idx < len(b.Stages) {
 		if s := b.Stages[idx]; s != nil {
@@ -97,6 +97,7 @@ func (b *Bgpipe) NewStage(idx int, cmd string) (*StageBase, error) {
 
 	// common CLI flags
 	s.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
+	s.Flags.SetInterspersed(false)
 	s.Flags.SortFlags = false
 	s.Flags.BoolP("left", "L", false, "L direction")
 	s.Flags.BoolP("right", "R", false, "R direction")
@@ -120,12 +121,13 @@ func (s *StageBase) SetName(name string) {
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 }
 
-// ParseArgs parses CLI flags and arguments, exporting to K
-func (s *StageBase) ParseArgs(args []string) error {
+// ParseArgs parses CLI flags and arguments, exporting to K.
+// May return unused args.
+func (s *StageBase) ParseArgs(args []string) ([]string, error) {
 	// override s.Flags.Usage?
 	if s.Flags.Usage == nil {
 		if len(s.Usage) == 0 {
-			s.Usage = strings.ToUpper(strings.Join(s.Argnames, " "))
+			s.Usage = strings.ToUpper(strings.Join(s.Args, " "))
 		}
 		s.Flags.Usage = func() {
 			fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n", s.Cmd, s.Usage)
@@ -133,25 +135,38 @@ func (s *StageBase) ParseArgs(args []string) error {
 		}
 	}
 
-	// parse stage args
+	// parse stage flags, export to koanf
 	if err := s.Flags.Parse(args); err != nil {
-		return fmt.Errorf("%s: %w", s.Name, err)
+		return args, s.Errorf("%w", err)
+	} else {
+		s.K.Load(posflag.Provider(s.Flags, ".", s.K), nil)
 	}
 
-	// export to koanf
-	s.K.Load(posflag.Provider(s.Flags, ".", s.K), nil)
-
+	// uses CLI arguments?
 	sargs := s.Flags.Args()
-	s.K.Set("args", sargs)
-	for i, name := range s.Argnames {
-		if i < len(sargs) {
-			s.K.Set(name, sargs[i])
-		} else {
-			break
+	if s.Args != nil {
+		// special case: all arguments
+		if len(s.Args) == 0 {
+			s.K.Set("args", sargs)
+			return nil, nil
+		}
+
+		// rewrite into k
+		for _, name := range s.Args {
+			if len(sargs) == 0 || sargs[0] == "--" {
+				return sargs, s.Errorf("needs an argument: %s", name)
+			}
+			s.K.Set(name, sargs[0])
+			sargs = sargs[1:]
 		}
 	}
 
-	return nil
+	// drop explicit --
+	if len(sargs) > 0 && sargs[0] == "--" {
+		sargs = sargs[1:]
+	}
+
+	return sargs, nil
 }
 
 // Prepare wraps Stage.Prepare and adds some logic around config

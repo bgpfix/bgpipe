@@ -24,7 +24,7 @@ func NewTcpConnect(parent *StageBase) Stage {
 
 	s.Flags.Duration("timeout", 60*time.Second, "connect timeout")
 	s.Flags.String("md5", "", "TCP MD5 password")
-	s.Argnames = []string{"target"}
+	s.Args = []string{"target"}
 
 	// setup I/O
 	s.IsStreamReader = true

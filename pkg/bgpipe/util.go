@@ -9,7 +9,7 @@ func IsAddr(v string) bool {
 	if _, err := netip.ParseAddr(v); err == nil {
 		return true
 	}
-	// TODO: host[:port]
+	// TODO: dns.name[:port]
 	return false
 }
 

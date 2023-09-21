@@ -18,7 +18,7 @@ type Mrt struct {
 func NewMrt(parent *StageBase) Stage {
 	s := &Mrt{StageBase: parent}
 	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
-	s.Argnames = []string{"path"}
+	s.Args = []string{"path"}
 
 	s.IsWriter = true
 	return s
