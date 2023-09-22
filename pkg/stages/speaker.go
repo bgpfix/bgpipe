@@ -1,19 +1,21 @@
-package bgpipe
+package stages
 
 import (
 	"net/netip"
 
 	"github.com/bgpfix/bgpfix/speaker"
+	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
 
 type Speaker struct {
-	*StageBase
+	*bgpipe.StageBase
 
 	spk *speaker.Speaker
 }
 
-func NewSpeaker(parent *StageBase) Stage {
+func NewSpeaker(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Speaker{StageBase: parent}
+	s.Descr = "run a simple local BGP speaker"
 	s.Flags.Bool("active", false, "send the OPEN message first")
 	s.Flags.Int("asn", -1, "local ASN, -1 means use remote ASN")
 	s.Flags.String("id", "", "local router ID, empty means use remote-1")
@@ -24,7 +26,7 @@ func NewSpeaker(parent *StageBase) Stage {
 func (s *Speaker) Prepare() error {
 	k := s.K
 
-	spk := speaker.NewSpeaker(s.B.ctx)
+	spk := speaker.NewSpeaker(s.B.Ctx)
 	s.spk = spk
 
 	so := &spk.Options

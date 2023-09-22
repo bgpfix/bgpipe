@@ -27,7 +27,7 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 		case IsAddr(cmd):
 			cmd = "tcp"
 		case IsFile(cmd):
-			cmd = "mrt" // FIXME: stat -> mrt / exec / json / etc.
+			cmd = "mrt" // TODO: stat -> mrt / exec / json / etc.
 		default:
 			args = args[1:]
 		}
@@ -39,9 +39,11 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 		}
 
 		// find an explicit end of its args
+		var found bool
 		var nextargs []string
 		for i, arg := range args {
 			if arg == "--" {
+				found = true
 				nextargs = args[i+1:]
 				args = args[:i]
 				break
@@ -49,7 +51,7 @@ func (b *Bgpipe) ParseArgs(args []string) error {
 		}
 
 		// parse stage args, move on
-		if remargs, err := s.ParseArgs(args); err != nil {
+		if remargs, err := s.ParseArgs(args, found); err != nil {
 			return err
 		} else {
 			args = append(remargs, nextargs...)

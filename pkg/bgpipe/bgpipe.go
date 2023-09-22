@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"sort"
 	"sync"
 	"time"
 
@@ -19,13 +20,16 @@ import (
 
 type Bgpipe struct {
 	zerolog.Logger
-	ctx    context.Context
-	cancel context.CancelCauseFunc
+
+	Ctx    context.Context
+	Cancel context.CancelCauseFunc
 
 	F      *pflag.FlagSet // global flags
 	K      *koanf.Koanf   // global config
 	Pipe   *pipe.Pipe     // bgpfix pipe
 	Stages []*StageBase   // pipe stages
+
+	repo map[string]NewStage // maps cmd to new stage func
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L
@@ -33,9 +37,11 @@ type Bgpipe struct {
 	wg_rread  sync.WaitGroup // stages that read from pipe R
 }
 
-func NewBgpipe() *Bgpipe {
+// NewBgpipe creates a new bgpipe instance using given
+// repositories of stage commands
+func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 	b := new(Bgpipe)
-	b.ctx, b.cancel = context.WithCancelCause(context.Background())
+	b.Ctx, b.Cancel = context.WithCancelCause(context.Background())
 
 	// default logger
 	b.Logger = log.Output(zerolog.ConsoleWriter{
@@ -44,7 +50,7 @@ func NewBgpipe() *Bgpipe {
 	})
 
 	// pipe
-	b.Pipe = pipe.NewPipe(b.ctx)
+	b.Pipe = pipe.NewPipe(b.Ctx)
 	b.Pipe.Options.Logger = &b.Logger
 
 	// global config
@@ -62,6 +68,12 @@ func NewBgpipe() *Bgpipe {
 	f.BoolP("no-parse-error", "N", false, "silently drop parse error messages")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 
+	// command repository
+	b.repo = make(map[string]NewStage)
+	for i := range repo {
+		b.AddRepo(repo[i])
+	}
+
 	return b
 }
 
@@ -73,11 +85,25 @@ Options:
 	b.F.PrintDefaults()
 	fmt.Fprintf(os.Stderr, `
 Supported stages (run stage -h to get its help)
-  tcp                    dial remote TCP endpoint
-  speaker                run a simple local BGP speaker
-  mrt                    read MRT file with BGP4MP messages
-
 `)
+
+	// iterate over cmds
+	var cmds []string
+	for cmd := range b.repo {
+		cmds = append(cmds, cmd)
+	}
+	sort.Strings(cmds)
+	for _, cmd := range cmds {
+		var descr string
+
+		s := b.NewStage(cmd)
+		if s != nil {
+			descr = s.Descr
+		}
+
+		fmt.Fprintf(os.Stderr, "  %-22s %s\n", cmd, descr)
+	}
+	fmt.Fprintf(os.Stderr, "\n")
 }
 
 func (b *Bgpipe) Run() error {
@@ -98,7 +124,7 @@ func (b *Bgpipe) Run() error {
 	b.Pipe.Wait()
 
 	// any errors on the global context?
-	if err := context.Cause(b.ctx); err != nil {
+	if err := context.Cause(b.Ctx); err != nil {
 		b.Fatal().Err(err).Msg("fatal error")
 		return err
 	}
@@ -256,7 +282,7 @@ func (b *Bgpipe) OnEstablished(ev *pipe.Event) bool {
 
 func (b *Bgpipe) OnStop(ev *pipe.Event) bool {
 	b.Info().Msg("pipe stopped")
-	b.cancel(nil)
+	b.Cancel(nil)
 	return true
 }
 

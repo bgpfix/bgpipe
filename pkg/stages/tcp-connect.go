@@ -1,4 +1,4 @@
-package bgpipe
+package stages
 
 import (
 	"context"
@@ -9,18 +9,20 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 	"golang.org/x/sys/unix"
 )
 
 type TcpConnect struct {
-	*StageBase
+	*bgpipe.StageBase
 
 	target string
 	dialer net.Dialer
 }
 
-func NewTcpConnect(parent *StageBase) Stage {
+func NewTcpConnect(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &TcpConnect{StageBase: parent}
+	s.Descr = "dial remote TCP endpoint"
 
 	s.Flags.Duration("timeout", 60*time.Second, "connect timeout")
 	s.Flags.String("md5", "", "TCP MD5 password")
@@ -92,7 +94,7 @@ func (s *TcpConnect) Prepare() error {
 func (s *TcpConnect) Start() error {
 	// derive the context
 	timeout := s.K.Duration("timeout")
-	ctx, cancel := context.WithTimeout(s.B.ctx, timeout)
+	ctx, cancel := context.WithTimeout(s.B.Ctx, timeout)
 	defer cancel()
 
 	// connect

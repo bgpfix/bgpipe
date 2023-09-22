@@ -26,6 +26,7 @@ type StageBase struct {
 	Name string // human-friendly stage name
 
 	Flags *pflag.FlagSet // CLI flags
+	Descr string         // CLI one-line description
 	Usage string         // CLI stage s.Usage string
 	Args  []string       // CLI argument names for exporting to K
 
@@ -55,34 +56,22 @@ type Stage interface {
 	Start() error
 }
 
-// NewStageFunc returns a new Stage for given parent base
-type NewStageFunc func(base *StageBase) Stage
+// NewStage returns a new Stage for given parent base
+type NewStage func(base *StageBase) Stage
 
-// NewStageFuncs maps stage commands to corresponding NewStageFunc
-var NewStageFuncs = map[string]NewStageFunc{
-	"tcp":     NewTcpConnect,
-	"mrt":     NewMrt,
-	"speaker": NewSpeaker,
+// AddRepo adds mapping between stage commands and their NewStageFunc
+func (b *Bgpipe) AddRepo(cmds map[string]NewStage) {
+	for cmd, newfunc := range cmds {
+		b.repo[cmd] = newfunc
+	}
 }
 
-// GetStage adds and returns a new stage at idx for cmd,
-// or returns an existing instance if it's for the same cmd.
-func (b *Bgpipe) GetStage(idx int, cmd string) (*StageBase, error) {
-	// already there? check cmd
-	if idx < len(b.Stages) {
-		if s := b.Stages[idx]; s != nil {
-			if cmd == "" || s.Cmd == cmd {
-				return s, nil
-			} else {
-				return nil, fmt.Errorf("[%d] %s: %w: %s", idx, cmd, ErrStageDiff, s.Cmd)
-			}
-		}
-	}
-
+// NewStage returns new stage for given cmd, or nil on error
+func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	// cmd valid?
-	newfunc, ok := NewStageFuncs[cmd]
+	newfunc, ok := b.repo[cmd]
 	if !ok {
-		return nil, fmt.Errorf("[%d] %s: %w", idx, cmd, ErrStageCmd)
+		return nil
 	}
 
 	// create new stage
@@ -90,20 +79,44 @@ func (b *Bgpipe) GetStage(idx int, cmd string) (*StageBase, error) {
 	s.B = b
 	s.P = b.Pipe
 	s.K = koanf.New(".")
-	s.Idx = idx
 	s.Cmd = cmd
-	s.SetName(fmt.Sprintf("[%d] %s", idx, cmd))
+	s.SetName(cmd)
 
 	// common CLI flags
 	s.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
-	s.Flags.SetInterspersed(false)
 	s.Flags.SortFlags = false
 	s.Flags.BoolP("left", "L", false, "L direction")
 	s.Flags.BoolP("right", "R", false, "R direction")
 	s.Flags.Bool("wait", false, "wait for ESTABLISHED")
 
-	// create sv
+	// create s
 	s.Stage = newfunc(s)
+	return s
+}
+
+// GetStage adds and returns a new stage at idx for cmd,
+// or returns an existing instance if it's for the same cmd.
+// If idx is -1, it always appends a new stage.
+func (b *Bgpipe) GetStage(idx int, cmd string) (*StageBase, error) {
+	if idx == -1 {
+		// append new
+		idx = len(b.Stages)
+	} else if idx < len(b.Stages) {
+		// already there? check cmd
+		if s := b.Stages[idx]; s != nil {
+			if s.Cmd == cmd {
+				return s, nil
+			} else {
+				return nil, fmt.Errorf("[%d] %s: %w: %s", idx, cmd, ErrStageDiff, s.Cmd)
+			}
+		}
+	}
+
+	// create
+	s := b.NewStage(cmd)
+	if s == nil {
+		return nil, fmt.Errorf("[%d] %s: %w", idx, cmd, ErrStageCmd)
+	}
 
 	// store
 	for idx >= len(b.Stages) {
@@ -111,18 +124,15 @@ func (b *Bgpipe) GetStage(idx int, cmd string) (*StageBase, error) {
 	}
 	b.Stages[idx] = s
 
-	return s, nil
-}
+	s.Idx = idx
+	s.SetName(fmt.Sprintf("[%d] %s", idx, cmd))
 
-// SetName updates s.Name and s.Logger
-func (s *StageBase) SetName(name string) {
-	s.Name = name
-	s.Logger = s.B.With().Str("stage", s.Name).Logger()
+	return s, nil
 }
 
 // ParseArgs parses CLI flags and arguments, exporting to K.
 // May return unused args.
-func (s *StageBase) ParseArgs(args []string) ([]string, error) {
+func (s *StageBase) ParseArgs(args []string, interspersed bool) ([]string, error) {
 	// override s.Flags.Usage?
 	if s.Flags.Usage == nil {
 		if len(s.Usage) == 0 {
@@ -133,6 +143,9 @@ func (s *StageBase) ParseArgs(args []string) ([]string, error) {
 			fmt.Fprint(os.Stderr, s.Flags.FlagUsages())
 		}
 	}
+
+	// enable interspersed args?
+	s.Flags.SetInterspersed(interspersed)
 
 	// parse stage flags, export to koanf
 	if err := s.Flags.Parse(args); err != nil {
@@ -222,7 +235,7 @@ func (s *StageBase) Start() {
 	b := s.B
 	err := s.Stage.Start()
 	if err != nil {
-		b.cancel(s.Errorf("%w", err))
+		b.Cancel(s.Errorf("%w", err))
 	}
 
 	if s.IsLReader() {
@@ -237,6 +250,12 @@ func (s *StageBase) Start() {
 	if s.IsRWriter() {
 		b.wg_rwrite.Done()
 	}
+}
+
+// SetName updates s.Name and s.Logger
+func (s *StageBase) SetName(name string) {
+	s.Name = name
+	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 }
 
 // IsLReader returns true iff the stage is supposed to write L.In

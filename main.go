@@ -2,8 +2,12 @@ package main
 
 import (
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
+	"github.com/bgpfix/bgpipe/pkg/stages"
 )
 
 func main() {
-	bgpipe.NewBgpipe().Run()
+	bp := bgpipe.NewBgpipe(
+		stages.Repo, // standard stage commands
+	)
+	bp.Run()
 }

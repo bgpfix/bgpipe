@@ -1,4 +1,4 @@
-package bgpipe
+package stages
 
 import (
 	"errors"
@@ -6,17 +6,19 @@ import (
 	"os"
 
 	"github.com/bgpfix/bgpfix/mrt"
+	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
 
 type Mrt struct {
-	*StageBase
+	*bgpipe.StageBase
 
 	fpath string
 	br    *mrt.Reader
 }
 
-func NewMrt(parent *StageBase) Stage {
+func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Mrt{StageBase: parent}
+	s.Descr = "read MRT file with BGP4MP messages"
 	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
 	s.Args = []string{"path"}
 
@@ -36,7 +38,7 @@ func (s *Mrt) Prepare() error {
 	}
 
 	// MRT-BGP reader writing to s.Input().In
-	s.br = mrt.NewReader(s.B.ctx, &s.Logger, s.Upstream())
+	s.br = mrt.NewReader(s.B.Ctx, &s.Logger, s.Upstream())
 	return nil
 }
 
