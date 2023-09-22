@@ -41,13 +41,6 @@ func (s *Stdout) Prepare() error {
 }
 
 func (s *Stdout) OnMsg(m *msg.Msg) (action pipe.Action) {
-	// TODO: yuck
-	// we should collect all Callbacks in the parent, and
-	// toggle an atomic on/off switch on Start
-	if !s.Started() {
-		return
-	}
-
 	// get from pool, marshal
 	buf, _ := s.pool.Get().([]byte)
 	buf = m.ToJSON(buf[:0])

@@ -48,7 +48,7 @@ type StageBase struct {
 	IsWriter       bool // writes pipe.Direction.In?
 	IsStreamWriter bool // needs pipe.Direction.Write?
 
-	started atomic.Bool
+	running atomic.Bool
 }
 
 // Stage implements a bgpipe stage
@@ -244,7 +244,7 @@ func (s *StageBase) Prepare() error {
 // Cancels the main bgpipe context on error.
 // Respects b.wg_* waitgroups.
 func (s *StageBase) Start() {
-	if !s.started.CompareAndSwap(false, true) {
+	if !s.running.CompareAndSwap(false, true) {
 		return // already started
 	}
 	s.Debug().Msg("starting")
@@ -269,9 +269,9 @@ func (s *StageBase) Start() {
 	}
 }
 
-// Started returns true iff stage has already been started
-func (s *StageBase) Started() bool {
-	return s.started.Load()
+// Running returns true iff stage has already been started
+func (s *StageBase) Running() bool {
+	return s.running.Load()
 }
 
 // SetName updates s.Name and s.Logger

@@ -150,6 +150,7 @@ func (b *Bgpipe) Configure() error {
 
 	return nil
 }
+
 func (b *Bgpipe) Prepare() error {
 	// shortcuts
 	var (
@@ -179,6 +180,7 @@ func (b *Bgpipe) Prepare() error {
 	}
 
 	// prepare stages
+	cbs := len(po.Callbacks)
 	for _, s := range b.Stages {
 		if s == nil {
 			continue
@@ -187,6 +189,14 @@ func (b *Bgpipe) Prepare() error {
 		if err := s.Prepare(); err != nil {
 			return s.Errorf("%w", err)
 		}
+
+		// make added callback depend on s.started?
+		if s.K.Bool("wait") {
+			for _, cb := range po.Callbacks[cbs:] {
+				cb.Enabled = &s.running
+			}
+		}
+		cbs = len(po.Callbacks)
 	}
 
 	// force 2-byte ASNs?
