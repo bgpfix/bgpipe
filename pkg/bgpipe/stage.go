@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync/atomic"
 
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/v2"
@@ -14,28 +16,30 @@ import (
 
 // StageBase represents a bgpipe stage base
 type StageBase struct {
-	zerolog.Logger
-	Stage
+	zerolog.Logger // logger with stage name
+	Stage          // the real implementation
 
-	B *Bgpipe      // parent
-	P *pipe.Pipe   // bgpfix pipe
-	K *koanf.Koanf // integrated config
+	B  *Bgpipe       // parent
+	P  *pipe.Pipe    // bgpfix pipe
+	PO *pipe.Options // bgpfix pipe options
+	K  *koanf.Koanf  // integrated config
 
 	Idx  int    // stage index
 	Cmd  string // stage command name
-	Name string // human-friendly stage name
+	name string // human-friendly stage name
 
 	Flags *pflag.FlagSet // CLI flags
-	Descr string         // CLI one-line description
-	Usage string         // CLI stage s.Usage string
+	Descr string         // CLI stage one-line description
+	Usage string         // CLI stage usage string
 	Args  []string       // CLI argument names for exporting to K
 
 	// set by StageBase.Prepare
 
-	IsLeft  bool // operates on L direction?
-	IsRight bool // operates on R direction?
-	IsFirst bool // is the first stage in pipe? (L peer)
-	IsLast  bool // is the last stage in pipe? (R peer)
+	IsLeft  bool    // operates on L direction?
+	IsRight bool    // operates on R direction?
+	Dst     msg.Dst // captures IsLeft+IsRight
+	IsFirst bool    // is the first stage in pipe? (L peer)
+	IsLast  bool    // is the last stage in pipe? (R peer)
 
 	// set by Stage.Prepare
 
@@ -43,6 +47,8 @@ type StageBase struct {
 	IsStreamReader bool // needs pipe.Direction.Read?
 	IsWriter       bool // writes pipe.Direction.In?
 	IsStreamWriter bool // needs pipe.Direction.Write?
+
+	started atomic.Bool
 }
 
 // Stage implements a bgpipe stage
@@ -78,6 +84,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s := &StageBase{}
 	s.B = b
 	s.P = b.Pipe
+	s.PO = &b.Pipe.Options
 	s.K = koanf.New(".")
 	s.Cmd = cmd
 	s.SetName(cmd)
@@ -193,17 +200,24 @@ func (s *StageBase) Prepare() error {
 		if s.IsLeft {
 			return ErrFirstL
 		}
-		s.IsRight = true // force R direction
 		s.IsFirst = true
+		s.IsRight = true // force R direction
+		s.Dst = msg.DST_R
 	case len(s.B.Stages) - 1:
 		if s.IsRight {
 			return ErrLastR
 		}
-		s.IsLeft = true // force L direction
 		s.IsLast = true
+		s.IsLeft = true // force L direction
+		s.Dst = msg.DST_L
 	default:
-		if !(s.IsLeft || s.IsRight) {
+		if s.IsLeft && s.IsRight {
+			s.Dst = msg.DST_LR
+		} else if s.IsLeft {
+			s.Dst = msg.DST_L
+		} else {
 			s.IsRight = true // by default send to R
+			s.Dst = msg.DST_R
 		}
 	}
 
@@ -226,10 +240,13 @@ func (s *StageBase) Prepare() error {
 	return nil
 }
 
-// Start starts Stage.Start and waits till finish.
+// Start wraps Stage.Start.
 // Cancels the main bgpipe context on error.
 // Respects b.wg_* waitgroups.
 func (s *StageBase) Start() {
+	if !s.started.CompareAndSwap(false, true) {
+		return // already started
+	}
 	s.Debug().Msg("starting")
 
 	b := s.B
@@ -252,10 +269,15 @@ func (s *StageBase) Start() {
 	}
 }
 
+// Started returns true iff stage has already been started
+func (s *StageBase) Started() bool {
+	return s.started.Load()
+}
+
 // SetName updates s.Name and s.Logger
 func (s *StageBase) SetName(name string) {
-	s.Name = name
-	s.Logger = s.B.With().Str("stage", s.Name).Logger()
+	s.name = name
+	s.Logger = s.B.With().Str("stage", s.name).Logger()
 }
 
 // IsLReader returns true iff the stage is supposed to write L.In
@@ -280,7 +302,7 @@ func (s *StageBase) IsRReader() bool {
 
 // Errorf wraps fmt.Errorf and adds a prefix with the stage name
 func (s *StageBase) Errorf(format string, a ...any) error {
-	return fmt.Errorf(s.Name+": "+format, a...)
+	return fmt.Errorf(s.name+": "+format, a...)
 }
 
 // Upstream returns the direction which the stage should write to, if its unidirectional

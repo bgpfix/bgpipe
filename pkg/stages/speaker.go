@@ -47,6 +47,7 @@ func (s *Speaker) Prepare() error {
 }
 
 func (s *Speaker) Start() error {
+	// TODO: speaker start (support --wait)
 	s.P.Wait() // FIXME: wait for fatal error in speaker
 	return nil // nothing to do here
 }

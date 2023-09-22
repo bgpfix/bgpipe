@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/caps"
-	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
@@ -204,10 +203,7 @@ func (b *Bgpipe) Prepare() error {
 		po.OnParseError(b.OnParseError) // pipe.EVENT_PARSE
 	}
 
-	// FIXME
 	// TODO: scan through the pipe, decide if needs automatic stdin/stdout
-	po.OnMsgLast(b.printL, msg.DST_L)
-	po.OnMsgLast(b.printR, msg.DST_R)
 
 	return nil
 }
@@ -293,21 +289,4 @@ func (b *Bgpipe) OnParseError(ev *pipe.Event) bool {
 		Err(ev.Error).
 		Msg("message parse error")
 	return true
-}
-
-// FIXME
-var bufL, bufR []byte
-
-func (b *Bgpipe) printL(m *msg.Msg) pipe.Action {
-	bufL = m.ToJSON(bufL[:0])
-	bufL = append(bufL, '\n')
-	os.Stdout.Write(bufL)
-	return pipe.ACTION_CONTINUE
-}
-
-func (b *Bgpipe) printR(m *msg.Msg) pipe.Action {
-	bufR = m.ToJSON(bufR[:0])
-	bufR = append(bufR, '\n')
-	os.Stdout.Write(bufR)
-	return pipe.ACTION_CONTINUE
 }
