@@ -60,7 +60,6 @@ type NewStageFunc func(base *StageBase) Stage
 
 // NewStageFuncs maps stage commands to corresponding NewStageFunc
 var NewStageFuncs = map[string]NewStageFunc{
-	"connect": NewTcpConnect,
 	"tcp":     NewTcpConnect,
 	"mrt":     NewMrt,
 	"speaker": NewSpeaker,

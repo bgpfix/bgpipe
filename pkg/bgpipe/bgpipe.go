@@ -14,6 +14,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/pflag"
 )
 
 type Bgpipe struct {
@@ -21,9 +22,10 @@ type Bgpipe struct {
 	ctx    context.Context
 	cancel context.CancelCauseFunc
 
-	K      *koanf.Koanf // global config
-	Pipe   *pipe.Pipe   // bgpfix pipe
-	Stages []*StageBase // pipe stages
+	F      *pflag.FlagSet // global flags
+	K      *koanf.Koanf   // global config
+	Pipe   *pipe.Pipe     // bgpfix pipe
+	Stages []*StageBase   // pipe stages
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L
@@ -48,7 +50,34 @@ func NewBgpipe() *Bgpipe {
 	// global config
 	b.K = koanf.New(".")
 
+	// global CLI flags
+	b.F = pflag.NewFlagSet("bgpipe", pflag.ExitOnError)
+	f := b.F
+	f.SortFlags = false
+	f.Usage = b.Usage
+	f.SetInterspersed(false)
+	f.StringP("log", "L", "warn", "log level (debug/info/warn/error/disabled)")
+	f.String("stdio", "auto", "controls stdin and stdout usage (none/auto/in/out)")
+	f.BoolP("reverse", "R", false, "reverse the pipe")
+	f.BoolP("no-parse-error", "N", false, "silently drop parse error messages")
+	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
+
 	return b
+}
+
+func (b *Bgpipe) Usage() {
+	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS...] [--] ...
+
+Options:
+`)
+	b.F.PrintDefaults()
+	fmt.Fprintf(os.Stderr, `
+Supported stages (run stage -h to get its help)
+  tcp                    dial remote TCP endpoint
+  speaker                run a simple local BGP speaker
+  mrt                    read MRT file with BGP4MP messages
+
+`)
 }
 
 func (b *Bgpipe) Run() error {
@@ -60,7 +89,7 @@ func (b *Bgpipe) Run() error {
 
 	// prepare the pipe
 	if err := b.Prepare(); err != nil {
-		b.Fatal().Err(err).Msg("could not prepare")
+		b.Fatal().Err(err).Msg("could not prepare the pipeline")
 		return err
 	}
 
@@ -78,6 +107,24 @@ func (b *Bgpipe) Run() error {
 	return nil
 }
 
+func (b *Bgpipe) Configure() error {
+	// parse CLI args
+	err := b.ParseArgs(os.Args[1:])
+	if err != nil {
+		return fmt.Errorf("could not parse CLI flags: %w", err)
+	}
+
+	// debugging level
+	if ll := b.K.String("log"); len(ll) > 0 {
+		lvl, err := zerolog.ParseLevel(ll)
+		if err != nil {
+			return err
+		}
+		zerolog.SetGlobalLevel(lvl)
+	}
+
+	return nil
+}
 func (b *Bgpipe) Prepare() error {
 	// shortcuts
 	var (
@@ -88,7 +135,8 @@ func (b *Bgpipe) Prepare() error {
 
 	// at least one stage defined?
 	if len(b.Stages) == 0 {
-		return fmt.Errorf("need at least 1 stage")
+		b.F.Usage()
+		return fmt.Errorf("bgpipe needs at least 1 stage")
 	}
 
 	// reverse?
