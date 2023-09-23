@@ -52,7 +52,3 @@ func (s *Stdout) OnMsg(m *msg.Msg) (action pipe.Action) {
 
 	return
 }
-
-func (s *Stdout) Start() error {
-	return nil
-}

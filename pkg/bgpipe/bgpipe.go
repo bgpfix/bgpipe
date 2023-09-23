@@ -186,15 +186,14 @@ func (b *Bgpipe) Prepare() error {
 			continue
 		}
 
-		if err := s.Prepare(); err != nil {
+		// call stage prepare
+		if err := s.prepare(); err != nil {
 			return s.Errorf("%w", err)
 		}
 
-		// make added callback depend on s.started?
-		if s.K.Bool("wait") {
-			for _, cb := range po.Callbacks[cbs:] {
-				cb.Enabled = &s.running
-			}
+		// make stage callbacks depend on s.enabled
+		for _, cb := range po.Callbacks[cbs:] {
+			cb.Enabled = &s.enabled
 		}
 		cbs = len(po.Callbacks)
 	}
@@ -208,7 +207,6 @@ func (b *Bgpipe) Prepare() error {
 
 	// attach to events
 	po.OnStart(b.OnStart)
-	po.OnEstablished(b.OnEstablished)
 	if !k.Bool("perr") {
 		po.OnParseError(b.OnParseError) // pipe.EVENT_PARSE
 	}
@@ -240,56 +238,36 @@ func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
 			b.wg_rwrite.Add(1)
 		}
 
-		// TODO: support waiting for OPEN (L/R/LR) or ESTABLISH or FIRST_MSG?
-		if !s.K.Bool("wait") {
-			go s.Start()
+		if s.enabled.Load() {
+			go s.start()
 		}
 	}
 
 	// wait for L/R writers
 	go func() {
 		b.wg_lwrite.Wait()
-		b.Debug().Msg("closing L input (no writers)")
+		b.Debug().Msg("closing L input")
 		b.Pipe.L.CloseInput()
 	}()
 	go func() {
 		b.wg_rwrite.Wait()
-		b.Debug().Msg("closing R input (no writers)")
+		b.Debug().Msg("closing R input")
 		b.Pipe.R.CloseInput()
 	}()
 
 	// wait for L/R readers
 	go func() {
 		b.wg_lread.Wait()
-		b.Debug().Msg("closing L output (no readers)")
+		b.Debug().Msg("closing L output")
 		b.Pipe.L.CloseOutput()
 	}()
 	go func() {
 		b.wg_rread.Wait()
-		b.Debug().Msg("closing R output (no readers)")
+		b.Debug().Msg("closing R output")
 		b.Pipe.R.CloseOutput()
 	}()
 
 	return false
-}
-func (b *Bgpipe) OnEstablished(ev *pipe.Event) bool {
-	for _, s := range b.Stages {
-		if s == nil {
-			continue
-		}
-
-		if s.K.Bool("wait") {
-			go s.Start()
-		}
-	}
-
-	return false
-}
-
-func (b *Bgpipe) OnStop(ev *pipe.Event) bool {
-	b.Info().Msg("pipe stopped")
-	b.Cancel(nil)
-	return true
 }
 
 // OnParseError is called when the pipe sees a message it cant parse

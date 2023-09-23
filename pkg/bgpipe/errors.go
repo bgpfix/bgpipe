@@ -3,8 +3,9 @@ package bgpipe
 import "errors"
 
 var (
-	ErrStageCmd  = errors.New("invalid stage command")
-	ErrStageDiff = errors.New("already defined but different")
+	ErrStageCmd     = errors.New("invalid stage command")
+	ErrStageDiff    = errors.New("already defined but different")
+	ErrStageStopped = errors.New("stage stopped")
 
 	ErrFirstL      = errors.New("invalid L direction in the first stage")
 	ErrLastR       = errors.New("invalid R direction in the last stage")

@@ -38,7 +38,7 @@ func (s *Mrt) Prepare() error {
 	}
 
 	// MRT-BGP reader writing to s.Input().In
-	s.br = mrt.NewReader(s.B.Ctx, &s.Logger, s.Upstream())
+	s.br = mrt.NewReader(s.Ctx, &s.Logger, s.Upstream())
 	return nil
 }
 

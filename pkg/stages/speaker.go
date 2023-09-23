@@ -26,7 +26,7 @@ func NewSpeaker(parent *bgpipe.StageBase) bgpipe.Stage {
 func (s *Speaker) Prepare() error {
 	k := s.K
 
-	spk := speaker.NewSpeaker(s.B.Ctx)
+	spk := speaker.NewSpeaker(s.Ctx)
 	s.spk = spk
 
 	so := &spk.Options
@@ -43,11 +43,6 @@ func (s *Speaker) Prepare() error {
 		so.LocalId = netip.MustParseAddr("0.0.0.1")
 	}
 
+	// TODO: don't start the speaker until stage Start()
 	return spk.Attach(s.Upstream())
-}
-
-func (s *Speaker) Start() error {
-	// TODO: speaker start (support --wait)
-	s.P.Wait() // FIXME: wait for fatal error in speaker
-	return nil // nothing to do here
 }

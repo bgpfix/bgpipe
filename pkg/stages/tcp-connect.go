@@ -94,7 +94,7 @@ func (s *TcpConnect) Prepare() error {
 func (s *TcpConnect) Start() error {
 	// derive the context
 	timeout := s.K.Duration("timeout")
-	ctx, cancel := context.WithTimeout(s.B.Ctx, timeout)
+	ctx, cancel := context.WithTimeout(s.Ctx, timeout)
 	defer cancel()
 
 	// connect
@@ -135,6 +135,8 @@ func (s *TcpConnect) Start() error {
 	running := 2
 	for running > 0 {
 		select {
+		case <-s.Ctx.Done():
+			return context.Cause(s.Ctx)
 		case r := <-rch:
 			read = r.n
 			running--

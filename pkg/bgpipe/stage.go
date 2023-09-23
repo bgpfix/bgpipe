@@ -1,6 +1,8 @@
 package bgpipe
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -19,10 +21,12 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	B  *Bgpipe       // parent
-	P  *pipe.Pipe    // bgpfix pipe
-	PO *pipe.Options // bgpfix pipe options
-	K  *koanf.Koanf  // integrated config
+	Ctx    context.Context
+	Cancel context.CancelCauseFunc
+
+	B *Bgpipe      // parent
+	P *pipe.Pipe   // bgpfix pipe
+	K *koanf.Koanf // integrated config
 
 	Idx  int    // stage index
 	Cmd  string // stage command name
@@ -48,17 +52,19 @@ type StageBase struct {
 	IsWriter       bool // writes pipe.Direction.In?
 	IsStreamWriter bool // needs pipe.Direction.Write?
 
-	running atomic.Bool
+	enabled atomic.Bool // controls all stage callbacks
+	started atomic.Bool // true iff Start() already called
 }
 
 // Stage implements a bgpipe stage
 type Stage interface {
-	// Prepare checks config and prepares for Start.
-	// It should modify parent's Is(Raw)Reader/Writer settings.
+	// Prepare checks config and prepares for Start,
+	// eg. attaching own callbacks to the pipe.
 	Prepare() error
 
-	// Start is run as a goroutine after the pipe starts.
-	// Returning a non-nil error results in a fatal error.
+	// Start runs the stage and returns after all work has finished.
+	// It must respect StageBase.Ctx. Returning a non-nil error different
+	// than ErrStopped results in a fatal error that stops the whole pipe.
 	Start() error
 }
 
@@ -82,19 +88,21 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 
 	// create new stage
 	s := &StageBase{}
+	s.Ctx, s.Cancel = context.WithCancelCause(b.Ctx)
 	s.B = b
 	s.P = b.Pipe
-	s.PO = &b.Pipe.Options
 	s.K = koanf.New(".")
 	s.Cmd = cmd
 	s.SetName(cmd)
+	s.enabled.Store(true)
 
 	// common CLI flags
 	s.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
 	s.Flags.SortFlags = false
 	s.Flags.BoolP("left", "L", false, "L direction")
 	s.Flags.BoolP("right", "R", false, "R direction")
-	s.Flags.Bool("wait", false, "wait for ESTABLISHED")
+	s.Flags.StringSlice("on", []string{}, "start on given event")
+	s.Flags.StringSlice("off", []string{}, "stop on given event")
 
 	// create s
 	s.Stage = newfunc(s)
@@ -188,13 +196,12 @@ func (s *StageBase) ParseArgs(args []string, interspersed bool) ([]string, error
 	return sargs, nil
 }
 
-// Prepare wraps Stage.Prepare and adds some logic around config
-func (s *StageBase) Prepare() error {
-	k := s.K
-	s.Debug().Interface("koanf", k.All()).Msg("preparing")
+// prepare wraps Stage.prepare and adds some logic around config
+func (s *StageBase) prepare() error {
+	s.Debug().Interface("koanf", s.K.All()).Msg("preparing")
 
 	// double-check direction settings
-	s.IsLeft, s.IsRight = k.Bool("left"), k.Bool("right")
+	s.IsLeft, s.IsRight = s.K.Bool("left"), s.K.Bool("right")
 	switch s.Idx {
 	case 0:
 		if s.IsLeft {
@@ -221,6 +228,17 @@ func (s *StageBase) Prepare() error {
 		}
 	}
 
+	// has trigger-on events?
+	if on := s.K.Strings("on"); len(on) > 0 {
+		s.enabled.Store(false)
+		s.P.Options.OnEvent(s.startEvent, on...)
+	}
+
+	// has trigger-off events?
+	if off := s.K.Strings("off"); len(off) > 0 {
+		s.P.Options.OnEvent(s.stopEvent, off...)
+	}
+
 	// call child prepare
 	if err := s.Stage.Prepare(); err != nil {
 		return err
@@ -240,38 +258,70 @@ func (s *StageBase) Prepare() error {
 	return nil
 }
 
-// Start wraps Stage.Start.
+// startEvent starts the stage in reaction to a pipe event
+func (s *StageBase) startEvent(ev *pipe.Event) (keep_event bool) {
+	s.Debug().Msgf("start event %s", ev.Type)
+	go s.start()
+	return false
+}
+
+// stopEvent stops the stage in reaction to a pipe event
+func (s *StageBase) stopEvent(ev *pipe.Event) (keep_event bool) {
+	s.Debug().Msgf("stop event %s", ev.Type)
+	s.Cancel(ErrStageStopped)
+	s.enabled.Store(false)
+	return false
+}
+
+// Prepare is the default Stage implementation that does nothing
+func (s *StageBase) Prepare() error {
+	return nil
+}
+
+// start wraps Stage.start.
 // Cancels the main bgpipe context on error.
 // Respects b.wg_* waitgroups.
-func (s *StageBase) Start() {
-	if !s.running.CompareAndSwap(false, true) {
-		return // already started
+func (s *StageBase) start() error {
+	if !s.started.CompareAndSwap(false, true) {
+		return nil // already running
+	} else {
+		s.Debug().Msg("starting")
 	}
-	s.Debug().Msg("starting")
 
-	b := s.B
+	s.enabled.Store(true)
 	err := s.Stage.Start()
-	if err != nil {
-		b.Cancel(s.Errorf("%w", err))
+	s.enabled.Store(false)
+
+	// stopped due to stage disabled? ignore
+	if errors.Is(err, ErrStageStopped) {
+		err = nil
 	}
 
 	if s.IsLReader() {
-		b.wg_lread.Done()
+		s.B.wg_lread.Done()
 	}
 	if s.IsLWriter() {
-		b.wg_lwrite.Done()
+		s.B.wg_lwrite.Done()
 	}
 	if s.IsRReader() {
-		b.wg_rread.Done()
+		s.B.wg_rread.Done()
 	}
 	if s.IsRWriter() {
-		b.wg_rwrite.Done()
+		s.B.wg_rwrite.Done()
 	}
+
+	if err != nil {
+		s.B.Cancel(s.Errorf("%w", err))
+	}
+
+	return err
 }
 
-// Running returns true iff stage has already been started
-func (s *StageBase) Running() bool {
-	return s.running.Load()
+// Start is the default Stage implementation that just waits
+// for the context and returns its cause
+func (s *StageBase) Start() error {
+	<-s.Ctx.Done()
+	return context.Cause(s.Ctx)
 }
 
 // SetName updates s.Name and s.Logger
