@@ -18,8 +18,8 @@ func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Stdout{StageBase: parent}
 	s.Descr = "print JSON representation to stdout"
 
-	f := s.Flags
-	f.Bool("last", true, "operate at the very end instead of here")
+	// f := s.Flags
+	// f.Bool("last", true, "operate at the very end instead of here")
 	// f.StringSlice("grep", []string{}, "print only given types")
 	// f.StringSlice("filter", []string{}, "filter given types")
 	return s

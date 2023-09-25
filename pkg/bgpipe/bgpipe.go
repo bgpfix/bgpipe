@@ -60,7 +60,7 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 	f.Usage = b.Usage
 	f.SetInterspersed(false)
 	f.StringP("log", "L", "warn", "log level (debug/info/warn/error/disabled)")
-	f.String("stdio", "auto", "controls stdin and stdout usage (none/auto/in/out)")
+	f.BoolP("quiet", "N", false, "do not use stdin/stdout unless explicitly requested")
 	f.BoolP("reverse", "R", false, "reverse the pipe")
 	f.BoolP("no-parse-error", "E", false, "silently drop parse error messages")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
