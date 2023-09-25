@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"slices"
-	"sort"
 	"sync"
 	"time"
 
-	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
@@ -17,6 +14,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// Bgpipe represents a BGP pipeline consisting of several stages, built on top of bgpfix.Pipe
 type Bgpipe struct {
 	zerolog.Logger
 
@@ -64,7 +62,7 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 	f.StringP("log", "L", "warn", "log level (debug/info/warn/error/disabled)")
 	f.String("stdio", "auto", "controls stdin and stdout usage (none/auto/in/out)")
 	f.BoolP("reverse", "R", false, "reverse the pipe")
-	f.BoolP("no-parse-error", "N", false, "silently drop parse error messages")
+	f.BoolP("no-parse-error", "E", false, "silently drop parse error messages")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 
 	// command repository
@@ -76,44 +74,16 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 	return b
 }
 
-func (b *Bgpipe) Usage() {
-	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS...] [--] ...
-
-Options:
-`)
-	b.F.PrintDefaults()
-	fmt.Fprintf(os.Stderr, `
-Supported stages (run stage -h to get its help)
-`)
-
-	// iterate over cmds
-	var cmds []string
-	for cmd := range b.repo {
-		cmds = append(cmds, cmd)
-	}
-	sort.Strings(cmds)
-	for _, cmd := range cmds {
-		var descr string
-
-		s := b.NewStage(cmd)
-		if s != nil {
-			descr = s.Descr
-		}
-
-		fmt.Fprintf(os.Stderr, "  %-22s %s\n", cmd, descr)
-	}
-	fmt.Fprintf(os.Stderr, "\n")
-}
-
+// Run configures and runs the bgpipe
 func (b *Bgpipe) Run() error {
 	// configure
-	if err := b.Configure(); err != nil {
+	if err := b.pipeConfig(); err != nil {
 		b.Fatal().Err(err).Msg("configuration error")
 		return err
 	}
 
 	// prepare the pipe
-	if err := b.Prepare(); err != nil {
+	if err := b.pipePrepare(); err != nil {
 		b.Fatal().Err(err).Msg("could not prepare the pipeline")
 		return err
 	}
@@ -132,149 +102,45 @@ func (b *Bgpipe) Run() error {
 	return nil
 }
 
-func (b *Bgpipe) Configure() error {
-	// parse CLI args
-	err := b.ParseArgs(os.Args[1:])
-	if err != nil {
-		return fmt.Errorf("could not parse CLI flags: %w", err)
+// AddRepo adds mapping between stage commands and their NewStageFunc
+func (b *Bgpipe) AddRepo(cmds map[string]NewStage) {
+	for cmd, newfunc := range cmds {
+		b.repo[cmd] = newfunc
 	}
-
-	// debugging level
-	if ll := b.K.String("log"); len(ll) > 0 {
-		lvl, err := zerolog.ParseLevel(ll)
-		if err != nil {
-			return err
-		}
-		zerolog.SetGlobalLevel(lvl)
-	}
-
-	return nil
 }
 
-func (b *Bgpipe) Prepare() error {
-	// shortcuts
-	var (
-		k  = b.K
-		p  = b.Pipe
-		po = &p.Options
-	)
-
-	// at least one stage defined?
-	if len(b.Stages) == 0 {
-		b.F.Usage()
-		return fmt.Errorf("bgpipe needs at least 1 stage")
-	}
-
-	// reverse?
-	if k.Bool("reverse") {
-		slices.Reverse(b.Stages)
-		for idx, s := range b.Stages {
-			if s != nil {
-				s.Idx = idx
-				s.SetName(fmt.Sprintf("[%d] %s", idx, s.Cmd))
+// AddStage adds and returns a new stage at idx for cmd,
+// or returns an existing instance if it's for the same cmd.
+// If idx is -1, it always appends a new stage.
+func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
+	if idx == -1 {
+		// append new
+		idx = len(b.Stages)
+	} else if idx < len(b.Stages) {
+		// already there? check cmd
+		if s := b.Stages[idx]; s != nil {
+			if s.Cmd == cmd {
+				return s, nil
+			} else {
+				return nil, fmt.Errorf("[%d] %s: %w: %s", idx, cmd, ErrStageDiff, s.Cmd)
 			}
 		}
-		left, right := k.Bool("left"), k.Bool("right")
-		k.Set("left", right)
-		k.Set("right", left)
 	}
 
-	// prepare stages
-	cbs := len(po.Callbacks)
-	for _, s := range b.Stages {
-		if s == nil {
-			continue
-		}
-
-		// call stage prepare
-		if err := s.prepare(); err != nil {
-			return s.Errorf("%w", err)
-		}
-
-		// make stage callbacks depend on s.enabled
-		for _, cb := range po.Callbacks[cbs:] {
-			cb.Enabled = &s.enabled
-		}
-		cbs = len(po.Callbacks)
+	// create
+	s := b.NewStage(cmd)
+	if s == nil {
+		return nil, fmt.Errorf("[%d] %s: %w", idx, cmd, ErrStageCmd)
 	}
 
-	// force 2-byte ASNs?
-	if k.Bool("short-asn") {
-		p.Caps.Set(caps.CAP_AS4, nil) // ban CAP_AS4
-	} else {
-		p.Caps.Use(caps.CAP_AS4) // use CAP_AS4 by default
+	// store
+	for idx >= len(b.Stages) {
+		b.Stages = append(b.Stages, nil)
 	}
+	b.Stages[idx] = s
 
-	// attach to events
-	po.OnStart(b.OnStart)
-	if !k.Bool("perr") {
-		po.OnParseError(b.OnParseError) // pipe.EVENT_PARSE
-	}
+	s.Idx = idx
+	s.SetName(fmt.Sprintf("[%d] %s", idx, cmd))
 
-	// TODO: scan through the pipe, decide if needs automatic stdin/stdout
-
-	return nil
-}
-
-// OnStart is called after the bgpfix pipe starts
-func (b *Bgpipe) OnStart(ev *pipe.Event) bool {
-	// go through all stages
-	for _, s := range b.Stages {
-		if s == nil {
-			continue
-		}
-
-		// kick waitgroups
-		if s.IsLReader() {
-			b.wg_lread.Add(1)
-		}
-		if s.IsLWriter() {
-			b.wg_lwrite.Add(1)
-		}
-		if s.IsRReader() {
-			b.wg_rread.Add(1)
-		}
-		if s.IsRWriter() {
-			b.wg_rwrite.Add(1)
-		}
-
-		if s.enabled.Load() {
-			go s.start()
-		}
-	}
-
-	// wait for L/R writers
-	go func() {
-		b.wg_lwrite.Wait()
-		b.Debug().Msg("closing L input")
-		b.Pipe.L.CloseInput()
-	}()
-	go func() {
-		b.wg_rwrite.Wait()
-		b.Debug().Msg("closing R input")
-		b.Pipe.R.CloseInput()
-	}()
-
-	// wait for L/R readers
-	go func() {
-		b.wg_lread.Wait()
-		b.Debug().Msg("closing L output")
-		b.Pipe.L.CloseOutput()
-	}()
-	go func() {
-		b.wg_rread.Wait()
-		b.Debug().Msg("closing R output")
-		b.Pipe.R.CloseOutput()
-	}()
-
-	return false
-}
-
-// OnParseError is called when the pipe sees a message it cant parse
-func (b *Bgpipe) OnParseError(ev *pipe.Event) bool {
-	b.Error().
-		Str("msg", ev.Msg.String()).
-		Err(ev.Error).
-		Msg("message parse error")
-	return true
+	return s, nil
 }

@@ -31,6 +31,7 @@ func (s *Speaker) Prepare() error {
 
 	so := &spk.Options
 	so.Logger = s.Logger
+	so.OnStart = false
 	so.Passive = !k.Bool("active")
 	so.LocalASN = k.Int("asn")
 
@@ -43,6 +44,10 @@ func (s *Speaker) Prepare() error {
 		so.LocalId = netip.MustParseAddr("0.0.0.1")
 	}
 
-	// TODO: don't start the speaker until stage Start()
 	return spk.Attach(s.Upstream())
+}
+
+func (s *Speaker) Start() error {
+	s.spk.OnStart(nil)
+	return s.StageBase.Start()
 }

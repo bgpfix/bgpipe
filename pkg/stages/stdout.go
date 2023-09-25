@@ -32,9 +32,9 @@ func (s *Stdout) Prepare() error {
 
 	po := &s.P.Options
 	if s.K.Bool("last") {
-		po.OnMsgLast(s.OnMsg, s.Dst)
+		po.OnMsgLast(s.OnMsg, s.Dst())
 	} else {
-		po.OnMsg(s.OnMsg, s.Dst)
+		po.OnMsg(s.OnMsg, s.Dst())
 	}
 
 	return nil
