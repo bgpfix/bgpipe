@@ -30,6 +30,12 @@ func (s *Stdout) Prepare() error {
 	// for _, t := range s.K.Strings("grep") {
 	// }
 
+	// by default, set LR
+	if !(s.K.Bool("left") || s.K.Bool("right")) {
+		s.IsLeft = true
+		s.IsRight = true
+	}
+
 	po := &s.P.Options
 	if s.K.Bool("last") {
 		po.OnMsgLast(s.OnMsg, s.Dst())

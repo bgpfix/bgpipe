@@ -115,23 +115,23 @@ func (s *StageBase) SetName(name string) {
 	s.Logger = s.B.With().Str("stage", s.name).Logger()
 }
 
-// IsLReader returns true iff the stage is supposed to write L.In
-func (s *StageBase) IsLWriter() bool {
+// isLWriter returns true iff the stage is supposed to write L.In
+func (s *StageBase) isLWriter() bool {
 	return s.IsLeft && s.IsWriter
 }
 
-// IsRWriter returns true iff the stage is supposed to write R.In
-func (s *StageBase) IsRWriter() bool {
+// isRWriter returns true iff the stage is supposed to write R.In
+func (s *StageBase) isRWriter() bool {
 	return s.IsRight && s.IsWriter
 }
 
-// IsLReader returns true iff the stage is supposed to read L.Out
-func (s *StageBase) IsLReader() bool {
+// isLReader returns true iff the stage is supposed to read L.Out
+func (s *StageBase) isLReader() bool {
 	return s.IsRight && s.IsReader
 }
 
-// IsLReader returns true iff the stage is supposed to read R.Out
-func (s *StageBase) IsRReader() bool {
+// isRReader returns true iff the stage is supposed to read R.Out
+func (s *StageBase) isRReader() bool {
 	return s.IsLeft && s.IsReader
 }
 
@@ -147,8 +147,10 @@ func (s *StageBase) Dst() msg.Dst {
 		} else {
 			return msg.DST_L
 		}
-	} else {
+	} else if s.IsRight || !s.IsLast {
 		return msg.DST_R
+	} else {
+		return msg.DST_L
 	}
 }
 
@@ -156,8 +158,10 @@ func (s *StageBase) Dst() msg.Dst {
 func (s *StageBase) Upstream() *pipe.Direction {
 	if s.IsLeft {
 		return s.P.L
-	} else {
+	} else if s.IsRight || !s.IsLast {
 		return s.P.R
+	} else {
+		return s.P.L
 	}
 }
 
@@ -165,7 +169,9 @@ func (s *StageBase) Upstream() *pipe.Direction {
 func (s *StageBase) Downstream() *pipe.Direction {
 	if s.IsLeft {
 		return s.P.R
-	} else {
+	} else if s.IsRight || !s.IsLast {
 		return s.P.L
+	} else {
+		return s.P.R
 	}
 }
