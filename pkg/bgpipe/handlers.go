@@ -67,6 +67,12 @@ func (b *Bgpipe) onParseError(ev *pipe.Event) bool {
 
 // startEvent starts the stage in reaction to a pipe event
 func (s *StageBase) startEvent(ev *pipe.Event) (keep_event bool) {
+	if s.Ctx.Err() != nil {
+		return false // already stopped
+	} else if !s.enabled.CompareAndSwap(false, true) {
+		return false // already started
+	}
+
 	s.Debug().Msgf("start event %s", ev.Type)
 	go s.pipeStart()
 	return false
@@ -74,8 +80,13 @@ func (s *StageBase) startEvent(ev *pipe.Event) (keep_event bool) {
 
 // stopEvent stops the stage in reaction to a pipe event
 func (s *StageBase) stopEvent(ev *pipe.Event) (keep_event bool) {
+	if s.Ctx.Err() != nil {
+		return false // already stopped
+	} else if !s.enabled.CompareAndSwap(true, false) {
+		return true // just stopped or not started yet
+	}
+
 	s.Debug().Msgf("stop event %s", ev.Type)
 	s.Cancel(ErrStageStopped)
-	s.enabled.Store(false)
 	return false
 }

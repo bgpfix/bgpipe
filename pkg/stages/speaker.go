@@ -31,7 +31,6 @@ func (s *Speaker) Prepare() error {
 
 	so := &spk.Options
 	so.Logger = s.Logger
-	so.OnStart = false
 	so.Passive = !k.Bool("active")
 	so.LocalASN = k.Int("asn")
 
@@ -45,9 +44,4 @@ func (s *Speaker) Prepare() error {
 	}
 
 	return spk.Attach(s.Upstream())
-}
-
-func (s *Speaker) Start() error {
-	s.spk.OnStart(nil)
-	return s.StageBase.Start()
 }

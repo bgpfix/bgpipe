@@ -15,8 +15,8 @@ func (s *StageBase) pipeStart() error {
 	}
 
 	// run the stage
-	s.enabled.Store(true)
 	s.Debug().Msg("starting")
+	s.enabled.Store(true)
 	err := s.Stage.Start()
 	s.enabled.Store(false)
 
@@ -24,6 +24,9 @@ func (s *StageBase) pipeStart() error {
 	if errors.Is(err, ErrStageStopped) {
 		err = nil
 	}
+
+	// force context cleanup anyway
+	s.Cancel(ErrStageStopped)
 
 	if s.isLReader() {
 		s.B.wg_lread.Done()

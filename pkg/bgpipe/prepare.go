@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/bgpfix/bgpfix/caps"
+	"github.com/bgpfix/bgpfix/pipe"
 )
 
 // pipePrepare prepares the bgpipe
@@ -125,6 +126,16 @@ func (s *StageBase) stagePrepare() error {
 	if on := s.K.Strings("on"); len(on) > 0 {
 		s.enabled.Store(false)
 		s.P.Options.OnEventFirst(s.startEvent, on...)
+
+		// re-target pipe.EVENT_START handlers to --on events
+		for _, h := range po.Handlers[hds:] {
+			for i, t := range h.Types {
+				if t == pipe.EVENT_START {
+					h.Types[i] = on[0]
+					h.Types = append(h.Types, on[1:]...)
+				}
+			}
+		}
 	}
 
 	// has trigger-off events?
