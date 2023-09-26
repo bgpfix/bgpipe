@@ -96,11 +96,9 @@ func (b *Bgpipe) pipeArgs(args []string) error {
 		}
 
 		// find an explicit end of its args
-		var found bool
 		var nextargs []string
 		for i, arg := range args {
 			if arg == "--" {
-				found = true
 				nextargs = args[i+1:]
 				args = args[:i]
 				break
@@ -108,7 +106,7 @@ func (b *Bgpipe) pipeArgs(args []string) error {
 		}
 
 		// parse stage args, move on
-		if remargs, err := s.stageArgs(args, found); err != nil {
+		if remargs, err := s.stageArgs(args); err != nil {
 			return err
 		} else {
 			args = append(remargs, nextargs...)
@@ -120,7 +118,7 @@ func (b *Bgpipe) pipeArgs(args []string) error {
 
 // stageArgs parses CLI flags and arguments, exporting to K.
 // May return unused args.
-func (s *StageBase) stageArgs(args []string, interspersed bool) (unused []string, err error) {
+func (s *StageBase) stageArgs(args []string) (unused []string, err error) {
 	// override s.Flags.Usage?
 	if s.Flags.Usage == nil {
 		if len(s.Usage) == 0 {
@@ -131,9 +129,6 @@ func (s *StageBase) stageArgs(args []string, interspersed bool) (unused []string
 			fmt.Fprint(os.Stderr, s.Flags.FlagUsages())
 		}
 	}
-
-	// enable interspersed args?
-	s.Flags.SetInterspersed(interspersed)
 
 	// parse stage flags, export to koanf
 	if err := s.Flags.Parse(args); err != nil {

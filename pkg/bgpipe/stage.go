@@ -87,6 +87,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	// common CLI flags
 	s.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
 	s.Flags.SortFlags = false
+	s.Flags.SetInterspersed(false)
 	s.Flags.BoolP("left", "L", false, "L direction")
 	s.Flags.BoolP("right", "R", false, "R direction")
 	s.Flags.StringSlice("on", []string{}, "start on given event")
