@@ -92,6 +92,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Flags.BoolP("right", "R", false, "R direction")
 	s.Flags.StringSlice("on", []string{}, "start on given event")
 	s.Flags.StringSlice("off", []string{}, "stop on given event")
+	// TODO: add --inject-first (by default inject here+1)
 
 	// create s
 	s.Stage = newfunc(s)

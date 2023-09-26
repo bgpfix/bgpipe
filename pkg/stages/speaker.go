@@ -3,6 +3,7 @@ package stages
 import (
 	"net/netip"
 
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/speaker"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
@@ -30,6 +31,7 @@ func (s *Speaker) Prepare() error {
 	s.spk = spk
 
 	so := &spk.Options
+	so.Writer = s.send
 	so.Logger = s.Logger
 	so.Passive = !k.Bool("active")
 	so.LocalASN = k.Int("asn")
@@ -44,4 +46,12 @@ func (s *Speaker) Prepare() error {
 	}
 
 	return spk.Attach(s.Upstream())
+}
+
+// TODO: export to base
+func (s *Speaker) send(m *msg.Msg) error {
+	// pc := pipe.PipeContext(m)
+	// pc.SkipAfter(nil)
+	s.Printf("TODO: speaker/send")
+	return s.Upstream().WriteMsg(m)
 }
