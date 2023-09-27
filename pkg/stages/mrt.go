@@ -46,7 +46,7 @@ func (s *Mrt) Prepare() error {
 	return s.mr.Attach(s.Upstream())
 }
 
-func (s *Mrt) Start() error {
+func (s *Mrt) Run() error {
 	n, err := s.mr.ReadFromPath(s.fpath)
 	if err != nil {
 		return fmt.Errorf("reading from %s failed: %w", s.fpath, err)

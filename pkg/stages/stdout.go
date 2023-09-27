@@ -21,7 +21,6 @@ func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
 	// TODO: modify --left/--right default options?
 
 	// f := s.Flags
-	// f.Bool("last", true, "operate at the very end instead of here")
 	// f.StringSlice("grep", []string{}, "print only given types")
 	// f.StringSlice("filter", []string{}, "filter given types")
 	return s

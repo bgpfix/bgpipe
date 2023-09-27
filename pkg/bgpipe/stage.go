@@ -49,7 +49,7 @@ type StageBase struct {
 
 	// set by Stage.Prepare
 
-	IsConsumer bool // consumes pipe.Direction.Out?
+	IsConsumer bool // consumes pipe.Direction.Out? (not callbacks)
 	IsProducer bool // produces pipe.Direction.In?
 	IsReader   bool // needs exclusive pipe.Direction.Read access?
 	IsWriter   bool // needs exclusive pipe.Direction.Write access?
@@ -61,10 +61,10 @@ type Stage interface {
 	// eg. attaching own callbacks to the pipe.
 	Prepare() error
 
-	// Start runs the stage and returns after all work has finished.
+	// Run runs the stage and returns after all work has finished.
 	// It must respect StageBase.Ctx. Returning a non-nil error different
 	// than ErrStopped results in a fatal error that stops the whole pipe.
-	Start() error
+	Run() error
 }
 
 // NewStage returns a new Stage for given parent base
@@ -84,6 +84,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.B = b
 	s.P = b.Pipe
 	s.K = koanf.New(".")
+	s.Index = -1
 	s.Cmd = cmd
 	s.SetName(cmd)
 	s.enabled.Store(true)
@@ -109,9 +110,9 @@ func (s *StageBase) Prepare() error {
 	return nil
 }
 
-// Start is the default Stage implementation that just waits
+// Run is the default Stage implementation that just waits
 // for the context and returns its cancel cause
-func (s *StageBase) Start() error {
+func (s *StageBase) Run() error {
 	<-s.Ctx.Done()
 	return context.Cause(s.Ctx)
 }

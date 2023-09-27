@@ -59,10 +59,10 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 	f.SortFlags = false
 	f.Usage = b.Usage
 	f.SetInterspersed(false)
-	f.StringP("log", "L", "warn", "log level (debug/info/warn/error/disabled)")
-	f.BoolP("quiet", "N", false, "do not use stdin/stdout unless explicitly requested")
+	f.StringP("log", "l", "warn", "log level (debug/info/warn/error/disabled)")
+	f.BoolP("silent", "s", false, "do not use stdin/stdout unless explicitly requested")
 	f.BoolP("reverse", "R", false, "reverse the pipe")
-	f.BoolP("no-parse-error", "E", false, "silently drop parse error messages")
+	f.BoolP("no-parse-error", "e", false, "silently drop parse error messages")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 
 	// command repository
@@ -83,7 +83,7 @@ func (b *Bgpipe) Run() error {
 	}
 
 	// prepare the pipe
-	if err := b.pipePrepare(); err != nil {
+	if err := b.prepare(); err != nil {
 		b.Fatal().Err(err).Msg("could not prepare the pipeline")
 		return err
 	}

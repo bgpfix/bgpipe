@@ -9,8 +9,8 @@ import (
 	"github.com/bgpfix/bgpfix/pipe"
 )
 
-// pipePrepare prepares the bgpipe
-func (b *Bgpipe) pipePrepare() error {
+// prepare prepares the bgpipe
+func (b *Bgpipe) prepare() error {
 	// shortcuts
 	var (
 		k  = b.K
@@ -39,15 +39,21 @@ func (b *Bgpipe) pipePrepare() error {
 	}
 
 	// prepare stages
+	has_stdin := false
 	has_stdout := false
 	for _, s := range b.Stages {
 		if s == nil {
 			continue
 		}
-		if err := s.stagePrepare(); err != nil {
+
+		if err := s.prepare(); err != nil {
 			return s.Errorf("%w", err)
 		}
-		if s.Cmd == "stdout" {
+
+		switch s.Cmd {
+		case "stdin":
+			has_stdin = true
+		case "stdout":
 			has_stdout = true
 		}
 	}
@@ -65,8 +71,20 @@ func (b *Bgpipe) pipePrepare() error {
 		po.OnParseError(b.onParseError) // pipe.EVENT_PARSE
 	}
 
-	// add automatic stdout?
-	if !k.Bool("quiet") {
+	// add automatic stdin/stdout?
+	// TODO: rewrite
+	if !k.Bool("silent") {
+		if !has_stdin {
+			s := b.NewStage("stdin")
+			s.Stage.Prepare()
+			if s.isLWriter() {
+				b.wg_lwrite.Add(1)
+			}
+			if s.isRWriter() {
+				b.wg_rwrite.Add(1)
+			}
+			go s.run()
+		}
 		if !has_stdout {
 			s := b.NewStage("stdout")
 			s.K.Set("auto", true)
@@ -77,8 +95,8 @@ func (b *Bgpipe) pipePrepare() error {
 	return nil
 }
 
-// stagePrepare wraps Stage.Prepare and adds some logic around config
-func (s *StageBase) stagePrepare() error {
+// prepare wraps Stage.Prepare and adds some logic around config
+func (s *StageBase) prepare() error {
 	s.Debug().Interface("koanf", s.K.All()).Msg("preparing")
 
 	// first / last?
@@ -89,10 +107,12 @@ func (s *StageBase) stagePrepare() error {
 	s.IsLeft = s.K.Bool("left")
 	s.IsRight = s.K.Bool("right")
 	if !s.IsLeft && !s.IsRight {
-		if s.IsLast {
+		if s.IsFirst {
+			s.IsRight = true // first? by default send to -> R
+		} else if s.IsLast {
 			s.IsLeft = true // last? by default send to L <-
 		} else {
-			s.IsRight = true // first? by default send to -> R
+			s.IsRight = true // in the middle = by default -> R
 		}
 	}
 
@@ -117,8 +137,8 @@ func (s *StageBase) stagePrepare() error {
 	}
 
 	// where to inject new messages?
-	switch s.K.String("in") {
-	case "here":
+	switch v := s.K.String("in"); v {
+	case "here", "":
 		s.CallbackIndex = s.Index
 	case "after":
 		if s.IsLeft {
@@ -138,6 +158,8 @@ func (s *StageBase) stagePrepare() error {
 		} else {
 			s.CallbackIndex = math.MaxInt
 		}
+	default:
+		return fmt.Errorf("%w: %s", ErrInject, v)
 	}
 
 	// fix I/O settings

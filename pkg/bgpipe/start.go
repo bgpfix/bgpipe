@@ -4,10 +4,10 @@ import (
 	"errors"
 )
 
-// pipeStart wraps Stage.Start.
+// run wraps Stage.Run.
 // Cancels the main bgpipe context on error.
 // Respects b.wg_* waitgroups.
-func (s *StageBase) pipeStart() error {
+func (s *StageBase) run() error {
 	if !s.started.CompareAndSwap(false, true) {
 		return nil // already running
 	} else if s.Ctx.Err() != nil {
@@ -15,9 +15,9 @@ func (s *StageBase) pipeStart() error {
 	}
 
 	// run the stage
-	s.Debug().Msg("starting")
 	s.enabled.Store(true)
-	err := s.Stage.Start()
+	err := s.Stage.Run()
+	s.Debug().Msg("stopped")
 	s.enabled.Store(false)
 
 	// stopped due to stage disabled? ignore
@@ -25,8 +25,12 @@ func (s *StageBase) pipeStart() error {
 		err = nil
 	}
 
-	// force context cleanup anyway
-	s.Cancel(ErrStageStopped)
+	// cancel context
+	if err != nil {
+		s.B.Cancel(s.Errorf("%w", err))
+	} else {
+		s.Cancel(ErrStageStopped)
+	}
 
 	if s.isLReader() {
 		s.B.wg_lread.Done()
@@ -39,10 +43,6 @@ func (s *StageBase) pipeStart() error {
 	}
 	if s.isRWriter() {
 		s.B.wg_rwrite.Done()
-	}
-
-	if err != nil {
-		s.B.Cancel(s.Errorf("%w", err))
 	}
 
 	return err

@@ -91,7 +91,7 @@ func (s *TcpConnect) Prepare() error {
 	return nil
 }
 
-func (s *TcpConnect) Start() error {
+func (s *TcpConnect) Run() error {
 	// derive the context
 	timeout := s.K.Duration("timeout")
 	ctx, cancel := context.WithTimeout(s.Ctx, timeout)

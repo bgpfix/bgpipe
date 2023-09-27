@@ -7,4 +7,5 @@ var Repo = map[string]bgpipe.NewStage{
 	"speaker": NewSpeaker,
 	"mrt":     NewMrt,
 	"stdout":  NewStdout,
+	"stdin":   NewStdin,
 }

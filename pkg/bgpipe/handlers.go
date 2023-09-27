@@ -25,7 +25,7 @@ func (b *Bgpipe) onStart(ev *pipe.Event) bool {
 		}
 
 		if s.enabled.Load() {
-			go s.pipeStart()
+			go s.run()
 		}
 	}
 
@@ -74,7 +74,7 @@ func (s *StageBase) startEvent(ev *pipe.Event) (keep_event bool) {
 	}
 
 	s.Debug().Msgf("start event %s", ev.Type)
-	go s.pipeStart()
+	go s.run()
 	return false
 }
 
