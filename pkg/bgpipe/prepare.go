@@ -2,6 +2,7 @@ package bgpipe
 
 import (
 	"fmt"
+	"math"
 	"slices"
 
 	"github.com/bgpfix/bgpfix/caps"
@@ -28,7 +29,7 @@ func (b *Bgpipe) pipePrepare() error {
 		slices.Reverse(b.Stages)
 		for idx, s := range b.Stages {
 			if s != nil {
-				s.Idx = idx
+				s.Index = idx
 				s.SetName(fmt.Sprintf("[%d] %s", idx, s.Cmd))
 			}
 		}
@@ -64,11 +65,11 @@ func (b *Bgpipe) pipePrepare() error {
 		po.OnParseError(b.onParseError) // pipe.EVENT_PARSE
 	}
 
-	// add automatic stdin/stdout?
+	// add automatic stdout?
 	if !k.Bool("quiet") {
 		if !has_stdout {
 			s := b.NewStage("stdout")
-			s.K.Set("last", true)
+			s.K.Set("auto", true)
 			s.Stage.Prepare()
 		}
 	}
@@ -76,13 +77,13 @@ func (b *Bgpipe) pipePrepare() error {
 	return nil
 }
 
-// stagePrepare wraps Stage.stagePrepare and adds some logic around config
+// stagePrepare wraps Stage.Prepare and adds some logic around config
 func (s *StageBase) stagePrepare() error {
 	s.Debug().Interface("koanf", s.K.All()).Msg("preparing")
 
 	// first / last?
-	s.IsFirst = s.Idx == 0
-	s.IsLast = s.Idx == len(s.B.Stages)-1
+	s.IsFirst = s.Index == 0
+	s.IsLast = s.Index == len(s.B.Stages)-1
 
 	// direction settings
 	s.IsLeft = s.K.Bool("left")
@@ -104,19 +105,47 @@ func (s *StageBase) stagePrepare() error {
 	}
 
 	// make stage callbacks and handlers depend on s.enabled
-	for _, cb := range po.Callbacks[cbs:] {
+	s.Callbacks = po.Callbacks[cbs:]
+	for _, cb := range s.Callbacks {
+		cb.Index = s.Index
 		cb.Enabled = &s.enabled
 	}
-	for _, h := range po.Handlers[hds:] {
+	s.Handlers = po.Handlers[hds:]
+	for _, h := range s.Handlers {
+		h.Index = s.Index
 		h.Enabled = &s.enabled
 	}
 
+	// where to inject new messages?
+	switch s.K.String("in") {
+	case "here":
+		s.CallbackIndex = s.Index
+	case "after":
+		if s.IsLeft {
+			s.CallbackIndex = s.Index - 1
+		} else {
+			s.CallbackIndex = s.Index + 1
+		}
+	case "first":
+		if s.IsLeft {
+			s.CallbackIndex = math.MaxInt
+		} else {
+			s.CallbackIndex = math.MinInt
+		}
+	case "last":
+		if s.IsLeft {
+			s.CallbackIndex = math.MinInt
+		} else {
+			s.CallbackIndex = math.MaxInt
+		}
+	}
+
 	// fix I/O settings
-	s.IsReader = s.IsReader || s.IsStreamReader
-	s.IsWriter = s.IsWriter || s.IsStreamWriter
+	s.IsConsumer = s.IsConsumer || s.IsReader
+	s.IsProducer = s.IsProducer || s.IsWriter
 
 	// needs stream access?
-	if s.IsStreamReader || s.IsStreamWriter {
+	if s.IsReader || s.IsWriter {
 		if !(s.IsFirst || s.IsLast) {
 			return ErrFirstOrLast
 		}

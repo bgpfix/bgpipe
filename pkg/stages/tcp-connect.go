@@ -29,8 +29,8 @@ func NewTcpConnect(parent *bgpipe.StageBase) bgpipe.Stage {
 	s.Args = []string{"target"}
 
 	// setup I/O
-	s.IsStreamReader = true
-	s.IsStreamWriter = true
+	s.IsReader = true
+	s.IsWriter = true
 
 	return s
 }
@@ -43,7 +43,7 @@ func (s *TcpConnect) Prepare() error {
 	}
 
 	// friendly name
-	name := fmt.Sprintf("[%d] tcp %s", s.Idx, s.target)
+	name := fmt.Sprintf("[%d] tcp %s", s.Index, s.target)
 	if s.IsFirst {
 		name += " (LHS)"
 	} else {

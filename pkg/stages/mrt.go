@@ -13,7 +13,7 @@ type Mrt struct {
 	*bgpipe.StageBase
 
 	fpath string
-	br    *mrt.Reader
+	mr    *mrt.Reader
 }
 
 func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
@@ -22,7 +22,7 @@ func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
 	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
 	s.Args = []string{"path"}
 
-	s.IsWriter = true
+	s.IsProducer = true
 	return s
 }
 
@@ -38,18 +38,22 @@ func (s *Mrt) Prepare() error {
 	}
 
 	// MRT-BGP reader writing to s.Input().In
-	s.br = mrt.NewReader(s.Ctx, &s.Logger, s.Upstream())
-	return nil
+	s.mr = mrt.NewReader(s.Ctx)
+	mo := &s.mr.Options
+	mo.Logger = &s.Logger
+	mo.NewMsg = s.NewMsg
+
+	return s.mr.Attach(s.Upstream())
 }
 
 func (s *Mrt) Start() error {
-	n, err := s.br.ReadFromPath(s.fpath)
+	n, err := s.mr.ReadFromPath(s.fpath)
 	if err != nil {
 		return fmt.Errorf("reading from %s failed: %w", s.fpath, err)
 	}
 
 	s.Info().
-		Int64("read", n).Interface("stats", &s.br.Stats).
+		Int64("read", n).Interface("stats", &s.mr.Stats).
 		Msg("reading finished")
 	return nil
 }

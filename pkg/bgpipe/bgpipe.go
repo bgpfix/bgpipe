@@ -139,7 +139,7 @@ func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
 	}
 	b.Stages[idx] = s
 
-	s.Idx = idx
+	s.Index = idx
 	s.SetName(fmt.Sprintf("[%d] %s", idx, cmd))
 
 	return s, nil

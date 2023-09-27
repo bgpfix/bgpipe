@@ -18,6 +18,8 @@ func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Stdout{StageBase: parent}
 	s.Descr = "print JSON representation to stdout"
 
+	// TODO: modify --left/--right default options?
+
 	// f := s.Flags
 	// f.Bool("last", true, "operate at the very end instead of here")
 	// f.StringSlice("grep", []string{}, "print only given types")
@@ -37,8 +39,8 @@ func (s *Stdout) Prepare() error {
 	}
 
 	po := &s.P.Options
-	if s.K.Bool("last") {
-		po.OnMsgLast(s.OnMsg, s.Dst())
+	if s.K.Bool("auto") {
+		po.OnMsgLast(s.OnMsg, s.Dst()).Index = -1
 	} else {
 		po.OnMsg(s.OnMsg, s.Dst())
 	}

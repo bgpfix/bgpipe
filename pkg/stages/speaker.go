@@ -3,7 +3,6 @@ package stages
 import (
 	"net/netip"
 
-	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/speaker"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
@@ -20,7 +19,7 @@ func NewSpeaker(parent *bgpipe.StageBase) bgpipe.Stage {
 	s.Flags.Bool("active", false, "send the OPEN message first")
 	s.Flags.Int("asn", -1, "local ASN, -1 means use remote ASN")
 	s.Flags.String("id", "", "local router ID, empty means use remote-1")
-	s.IsWriter = true
+	s.IsProducer = true
 	return s
 }
 
@@ -31,8 +30,8 @@ func (s *Speaker) Prepare() error {
 	s.spk = spk
 
 	so := &spk.Options
-	so.Writer = s.send
-	so.Logger = s.Logger
+	so.Logger = &s.Logger
+	so.NewMsg = s.NewMsg
 	so.Passive = !k.Bool("active")
 	so.LocalASN = k.Int("asn")
 
@@ -46,12 +45,4 @@ func (s *Speaker) Prepare() error {
 	}
 
 	return spk.Attach(s.Upstream())
-}
-
-// TODO: export to base
-func (s *Speaker) send(m *msg.Msg) error {
-	// pc := pipe.PipeContext(m)
-	// pc.SkipAfter(nil)
-	s.Printf("TODO: speaker/send")
-	return s.Upstream().WriteMsg(m)
 }

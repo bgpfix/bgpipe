@@ -24,14 +24,17 @@ type StageBase struct {
 	P *pipe.Pipe   // bgpfix pipe
 	K *koanf.Koanf // integrated config
 
-	Idx  int    // stage index
-	Cmd  string // stage command name
-	name string // human-friendly stage name
+	Index int    // stage index
+	Cmd   string // stage command name
+	Name  string // human-friendly stage name
 
 	Flags *pflag.FlagSet // CLI flags
 	Descr string         // CLI stage one-line description
 	Usage string         // CLI stage usage string
 	Args  []string       // CLI argument names for exporting to K
+
+	enabled atomic.Bool // true if enabled (--on), false if disabled (--off)
+	started atomic.Bool // true if already started
 
 	// set by StageBase.Prepare
 
@@ -40,15 +43,16 @@ type StageBase struct {
 	IsFirst bool // is the first stage in pipe? (L peer)
 	IsLast  bool // is the last stage in pipe? (R peer)
 
+	Callbacks     []*pipe.Callback // registered callbacks
+	Handlers      []*pipe.Handler  // registered handlers
+	CallbackIndex int              // which callback to start at when injecting?
+
 	// set by Stage.Prepare
 
-	IsReader       bool // reads pipe.Direction.Out?
-	IsStreamReader bool // needs pipe.Direction.Read?
-	IsWriter       bool // writes pipe.Direction.In?
-	IsStreamWriter bool // needs pipe.Direction.Write?
-
-	enabled atomic.Bool // true if enabled (--on), false if disabled (--off)
-	started atomic.Bool // true if already started (or stopped before start)
+	IsConsumer bool // consumes pipe.Direction.Out?
+	IsProducer bool // produces pipe.Direction.In?
+	IsReader   bool // needs exclusive pipe.Direction.Read access?
+	IsWriter   bool // needs exclusive pipe.Direction.Write access?
 }
 
 // Stage implements a bgpipe stage
@@ -86,13 +90,14 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 
 	// common CLI flags
 	s.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
-	s.Flags.SortFlags = false
-	s.Flags.SetInterspersed(false)
-	s.Flags.BoolP("left", "L", false, "L direction")
-	s.Flags.BoolP("right", "R", false, "R direction")
-	s.Flags.StringSlice("on", []string{}, "start on given event")
-	s.Flags.StringSlice("off", []string{}, "stop on given event")
-	// TODO: add --inject-first (by default inject here+1)
+	f := s.Flags
+	f.SortFlags = false
+	f.SetInterspersed(false)
+	f.BoolP("left", "L", false, "operate in L direction")
+	f.BoolP("right", "R", false, "operate in R direction")
+	f.StringSlice("on", []string{}, "start just after given event is received")
+	f.StringSlice("off", []string{}, "stop just after given event is handled")
+	f.String("in", "here", "where in the pipe to inject new messages (here/after/first/last)")
 
 	// create s
 	s.Stage = newfunc(s)
@@ -111,35 +116,45 @@ func (s *StageBase) Start() error {
 	return context.Cause(s.Ctx)
 }
 
+// NewMsg returns a new, empty message from pipe pool,
+// but respecting common stage options.
+func (s *StageBase) NewMsg() *msg.Msg {
+	m := s.P.Get()
+	pc := pipe.Context(m)
+	pc.Reverse = s.IsLeft
+	pc.Index = s.CallbackIndex
+	return m
+}
+
 // SetName updates s.Name and s.Logger
 func (s *StageBase) SetName(name string) {
-	s.name = name
-	s.Logger = s.B.With().Str("stage", s.name).Logger()
+	s.Name = name
+	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 }
 
 // isLWriter returns true iff the stage is supposed to write L.In
 func (s *StageBase) isLWriter() bool {
-	return s.IsLeft && s.IsWriter
+	return s.IsLeft && s.IsProducer
 }
 
 // isRWriter returns true iff the stage is supposed to write R.In
 func (s *StageBase) isRWriter() bool {
-	return s.IsRight && s.IsWriter
+	return s.IsRight && s.IsProducer
 }
 
 // isLReader returns true iff the stage is supposed to read L.Out
 func (s *StageBase) isLReader() bool {
-	return s.IsRight && s.IsReader
+	return s.IsRight && s.IsConsumer
 }
 
 // isRReader returns true iff the stage is supposed to read R.Out
 func (s *StageBase) isRReader() bool {
-	return s.IsLeft && s.IsReader
+	return s.IsLeft && s.IsConsumer
 }
 
 // Errorf wraps fmt.Errorf and adds a prefix with the stage name
 func (s *StageBase) Errorf(format string, a ...any) error {
-	return fmt.Errorf(s.name+": "+format, a...)
+	return fmt.Errorf(s.Name+": "+format, a...)
 }
 
 func (s *StageBase) Dst() msg.Dst {
