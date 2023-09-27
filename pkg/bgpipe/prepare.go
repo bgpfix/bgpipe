@@ -152,24 +152,24 @@ func (s *StageBase) stagePrepare() error {
 	}
 
 	// has trigger-on events?
-	if on := s.K.Strings("on"); len(on) > 0 {
+	if evs := s.cfgEvents("on"); len(evs) > 0 {
 		s.enabled.Store(false)
-		s.P.Options.OnEventFirst(s.startEvent, on...)
+		s.P.Options.OnEventFirst(s.startEvent, evs...)
 
 		// re-target pipe.EVENT_START handlers to --on events
-		for _, h := range po.Handlers[hds:] {
+		for _, h := range s.Handlers {
 			for i, t := range h.Types {
 				if t == pipe.EVENT_START {
-					h.Types[i] = on[0]
-					h.Types = append(h.Types, on[1:]...)
+					h.Types[i] = evs[0]
+					h.Types = append(h.Types, evs[1:]...)
 				}
 			}
 		}
 	}
 
 	// has trigger-off events?
-	if off := s.K.Strings("off"); len(off) > 0 {
-		s.P.Options.OnEventLast(s.stopEvent, off...)
+	if evs := s.cfgEvents("off"); len(evs) > 0 {
+		s.P.Options.OnEventLast(s.stopEvent, evs...)
 	}
 
 	return nil

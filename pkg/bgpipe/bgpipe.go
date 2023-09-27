@@ -77,7 +77,7 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 // Run configures and runs the bgpipe
 func (b *Bgpipe) Run() error {
 	// configure
-	if err := b.pipeConfig(); err != nil {
+	if err := b.configure(); err != nil {
 		b.Fatal().Err(err).Msg("configuration error")
 		return err
 	}

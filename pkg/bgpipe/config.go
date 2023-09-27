@@ -40,10 +40,10 @@ Supported stages (run stage -h to get its help)
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
-// pipeConfig configures bgpipe
-func (b *Bgpipe) pipeConfig() error {
+// configure configures bgpipe
+func (b *Bgpipe) configure() error {
 	// parse CLI args
-	err := b.pipeArgs(os.Args[1:])
+	err := b.parseArgs(os.Args[1:])
 	if err != nil {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
 	}
@@ -60,8 +60,8 @@ func (b *Bgpipe) pipeConfig() error {
 	return nil
 }
 
-// pipeArgs adds and configures stages from CLI args
-func (b *Bgpipe) pipeArgs(args []string) error {
+// parseArgs adds and configures stages from CLI args
+func (b *Bgpipe) parseArgs(args []string) error {
 	// parse and export flags into koanf
 	if err := b.F.Parse(args); err != nil {
 		return err
@@ -106,7 +106,7 @@ func (b *Bgpipe) pipeArgs(args []string) error {
 		}
 
 		// parse stage args, move on
-		if remargs, err := s.stageArgs(args); err != nil {
+		if remargs, err := s.parseArgs(args); err != nil {
 			return err
 		} else {
 			args = append(remargs, nextargs...)
@@ -116,9 +116,9 @@ func (b *Bgpipe) pipeArgs(args []string) error {
 	return nil
 }
 
-// stageArgs parses CLI flags and arguments, exporting to K.
+// parseArgs parses CLI flags and arguments, exporting to K.
 // May return unused args.
-func (s *StageBase) stageArgs(args []string) (unused []string, err error) {
+func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 	// override s.Flags.Usage?
 	if s.Flags.Usage == nil {
 		if len(s.Usage) == 0 {
@@ -162,4 +162,35 @@ func (s *StageBase) stageArgs(args []string) (unused []string, err error) {
 	}
 
 	return sargs, nil
+}
+
+// cfgEvents returns events from given koanf key,
+// or nil if none found
+func (s *StageBase) cfgEvents(key string) []string {
+	events := s.K.Strings(key)
+	if len(events) == 0 {
+		return nil
+	}
+
+	// rewrite
+	for i, et := range events {
+		has_pkg := strings.IndexByte(et, '.') > 0
+		has_lib := strings.IndexByte(et, '/') > 0
+
+		if has_pkg && has_lib {
+			// fully specified, done
+		} else if !has_lib {
+			if !has_pkg {
+				et = "bgpfix/pipe." + strings.ToUpper(et)
+			} else {
+				et = "bgpfix/" + et
+			}
+		} else {
+			// has lib, take as-is
+		}
+
+		events[i] = et
+	}
+
+	return events
 }
