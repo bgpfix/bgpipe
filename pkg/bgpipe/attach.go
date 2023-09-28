@@ -2,15 +2,14 @@ package bgpipe
 
 import (
 	"fmt"
-	"math"
 	"slices"
 
 	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/pipe"
 )
 
-// prepare prepares the bgpipe
-func (b *Bgpipe) prepare() error {
+// attach prepares the bgpipe by attaching stages to pipe
+func (b *Bgpipe) attach() error {
 	// shortcuts
 	var (
 		k  = b.K
@@ -38,23 +37,34 @@ func (b *Bgpipe) prepare() error {
 		k.Set("right", left)
 	}
 
-	// prepare stages
-	has_stdin := false
-	has_stdout := false
-	for _, s := range b.Stages {
+	// attach stages
+	var (
+		has_stdin  int
+		has_stdout int
+	)
+	for idx, s := range b.Stages {
 		if s == nil {
 			continue
 		}
 
-		if err := s.prepare(); err != nil {
+		if err := s.attach(); err != nil {
 			return s.Errorf("%w", err)
 		}
 
-		switch s.Cmd {
-		case "stdin":
-			has_stdin = true
-		case "stdout":
-			has_stdout = true
+		// cross-pipe checks
+		if s.Options.IsStdin {
+			if has_stdin > 0 {
+				s.Warn().Msgf("stage %s already uses stdin", b.Stages[has_stdin].Name)
+			} else {
+				has_stdin = idx
+			}
+		}
+		if s.Options.IsStdout {
+			if has_stdout > 0 {
+				s.Warn().Msgf("stage %s already uses stdout", b.Stages[has_stdout].Name)
+			} else {
+				has_stdout = idx
+			}
 		}
 	}
 
@@ -71,36 +81,22 @@ func (b *Bgpipe) prepare() error {
 		po.OnParseError(b.onParseError) // pipe.EVENT_PARSE
 	}
 
-	// add automatic stdin/stdout?
-	// TODO: rewrite
-	if !k.Bool("silent") {
-		if !has_stdin {
-			s := b.NewStage("stdin")
-			s.Stage.Prepare()
-			if s.isLWriter() {
-				b.wg_lwrite.Add(1)
-			}
-			if s.isRWriter() {
-				b.wg_rwrite.Add(1)
-			}
-			go s.run()
-		}
-		if !has_stdout {
-			s := b.NewStage("stdout")
-			s.K.Set("auto", true)
-			s.Stage.Prepare()
-		}
+	// add automatic stdout?
+	if !k.Bool("silent") && has_stdout == 0 {
+		s := b.NewStage("stdout")
+		s.K.Set("auto", true)
+		s.Stage.Attach()
 	}
 
 	return nil
 }
 
-// prepare wraps Stage.Prepare and adds some logic around config
-func (s *StageBase) prepare() error {
+// attach wraps Stage.Attach and adds some logic
+func (s *StageBase) attach() error {
 	s.Debug().Interface("koanf", s.K.All()).Msg("preparing")
 
 	// first / last?
-	s.IsFirst = s.Index == 0
+	s.IsFirst = s.Index == 1
 	s.IsLast = s.Index == len(s.B.Stages)-1
 
 	// direction settings
@@ -116,67 +112,49 @@ func (s *StageBase) prepare() error {
 		}
 	}
 
-	// call child prepare
-	po := &s.P.Options
-	cbs := len(po.Callbacks)
-	hds := len(po.Handlers)
-	if err := s.Stage.Prepare(); err != nil {
-		return err
-	}
-
-	// make stage callbacks and handlers depend on s.enabled
-	s.Callbacks = po.Callbacks[cbs:]
-	for _, cb := range s.Callbacks {
-		cb.Index = s.Index
-		cb.Enabled = &s.enabled
-	}
-	s.Handlers = po.Handlers[hds:]
-	for _, h := range s.Handlers {
-		h.Index = s.Index
-		h.Enabled = &s.enabled
-	}
-
 	// where to inject new messages?
 	switch v := s.K.String("in"); v {
-	case "here", "":
-		s.CallbackIndex = s.Index
-	case "after":
-		if s.IsLeft {
-			s.CallbackIndex = s.Index - 1
-		} else {
-			s.CallbackIndex = s.Index + 1
-		}
-	case "first":
-		if s.IsLeft {
-			s.CallbackIndex = math.MaxInt
-		} else {
-			s.CallbackIndex = math.MinInt
-		}
+	case "here":
+		s.StartAt = s.Index
+	case "first", "":
+		s.StartAt = 0
 	case "last":
-		if s.IsLeft {
-			s.CallbackIndex = math.MinInt
-		} else {
-			s.CallbackIndex = math.MaxInt
-		}
+		s.StartAt = -1
 	default:
 		return fmt.Errorf("%w: %s", ErrInject, v)
 	}
 
-	// fix I/O settings
-	s.IsConsumer = s.IsConsumer || s.IsReader
-	s.IsProducer = s.IsProducer || s.IsWriter
+	// call child attach
+	po := &s.P.Options
+	cbs := len(po.Callbacks)
+	hds := len(po.Handlers)
+	if err := s.Stage.Attach(); err != nil {
+		return err
+	}
 
-	// needs stream access?
-	if s.IsReader || s.IsWriter {
+	// needs raw stream access?
+	if s.Options.IsRawReader || s.Options.IsRawWriter {
 		if !(s.IsFirst || s.IsLast) {
 			return ErrFirstOrLast
 		}
 	}
 
+	// make stage callbacks and handlers depend on s.enabled
+	s.Callbacks = po.Callbacks[cbs:]
+	for _, cb := range s.Callbacks {
+		cb.Id = s.Index
+		cb.Enabled = &s.enabled
+	}
+	s.Handlers = po.Handlers[hds:]
+	for _, h := range s.Handlers {
+		h.Id = s.Index
+		h.Enabled = &s.enabled
+	}
+
 	// has trigger-on events?
 	if evs := s.cfgEvents("on"); len(evs) > 0 {
 		s.enabled.Store(false)
-		s.P.Options.OnEventFirst(s.startEvent, evs...)
+		po.OnEventPre(s.startEvent, evs...)
 
 		// re-target pipe.EVENT_START handlers to --on events
 		for _, h := range s.Handlers {
@@ -191,8 +169,13 @@ func (s *StageBase) prepare() error {
 
 	// has trigger-off events?
 	if evs := s.cfgEvents("off"); len(evs) > 0 {
-		s.P.Options.OnEventLast(s.stopEvent, evs...)
+		po.OnEventPost(s.stopEvent, evs...)
 	}
 
+	return nil
+}
+
+// Attach is the default Stage implementation that does nothing
+func (s *StageBase) Attach() error {
 	return nil
 }

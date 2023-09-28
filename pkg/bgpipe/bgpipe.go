@@ -48,22 +48,16 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 
 	// pipe
 	b.Pipe = pipe.NewPipe(b.Ctx)
-	b.Pipe.Options.Logger = &b.Logger
+	po := &b.Pipe.Options
+	po.Logger = &b.Logger
+	po.Lreverse = true // it's just the case for bgpipe
 
 	// global config
 	b.K = koanf.New(".")
 
 	// global CLI flags
 	b.F = pflag.NewFlagSet("bgpipe", pflag.ExitOnError)
-	f := b.F
-	f.SortFlags = false
-	f.Usage = b.Usage
-	f.SetInterspersed(false)
-	f.StringP("log", "l", "warn", "log level (debug/info/warn/error/disabled)")
-	f.BoolP("silent", "s", false, "do not use stdin/stdout unless explicitly requested")
-	f.BoolP("reverse", "R", false, "reverse the pipe")
-	f.BoolP("no-parse-error", "e", false, "silently drop parse error messages")
-	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
+	b.addFlags()
 
 	// command repository
 	b.repo = make(map[string]NewStage)
@@ -76,15 +70,15 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 
 // Run configures and runs the bgpipe
 func (b *Bgpipe) Run() error {
-	// configure
+	// configure bgpipe and its stages
 	if err := b.configure(); err != nil {
 		b.Fatal().Err(err).Msg("configuration error")
 		return err
 	}
 
-	// prepare the pipe
-	if err := b.prepare(); err != nil {
-		b.Fatal().Err(err).Msg("could not prepare the pipeline")
+	// attach stages to pipe
+	if err := b.attach(); err != nil {
+		b.Fatal().Err(err).Msg("could not attach stages to the pipe")
 		return err
 	}
 
@@ -111,13 +105,9 @@ func (b *Bgpipe) AddRepo(cmds map[string]NewStage) {
 
 // AddStage adds and returns a new stage at idx for cmd,
 // or returns an existing instance if it's for the same cmd.
-// If idx is -1, it always appends a new stage.
 func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
-	if idx == -1 {
-		// append new
-		idx = len(b.Stages)
-	} else if idx < len(b.Stages) {
-		// already there? check cmd
+	// already there? check cmd
+	if idx < len(b.Stages) {
 		if s := b.Stages[idx]; s != nil {
 			if s.Cmd == cmd {
 				return s, nil
@@ -138,9 +128,8 @@ func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
 		b.Stages = append(b.Stages, nil)
 	}
 	b.Stages[idx] = s
-
 	s.Index = idx
-	s.SetName(fmt.Sprintf("[%d] %s", idx, cmd))
 
+	s.SetName(fmt.Sprintf("[%d] %s", idx, cmd))
 	return s, nil
 }

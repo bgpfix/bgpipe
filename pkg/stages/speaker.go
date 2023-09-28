@@ -15,15 +15,15 @@ type Speaker struct {
 
 func NewSpeaker(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Speaker{StageBase: parent}
-	s.Descr = "run a simple local BGP speaker"
-	s.Flags.Bool("active", false, "send the OPEN message first")
-	s.Flags.Int("asn", -1, "local ASN, -1 means use remote ASN")
-	s.Flags.String("id", "", "local router ID, empty means use remote-1")
-	s.IsProducer = true
+	s.Options.Descr = "run a simple local BGP speaker"
+	s.Options.Flags.Bool("active", false, "send the OPEN message first")
+	s.Options.Flags.Int("asn", -1, "local ASN, -1 means use remote ASN")
+	s.Options.Flags.String("id", "", "local router ID, empty means use remote-1")
+	s.Options.IsProducer = true
 	return s
 }
 
-func (s *Speaker) Prepare() error {
+func (s *Speaker) Attach() error {
 	k := s.K
 
 	spk := speaker.NewSpeaker(s.Ctx)

@@ -10,8 +10,19 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Usage prints CLI usage screen
-func (b *Bgpipe) Usage() {
+func (b *Bgpipe) addFlags() {
+	f := b.F
+	f.SortFlags = false
+	f.Usage = b.usage
+	f.SetInterspersed(false)
+	f.StringP("log", "l", "warn", "log level (debug/info/warn/error/disabled)")
+	f.BoolP("silent", "s", false, "do not use stdout unless explicitly requested")
+	f.BoolP("reverse", "r", false, "reverse the pipe")
+	f.BoolP("no-parse-error", "e", false, "do not report parse errors")
+	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
+}
+
+func (b *Bgpipe) usage() {
 	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS...] [--] ...
 
 Options:
@@ -32,7 +43,7 @@ Supported stages (run stage -h to get its help)
 
 		s := b.NewStage(cmd)
 		if s != nil {
-			descr = s.Descr
+			descr = s.Options.Descr
 		}
 
 		fmt.Fprintf(os.Stderr, "  %-22s %s\n", cmd, descr)
@@ -71,7 +82,7 @@ func (b *Bgpipe) parseArgs(args []string) error {
 
 	// parse stages and their args
 	args = b.F.Args()
-	for idx := 0; len(args) > 0; idx++ {
+	for idx := 1; len(args) > 0; idx++ {
 		// skip empty stages
 		if args[0] == "--" {
 			args = args[1:]
@@ -119,35 +130,38 @@ func (b *Bgpipe) parseArgs(args []string) error {
 // parseArgs parses CLI flags and arguments, exporting to K.
 // May return unused args.
 func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
-	// override s.Flags.Usage?
-	if s.Flags.Usage == nil {
-		if len(s.Usage) == 0 {
-			s.Usage = strings.ToUpper(strings.Join(s.Args, " "))
+	o := &s.Options
+	f := o.Flags
+
+	// override f.Usage?
+	if f.Usage == nil {
+		if len(o.Usage) == 0 {
+			o.Usage = strings.ToUpper(strings.Join(o.Args, " "))
 		}
-		s.Flags.Usage = func() {
-			fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n", s.Cmd, s.Usage)
-			fmt.Fprint(os.Stderr, s.Flags.FlagUsages())
+		f.Usage = func() {
+			fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n", s.Cmd, o.Usage)
+			fmt.Fprint(os.Stderr, f.FlagUsages())
 		}
 	}
 
 	// parse stage flags, export to koanf
-	if err := s.Flags.Parse(args); err != nil {
+	if err := f.Parse(args); err != nil {
 		return args, s.Errorf("%w", err)
 	} else {
-		s.K.Load(posflag.Provider(s.Flags, ".", s.K), nil)
+		s.K.Load(posflag.Provider(f, ".", s.K), nil)
 	}
 
 	// uses CLI arguments?
-	sargs := s.Flags.Args()
-	if s.Args != nil {
+	sargs := f.Args()
+	if o.Args != nil {
 		// special case: all arguments
-		if len(s.Args) == 0 {
+		if len(o.Args) == 0 {
 			s.K.Set("args", sargs)
 			return nil, nil
 		}
 
 		// rewrite into k
-		for _, name := range s.Args {
+		for _, name := range o.Args {
 			if len(sargs) == 0 || sargs[0] == "--" {
 				return sargs, s.Errorf("needs an argument: %s", name)
 			}

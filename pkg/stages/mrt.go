@@ -18,15 +18,15 @@ type Mrt struct {
 
 func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Mrt{StageBase: parent}
-	s.Descr = "read MRT file with BGP4MP messages"
-	s.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
-	s.Args = []string{"path"}
+	s.Options.Descr = "read MRT file with BGP4MP messages"
+	s.Options.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
+	s.Options.Args = []string{"path"}
 
-	s.IsProducer = true
+	s.Options.IsProducer = true
 	return s
 }
 
-func (s *Mrt) Prepare() error {
+func (s *Mrt) Attach() error {
 	s.fpath = s.K.String("path")
 	if len(s.fpath) == 0 {
 		return errors.New("needs source file path")

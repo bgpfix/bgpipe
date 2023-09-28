@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
 
@@ -20,22 +19,24 @@ type Stdin struct {
 
 func NewStdin(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Stdin{StageBase: parent}
-	s.Descr = "read JSON representation from stdin"
+	s.Options.Descr = "read JSON representation from stdin"
 
-	f := s.Flags
+	f := s.Options.Flags
 	f.Bool("seq", false, "ignore sequence numbers")
 	f.Bool("time", false, "ignore message time")
 
-	s.IsProducer = true
+	s.Options.IsStdin = true
+	s.Options.IsProducer = true
 	return s
 }
 
-func (s *Stdin) Prepare() error {
+func (s *Stdin) Attach() error {
 	// TODO: grep /filter
 	// for _, t := range s.K.Strings("grep") {
 	// }
 
 	// by default, set LR
+	// FIXME: export to parent
 	if !(s.K.Bool("left") || s.K.Bool("right")) {
 		s.IsLeft = true
 		s.IsRight = true
@@ -55,11 +56,8 @@ func (s *Stdin) Run() error {
 	// TODO: respect the context
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
-		// FIXME: pc should be set later
+		// grab new m
 		m := s.NewMsg()
-		pc := pipe.Context(m)
-		pc.Reverse = false
-		pc.Index = 0
 
 		// read line, trim it
 		if !scanner.Scan() {
@@ -80,7 +78,7 @@ func (s *Stdin) Run() error {
 			m.Up(msg.UPDATE)
 			err = m.Update.FromJSON(buf)
 
-		// case exabgp // TODO
+		// TODO: exabgp format
 
 		default:
 			err = errors.New("invalid input")
@@ -91,16 +89,19 @@ func (s *Stdin) Run() error {
 			continue
 		}
 
-		// overwrite?
+		// TODO: fix direction
 		if s.Dst() != 0 {
 			m.Dst = s.Dst()
-		} else if m.Dst == 0 {
+		}
+		if m.Dst == 0 {
 			if s.IsLast {
 				m.Dst = msg.DST_L
 			} else {
 				m.Dst = msg.DST_R
 			}
 		}
+
+		// overwrite?
 		if opt_seq {
 			m.Seq = 0
 		}

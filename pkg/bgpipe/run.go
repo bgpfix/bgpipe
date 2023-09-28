@@ -1,6 +1,7 @@
 package bgpipe
 
 import (
+	"context"
 	"errors"
 )
 
@@ -46,4 +47,11 @@ func (s *StageBase) run() error {
 	}
 
 	return err
+}
+
+// Run is the default Stage implementation that just waits
+// for the context and returns its cancel cause
+func (s *StageBase) Run() error {
+	<-s.Ctx.Done()
+	return context.Cause(s.Ctx)
 }

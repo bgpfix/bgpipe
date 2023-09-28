@@ -17,49 +17,52 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	Ctx    context.Context
-	Cancel context.CancelCauseFunc
-
-	B *Bgpipe      // parent
-	P *pipe.Pipe   // bgpfix pipe
-	K *koanf.Koanf // integrated config
-
-	Index int    // stage index
-	Cmd   string // stage command name
-	Name  string // human-friendly stage name
-
-	Flags *pflag.FlagSet // CLI flags
-	Descr string         // CLI stage one-line description
-	Usage string         // CLI stage usage string
-	Args  []string       // CLI argument names for exporting to K
-
 	enabled atomic.Bool // true if enabled (--on), false if disabled (--off)
 	started atomic.Bool // true if already started
 
-	// set by StageBase.Prepare
+	Ctx    context.Context         // stage context
+	Cancel context.CancelCauseFunc // cancel to stop the stage
 
-	IsLeft  bool // operates on L direction?
-	IsRight bool // operates on R direction?
+	B *Bgpipe      // parent
+	P *pipe.Pipe   // bgpfix pipe
+	K *koanf.Koanf // integrated config (args / config file / etc)
+
+	Index   int          // stage index
+	Cmd     string       // stage command name
+	Name    string       // human-friendly stage name
+	Options StageOptions // stage options, should be updated in NewStage
+
+	// set during StageBase.attach
+
 	IsFirst bool // is the first stage in pipe? (L peer)
 	IsLast  bool // is the last stage in pipe? (R peer)
+	IsLeft  bool // operates on L direction?
+	IsRight bool // operates on R direction?
 
-	Callbacks     []*pipe.Callback // registered callbacks
-	Handlers      []*pipe.Handler  // registered handlers
-	CallbackIndex int              // which callback to start at when injecting?
+	StartAt   int              // which stage to start at when injecting new messages?
+	Callbacks []*pipe.Callback // registered callbacks
+	Handlers  []*pipe.Handler  // registered handlers
+}
 
-	// set by Stage.Prepare
+// StageOptions describe high-level settings of a stage
+type StageOptions struct {
+	Descr string         // one-line description
+	Flags *pflag.FlagSet // CLI flags
+	Usage string         // CLI usage string
+	Args  []string       // CLI argument names
 
-	IsConsumer bool // consumes pipe.Direction.Out? (not callbacks)
-	IsProducer bool // produces pipe.Direction.In?
-	IsReader   bool // needs exclusive pipe.Direction.Read access?
-	IsWriter   bool // needs exclusive pipe.Direction.Write access?
+	IsConsumer  bool // consumes pipe.Direction.Out? (not callbacks)
+	IsProducer  bool // produces pipe.Direction.In?
+	IsRawReader bool // needs exclusive pipe.Direction.Read access?
+	IsRawWriter bool // needs exclusive pipe.Direction.Write access?
+	IsStdin     bool // reads from stdin?
+	IsStdout    bool // writes to stdout?
 }
 
 // Stage implements a bgpipe stage
 type Stage interface {
-	// Prepare checks config and prepares for Start,
-	// eg. attaching own callbacks to the pipe.
-	Prepare() error
+	// Attach checks config and prepares for Run, attaching to the pipe.
+	Attach() error
 
 	// Run runs the stage and returns after all work has finished.
 	// It must respect StageBase.Ctx. Returning a non-nil error different
@@ -67,7 +70,7 @@ type Stage interface {
 	Run() error
 }
 
-// NewStage returns a new Stage for given parent base
+// NewStage returns a new Stage for given parent base. It should modify base.Options.
 type NewStage func(base *StageBase) Stage
 
 // NewStage returns new stage for given cmd, or nil on error
@@ -84,46 +87,52 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.B = b
 	s.P = b.Pipe
 	s.K = koanf.New(".")
-	s.Index = -1
 	s.Cmd = cmd
 	s.SetName(cmd)
 	s.enabled.Store(true)
 
 	// common CLI flags
-	s.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
-	f := s.Flags
+	s.Options.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
+	f := s.Options.Flags
 	f.SortFlags = false
 	f.SetInterspersed(false)
 	f.BoolP("left", "L", false, "operate in L direction")
 	f.BoolP("right", "R", false, "operate in R direction")
-	f.StringSlice("on", []string{}, "start just after given event is received")
-	f.StringSlice("off", []string{}, "stop just after given event is handled")
-	f.String("in", "here", "where in the pipe to inject new messages (here/after/first/last)")
+	f.StringSlice("on", []string{}, "start when given event is received")
+	f.StringSlice("off", []string{}, "stop after given event is handled")
+	f.String("in", "here", "where in the pipe to inject new messages (first/here/last)")
 
 	// create s
 	s.Stage = newfunc(s)
+
+	// fix I/O settings
+	s.Options.IsConsumer = s.Options.IsConsumer || s.Options.IsRawReader
+	s.Options.IsProducer = s.Options.IsProducer || s.Options.IsRawWriter
+
+	// raw writers can't set --in
+	if s.Options.IsRawWriter {
+		if o := f.Lookup("in"); o != nil {
+			o.Hidden = true
+			o.Value.Set("")
+		}
+	}
+
 	return s
 }
 
-// Prepare is the default Stage implementation that does nothing
-func (s *StageBase) Prepare() error {
-	return nil
-}
-
-// Run is the default Stage implementation that just waits
-// for the context and returns its cancel cause
-func (s *StageBase) Run() error {
-	<-s.Ctx.Done()
-	return context.Cause(s.Ctx)
-}
-
 // NewMsg returns a new, empty message from pipe pool,
-// but respecting common stage options.
+// but respecting --in stage options.
 func (s *StageBase) NewMsg() *msg.Msg {
 	m := s.P.Get()
 	pc := pipe.Context(m)
-	pc.Reverse = s.IsLeft
-	pc.Index = s.CallbackIndex
+	switch s.StartAt {
+	case 0: // first
+		pc.StartAt = 0
+	case -1: // last
+		pc.NoCallbacks()
+	default: // here
+		pc.StartAt = s.StartAt
+	}
 	return m
 }
 
@@ -135,22 +144,22 @@ func (s *StageBase) SetName(name string) {
 
 // isLWriter returns true iff the stage is supposed to write L.In
 func (s *StageBase) isLWriter() bool {
-	return s.IsLeft && s.IsProducer
+	return s.IsLeft && s.Options.IsProducer
 }
 
 // isRWriter returns true iff the stage is supposed to write R.In
 func (s *StageBase) isRWriter() bool {
-	return s.IsRight && s.IsProducer
+	return s.IsRight && s.Options.IsProducer
 }
 
 // isLReader returns true iff the stage is supposed to read L.Out
 func (s *StageBase) isLReader() bool {
-	return s.IsRight && s.IsConsumer
+	return s.IsRight && s.Options.IsConsumer
 }
 
 // isRReader returns true iff the stage is supposed to read R.Out
 func (s *StageBase) isRReader() bool {
-	return s.IsLeft && s.IsConsumer
+	return s.IsLeft && s.Options.IsConsumer
 }
 
 // Errorf wraps fmt.Errorf and adds a prefix with the stage name

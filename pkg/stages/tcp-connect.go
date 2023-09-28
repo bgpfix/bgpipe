@@ -22,20 +22,20 @@ type TcpConnect struct {
 
 func NewTcpConnect(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &TcpConnect{StageBase: parent}
-	s.Descr = "dial remote TCP endpoint"
+	s.Options.Descr = "dial remote TCP endpoint"
 
-	s.Flags.Duration("timeout", 60*time.Second, "connect timeout")
-	s.Flags.String("md5", "", "TCP MD5 password")
-	s.Args = []string{"target"}
+	s.Options.Flags.Duration("timeout", 60*time.Second, "connect timeout")
+	s.Options.Flags.String("md5", "", "TCP MD5 password")
+	s.Options.Args = []string{"target"}
 
 	// setup I/O
-	s.IsReader = true
-	s.IsWriter = true
+	s.Options.IsRawReader = true
+	s.Options.IsRawWriter = true
 
 	return s
 }
 
-func (s *TcpConnect) Prepare() error {
+func (s *TcpConnect) Attach() error {
 	// check config
 	s.target = s.K.String("target")
 	if len(s.target) == 0 {
@@ -43,13 +43,7 @@ func (s *TcpConnect) Prepare() error {
 	}
 
 	// friendly name
-	name := fmt.Sprintf("[%d] tcp %s", s.Index, s.target)
-	if s.IsFirst {
-		name += " (LHS)"
-	} else {
-		name += " (RHS)"
-	}
-	s.SetName(name)
+	s.SetName(fmt.Sprintf("[%d] tcp %s", s.Index, s.target))
 
 	// target needs a port number?
 	_, _, err := net.SplitHostPort(s.target)
