@@ -32,6 +32,10 @@ type Bgpipe struct {
 	wg_lread  sync.WaitGroup // stages that read from pipe L
 	wg_rwrite sync.WaitGroup // stages that write to pipe R
 	wg_rread  sync.WaitGroup // stages that read from pipe R
+
+	auto_stdin  *StageBase // if not nil, automatic stdin stage
+	auto_stdout *StageBase // if not nil, automatic stdout stage
+	logbuf      []byte     // buffer for LogEvent
 }
 
 // NewBgpipe creates a new bgpipe instance using given
@@ -71,20 +75,23 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 // Run configures and runs the bgpipe
 func (b *Bgpipe) Run() error {
 	// configure bgpipe and its stages
-	if err := b.configure(); err != nil {
+	if err := b.Configure(); err != nil {
 		b.Fatal().Err(err).Msg("configuration error")
 		return err
 	}
 
 	// attach stages to pipe
-	if err := b.attach(); err != nil {
+	if err := b.Attach(); err != nil {
 		b.Fatal().Err(err).Msg("could not attach stages to the pipe")
 		return err
 	}
 
-	// run the pipe and block till end
-	b.Pipe.Start() // will call b.OnStart
-	b.Pipe.Wait()
+	// attach our b.Start
+	b.Pipe.Options.OnStart(b.Start)
+
+	// start the pipeline and block
+	b.Pipe.Start() // will call b.Start
+	b.Pipe.Wait()  // until error or all processing is done
 
 	// any errors on the global context?
 	if err := context.Cause(b.Ctx); err != nil {
@@ -94,6 +101,79 @@ func (b *Bgpipe) Run() error {
 
 	// successfully finished
 	return nil
+}
+
+// Start is called after the bgpfix pipe starts
+func (b *Bgpipe) Start(ev *pipe.Event) bool {
+	// start auto stdout?
+	if s := b.auto_stdout; s != nil {
+		s.WgAdd(1)
+		go s.run(ev.Type)
+	}
+
+	// start auto stdin?
+	if s := b.auto_stdin; s != nil {
+		s.WgAdd(1)
+		go s.run(ev.Type)
+	}
+
+	// go through all stages
+	for _, s := range b.Stages {
+		if s == nil {
+			continue
+		}
+
+		// kick waitgroups now, even if waiting for --on
+		s.WgAdd(1)
+
+		// run now iff already enabled
+		if s.enabled.Load() {
+			go s.run(ev.Type)
+		}
+	}
+
+	// wait for writers
+	go func() {
+		b.wg_lwrite.Wait()
+		b.Debug().Msg("closing L input")
+		b.Pipe.L.CloseInput()
+	}()
+	go func() {
+		b.wg_rwrite.Wait()
+		b.Debug().Msg("closing R input")
+		b.Pipe.R.CloseInput()
+	}()
+
+	// wait for readers
+	go func() {
+		b.wg_lread.Wait()
+		b.Debug().Msg("closing L output")
+		b.Pipe.L.CloseOutput()
+	}()
+	go func() {
+		b.wg_rread.Wait()
+		b.Debug().Msg("closing R output")
+		b.Pipe.R.CloseOutput()
+	}()
+
+	return false
+}
+
+// LogEvent logs given event
+func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
+	if ev.Msg != nil {
+		b.logbuf = ev.Msg.ToJSON(b.logbuf[:0])
+	} else {
+		b.logbuf = b.logbuf[:0]
+	}
+
+	b.
+		Err(ev.Error). // will b.Info() if nil
+		Uint64("seq", ev.Seq).
+		Bytes("msg", b.logbuf).
+		Interface("val", ev.Value).
+		Msgf("event %s", ev.Type)
+	return true
 }
 
 // AddRepo adds mapping between stage commands and their NewStageFunc
@@ -106,6 +186,11 @@ func (b *Bgpipe) AddRepo(cmds map[string]NewStage) {
 // AddStage adds and returns a new stage at idx for cmd,
 // or returns an existing instance if it's for the same cmd.
 func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
+	// append?
+	if idx <= 0 {
+		idx = max(1, len(b.Stages))
+	}
+
 	// already there? check cmd
 	if idx < len(b.Stages) {
 		if s := b.Stages[idx]; s != nil {
@@ -130,6 +215,5 @@ func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
 	b.Stages[idx] = s
 	s.Index = idx
 
-	s.SetName(fmt.Sprintf("[%d] %s", idx, cmd))
 	return s, nil
 }

@@ -30,19 +30,13 @@ func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
 }
 
 func (s *Stdout) Attach() error {
+	po := &s.P.Options
+
 	// TODO: grep /filter
 	// for _, t := range s.K.Strings("grep") {
 	// }
 
-	// by default, set LR
-	// FIXME: in parent
-	if !(s.K.Bool("left") || s.K.Bool("right")) {
-		s.IsLeft = true
-		s.IsRight = true
-	}
-
-	po := &s.P.Options
-	if s.K.Bool("auto") {
+	if s.Index == 0 {
 		po.AddCallback(s.OnMsg, &pipe.Callback{
 			Post:  true,
 			Order: math.MaxInt,

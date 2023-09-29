@@ -3,50 +3,54 @@ package bgpipe
 import (
 	"context"
 	"errors"
+
+	"github.com/bgpfix/bgpfix/pipe"
 )
 
 // run wraps Stage.Run.
 // Cancels the main bgpipe context on error.
 // Respects b.wg_* waitgroups.
-func (s *StageBase) run() error {
-	if !s.started.CompareAndSwap(false, true) {
-		return nil // already running
-	} else if s.Ctx.Err() != nil {
-		return nil // already stopped
+func (s *StageBase) run(ev string) {
+	if s.started.Swap(true) || s.stopped.Load() {
+		return // already started or stopped
 	}
 
-	// run the stage
+	// wrap Run
+	s.Trace().Str("ev", ev).Msg("starting")
 	s.enabled.Store(true)
 	err := s.Stage.Run()
-	s.Debug().Msg("stopped")
 	s.enabled.Store(false)
 
-	// stopped due to stage disabled? ignore
-	if errors.Is(err, ErrStageStopped) {
-		err = nil
-	}
-
-	// cancel context
-	if err != nil {
+	// no error or stopped due to --off?
+	if err == nil || errors.Is(err, ErrStageStopped) {
+		s.runStop("finished")
+	} else { // ...otherwise it's game over
 		s.B.Cancel(s.Errorf("%w", err))
-	} else {
-		s.Cancel(ErrStageStopped)
+	}
+}
+
+// runStop requests to stop Stage.Run
+func (s *StageBase) runStop(ev string) {
+	if s.stopped.Swap(true) {
+		return // already stopped
 	}
 
-	if s.isLReader() {
-		s.B.wg_lread.Done()
-	}
-	if s.isLWriter() {
-		s.B.wg_lwrite.Done()
-	}
-	if s.isRReader() {
-		s.B.wg_rread.Done()
-	}
-	if s.isRWriter() {
-		s.B.wg_rwrite.Done()
-	}
+	s.Trace().Str("ev", ev).Msg("stopping")
+	s.Cancel(ErrStageStopped)
+	s.enabled.Store(false)
+	s.WgAdd(-1)
+}
 
-	return err
+// runOn starts the stage in reaction to a pipe event
+func (s *StageBase) runOn(ev *pipe.Event) (keep_event bool) {
+	go s.run(ev.Type)
+	return false
+}
+
+// runOff stops the stage in reaction to a pipe event
+func (s *StageBase) runOff(ev *pipe.Event) (keep_event bool) {
+	go s.runStop(ev.Type)
+	return false
 }
 
 // Run is the default Stage implementation that just waits

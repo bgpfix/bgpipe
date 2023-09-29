@@ -30,27 +30,13 @@ func NewStdin(parent *bgpipe.StageBase) bgpipe.Stage {
 	return s
 }
 
-func (s *Stdin) Attach() error {
-	// TODO: grep /filter
-	// for _, t := range s.K.Strings("grep") {
-	// }
-
-	// by default, set LR
-	// FIXME: export to parent
-	if !(s.K.Bool("left") || s.K.Bool("right")) {
-		s.IsLeft = true
-		s.IsRight = true
-	}
-
-	return nil
-}
-
-// TODO: move to bgpfix?
+// TODO: rewrite / cleanup
 func (s *Stdin) Run() error {
 	var (
 		p        = s.P
 		opt_seq  = s.K.Bool("seq")
 		opt_time = s.K.Bool("time")
+		stages   = len(s.B.Stages) - 1
 	)
 
 	// TODO: respect the context
@@ -94,11 +80,16 @@ func (s *Stdin) Run() error {
 			m.Dst = s.Dst()
 		}
 		if m.Dst == 0 {
-			if s.IsLast {
+			if s.IsLast || stages == 1 {
 				m.Dst = msg.DST_L
 			} else {
 				m.Dst = msg.DST_R
 			}
+		}
+
+		// fix type?
+		if m.Type == msg.INVALID {
+			m.Up(msg.KEEPALIVE)
 		}
 
 		// overwrite?

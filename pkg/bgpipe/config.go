@@ -10,15 +10,36 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Configure configures bgpipe
+func (b *Bgpipe) Configure() error {
+	// parse CLI args
+	err := b.parseArgs(os.Args[1:])
+	if err != nil {
+		return fmt.Errorf("could not parse CLI flags: %w", err)
+	}
+
+	// debugging level
+	if ll := b.K.String("log"); len(ll) > 0 {
+		lvl, err := zerolog.ParseLevel(ll)
+		if err != nil {
+			return err
+		}
+		zerolog.SetGlobalLevel(lvl)
+	}
+
+	return nil
+}
+
 func (b *Bgpipe) addFlags() {
 	f := b.F
 	f.SortFlags = false
 	f.Usage = b.usage
 	f.SetInterspersed(false)
-	f.StringP("log", "l", "warn", "log level (debug/info/warn/error/disabled)")
-	f.BoolP("silent", "s", false, "do not use stdout unless explicitly requested")
+	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
+	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given pipe events (asterisk means all)")
+	f.BoolP("stdin", "i", false, "read stdin, even if not explicitly requested")
+	f.BoolP("stdout", "o", false, "write stdout, even if not explicitly requested")
 	f.BoolP("reverse", "r", false, "reverse the pipe")
-	f.BoolP("no-parse-error", "e", false, "do not report parse errors")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 }
 
@@ -51,26 +72,6 @@ Supported stages (run stage -h to get its help)
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
-// configure configures bgpipe
-func (b *Bgpipe) configure() error {
-	// parse CLI args
-	err := b.parseArgs(os.Args[1:])
-	if err != nil {
-		return fmt.Errorf("could not parse CLI flags: %w", err)
-	}
-
-	// debugging level
-	if ll := b.K.String("log"); len(ll) > 0 {
-		lvl, err := zerolog.ParseLevel(ll)
-		if err != nil {
-			return err
-		}
-		zerolog.SetGlobalLevel(lvl)
-	}
-
-	return nil
-}
-
 // parseArgs adds and configures stages from CLI args
 func (b *Bgpipe) parseArgs(args []string) error {
 	// parse and export flags into koanf
@@ -89,6 +90,13 @@ func (b *Bgpipe) parseArgs(args []string) error {
 			continue
 		}
 
+		// has a name prefix?
+		name := ""
+		if args[0][0] == '@' {
+			name = args[0]
+			args = args[1:]
+		}
+
 		// is args[0] a special value, or generic stage command name?
 		cmd := args[0]
 		switch {
@@ -104,6 +112,11 @@ func (b *Bgpipe) parseArgs(args []string) error {
 		s, err := b.AddStage(idx, cmd)
 		if err != nil {
 			return err
+		}
+
+		// override the stage name?
+		if name != "" {
+			s.Name = name
 		}
 
 		// find an explicit end of its args
@@ -176,35 +189,4 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 	}
 
 	return sargs, nil
-}
-
-// cfgEvents returns events from given koanf key,
-// or nil if none found
-func (s *StageBase) cfgEvents(key string) []string {
-	events := s.K.Strings(key)
-	if len(events) == 0 {
-		return nil
-	}
-
-	// rewrite
-	for i, et := range events {
-		has_pkg := strings.IndexByte(et, '.') > 0
-		has_lib := strings.IndexByte(et, '/') > 0
-
-		if has_pkg && has_lib {
-			// fully specified, done
-		} else if !has_lib {
-			if !has_pkg {
-				et = "bgpfix/pipe." + strings.ToUpper(et)
-			} else {
-				et = "bgpfix/" + et
-			}
-		} else {
-			// has lib, take as-is
-		}
-
-		events[i] = et
-	}
-
-	return events
 }

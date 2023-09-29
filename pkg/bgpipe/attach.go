@@ -2,69 +2,86 @@ package bgpipe
 
 import (
 	"fmt"
+	"math"
 	"slices"
 
 	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/pipe"
 )
 
-// attach prepares the bgpipe by attaching stages to pipe
-func (b *Bgpipe) attach() error {
+// Attach attaches all stages to pipe
+func (b *Bgpipe) Attach() error {
 	// shortcuts
 	var (
-		k  = b.K
-		p  = b.Pipe
-		po = &p.Options
+		k = b.K
+		p = b.Pipe
 	)
 
 	// at least one stage defined?
-	if len(b.Stages) == 0 {
+	if len(b.Stages) < 2 {
 		b.F.Usage()
 		return fmt.Errorf("bgpipe needs at least 1 stage")
 	}
 
-	// reverse?
+	// reverse the pipe?
 	if k.Bool("reverse") {
 		slices.Reverse(b.Stages)
 		for idx, s := range b.Stages {
-			if s != nil {
-				s.Index = idx
-				s.SetName(fmt.Sprintf("[%d] %s", idx, s.Cmd))
+			if s == nil {
+				continue
 			}
+			s.Index = idx
+			s.SetName(fmt.Sprintf("[%d] %s", idx, s.Cmd))
+
+			left, right := s.K.Bool("left"), s.K.Bool("right")
+			s.K.Set("left", right)
+			s.K.Set("right", left)
 		}
-		left, right := k.Bool("left"), k.Bool("right")
-		k.Set("left", right)
-		k.Set("right", left)
 	}
 
 	// attach stages
 	var (
-		has_stdin  int
-		has_stdout int
+		has_stdin  bool
+		has_stdout bool
 	)
-	for idx, s := range b.Stages {
+	for _, s := range b.Stages {
 		if s == nil {
 			continue
 		}
 
+		// run stage attach
 		if err := s.attach(); err != nil {
 			return s.Errorf("%w", err)
 		}
 
-		// cross-pipe checks
-		if s.Options.IsStdin {
-			if has_stdin > 0 {
-				s.Warn().Msgf("stage %s already uses stdin", b.Stages[has_stdin].Name)
-			} else {
-				has_stdin = idx
-			}
+		// does stdin/stdout?
+		has_stdin = has_stdin || s.Options.IsStdin
+		has_stdout = has_stdout || s.Options.IsStdout
+	}
+
+	// add automatic stdout?
+	if k.Bool("stdout") && !has_stdout {
+		s := b.NewStage("stdout")
+		s.K.Set("left", true)
+		s.K.Set("right", true)
+		if err := s.attach(); err != nil {
+			return fmt.Errorf("auto stdout: %w", err)
+		} else {
+			b.auto_stdout = s
 		}
-		if s.Options.IsStdout {
-			if has_stdout > 0 {
-				s.Warn().Msgf("stage %s already uses stdout", b.Stages[has_stdout].Name)
-			} else {
-				has_stdout = idx
-			}
+	}
+
+	// add automatic stdin?
+	if k.Bool("stdin") && !has_stdin {
+		s := b.NewStage("stdin")
+		s.K.Set("left", true)
+		s.K.Set("right", true)
+		s.K.Set("in", "first")
+		s.attach()
+		if err := s.attach(); err != nil {
+			return fmt.Errorf("auto stdin: %w", err)
+		} else {
+			b.auto_stdin = s
 		}
 	}
 
@@ -75,17 +92,13 @@ func (b *Bgpipe) attach() error {
 		p.Caps.Use(caps.CAP_AS4) // use CAP_AS4 by default
 	}
 
-	// attach to events
-	po.OnStart(b.onStart)
-	if !k.Bool("perr") {
-		po.OnParseError(b.onParseError) // pipe.EVENT_PARSE
-	}
-
-	// add automatic stdout?
-	if !k.Bool("silent") && has_stdout == 0 {
-		s := b.NewStage("stdout")
-		s.K.Set("auto", true)
-		s.Stage.Attach()
+	// log events?
+	if evs := b.parseEvents(k, "events"); len(evs) > 0 {
+		p.Options.AddHandler(b.LogEvent, &pipe.Handler{
+			Pre:   true,
+			Order: math.MinInt,
+			Types: evs,
+		})
 	}
 
 	return nil
@@ -93,15 +106,22 @@ func (b *Bgpipe) attach() error {
 
 // attach wraps Stage.Attach and adds some logic
 func (s *StageBase) attach() error {
-	s.Debug().Interface("koanf", s.K.All()).Msg("preparing")
+	var (
+		b  = s.B
+		p  = s.P
+		po = &p.Options
+		k  = s.K
+	)
+
+	s.Debug().Interface("koanf", k.All()).Msg("preparing")
 
 	// first / last?
 	s.IsFirst = s.Index == 1
-	s.IsLast = s.Index == len(s.B.Stages)-1
+	s.IsLast = s.Index == len(b.Stages)-1
 
 	// direction settings
-	s.IsLeft = s.K.Bool("left")
-	s.IsRight = s.K.Bool("right")
+	s.IsLeft = k.Bool("left")
+	s.IsRight = k.Bool("right")
 	if !s.IsLeft && !s.IsRight {
 		if s.IsFirst {
 			s.IsRight = true // first? by default send to -> R
@@ -113,7 +133,7 @@ func (s *StageBase) attach() error {
 	}
 
 	// where to inject new messages?
-	switch v := s.K.String("in"); v {
+	switch v := k.String("in"); v {
 	case "here":
 		s.StartAt = s.Index
 	case "first", "":
@@ -121,15 +141,36 @@ func (s *StageBase) attach() error {
 	case "last":
 		s.StartAt = -1
 	default:
-		return fmt.Errorf("%w: %s", ErrInject, v)
+		// a stage name reference?
+		if len(v) > 0 && v[0] == '@' {
+			for _, s2 := range s.B.Stages {
+				if s2 != nil && s2.Name == v {
+					s.StartAt = s2.Index
+					break
+				}
+			}
+		}
+		if s.StartAt == 0 {
+			return fmt.Errorf("%w: %s", ErrInject, v)
+		}
 	}
 
 	// call child attach
-	po := &s.P.Options
 	cbs := len(po.Callbacks)
 	hds := len(po.Handlers)
 	if err := s.Stage.Attach(); err != nil {
 		return err
+	}
+
+	// prefix the name?
+	if s.Name[0] != '[' {
+		s.Name = fmt.Sprintf("[%d] %s", s.Index, s.Name)
+	}
+	s.SetName(s.Name)
+
+	// is an internal stage?
+	if s.Index == 0 {
+		return nil
 	}
 
 	// needs raw stream access?
@@ -152,11 +193,11 @@ func (s *StageBase) attach() error {
 	}
 
 	// has trigger-on events?
-	if evs := s.cfgEvents("on"); len(evs) > 0 {
+	if evs := b.parseEvents(k, "on"); len(evs) > 0 {
 		s.enabled.Store(false)
-		po.OnEventPre(s.startEvent, evs...)
+		po.OnEventPre(s.runOn, evs...)
 
-		// re-target pipe.EVENT_START handlers to --on events
+		// re-target pipe.EVENT_START handlers to the --on events
 		for _, h := range s.Handlers {
 			for i, t := range h.Types {
 				if t == pipe.EVENT_START {
@@ -168,8 +209,8 @@ func (s *StageBase) attach() error {
 	}
 
 	// has trigger-off events?
-	if evs := s.cfgEvents("off"); len(evs) > 0 {
-		po.OnEventPost(s.stopEvent, evs...)
+	if evs := b.parseEvents(k, "off"); len(evs) > 0 {
+		po.OnEventPost(s.runOff, evs...)
 	}
 
 	return nil

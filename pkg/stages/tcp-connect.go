@@ -42,8 +42,10 @@ func (s *TcpConnect) Attach() error {
 		return fmt.Errorf("no target defined")
 	}
 
-	// friendly name
-	s.SetName(fmt.Sprintf("[%d] tcp %s", s.Index, s.target))
+	// more friendly name?
+	if s.Name == "tcp" {
+		s.Name += " " + s.target
+	}
 
 	// target needs a port number?
 	_, _, err := net.SplitHostPort(s.target)
@@ -92,7 +94,7 @@ func (s *TcpConnect) Run() error {
 	defer cancel()
 
 	// connect
-	s.Info().Stringer("timeout", timeout).Msg("connecting")
+	s.Debug().Stringer("timeout", timeout).Msg("connecting")
 	at := time.Now()
 	conn, err := s.dialer.DialContext(ctx, "tcp", s.target)
 	if err != nil {
@@ -101,7 +103,7 @@ func (s *TcpConnect) Run() error {
 
 	// connected
 	msec := time.Since(at).Milliseconds()
-	s.Debug().Int64("msec", msec).Msg("connected")
+	s.Info().Int64("msec", msec).Msg("connected")
 	defer conn.Close()
 
 	// variables for reader / writer

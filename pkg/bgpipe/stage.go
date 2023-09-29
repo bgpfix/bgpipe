@@ -17,8 +17,9 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	enabled atomic.Bool // true if enabled (--on), false if disabled (--off)
 	started atomic.Bool // true if already started
+	stopped atomic.Bool // true if already stopped
+	enabled atomic.Bool // true if enabled (--on), false if disabled (--off)
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage
@@ -27,10 +28,10 @@ type StageBase struct {
 	P *pipe.Pipe   // bgpfix pipe
 	K *koanf.Koanf // integrated config (args / config file / etc)
 
-	Index   int          // stage index
+	Index   int          // stage index (zero means internal)
 	Cmd     string       // stage command name
 	Name    string       // human-friendly stage name
-	Options StageOptions // stage options, should be updated in NewStage
+	Options StageOptions // stage options, can be updated in NewStage
 
 	// set during StageBase.attach
 
@@ -57,6 +58,7 @@ type StageOptions struct {
 	IsRawWriter bool // needs exclusive pipe.Direction.Write access?
 	IsStdin     bool // reads from stdin?
 	IsStdout    bool // writes to stdout?
+	// TODO: allow L+R?
 }
 
 // Stage implements a bgpipe stage
@@ -142,24 +144,25 @@ func (s *StageBase) SetName(name string) {
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 }
 
-// isLWriter returns true iff the stage is supposed to write L.In
-func (s *StageBase) isLWriter() bool {
-	return s.IsLeft && s.Options.IsProducer
-}
-
-// isRWriter returns true iff the stage is supposed to write R.In
-func (s *StageBase) isRWriter() bool {
-	return s.IsRight && s.Options.IsProducer
-}
-
-// isLReader returns true iff the stage is supposed to read L.Out
-func (s *StageBase) isLReader() bool {
-	return s.IsRight && s.Options.IsConsumer
-}
-
-// isRReader returns true iff the stage is supposed to read R.Out
-func (s *StageBase) isRReader() bool {
-	return s.IsLeft && s.Options.IsConsumer
+// WgAdd adds delta to B.wg* waitgroups related to s
+func (s *StageBase) WgAdd(delta int) {
+	o := &s.Options
+	if s.IsRight {
+		if o.IsProducer {
+			s.B.wg_rwrite.Add(delta)
+		}
+		if o.IsConsumer {
+			s.B.wg_lread.Add(delta)
+		}
+	}
+	if s.IsLeft {
+		if o.IsProducer {
+			s.B.wg_lwrite.Add(delta)
+		}
+		if o.IsConsumer {
+			s.B.wg_rread.Add(delta)
+		}
+	}
 }
 
 // Errorf wraps fmt.Errorf and adds a prefix with the stage name

@@ -15,11 +15,16 @@ type Speaker struct {
 
 func NewSpeaker(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Speaker{StageBase: parent}
-	s.Options.Descr = "run a simple local BGP speaker"
-	s.Options.Flags.Bool("active", false, "send the OPEN message first")
-	s.Options.Flags.Int("asn", -1, "local ASN, -1 means use remote ASN")
-	s.Options.Flags.String("id", "", "local router ID, empty means use remote-1")
-	s.Options.IsProducer = true
+
+	o := &s.Options
+	o.Descr = "run a simple local BGP speaker"
+	o.IsProducer = true
+
+	do := &speaker.DefaultOptions
+	o.Flags.Bool("active", false, "send the OPEN message first")
+	o.Flags.Int("asn", do.LocalASN, "local ASN, -1 means use remote ASN")
+	o.Flags.String("id", "", "local router ID, empty means use remote-1")
+	o.Flags.Int("hold", do.LocalHoldTime, "hold time")
 	return s
 }
 
@@ -34,6 +39,7 @@ func (s *Speaker) Attach() error {
 	so.NewMsg = s.NewMsg
 	so.Passive = !k.Bool("active")
 	so.LocalASN = k.Int("asn")
+	so.LocalHoldTime = k.Int("hold")
 
 	lid := k.String("id")
 	if len(lid) > 0 {
