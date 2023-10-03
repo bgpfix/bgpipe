@@ -20,17 +20,23 @@ type Tcp struct {
 }
 
 func NewTcp(parent *bgpipe.StageBase) bgpipe.Stage {
-	s := &Tcp{StageBase: parent}
+	var (
+		s = &Tcp{StageBase: parent}
+		o = &s.Options
+		f = o.Flags
+	)
 
-	o := &s.Options
-	o.Descr = "dial remote TCP endpoint"
-	o.IsRawReader = true
-	o.IsRawWriter = true
-
-	f := o.Flags
 	f.Duration("timeout", 60*time.Second, "connect timeout")
 	f.String("md5", "", "TCP MD5 password")
 	o.Args = []string{"target"}
+
+	o.Descr = "dial remote TCP endpoint"
+	o.Events = map[string]string{
+		"connected": "connection established",
+	}
+
+	o.IsRawReader = true
+	o.IsRawWriter = true
 
 	return s
 }
@@ -40,11 +46,6 @@ func (s *Tcp) Attach() error {
 	s.target = s.K.String("target")
 	if len(s.target) == 0 {
 		return fmt.Errorf("no target defined")
-	}
-
-	// more friendly name?
-	if s.Name == "tcp" {
-		s.Name += " " + s.target
 	}
 
 	// target needs a port number?
@@ -111,6 +112,7 @@ func tcp_md5(md5pass string) func(net, addr string, c syscall.RawConn) error {
 
 func tcp_handle(s *bgpipe.StageBase, conn net.Conn) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
+	s.Event("connected", nil, conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
 	// get tcp conn

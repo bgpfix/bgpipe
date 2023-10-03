@@ -1,7 +1,9 @@
 package bgpipe
 
 import (
+	"math"
 	"net/netip"
+	"strconv"
 	"strings"
 
 	"github.com/knadh/koanf/v2"
@@ -16,6 +18,20 @@ func IsAddr(v string) bool {
 	}
 	// TODO: dns.name[:port]
 	return false
+}
+
+func IsBind(v string) bool {
+	if len(v) < 2 {
+		return false
+	}
+	if v[0] != ':' {
+		return false
+	}
+	p, err := strconv.Atoi(v[1:])
+	if err != nil || p <= 0 || p > math.MaxUint16 {
+		return false
+	}
+	return true
 }
 
 func IsFile(v string) bool {

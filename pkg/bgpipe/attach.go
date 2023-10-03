@@ -169,13 +169,14 @@ func (s *StageBase) attach() error {
 		return err
 	}
 
-	// prefix the name?
-	if s.Name[0] != '[' {
-		s.Name = fmt.Sprintf("[%d] %s", s.Index, s.Name)
+	// update the logger
+	name := s.Name
+	if name[0] != '[' {
+		name = fmt.Sprintf("[%d] %s", s.Index, name)
 	}
-	s.SetName(s.Name)
+	s.Logger = s.B.With().Str("stage", name).Logger()
 
-	s.Debug().Msgf("attached [%d] first/last=%v/%v L/R=%v,%v startat=%d",
+	s.Trace().Msgf("attached [%d] first/last=%v/%v L/R=%v,%v startat=%d",
 		s.Index, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight, s.StartAt)
 
 	// is an internal stage?
@@ -203,11 +204,11 @@ func (s *StageBase) attach() error {
 	}
 
 	// has trigger-on events?
-	if evs := b.parseEvents(k, "on"); len(evs) > 0 {
+	if evs := b.parseEvents(k, "wait"); len(evs) > 0 {
 		s.enabled.Store(false)
-		po.OnEventPre(s.runOn, evs...)
+		po.OnEventPre(s.runStart, evs...)
 
-		// re-target pipe.EVENT_START handlers to the --on events
+		// re-target pipe.EVENT_START handlers to the --wait events
 		for _, h := range s.Handlers {
 			for i, t := range h.Types {
 				if t == pipe.EVENT_START {
@@ -219,8 +220,8 @@ func (s *StageBase) attach() error {
 	}
 
 	// has trigger-off events?
-	if evs := b.parseEvents(k, "off"); len(evs) > 0 {
-		po.OnEventPost(s.runOff, evs...)
+	if evs := b.parseEvents(k, "stop"); len(evs) > 0 {
+		po.OnEventPost(s.runStop, evs...)
 	}
 
 	return nil

@@ -3,7 +3,7 @@ package bgpipe
 import (
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/knadh/koanf/providers/posflag"
@@ -62,7 +62,7 @@ Supported stages (run stage -h to get its help)
 	for cmd := range b.repo {
 		cmds = append(cmds, cmd)
 	}
-	sort.Strings(cmds)
+	slices.Sort(cmds)
 	for _, cmd := range cmds {
 		var descr string
 
@@ -106,6 +106,8 @@ func (b *Bgpipe) parseArgs(args []string) error {
 		switch {
 		case IsAddr(cmd):
 			cmd = "tcp"
+		case IsBind(cmd):
+			cmd = "listen"
 		case IsFile(cmd):
 			cmd = "mrt" // TODO: stat -> mrt / exec / json / etc.
 		default:
@@ -144,6 +146,34 @@ func (b *Bgpipe) parseArgs(args []string) error {
 	return nil
 }
 
+// Usage prints usage screen to stderr
+func (s *StageBase) usage() {
+	o := &s.Options
+	f := o.Flags
+
+	if len(o.Usage) > 0 {
+		fmt.Fprintf(os.Stderr, "Stage usage: %s\n", o.Usage)
+	} else {
+		fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n",
+			s.Cmd, strings.ToUpper(strings.Join(o.Args, " ")))
+	}
+
+	fmt.Fprint(os.Stderr, f.FlagUsages())
+
+	// iterate over events?
+	if len(o.Events) > 0 {
+		fmt.Fprintf(os.Stderr, "Events:\n")
+		var events []string
+		for e := range o.Events {
+			events = append(events, e)
+		}
+		slices.Sort(events)
+		for _, e := range events {
+			fmt.Fprintf(os.Stderr, "  %-19s %s\n", e, o.Events[e])
+		}
+	}
+}
+
 // parseArgs parses CLI flags and arguments, exporting to K.
 // May return unused args.
 func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
@@ -152,13 +182,7 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 
 	// override f.Usage?
 	if f.Usage == nil {
-		if len(o.Usage) == 0 {
-			o.Usage = strings.ToUpper(strings.Join(o.Args, " "))
-		}
-		f.Usage = func() {
-			fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n", s.Cmd, o.Usage)
-			fmt.Fprint(os.Stderr, f.FlagUsages())
-		}
+		f.Usage = s.usage
 	}
 
 	// parse stage flags, export to koanf

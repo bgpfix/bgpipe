@@ -20,7 +20,7 @@ type StageBase struct {
 	started  atomic.Bool // true if already started
 	prepared atomic.Bool // true if already prepared (or during prepare)
 	stopped  atomic.Bool // true if already stopped
-	enabled  atomic.Bool // true if enabled (--on), false if disabled (--off)
+	enabled  atomic.Bool // true after started, false after stopped
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage
@@ -48,10 +48,11 @@ type StageBase struct {
 
 // StageOptions describe high-level settings of a stage
 type StageOptions struct {
-	Descr string         // one-line description
-	Flags *pflag.FlagSet // CLI flags
-	Usage string         // CLI usage string
-	Args  []string       // CLI argument names
+	Descr  string            // one-line description
+	Flags  *pflag.FlagSet    // flags
+	Usage  string            // usage string
+	Args   []string          // argument names
+	Events map[string]string // event names and descriptions
 
 	IsConsumer  bool // consumes pipe.Direction.Out? (not callbacks)
 	IsProducer  bool // produces pipe.Direction.In?
@@ -66,11 +67,6 @@ type StageOptions struct {
 type Stage interface {
 	// Attach checks config and and attaches to the pipe.
 	Attach() error
-
-	// Prepare is the first, optional part of Run that opens files, network connections,
-	// and all dependencies that block the ordinary operation of Run. It is called after
-	// Attach and before Run, possibly even before the bgpfix pipe is started.
-	Prepare() error
 
 	// Run runs the stage and returns after all work has finished.
 	// It must respect StageBase.Ctx. Returning a non-nil error different
@@ -96,7 +92,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.P = b.Pipe
 	s.K = koanf.New(".")
 	s.Cmd = cmd
-	s.SetName(cmd)
+	s.Name = cmd
+	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 	s.enabled.Store(true)
 
 	// common CLI flags
@@ -106,10 +103,9 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	f.SetInterspersed(false)
 	f.BoolP("left", "L", false, "operate in L direction")
 	f.BoolP("right", "R", false, "operate in R direction")
-	f.StringSlice("on", []string{}, "start when given event is received")
-	f.StringSlice("off", []string{}, "stop after given event is handled")
+	f.StringSlice("wait", []string{}, "wait for given event before starting")
+	f.StringSlice("stop", []string{}, "stop after given event is handled")
 	f.String("in", "here", "where to inject new messages of this stage (here/first/last/@name)")
-	f.Bool("block", false, "block starting the pipe until this stage is ready (eg. connections are established)")
 
 	// create s
 	s.Stage = newfunc(s)
@@ -145,14 +141,8 @@ func (s *StageBase) NewMsg() *msg.Msg {
 	return m
 }
 
-// SetName updates s.Name and s.Logger
-func (s *StageBase) SetName(name string) {
-	s.Name = name
-	s.Logger = s.B.With().Str("stage", s.Name).Logger()
-}
-
-// WgAdd adds delta to B.wg* waitgroups related to s
-func (s *StageBase) WgAdd(delta int) {
+// wgAdd adds delta to B.wg* waitgroups related to s
+func (s *StageBase) wgAdd(delta int) {
 	o := &s.Options
 	if s.IsRight {
 		if o.IsProducer {
@@ -206,4 +196,9 @@ func (s *StageBase) Downstream() *pipe.Direction {
 	} else {
 		return s.P.L
 	}
+}
+
+// Event sends an event, prefixing et with stage name + slash
+func (s *StageBase) Event(et string, msg *msg.Msg, args ...any) (sent bool) {
+	return s.B.Pipe.Event(s.Name+"/"+et, msg, args...)
 }

@@ -86,12 +86,6 @@ func (b *Bgpipe) Run() error {
 		return err
 	}
 
-	// prepare I/O
-	if err := b.Prepare(); err != nil {
-		b.Fatal().Err(err).Msg("could not prepare to start the pipe")
-		return err
-	}
-
 	// attach our b.Start
 	b.Pipe.Options.OnStart(b.Start)
 
@@ -109,40 +103,18 @@ func (b *Bgpipe) Run() error {
 	return nil
 }
 
-// Prepare runs Stage.Prepare for stages with --block option on
-func (b *Bgpipe) Prepare() error {
-	var wg sync.WaitGroup
-	for _, s := range b.Stages {
-		if s == nil || !s.K.Bool("wait") {
-			continue
-		}
-
-		s.Debug().Msg("waiting for prepare")
-		wg.Add(1)
-		go func(s *StageBase) {
-			err := s.prepare()
-			if err != nil {
-				b.Cancel(err)
-			}
-			wg.Done()
-		}(s)
-	}
-	wg.Wait()
-	return context.Cause(b.Ctx)
-}
-
 // Start is called after the bgpfix pipe starts
 func (b *Bgpipe) Start(ev *pipe.Event) bool {
 	// start auto stdout?
 	if s := b.auto_stdout; s != nil {
-		s.WgAdd(1)
-		go s.run(ev.Type)
+		s.wgAdd(1)
+		s.runStart(ev)
 	}
 
 	// start auto stdin?
 	if s := b.auto_stdin; s != nil {
-		s.WgAdd(1)
-		go s.run(ev.Type)
+		s.wgAdd(1)
+		s.runStart(ev)
 	}
 
 	// go through all stages
@@ -152,11 +124,11 @@ func (b *Bgpipe) Start(ev *pipe.Event) bool {
 		}
 
 		// kick waitgroups now, even if waiting for --on
-		s.WgAdd(1)
+		s.wgAdd(1)
 
 		// run now iff already enabled
 		if s.enabled.Load() {
-			go s.run(ev.Type)
+			s.runStart(ev)
 		}
 	}
 
