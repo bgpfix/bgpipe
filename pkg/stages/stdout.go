@@ -17,26 +17,19 @@ type Stdout struct {
 
 func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Stdout{StageBase: parent}
-	s.Options.Descr = "print JSON representation to stdout"
 
-	// TODO: modify --left/--right default options?
-
-	// f := s.Options.Flags
-	// f.StringSlice("grep", []string{}, "print only given types")
-	// f.StringSlice("filter", []string{}, "filter given types")
-
+	o := &s.Options
+	o.Descr = "print JSON representation to stdout"
 	s.Options.IsStdout = true
+	o.AllowLR = true
+
 	return s
 }
 
 func (s *Stdout) Attach() error {
 	po := &s.P.Options
 
-	// TODO: grep /filter
-	// for _, t := range s.K.Strings("grep") {
-	// }
-
-	if s.Index == 0 {
+	if s.Index == 0 { // auto stdout
 		po.AddCallback(s.OnMsg, &pipe.Callback{
 			Post:  true,
 			Order: math.MaxInt,

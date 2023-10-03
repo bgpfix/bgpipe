@@ -86,6 +86,12 @@ func (b *Bgpipe) Run() error {
 		return err
 	}
 
+	// prepare I/O
+	if err := b.Prepare(); err != nil {
+		b.Fatal().Err(err).Msg("could not prepare to start the pipe")
+		return err
+	}
+
 	// attach our b.Start
 	b.Pipe.Options.OnStart(b.Start)
 
@@ -101,6 +107,28 @@ func (b *Bgpipe) Run() error {
 
 	// successfully finished
 	return nil
+}
+
+// Prepare runs Stage.Prepare for stages with --block option on
+func (b *Bgpipe) Prepare() error {
+	var wg sync.WaitGroup
+	for _, s := range b.Stages {
+		if s == nil || !s.K.Bool("wait") {
+			continue
+		}
+
+		s.Debug().Msg("waiting for prepare")
+		wg.Add(1)
+		go func(s *StageBase) {
+			err := s.prepare()
+			if err != nil {
+				b.Cancel(err)
+			}
+			wg.Done()
+		}(s)
+	}
+	wg.Wait()
+	return context.Cause(b.Ctx)
 }
 
 // Start is called after the bgpfix pipe starts
@@ -216,4 +244,8 @@ func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
 	s.Index = idx
 
 	return s, nil
+}
+
+func (b *Bgpipe) StageCount() int {
+	return max(0, len(b.Stages)-1)
 }

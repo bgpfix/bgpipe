@@ -18,20 +18,19 @@ func (b *Bgpipe) Attach() error {
 	)
 
 	// at least one stage defined?
-	if len(b.Stages) < 2 {
+	if b.StageCount() < 1 {
 		b.F.Usage()
 		return fmt.Errorf("bgpipe needs at least 1 stage")
 	}
 
 	// reverse the pipe?
 	if k.Bool("reverse") {
-		slices.Reverse(b.Stages)
+		slices.Reverse(b.Stages[1:])
 		for idx, s := range b.Stages {
 			if s == nil {
 				continue
 			}
 			s.Index = idx
-			s.SetName(fmt.Sprintf("[%d] %s", idx, s.Cmd))
 
 			left, right := s.K.Bool("left"), s.K.Bool("right")
 			s.K.Set("left", right)
@@ -60,7 +59,7 @@ func (b *Bgpipe) Attach() error {
 	}
 
 	// add automatic stdout?
-	if k.Bool("stdout") && !has_stdout {
+	if !k.Bool("silent") && !has_stdout {
 		s := b.NewStage("stdout")
 		s.K.Set("left", true)
 		s.K.Set("right", true)
@@ -77,7 +76,6 @@ func (b *Bgpipe) Attach() error {
 		s.K.Set("left", true)
 		s.K.Set("right", true)
 		s.K.Set("in", "first")
-		s.attach()
 		if err := s.attach(); err != nil {
 			return fmt.Errorf("auto stdin: %w", err)
 		} else {
@@ -113,23 +111,32 @@ func (s *StageBase) attach() error {
 		k  = s.K
 	)
 
-	s.Debug().Interface("koanf", k.All()).Msg("preparing")
-
 	// first / last?
-	s.IsFirst = s.Index == 1
-	s.IsLast = s.Index == len(b.Stages)-1
+	if s.Index == 1 {
+		s.IsFirst = true
+	} else if s.Index == b.StageCount() {
+		s.IsLast = true
+	}
 
-	// direction settings
+	// left / right?
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
-	if !s.IsLeft && !s.IsRight {
-		if s.IsFirst {
-			s.IsRight = true // first? by default send to -> R
-		} else if s.IsLast {
-			s.IsLeft = true // last? by default send to L <-
-		} else {
-			s.IsRight = true // in the middle = by default -> R
+	if s.IsLeft && s.IsRight {
+		if !s.Options.AllowLR {
+			return ErrLR
 		}
+	} else if s.IsLeft == s.IsRight { // both false
+		s.IsRight = true // the default
+
+		// exceptions
+		if s.IsLast && s.Options.IsProducer {
+			s.IsRight = false
+		} else if s.IsFirst && !s.Options.IsProducer {
+			s.IsRight = false
+		}
+
+		// symmetry
+		s.IsLeft = !s.IsRight
 	}
 
 	// where to inject new messages?
@@ -167,6 +174,9 @@ func (s *StageBase) attach() error {
 		s.Name = fmt.Sprintf("[%d] %s", s.Index, s.Name)
 	}
 	s.SetName(s.Name)
+
+	s.Debug().Msgf("attached [%d] first/last=%v/%v L/R=%v,%v startat=%d",
+		s.Index, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight, s.StartAt)
 
 	// is an internal stage?
 	if s.Index == 0 {

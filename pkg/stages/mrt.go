@@ -18,11 +18,13 @@ type Mrt struct {
 
 func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Mrt{StageBase: parent}
-	s.Options.Descr = "read MRT file with BGP4MP messages"
-	s.Options.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
-	s.Options.Args = []string{"path"}
+	o := &s.Options
+	o.Descr = "read MRT file with BGP4MP messages"
+	o.Usage = "PATH\nProvides MRT file reader, with uncompression if needed."
+	o.IsProducer = true
 
-	s.Options.IsProducer = true
+	o.Args = []string{"path"}
+
 	return s
 }
 

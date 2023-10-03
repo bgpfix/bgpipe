@@ -16,10 +16,14 @@ func (s *StageBase) run(ev string) {
 	}
 
 	// wrap Run
-	s.Trace().Str("ev", ev).Msg("starting")
+	s.Debug().Str("ev", ev).Msg("starting")
 	s.enabled.Store(true)
-	err := s.Stage.Run()
+	err := s.prepare()
+	if err == nil {
+		err = s.Stage.Run()
+	}
 	s.enabled.Store(false)
+	s.Trace().Str("ev", ev).Err(err).Msg("run returned")
 
 	// no error or stopped due to --off?
 	if err == nil || errors.Is(err, ErrStageStopped) {
@@ -35,7 +39,7 @@ func (s *StageBase) runStop(ev string) {
 		return // already stopped
 	}
 
-	s.Trace().Str("ev", ev).Msg("stopping")
+	s.Debug().Str("ev", ev).Msg("stopping")
 	s.Cancel(ErrStageStopped)
 	s.enabled.Store(false)
 	s.WgAdd(-1)
@@ -58,4 +62,17 @@ func (s *StageBase) runOff(ev *pipe.Event) (keep_event bool) {
 func (s *StageBase) Run() error {
 	<-s.Ctx.Done()
 	return context.Cause(s.Ctx)
+}
+
+// prepare wraps Stage.Prepare
+func (s *StageBase) prepare() error {
+	if s.prepared.Swap(true) {
+		return nil // already prepared
+	}
+	return s.Stage.Prepare()
+}
+
+// Prepare is the default Stage implementation that does nothing
+func (s *StageBase) Prepare() error {
+	return nil
 }

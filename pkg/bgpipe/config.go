@@ -19,6 +19,9 @@ func (b *Bgpipe) Configure() error {
 	}
 
 	// debugging level
+	if b.K.Bool("debug") {
+		b.K.Set("log", "debug")
+	}
 	if ll := b.K.String("log"); len(ll) > 0 {
 		lvl, err := zerolog.ParseLevel(ll)
 		if err != nil {
@@ -36,9 +39,10 @@ func (b *Bgpipe) addFlags() {
 	f.Usage = b.usage
 	f.SetInterspersed(false)
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
+	f.BoolP("debug", "D", false, "alias for --log debug")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given pipe events (asterisk means all)")
-	f.BoolP("stdin", "i", false, "read stdin, even if not explicitly requested")
-	f.BoolP("stdout", "o", false, "write stdout, even if not explicitly requested")
+	f.BoolP("stdin", "i", false, "read stdin (even if not explicitly requested)")
+	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly requested)")
 	f.BoolP("reverse", "r", false, "reverse the pipe")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 }

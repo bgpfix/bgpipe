@@ -8,4 +8,5 @@ var (
 	ErrStageStopped = errors.New("stage stopped")
 	ErrFirstOrLast  = errors.New("must be either the first or the last stage")
 	ErrInject       = errors.New("invalid --in option value")
+	ErrLR           = errors.New("select either --left or --right, not both")
 )

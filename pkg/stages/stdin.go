@@ -3,6 +3,7 @@ package stages
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"sync"
@@ -19,37 +20,45 @@ type Stdin struct {
 
 func NewStdin(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Stdin{StageBase: parent}
-	s.Options.Descr = "read JSON representation from stdin"
 
-	f := s.Options.Flags
+	o := &s.Options
+	o.Descr = "read JSON representation from stdin"
+	o.IsStdin = true
+	o.IsProducer = true
+	o.AllowLR = true
+
+	f := o.Flags
 	f.Bool("seq", false, "ignore sequence numbers")
 	f.Bool("time", false, "ignore message time")
 
-	s.Options.IsStdin = true
-	s.Options.IsProducer = true
 	return s
 }
 
-// TODO: rewrite / cleanup
 func (s *Stdin) Run() error {
 	var (
 		p        = s.P
 		opt_seq  = s.K.Bool("seq")
 		opt_time = s.K.Bool("time")
-		stages   = len(s.B.Stages) - 1
+		stdin    = bufio.NewScanner(os.Stdin)
+		ctx      = s.Ctx
+		dst      = s.Dst()
+		def      = msg.DST_R
 	)
 
-	// TODO: respect the context
-	scanner := bufio.NewScanner(os.Stdin)
+	// default direction?
+	if s.B.StageCount() < 2 {
+		def = msg.DST_L
+	}
+
 	for {
 		// grab new m
 		m := s.NewMsg()
 
 		// read line, trim it
-		if !scanner.Scan() {
+		if !stdin.Scan() {
 			break
 		}
-		buf := bytes.TrimSpace(scanner.Bytes())
+		buf := bytes.TrimSpace(stdin.Bytes())
 
 		// detect the format
 		var err error
@@ -64,8 +73,6 @@ func (s *Stdin) Run() error {
 			m.Up(msg.UPDATE)
 			err = m.Update.FromJSON(buf)
 
-		// TODO: exabgp format
-
 		default:
 			err = errors.New("invalid input")
 		}
@@ -75,16 +82,12 @@ func (s *Stdin) Run() error {
 			continue
 		}
 
-		// TODO: fix direction
-		if s.Dst() != 0 {
-			m.Dst = s.Dst()
+		// overwrite metadata?
+		if opt_seq {
+			m.Seq = 0
 		}
-		if m.Dst == 0 {
-			if s.IsLast || stages == 1 {
-				m.Dst = msg.DST_L
-			} else {
-				m.Dst = msg.DST_R
-			}
+		if opt_time {
+			m.Time = time.Time{}
 		}
 
 		// fix type?
@@ -92,12 +95,16 @@ func (s *Stdin) Run() error {
 			m.Up(msg.KEEPALIVE)
 		}
 
-		// overwrite?
-		if opt_seq {
-			m.Seq = 0
+		// fix direction?
+		if dst != 0 {
+			m.Dst = dst
+		} else if m.Dst == 0 {
+			m.Dst = def
 		}
-		if opt_time {
-			m.Time = time.Time{}
+
+		// context still valid?
+		if ctx.Err() != nil {
+			break
 		}
 
 		// sail
@@ -108,5 +115,9 @@ func (s *Stdin) Run() error {
 		}
 	}
 
-	return nil
+	if ctx.Err() != nil {
+		return context.Cause(ctx)
+	}
+
+	return stdin.Err()
 }

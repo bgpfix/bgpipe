@@ -17,9 +17,10 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	started atomic.Bool // true if already started
-	stopped atomic.Bool // true if already stopped
-	enabled atomic.Bool // true if enabled (--on), false if disabled (--off)
+	started  atomic.Bool // true if already started
+	prepared atomic.Bool // true if already prepared (or during prepare)
+	stopped  atomic.Bool // true if already stopped
+	enabled  atomic.Bool // true if enabled (--on), false if disabled (--off)
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage
@@ -58,13 +59,18 @@ type StageOptions struct {
 	IsRawWriter bool // needs exclusive pipe.Direction.Write access?
 	IsStdin     bool // reads from stdin?
 	IsStdout    bool // writes to stdout?
-	// TODO: allow L+R?
+	AllowLR     bool // allow -LR (bidir mode)?
 }
 
 // Stage implements a bgpipe stage
 type Stage interface {
-	// Attach checks config and prepares for Run, attaching to the pipe.
+	// Attach checks config and and attaches to the pipe.
 	Attach() error
+
+	// Prepare is the first, optional part of Run that opens files, network connections,
+	// and all dependencies that block the ordinary operation of Run. It is called after
+	// Attach and before Run, possibly even before the bgpfix pipe is started.
+	Prepare() error
 
 	// Run runs the stage and returns after all work has finished.
 	// It must respect StageBase.Ctx. Returning a non-nil error different
@@ -102,7 +108,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	f.BoolP("right", "R", false, "operate in R direction")
 	f.StringSlice("on", []string{}, "start when given event is received")
 	f.StringSlice("off", []string{}, "stop after given event is handled")
-	f.String("in", "here", "where in the pipe to inject new messages (first/here/last)")
+	f.String("in", "here", "where to inject new messages of this stage (here/first/last/@name)")
+	f.Bool("block", false, "block starting the pipe until this stage is ready (eg. connections are established)")
 
 	// create s
 	s.Stage = newfunc(s)
@@ -170,6 +177,7 @@ func (s *StageBase) Errorf(format string, a ...any) error {
 	return fmt.Errorf(s.Name+": "+format, a...)
 }
 
+// Dst translates s.IsLeft/s.IsRight to msg.Dst
 func (s *StageBase) Dst() msg.Dst {
 	if s.IsLeft {
 		if s.IsRight {
@@ -177,10 +185,8 @@ func (s *StageBase) Dst() msg.Dst {
 		} else {
 			return msg.DST_L
 		}
-	} else if s.IsRight || !s.IsLast {
-		return msg.DST_R
 	} else {
-		return msg.DST_L
+		return msg.DST_R
 	}
 }
 
@@ -188,10 +194,8 @@ func (s *StageBase) Dst() msg.Dst {
 func (s *StageBase) Upstream() *pipe.Direction {
 	if s.IsLeft {
 		return s.P.L
-	} else if s.IsRight || !s.IsLast {
-		return s.P.R
 	} else {
-		return s.P.L
+		return s.P.R
 	}
 }
 
@@ -199,9 +203,7 @@ func (s *StageBase) Upstream() *pipe.Direction {
 func (s *StageBase) Downstream() *pipe.Direction {
 	if s.IsLeft {
 		return s.P.R
-	} else if s.IsRight || !s.IsLast {
-		return s.P.L
 	} else {
-		return s.P.R
+		return s.P.L
 	}
 }
