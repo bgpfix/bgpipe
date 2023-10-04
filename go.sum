@@ -1,3 +1,5 @@
+github.com/bgpfix/bgpfix v0.0.0-20231003232953-99970152bc36 h1:Ubl0c9kAuepqI7RQ+hbNIn38l2dXzjgayxujcDh5QKQ=
+github.com/bgpfix/bgpfix v0.0.0-20231003232953-99970152bc36/go.mod h1:EkeLwGiW9F1LSOO4ziPXEoJRiWeEw/C7p7iJhGQbDYw=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=
 github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

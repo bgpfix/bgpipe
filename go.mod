@@ -3,7 +3,7 @@ module github.com/bgpfix/bgpipe
 go 1.21.0
 
 require (
-	github.com/bgpfix/bgpfix v0.0.0
+	github.com/bgpfix/bgpfix v0.0.0-20231003232953-99970152bc36
 	github.com/spf13/pflag v1.0.5
 )
 
@@ -25,4 +25,4 @@ require (
 	golang.org/x/sys v0.12.0
 )
 
-replace github.com/bgpfix/bgpfix => ../bgpfix
+// replace github.com/bgpfix/bgpfix => ../bgpfix
