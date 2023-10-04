@@ -16,7 +16,7 @@ Under the hood, it works as a pipeline of data processing stages that slice and 
 
 ## Install and usage
 
-```bash
+```
 # install golang, eg. https://go.dev/dl/
 $ go version
 go version go1.21.1 linux/amd64
@@ -46,6 +46,7 @@ Supported stages (run stage -h to get its help)
   stdout                 print JSON representation to stdout
 
 # see docs for "connect" stage
+$ bgpipe connect -h
 Stage usage: connect [OPTIONS] TARGET
 
 connect to a TCP endpoint
@@ -76,18 +77,18 @@ $ bgpipe updates.20230301.0000.bz2 > output.json
 
 # proxy a connection, print the conversation to stdout
 # 1st stage: bind to TCP *:179
-# 2nd stage: wait for connection, and proxy to 1.2.3.4:179 adding TCP-MD5
+# 2nd stage: wait for connection, and proxy to 1.2.3.4 adding TCP-MD5
 $ bgpipe \
 	-- listen :179 \
-	-- connect --wait listen/connected --md5 solarwinds123 127.0.0.1:1790
+	-- connect --wait listen/connected --md5 solarwinds123 1.2.3.4
 
-# a BGP speaker that streams MRT file after establish
+# a BGP speaker that streams MRT file after the session is established
 # 1st stage: active BGP speaker (AS65055), starting when client connects
 # 2nd stage: MRT file reader, starting after session is established
 # 3rd stage: bind to TCP *:179
 $ bgpipe \
     -- speaker --wait listen/connected --active --asn 65055 \
-    -- mrt --wait established ../test/updates.20230301.0000.bz2 \
+    -- mrt --wait established updates.20230301.0000.bz2 \
     -- listen :179
 ```
 
