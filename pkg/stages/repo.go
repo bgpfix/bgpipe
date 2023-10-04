@@ -3,9 +3,9 @@ package stages
 import "github.com/bgpfix/bgpipe/pkg/bgpipe"
 
 var Repo = map[string]bgpipe.NewStage{
-	"tcp":     NewTcp,
-	"speaker": NewSpeaker,
+	"connect": NewConnect,
 	"listen":  NewListen,
+	"speaker": NewSpeaker,
 	"mrt":     NewMrt,
 	"stdout":  NewStdout,
 	"stdin":   NewStdin,

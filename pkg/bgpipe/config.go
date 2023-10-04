@@ -105,7 +105,7 @@ func (b *Bgpipe) parseArgs(args []string) error {
 		cmd := args[0]
 		switch {
 		case IsAddr(cmd):
-			cmd = "tcp"
+			cmd = "connect"
 		case IsBind(cmd):
 			cmd = "listen"
 		case IsFile(cmd):
