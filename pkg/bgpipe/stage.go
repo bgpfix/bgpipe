@@ -103,9 +103,9 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	f.SetInterspersed(false)
 	f.BoolP("left", "L", false, "operate in L direction")
 	f.BoolP("right", "R", false, "operate in R direction")
-	f.StringSlice("wait", []string{}, "wait for given event before starting")
-	f.StringSlice("stop", []string{}, "stop after given event is handled")
-	f.String("in", "here", "where to inject new messages of this stage (here/first/last/@name)")
+	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
+	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
+	f.StringP("in", "I", "here", "where to inject new messages (here/first/last/@name)")
 
 	// create s
 	s.Stage = newfunc(s)
@@ -114,8 +114,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Options.IsConsumer = s.Options.IsConsumer || s.Options.IsRawReader
 	s.Options.IsProducer = s.Options.IsProducer || s.Options.IsRawWriter
 
-	// raw writers can't set --in
-	if s.Options.IsRawWriter {
+	// some stages can't set --in
+	if s.Options.IsRawWriter || !s.Options.IsProducer {
 		if o := f.Lookup("in"); o != nil {
 			o.Hidden = true
 			o.Value.Set("")

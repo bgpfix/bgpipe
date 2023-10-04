@@ -114,7 +114,7 @@ func (b *Bgpipe) Start(ev *pipe.Event) bool {
 	// start auto stdin?
 	if s := b.auto_stdin; s != nil {
 		s.wgAdd(1)
-		s.runStart(ev)
+		// NB: no s.runStart(ev) --wait for established
 	}
 
 	// go through all stages
@@ -123,7 +123,7 @@ func (b *Bgpipe) Start(ev *pipe.Event) bool {
 			continue
 		}
 
-		// kick waitgroups now, even if waiting for --on
+		// kick waitgroups now, even if waiting for --wait event
 		s.wgAdd(1)
 
 		// run now iff already enabled

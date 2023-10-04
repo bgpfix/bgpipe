@@ -80,6 +80,7 @@ func (b *Bgpipe) Attach() error {
 			return fmt.Errorf("auto stdin: %w", err)
 		} else {
 			b.auto_stdin = s
+			p.Options.OnEventPre(s.runStart, pipe.EVENT_ESTABLISHED)
 		}
 	}
 

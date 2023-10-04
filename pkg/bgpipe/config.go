@@ -41,8 +41,8 @@ func (b *Bgpipe) addFlags() {
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.BoolP("debug", "D", false, "alias for --log debug")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given pipe events (asterisk means all)")
-	f.BoolP("stdin", "i", false, "read stdin (even if not explicitly requested)")
-	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly requested)")
+	f.BoolP("stdin", "i", false, "read stdin after ESTABLISHED (unless explicitly configured)")
+	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly configured)")
 	f.BoolP("reverse", "r", false, "reverse the pipe")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 }
@@ -154,22 +154,25 @@ func (s *StageBase) usage() {
 	if len(o.Usage) > 0 {
 		fmt.Fprintf(os.Stderr, "Stage usage: %s\n", o.Usage)
 	} else {
-		fmt.Fprintf(os.Stderr, "Stage usage: %s %s\n",
-			s.Cmd, strings.ToUpper(strings.Join(o.Args, " ")))
+		fmt.Fprintf(os.Stderr, "Stage usage: %s [OPTIONS] %s\n\n%s\n",
+			s.Cmd,
+			strings.ToUpper(strings.Join(o.Args, " ")),
+			s.Options.Descr)
 	}
 
+	fmt.Fprintf(os.Stderr, "\nOptions:\n")
 	fmt.Fprint(os.Stderr, f.FlagUsages())
 
 	// iterate over events?
 	if len(o.Events) > 0 {
-		fmt.Fprintf(os.Stderr, "Events:\n")
+		fmt.Fprintf(os.Stderr, "\nEvents:\n")
 		var events []string
 		for e := range o.Events {
 			events = append(events, e)
 		}
 		slices.Sort(events)
 		for _, e := range events {
-			fmt.Fprintf(os.Stderr, "  %-19s %s\n", e, o.Events[e])
+			fmt.Fprintf(os.Stderr, "  %-24s %s\n", e, o.Events[e])
 		}
 	}
 }
