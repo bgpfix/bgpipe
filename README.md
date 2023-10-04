@@ -22,7 +22,7 @@ $ go version
 go version go1.21.1 linux/amd64
 
 # install bgpipe
-$ go install github.com/bgpfix/bgpipe
+$ go install github.com/bgpfix/bgpipe@latest
 
 # bgpipe has built-in docs
 $ bgpipe -h
