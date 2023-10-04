@@ -41,7 +41,7 @@ func (b *Bgpipe) addFlags() {
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.BoolP("debug", "D", false, "alias for --log debug")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given pipe events (asterisk means all)")
-	f.BoolP("stdin", "i", false, "read stdin after ESTABLISHED (unless explicitly configured)")
+	f.BoolP("stdin", "i", false, "read stdin after session is established (unless explicitly configured)")
 	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly configured)")
 	f.BoolP("reverse", "r", false, "reverse the pipe")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
@@ -175,6 +175,8 @@ func (s *StageBase) usage() {
 			fmt.Fprintf(os.Stderr, "  %-24s %s\n", e, o.Events[e])
 		}
 	}
+
+	fmt.Fprintf(os.Stderr, "\n")
 }
 
 // parseArgs parses CLI flags and arguments, exporting to K.

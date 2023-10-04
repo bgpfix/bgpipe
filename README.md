@@ -32,8 +32,8 @@ Options:
   -l, --log string       log level (debug/info/warn/error/disabled) (default "info")
   -D, --debug            alias for --log debug
   -e, --events strings   log given pipe events (asterisk means all) (default [PARSE,ESTABLISHED])
-  -i, --stdin            read stdin (even if not explicitly requested)
-  -s, --silent           do not write stdout (unless explicitly requested)
+  -i, --stdin            read stdin after session is established (unless explicitly configured)
+  -s, --silent           do not write stdout (unless explicitly configured)
   -r, --reverse          reverse the pipe
   -2, --short-asn        use 2-byte ASN numbers
 
@@ -93,4 +93,5 @@ $ bgpipe \
 ```
 
 ## Author
+
 Pawel Foremski [@pforemski](https://twitter.com/pforemski) 2023
