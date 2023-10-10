@@ -1,6 +1,7 @@
 package bgpipe
 
 import (
+	"fmt"
 	"math"
 	"net/netip"
 	"strconv"
@@ -58,21 +59,36 @@ func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string) []string {
 			continue
 		}
 
-		has_dot := strings.IndexByte(et, '.') > 0
-		has_slash := strings.IndexByte(et, '/') > 0
+		// split slash/dot.event
+		slash, et, has_slash := strings.Cut(et, "/")
+		if !has_slash {
+			et = slash
+			slash = ""
+		}
+		dot, et, has_dot := strings.Cut(et, ".")
+		if !has_dot {
+			et = dot
+			dot = ""
+		}
+		et_lower := strings.ToLower(et)
+		et_upper := strings.ToUpper(et)
 
-		if has_dot && has_slash {
-			// fully specified, done
-		} else if !has_slash {
-			if !has_dot {
-				et = "bgpfix/pipe." + strings.ToUpper(et)
+		switch {
+		case has_dot && has_slash:
+			et = fmt.Sprintf("%s/%s.%s", slash, dot, et_upper)
+		case has_dot:
+			et = fmt.Sprintf("bgpfix/%s.%s", dot, et_upper)
+		case has_slash:
+			et = fmt.Sprintf("%s/%s", slash, et_upper) // stage event
+		default:
+			if et == et_lower {
+				et = fmt.Sprintf("%s/READY", et) // stage ready
 			} else {
-				et = "bgpfix/" + et
+				et = fmt.Sprintf("bgpfix/pipe.%s", et_upper)
 			}
-		} else {
-			// has lib, take as-is
 		}
 
+		b.Trace().Msgf("parseEvents(): '%s' -> '%s'", events[i], et)
 		events[i] = et
 	}
 
