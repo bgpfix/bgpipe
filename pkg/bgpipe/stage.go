@@ -19,7 +19,7 @@ type StageBase struct {
 
 	started atomic.Bool // true if already started
 	stopped atomic.Bool // true if already stopped
-	running atomic.Bool // true if in Stage.Run and not stopped
+	running atomic.Bool // true if stage running
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage

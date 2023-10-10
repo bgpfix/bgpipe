@@ -18,6 +18,34 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		s.Debug().Stringer("ev", ev).Msg("starting")
 	}
 
+	// check if err and s.Ctx ok; cancel global ctx otherwise
+	iserr := func(err error) bool {
+		if err == nil {
+			err = context.Cause(s.Ctx)
+			if err == context.Canceled {
+				err = nil
+			}
+		}
+		if err == nil || errors.Is(err, ErrStageStopped) {
+			return false
+		}
+
+		// game over
+		s.B.Cancel(s.Errorf("%w", err))
+		return true
+	}
+
+	// run Prepare, make sure to get the error back
+	s.Trace().Msg("Prepare start")
+	err := s.Stage.Prepare()
+	s.Trace().Err(err).Msg("Prepare done")
+	if iserr(err) {
+		return
+	}
+
+	// enable callbacks and handlers
+	s.running.Store(true)
+
 	// start Stage.Run in background
 	go func() {
 		// catch stage panics
@@ -27,29 +55,22 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 			}
 		}()
 
-		// run Prepare, make sure to get the error back
-		s.Trace().Msg("Prepare start")
-		err := s.Stage.Prepare()
-		s.Trace().Err(err).Msg("Prepare done")
-
-		// successful? enable callbacks/handlers and block on Run if context still valid
+		// block on Run if context still valid
+		err := context.Cause(s.Ctx)
 		if err == nil {
-			s.running.Store(true)
-			if err = context.Cause(s.Ctx); err == nil {
-				s.Trace().Msg("Run start")
-				s.Event("READY", nil)
-				err = s.Stage.Run()
-				s.Event("DONE", nil)
-				s.Trace().Err(err).Msg("Run done")
-			}
-			s.running.Store(false)
+			s.Trace().Msg("Run start")
+			s.Event("READY", nil)
+			err = s.Stage.Run()
+			s.Trace().Err(err).Msg("Run done")
+			s.Event("DONE", nil)
 		}
 
-		// handle the error
-		if err == nil || errors.Is(err, ErrStageStopped) {
-			s.runStop(nil) // ordinary stop
-		} else {
-			s.B.Cancel(s.Errorf("%w", err)) // game over
+		// disable callbacks and handlers
+		s.running.Store(false)
+
+		// exited cleanly? run ordinary stop
+		if !iserr(err) {
+			s.runStop(nil)
 		}
 	}()
 

@@ -212,7 +212,7 @@ func (s *StageBase) attach() error {
 			}
 		}
 	} else {
-		po.OnEvent(s.runStart, pipe.EVENT_START)
+		po.OnEventPre(s.runStart, pipe.EVENT_START)
 	}
 
 	// has trigger-off events?
