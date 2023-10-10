@@ -50,14 +50,8 @@ func (s *Stdin) Run() error {
 		def = msg.DST_L
 	}
 
-	for {
-		// grab new m
-		m := s.NewMsg()
-
-		// read line, trim it
-		if !stdin.Scan() {
-			break
-		}
+	m := s.NewMsg()
+	for stdin.Scan() {
 		buf := bytes.TrimSpace(stdin.Bytes())
 		// s.Trace().Msgf("stdin: %s", buf)
 
@@ -80,6 +74,7 @@ func (s *Stdin) Run() error {
 
 		if err != nil {
 			s.Error().Err(err).Bytes("input", buf).Msg("parse error")
+			m = s.NewMsg()
 			continue
 		}
 
@@ -114,6 +109,8 @@ func (s *Stdin) Run() error {
 		} else {
 			p.R.WriteMsg(m)
 		}
+
+		m = s.NewMsg()
 	}
 
 	if ctx.Err() != nil {
