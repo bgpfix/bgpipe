@@ -65,13 +65,39 @@ type StageOptions struct {
 
 // Stage implements a bgpipe stage
 type Stage interface {
-	// Attach checks config and and attaches to the pipe.
+	// Attach is run before the pipe starts.
+	// It should check the config and attach to the bgpfix pipe.
 	Attach() error
 
+	// Prepare is called after the pipe starts, and just before Run.
+	// It should prepare required I/O, eg. files, network connections, etc.
+	// If no error is returned, the stage emits a "ready" event, and
+	// all callbacks and handlers are enabled.
+	Prepare() error
+
 	// Run runs the stage and returns after all work has finished.
+	// It must call StageBase.Ready() when the stage is ready to start
+	// processing messages and events (eg. after I/O setup ready).
 	// It must respect StageBase.Ctx. Returning a non-nil error different
 	// than ErrStopped results in a fatal error that stops the whole pipe.
 	Run() error
+}
+
+// Attach is the default Stage implementation that does nothing.
+func (s *StageBase) Attach() error {
+	return nil
+}
+
+// Prepare is the default Stage implementation that does nothing.
+func (s *StageBase) Prepare() error {
+	return nil
+}
+
+// Run is the default Stage implementation that just waits
+// for the context and returns its cancel cause
+func (s *StageBase) Run() error {
+	<-s.Ctx.Done()
+	return context.Cause(s.Ctx)
 }
 
 // NewStage returns a new Stage for given parent base. It should modify base.Options.

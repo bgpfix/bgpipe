@@ -227,8 +227,3 @@ func (s *StageBase) attach() error {
 
 	return nil
 }
-
-// Attach is the default Stage implementation that does nothing
-func (s *StageBase) Attach() error {
-	return nil
-}

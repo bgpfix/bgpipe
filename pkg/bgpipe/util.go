@@ -52,18 +52,19 @@ func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string) []string {
 
 	// rewrite
 	for i, et := range events {
-		// special value
-		if et == "*" {
+		// special values
+		if et == "all" || et == "*" {
+			events[i] = "*"
 			continue
 		}
 
-		has_pkg := strings.IndexByte(et, '.') > 0
-		has_lib := strings.IndexByte(et, '/') > 0
+		has_dot := strings.IndexByte(et, '.') > 0
+		has_slash := strings.IndexByte(et, '/') > 0
 
-		if has_pkg && has_lib {
+		if has_dot && has_slash {
 			// fully specified, done
-		} else if !has_lib {
-			if !has_pkg {
+		} else if !has_slash {
+			if !has_dot {
 				et = "bgpfix/pipe." + strings.ToUpper(et)
 			} else {
 				et = "bgpfix/" + et
