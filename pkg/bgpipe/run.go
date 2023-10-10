@@ -34,14 +34,15 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 
 		// successful? enable callbacks/handlers and block on Run if context still valid
 		if err == nil {
-			s.enabled.Store(true)
+			s.running.Store(true)
 			if err = context.Cause(s.Ctx); err == nil {
-				s.Event("READY", nil)
 				s.Trace().Msg("Run start")
+				s.Event("READY", nil)
 				err = s.Stage.Run()
+				s.Event("DONE", nil)
 				s.Trace().Err(err).Msg("Run done")
 			}
-			s.enabled.Store(false)
+			s.running.Store(false)
 		}
 
 		// handle the error
@@ -64,7 +65,7 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	}
 
 	s.Cancel(ErrStageStopped)
-	s.enabled.Store(false)
+	s.running.Store(false)
 	s.wgAdd(-1)
 
 	return

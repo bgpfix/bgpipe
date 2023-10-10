@@ -65,8 +65,6 @@ func (b *Bgpipe) Attach() error {
 		s.K.Set("right", true)
 		if err := s.attach(); err != nil {
 			return fmt.Errorf("auto stdout: %w", err)
-		} else {
-			b.auto_stdout = s
 		}
 	}
 
@@ -76,11 +74,9 @@ func (b *Bgpipe) Attach() error {
 		s.K.Set("left", true)
 		s.K.Set("right", true)
 		s.K.Set("in", "first")
+		s.K.Set("wait", "ESTABLISHED")
 		if err := s.attach(); err != nil {
 			return fmt.Errorf("auto stdin: %w", err)
-		} else {
-			b.auto_stdin = s
-			p.Options.OnEventPre(s.runStart, pipe.EVENT_ESTABLISHED)
 		}
 	}
 
@@ -170,43 +166,40 @@ func (s *StageBase) attach() error {
 		return err
 	}
 
-	// update the logger
-	name := s.Name
-	if name[0] != '[' {
-		name = fmt.Sprintf("[%d] %s", s.Index, name)
-	}
-	s.Logger = s.B.With().Str("stage", name).Logger()
+	// if not an internal stage...
+	if s.Index > 0 {
+		// update the logger
+		name := s.Name
+		if name[0] != '[' {
+			name = fmt.Sprintf("[%d] %s", s.Index, name)
+		}
+		s.Logger = s.B.With().Str("stage", name).Logger()
 
-	s.Trace().Msgf("attached [%d] first/last=%v/%v L/R=%v,%v startat=%d",
-		s.Index, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight, s.StartAt)
+		// needs raw stream access?
+		if s.Options.IsRawReader || s.Options.IsRawWriter {
+			if !(s.IsFirst || s.IsLast) {
+				return ErrFirstOrLast
+			}
+		}
 
-	// is an internal stage?
-	if s.Index == 0 {
-		return nil
-	}
-
-	// needs raw stream access?
-	if s.Options.IsRawReader || s.Options.IsRawWriter {
-		if !(s.IsFirst || s.IsLast) {
-			return ErrFirstOrLast
+		// make stage callbacks and handlers depend on s.enabled
+		s.Callbacks = po.Callbacks[cbs:]
+		for _, cb := range s.Callbacks {
+			cb.Id = s.Index
+			cb.Enabled = &s.running
+		}
+		s.Handlers = po.Handlers[hds:]
+		for _, h := range s.Handlers {
+			h.Id = s.Index
+			h.Enabled = &s.running
 		}
 	}
 
-	// make stage callbacks and handlers depend on s.enabled
-	s.Callbacks = po.Callbacks[cbs:]
-	for _, cb := range s.Callbacks {
-		cb.Id = s.Index
-		cb.Enabled = &s.enabled
-	}
-	s.Handlers = po.Handlers[hds:]
-	for _, h := range s.Handlers {
-		h.Id = s.Index
-		h.Enabled = &s.enabled
-	}
+	// update related waitgroups
+	s.wgAdd(1)
 
 	// has trigger-on events?
 	if evs := b.parseEvents(k, "wait"); len(evs) > 0 {
-		s.enabled.Store(false)
 		po.OnEventPre(s.runStart, evs...)
 
 		// re-target pipe.EVENT_START handlers to the --wait events
@@ -218,12 +211,17 @@ func (s *StageBase) attach() error {
 				}
 			}
 		}
+	} else {
+		po.OnEvent(s.runStart, pipe.EVENT_START)
 	}
 
 	// has trigger-off events?
 	if evs := b.parseEvents(k, "stop"); len(evs) > 0 {
 		po.OnEventPost(s.runStop, evs...)
 	}
+
+	s.Trace().Msgf("attached [%d] first/last=%v/%v L/R=%v,%v startat=%d",
+		s.Index, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight, s.StartAt)
 
 	return nil
 }

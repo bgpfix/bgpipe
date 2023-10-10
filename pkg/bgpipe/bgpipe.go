@@ -33,9 +33,7 @@ type Bgpipe struct {
 	wg_rwrite sync.WaitGroup // stages that write to pipe R
 	wg_rread  sync.WaitGroup // stages that read from pipe R
 
-	auto_stdin  *StageBase // if not nil, automatic stdin stage
-	auto_stdout *StageBase // if not nil, automatic stdout stage
-	logbuf      []byte     // buffer for LogEvent
+	logbuf []byte // buffer for LogEvent
 }
 
 // NewBgpipe creates a new bgpipe instance using given
@@ -105,33 +103,6 @@ func (b *Bgpipe) Run() error {
 
 // Start is called after the bgpfix pipe starts
 func (b *Bgpipe) Start(ev *pipe.Event) bool {
-	// start auto stdout?
-	if s := b.auto_stdout; s != nil {
-		s.wgAdd(1)
-		s.runStart(ev)
-	}
-
-	// start auto stdin?
-	if s := b.auto_stdin; s != nil {
-		s.wgAdd(1)
-		// NB: no s.runStart(ev) --wait for established
-	}
-
-	// go through all stages
-	for _, s := range b.Stages {
-		if s == nil {
-			continue
-		}
-
-		// kick waitgroups now, even if waiting for --wait event
-		s.wgAdd(1)
-
-		// run now iff already enabled
-		if s.enabled.Load() {
-			s.runStart(ev)
-		}
-	}
-
 	// wait for writers
 	go func() {
 		b.wg_lwrite.Wait()

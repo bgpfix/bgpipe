@@ -59,6 +59,7 @@ func (s *Stdin) Run() error {
 			break
 		}
 		buf := bytes.TrimSpace(stdin.Bytes())
+		// s.Trace().Msgf("stdin: %s", buf)
 
 		// detect the format
 		var err error

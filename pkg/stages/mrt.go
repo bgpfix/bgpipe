@@ -20,7 +20,7 @@ func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Mrt{StageBase: parent}
 	o := &s.Options
 
-	o.Args = []string{"file"}
+	o.Args = []string{"path"}
 
 	o.Descr = "read MRT file with BGP4MP messages (uncompress if needed)"
 	o.IsProducer = true
@@ -29,7 +29,7 @@ func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
 }
 
 func (s *Mrt) Attach() error {
-	s.fpath = s.K.String("file")
+	s.fpath = s.K.String("path")
 	if len(s.fpath) == 0 {
 		return errors.New("needs source file path")
 	}
@@ -39,7 +39,7 @@ func (s *Mrt) Attach() error {
 		return err
 	}
 
-	// MRT-BGP reader writing to s.Input().In
+	// MRT-BGP reader writing to s.Upstream().In
 	s.mr = mrt.NewReader(s.Ctx)
 	mo := &s.mr.Options
 	mo.Logger = &s.Logger

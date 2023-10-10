@@ -17,10 +17,9 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	started  atomic.Bool // true if already started
-	prepared atomic.Bool // true if already prepared (or during prepare)
-	stopped  atomic.Bool // true if already stopped
-	enabled  atomic.Bool // true after started, false after stopped
+	started atomic.Bool // true if already started
+	stopped atomic.Bool // true if already stopped
+	running atomic.Bool // true if in Stage.Run and not stopped
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage
@@ -71,15 +70,14 @@ type Stage interface {
 
 	// Prepare is called after the pipe starts, and just before Run.
 	// It should prepare required I/O, eg. files, network connections, etc.
-	// If no error is returned, the stage emits a "ready" event, and
+	// If no error is returned, the stage emits a "READY" event, and
 	// all callbacks and handlers are enabled.
 	Prepare() error
 
 	// Run runs the stage and returns after all work has finished.
-	// It must call StageBase.Ready() when the stage is ready to start
-	// processing messages and events (eg. after I/O setup ready).
 	// It must respect StageBase.Ctx. Returning a non-nil error different
 	// than ErrStopped results in a fatal error that stops the whole pipe.
+	// Emits a "DONE" event after return.
 	Run() error
 }
 
@@ -120,7 +118,6 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Cmd = cmd
 	s.Name = cmd
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
-	s.enabled.Store(true)
 
 	// common CLI flags
 	s.Options.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
@@ -227,4 +224,9 @@ func (s *StageBase) Downstream() *pipe.Direction {
 // Event sends an event, prefixing et with stage name + slash
 func (s *StageBase) Event(et string, msg *msg.Msg, args ...any) (sent bool) {
 	return s.B.Pipe.Event(s.Name+"/"+et, msg, args...)
+}
+
+// Running returns true if the stage is in Run(), false otherwise.
+func (s *StageBase) Running() bool {
+	return s.running.Load()
 }

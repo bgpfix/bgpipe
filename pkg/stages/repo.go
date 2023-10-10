@@ -9,4 +9,5 @@ var Repo = map[string]bgpipe.NewStage{
 	"mrt":     NewMrt,
 	"stdout":  NewStdout,
 	"stdin":   NewStdin,
+	"exec":    NewExec,
 }

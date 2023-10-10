@@ -12,6 +12,7 @@ type Listen struct {
 	*bgpipe.StageBase
 
 	bind string
+	conn net.Conn
 }
 
 func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
@@ -23,13 +24,9 @@ func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
 
 	f.Duration("timeout", 0, "connect timeout (0 means none)")
 	f.String("md5", "", "TCP MD5 password")
-	o.Args = []string{"bind"}
+	o.Args = []string{"addr"}
 
 	o.Descr = "wait for a TCP client to connect"
-	o.Events = map[string]string{
-		"connected": "new connection accepted",
-	}
-
 	o.IsRawReader = true
 	o.IsRawWriter = true
 
@@ -38,7 +35,7 @@ func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
 
 func (s *Listen) Attach() error {
 	// check config
-	s.bind = s.K.String("bind")
+	s.bind = s.K.String("addr")
 	if len(s.bind) == 0 {
 		s.bind = ":179" // a default
 	}
@@ -52,7 +49,7 @@ func (s *Listen) Attach() error {
 	return nil
 }
 
-func (s *Listen) Run() error {
+func (s *Listen) Prepare() error {
 	// listen
 	var lc net.ListenConfig
 	lc.Control = tcp_md5(s.K.String("md5"))
@@ -80,5 +77,11 @@ func (s *Listen) Run() error {
 	// don't listen for more
 	l.Close()
 
-	return tcp_handle(s.StageBase, conn)
+	// success
+	s.conn = conn
+	return nil
+}
+
+func (s *Listen) Run() error {
+	return tcp_handle(s.StageBase, s.conn)
 }

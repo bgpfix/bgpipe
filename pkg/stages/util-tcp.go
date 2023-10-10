@@ -49,7 +49,6 @@ func tcp_md5(md5pass string) func(net, addr string, c syscall.RawConn) error {
 
 func tcp_handle(s *bgpipe.StageBase, conn net.Conn) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
-	s.Event("connected", nil, conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
 	// get tcp conn
