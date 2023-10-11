@@ -19,7 +19,7 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 	}
 
 	// check if err and s.Ctx ok; cancel global ctx otherwise
-	iserr := func(err error) bool {
+	isfatal := func(err error) bool {
 		if err == nil {
 			err = context.Cause(s.Ctx)
 			if err == context.Canceled {
@@ -28,18 +28,17 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		}
 		if err == nil || errors.Is(err, ErrStageStopped) {
 			return false
+		} else {
+			s.B.Cancel(s.Errorf("%w", err)) // game over
+			return true
 		}
-
-		// game over
-		s.B.Cancel(s.Errorf("%w", err))
-		return true
 	}
 
 	// run Prepare, make sure to get the error back
 	s.Trace().Msg("Prepare start")
 	err := s.Stage.Prepare()
 	s.Trace().Err(err).Msg("Prepare done")
-	if iserr(err) {
+	if isfatal(err) {
 		return
 	}
 
@@ -65,13 +64,14 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 			s.Event("DONE", nil)
 		}
 
-		// disable callbacks and handlers
-		s.running.Store(false)
-
-		// exited cleanly? run ordinary stop
-		if !iserr(err) {
-			s.runStop(nil)
+		// exit on fatal error
+		if isfatal(err) {
+			return
 		}
+
+		// cleanup & keep running otherwise
+		s.running.Store(false)
+		s.runStop(nil)
 	}()
 
 	return

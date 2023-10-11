@@ -2,6 +2,7 @@ package bgpipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -92,13 +93,17 @@ func (b *Bgpipe) Run() error {
 	b.Pipe.Wait()  // until error or all processing is done
 
 	// any errors on the global context?
-	if err := context.Cause(b.Ctx); err != nil {
-		b.Fatal().Err(err).Msg("fatal error")
-		return err
+	err := context.Cause(b.Ctx)
+	switch {
+	case err == nil:
+		break // full success
+	case errors.Is(err, ErrStageStopped):
+		b.Info().Msg(err.Error())
+	default:
+		b.Error().Err(err).Msg("pipe error")
 	}
 
-	// successfully finished
-	return nil
+	return err
 }
 
 // Start is called after the bgpfix pipe starts

@@ -40,7 +40,7 @@ type StageBase struct {
 	IsLeft  bool // operates on L direction?
 	IsRight bool // operates on R direction?
 
-	StartAt   int              // which stage to start at when injecting new messages?
+	SkipId    int              // which stage to start at when injecting new messages?
 	Callbacks []*pipe.Callback // registered callbacks
 	Handlers  []*pipe.Handler  // registered handlers
 }
@@ -128,7 +128,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	f.BoolP("right", "R", false, "operate in R direction")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
-	f.StringP("in", "I", "here", "where to inject new messages (here/first/last/@name)")
+	f.StringP("in", "I", "next", "where to inject new messages (next/here/first/@name)")
 
 	// create s
 	s.Stage = newfunc(s)
@@ -149,18 +149,12 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 }
 
 // NewMsg returns a new, empty message from pipe pool,
-// but respecting --in stage options.
+// but respecting the stage --in option.
 func (s *StageBase) NewMsg() *msg.Msg {
 	m := s.P.Get()
 	pc := pipe.Context(m)
-	switch s.StartAt {
-	case 0: // first
-		pc.StartAt = 0
-	case -1: // last
-		pc.NoCallbacks()
-	default: // here
-		pc.StartAt = s.StartAt
-	}
+	pc.SourceId = s.Index
+	pc.SkipId = s.SkipId
 	return m
 }
 

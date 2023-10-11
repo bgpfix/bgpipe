@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"slices"
+	"strconv"
 
 	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -138,23 +139,27 @@ func (s *StageBase) attach() error {
 
 	// where to inject new messages?
 	switch v := k.String("in"); v {
+	case "next", "":
+		s.SkipId = -s.Index
 	case "here":
-		s.StartAt = s.Index
-	case "first", "":
-		s.StartAt = 0
-	case "last":
-		s.StartAt = -1
+		s.SkipId = s.Index
+	case "first":
+		s.SkipId = 0
 	default:
-		// a stage name reference?
-		if len(v) > 0 && v[0] == '@' {
+		if id, err := strconv.Atoi(v); err == nil {
+			// an integer
+			s.SkipId = id
+			break
+		} else if len(v) > 0 && v[0] == '@' {
+			// a stage name reference?
 			for _, s2 := range s.B.Stages {
 				if s2 != nil && s2.Name == v {
-					s.StartAt = s2.Index
+					s.SkipId = s2.Index
 					break
 				}
 			}
 		}
-		if s.StartAt == 0 {
+		if s.SkipId == 0 {
 			return fmt.Errorf("%w: %s", ErrInject, v)
 		}
 	}
@@ -221,7 +226,7 @@ func (s *StageBase) attach() error {
 	}
 
 	s.Trace().Msgf("attached [%d] first/last=%v/%v L/R=%v,%v startat=%d",
-		s.Index, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight, s.StartAt)
+		s.Index, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight, s.SkipId)
 
 	return nil
 }

@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strconv"
 	"syscall"
 	"unsafe"
 
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
+	"github.com/spf13/pflag"
 	"golang.org/x/sys/unix"
 )
 
@@ -110,4 +112,38 @@ func tcp_handle(s *bgpipe.StageBase, conn net.Conn) error {
 
 	s.Info().Int64("read", read).Int64("wrote", wrote).Msg("connection closed")
 	return nil
+}
+
+func FnFlag(name, short, usage string, fn func()) *pflag.Flag {
+	v := fnValue(fn)
+	return &pflag.Flag{
+		Name:        name,
+		Shorthand:   short,
+		Usage:       usage,
+		Value:       &v,
+		NoOptDefVal: "true",
+	}
+}
+
+type fnValue func()
+
+func (fn *fnValue) IsBoolFlag() bool { return true }
+
+func (fn *fnValue) String() string {
+	return "fn"
+}
+
+func (fn *fnValue) Set(s string) error {
+	v, err := strconv.ParseBool(s)
+	if err != nil {
+		return err
+	}
+	if v {
+		(*fn)()
+	}
+	return nil
+}
+
+func (b *fnValue) Type() string {
+	return "bool"
 }
