@@ -216,8 +216,8 @@ func (s *StageBase) Downstream() *pipe.Direction {
 }
 
 // Event sends an event, prefixing et with stage name + slash
-func (s *StageBase) Event(et string, msg *msg.Msg, args ...any) (sent bool) {
-	return s.B.Pipe.Event(s.Name+"/"+et, msg, args...)
+func (s *StageBase) Event(et string, args ...any) (sent bool) {
+	return s.B.Pipe.Event(s.Name+"/"+et, args...)
 }
 
 // Running returns true if the stage is in Run(), false otherwise.

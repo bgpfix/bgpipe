@@ -179,7 +179,7 @@ func (s *Exec) stdoutReader(done chan error) {
 	for m := s.NewMsg(); in.Scan(); m = s.NewMsg() {
 		// trim
 		buf := bytes.TrimSpace(in.Bytes())
-		s.Trace().Msgf("out: %s", buf)
+		// s.Trace().Msgf("out: %s", buf)
 
 		// detect the format
 		var err error
@@ -213,11 +213,10 @@ func (s *Exec) stdoutReader(done chan error) {
 		}
 
 		// sail
-		// FIXME: way to inject skipping .In
 		if m.Dst == msg.DST_L {
-			p.L.WriteMsg(m)
+			p.L.ProcessMsg(m)
 		} else {
-			p.R.WriteMsg(m)
+			p.R.ProcessMsg(m)
 		}
 	}
 	done <- in.Err()
