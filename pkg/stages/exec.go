@@ -270,9 +270,9 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 	s.output <- buf
 
 	// output full?
-	if len(s.output) == EXEC_OUTPUT_BUF {
-		s.Warn().Msg("output buffer full")
-	}
+	// if len(s.output) == EXEC_OUTPUT_BUF {
+	// 	s.Warn().Msg("output buffer full")
+	// }
 
 	return
 }

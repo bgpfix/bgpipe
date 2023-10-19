@@ -2,17 +2,19 @@
 
 **WORK IN PROGRESS PREVIEW 10/2023**
 
-This project provides an open-source BGP reverse proxy based on [the BGPFix library](https://github.com/bgpfix/bgpfix) that can be used to run:
+This project provides an open-source BGP reverse proxy based on [the BGPFix library](https://github.com/bgpfix/bgpfix).
 
- * a bidirectional BGP to JSON bridge (eg. under a parent process)
- * a BGP man-in-the-middle proxy that dumps all conversation to JSON
+For example, bgpipe can be used to run:
+
+ * a BGP man-in-the-middle proxy that dumps and controls all conversation
+ * a bidirectional BGP to JSON bridge
  * a BGP listener on one end that connects adding (or changing) TCP-MD5 password on the other end
- * a speaker (or proxy) that streams to a peer an MRT file after the session is established
+ * a speaker (or proxy) that streams an MRT file after the session is established
  * a fast MRT to JSON dumper (eg. for data analysis)
  
-The vision for bgpipe is to be a powerful *BGP firewall* that transparently secures, enhances, and audits existing BGP speakers. The hope is to enable disruptive innovation in the closed world of big BGP router vendors.
+The vision for bgpipe is to be a powerful *BGP firewall* that transparently secures, enhances, and audits existing BGP speakers. The hope is to bolster open source innovation in the closed world of big BGP router vendors.
 
-Under the hood, it works as a pipeline of data processing stages that slice and dice streams of BGP messages.
+Under the hood, it works as a pipeline of data processing stages that slice and dice streams of BGP messages. See [BGPFix docs](https://github.com/bgpfix/bgpfix) for more background.
 
 ## Install and usage
 
@@ -39,6 +41,7 @@ Options:
 
 Supported stages (run stage -h to get its help)
   connect                connect to a TCP endpoint
+  exec                   pass through a background JSON processor
   listen                 wait for a TCP client to connect
   mrt                    read MRT file with BGP4MP messages (uncompress if needed)
   speaker                run a simple local BGP speaker
