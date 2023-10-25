@@ -40,10 +40,10 @@ func (b *Bgpipe) addFlags() {
 	f.SetInterspersed(false)
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.BoolP("debug", "D", false, "alias for --log debug")
-	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given pipe events (use \"all\" to log all events)")
+	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given events (\"all\" means all events)")
 	f.BoolP("stdin", "i", false, "read stdin after session is established (unless explicitly configured)")
 	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly configured)")
-	f.BoolP("reverse", "r", false, "reverse the pipe")
+	f.BoolP("reverse", "r", false, "reverse the pipe direction")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 }
 

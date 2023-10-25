@@ -33,10 +33,10 @@ Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS...] [--] ...
 Options:
   -l, --log string       log level (debug/info/warn/error/disabled) (default "info")
   -D, --debug            alias for --log debug
-  -e, --events strings   log given pipe events (asterisk means all) (default [PARSE,ESTABLISHED])
+  -e, --events strings   log given events ("all" means all events) (default [PARSE,ESTABLISHED])
   -i, --stdin            read stdin after session is established (unless explicitly configured)
   -s, --silent           do not write stdout (unless explicitly configured)
-  -r, --reverse          reverse the pipe
+  -r, --reverse          reverse the pipe direction
   -2, --short-asn        use 2-byte ASN numbers
 
 Supported stages (run stage -h to get its help)
@@ -50,7 +50,7 @@ Supported stages (run stage -h to get its help)
 
 # see docs for "connect" stage
 $ bgpipe connect -h
-Stage usage: connect [OPTIONS] TARGET
+Stage usage: connect [OPTIONS] ADDR
 
 connect to a TCP endpoint
 
@@ -59,11 +59,9 @@ Options:
   -R, --right              operate in R direction
   -W, --wait strings       wait for given event before starting
   -S, --stop strings       stop after given event is handled
+  -I, --in string          where to inject new messages (default "next")
       --timeout duration   connect timeout (0 means none)
       --md5 string         TCP MD5 password
-
-Events:
-  connected           connection established
 ```
 
 ## Examples
@@ -93,6 +91,12 @@ $ bgpipe \
     -- speaker --active --asn 65055 \
     -- mrt --wait ESTABLISHED updates.20230301.0000.bz2 \
     -- listen :179
+
+# a BGP sed-in-the-middle proxy rewriting ASNs in OPEN messages
+$ bgpipe \
+    -- connect 1.2.3.4 \
+    -- exec -LR -c sed -ure '/"OPEN"/{ s/65055/65001/g; s/57355/65055/g }' \
+    -- connect 85.232.240.179
 ```
 
 ## Author
