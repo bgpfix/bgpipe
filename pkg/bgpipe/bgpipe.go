@@ -53,7 +53,6 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 	b.Pipe = pipe.NewPipe(b.Ctx)
 	po := &b.Pipe.Options
 	po.Logger = &b.Logger
-	po.Lreverse = true // it's just the case for bgpipe
 
 	// global config
 	b.K = koanf.New(".")
@@ -92,6 +91,8 @@ func (b *Bgpipe) Run() error {
 	b.Pipe.Start() // will call b.Start
 	b.Pipe.Wait()  // until error or all processing is done
 
+	// TODO: wait until all pipe output is read
+
 	// any errors on the global context?
 	err := context.Cause(b.Ctx)
 	switch {
@@ -111,13 +112,13 @@ func (b *Bgpipe) Start(ev *pipe.Event) bool {
 	// wait for writers
 	go func() {
 		b.wg_lwrite.Wait()
-		b.Debug().Msg("closing L input")
-		b.Pipe.L.CloseInput()
+		b.Debug().Msg("closing L inputs")
+		b.Pipe.L.Close()
 	}()
 	go func() {
 		b.wg_rwrite.Wait()
-		b.Debug().Msg("closing R input")
-		b.Pipe.R.CloseInput()
+		b.Debug().Msg("closing R inputs")
+		b.Pipe.R.Close()
 	}()
 
 	// wait for readers
@@ -137,18 +138,27 @@ func (b *Bgpipe) Start(ev *pipe.Event) bool {
 
 // LogEvent logs given event
 func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
+	// will b.Info() if ev.Error is nil
+	l := b.Err(ev.Error)
+
 	if ev.Msg != nil {
 		b.logbuf = ev.Msg.ToJSON(b.logbuf[:0])
-	} else {
-		b.logbuf = b.logbuf[:0]
+		l = l.Bytes("msg", b.logbuf)
 	}
 
-	b.
-		Err(ev.Error). // will b.Info() if nil
-		Uint64("seq", ev.Seq).
-		Bytes("msg", b.logbuf).
-		Interface("val", ev.Value).
-		Msgf("event %s", ev.Type)
+	if ev.Dir != 0 {
+		l = l.Stringer("dir", ev.Dir)
+	}
+
+	if ev.Seq != 0 {
+		l = l.Uint64("seq", ev.Seq)
+	}
+
+	if ev.Value != nil {
+		l = l.Interface("val", ev.Value)
+	}
+
+	l.Msgf("event %s", ev.Type)
 	return true
 }
 

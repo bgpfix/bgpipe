@@ -3,7 +3,7 @@ module github.com/bgpfix/bgpipe
 go 1.21.0
 
 require (
-	github.com/bgpfix/bgpfix v0.0.0-20231003232953-99970152bc36
+	github.com/bgpfix/bgpfix v0.0.0-20231025125100-6d78c672faa6
 	github.com/spf13/pflag v1.0.5
 )
 
@@ -19,10 +19,10 @@ require (
 	github.com/knadh/koanf/providers/posflag v0.1.0
 	github.com/knadh/koanf/v2 v2.0.1
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/puzpuzpuz/xsync/v2 v2.4.1 // indirect
-	github.com/rs/zerolog v1.30.0
-	golang.org/x/sys v0.12.0
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/puzpuzpuz/xsync/v2 v2.5.1 // indirect
+	github.com/rs/zerolog v1.31.0
+	golang.org/x/sys v0.13.0
 )
 
 // replace github.com/bgpfix/bgpfix => ../bgpfix

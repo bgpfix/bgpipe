@@ -17,9 +17,10 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	started atomic.Bool // true if already started
-	stopped atomic.Bool // true if already stopped
-	running atomic.Bool // true if stage running
+	started atomic.Bool   // true if already started
+	stopped atomic.Bool   // true if already stopped
+	running atomic.Bool   // true if stage running
+	done    chan struct{} // closed when Run returns
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage
@@ -40,9 +41,13 @@ type StageBase struct {
 	IsLeft  bool // operates on L direction?
 	IsRight bool // operates on R direction?
 
-	SkipId    int              // which stage to start at when injecting new messages?
-	Callbacks []*pipe.Callback // registered callbacks
-	Handlers  []*pipe.Handler  // registered handlers
+	Dir        msg.Dir    // -L/-R translated to Dir (can be DIR_LR)
+	Upstream   *pipe.Line // pipeline processing messages to Dst (may be nil)
+	Downstream *pipe.Line // pipeline processing messages from Dst (may be nil)
+
+	callbacks []*pipe.Callback // registered callbacks
+	handlers  []*pipe.Handler  // registered handlers
+	inputs    []*pipe.Input    // registered inputs
 }
 
 // StageOptions describe high-level settings of a stage
@@ -53,13 +58,11 @@ type StageOptions struct {
 	Args   []string          // argument names
 	Events map[string]string // event names and descriptions
 
-	IsConsumer  bool // consumes pipe.Direction.Out? (not callbacks)
-	IsProducer  bool // produces pipe.Direction.In?
-	IsRawReader bool // needs exclusive pipe.Direction.Read access?
-	IsRawWriter bool // needs exclusive pipe.Direction.Write access?
-	IsStdin     bool // reads from stdin?
-	IsStdout    bool // writes to stdout?
-	AllowLR     bool // allow -LR (bidir mode)?
+	IsProducer bool // produces messages? (writes to Line input)
+	IsConsumer bool // consumes messages? (reads from Line output)
+	IsStdin    bool // reads from stdin?
+	IsStdout   bool // writes to stdout?
+	Bidir      bool // allow -LR (bidir mode)?
 }
 
 // Stage implements a bgpipe stage
@@ -79,6 +82,10 @@ type Stage interface {
 	// than ErrStopped results in a fatal error that stops the whole pipe.
 	// Emits a "DONE" event after return.
 	Run() error
+
+	// Stop is called when the stage is requested to stop.
+	// It should safely finish all I/O and make Run() return if it's still running.
+	Stop() error
 }
 
 // Attach is the default Stage implementation that does nothing.
@@ -96,6 +103,11 @@ func (s *StageBase) Prepare() error {
 func (s *StageBase) Run() error {
 	<-s.Ctx.Done()
 	return context.Cause(s.Ctx)
+}
+
+// Stop is the default Stage implementation that does nothing.
+func (s *StageBase) Stop() error {
+	return nil
 }
 
 // NewStage returns a new Stage for given parent base. It should modify base.Options.
@@ -118,6 +130,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Cmd = cmd
 	s.Name = cmd
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
+	s.done = make(chan struct{})
 
 	// common CLI flags
 	s.Options.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
@@ -128,34 +141,12 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	f.BoolP("right", "R", false, "operate in R direction")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
-	f.StringP("in", "I", "next", "where to inject new messages (next/here/first/@name)")
+	f.StringP("in", "I", "next", "where to inject new messages (next/here/first/last/@name)")
 
 	// create s
 	s.Stage = newfunc(s)
 
-	// fix I/O settings
-	s.Options.IsConsumer = s.Options.IsConsumer || s.Options.IsRawReader
-	s.Options.IsProducer = s.Options.IsProducer || s.Options.IsRawWriter
-
-	// some stages can't set --in
-	if s.Options.IsRawWriter || !s.Options.IsProducer {
-		if o := f.Lookup("in"); o != nil {
-			o.Hidden = true
-			o.Value.Set("")
-		}
-	}
-
 	return s
-}
-
-// NewMsg returns a new, empty message from pipe pool,
-// but respecting the stage --in option.
-func (s *StageBase) NewMsg() *msg.Msg {
-	m := s.P.Get()
-	pc := pipe.Context(m)
-	pc.SourceId = s.Index
-	pc.SkipId = s.SkipId
-	return m
 }
 
 // wgAdd adds delta to B.wg* waitgroups related to s
@@ -184,39 +175,8 @@ func (s *StageBase) Errorf(format string, a ...any) error {
 	return fmt.Errorf(s.Name+": "+format, a...)
 }
 
-// Dst translates s.IsLeft/s.IsRight to msg.Dst
-func (s *StageBase) Dst() msg.Dst {
-	if s.IsLeft {
-		if s.IsRight {
-			return msg.DST_LR
-		} else {
-			return msg.DST_L
-		}
-	} else {
-		return msg.DST_R
-	}
-}
-
-// Upstream returns the direction which the stage should write to, if its unidirectional
-func (s *StageBase) Upstream() *pipe.Direction {
-	if s.IsLeft {
-		return s.P.L
-	} else {
-		return s.P.R
-	}
-}
-
-// Downstream returns the direction which the stage should read from, if its unidirectional
-func (s *StageBase) Downstream() *pipe.Direction {
-	if s.IsLeft {
-		return s.P.R
-	} else {
-		return s.P.L
-	}
-}
-
 // Event sends an event, prefixing et with stage name + slash
-func (s *StageBase) Event(et string, args ...any) (sent bool) {
+func (s *StageBase) Event(et string, args ...any) *pipe.Event {
 	return s.B.Pipe.Event(s.Name+"/"+et, args...)
 }
 

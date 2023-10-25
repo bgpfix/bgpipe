@@ -39,13 +39,13 @@ func (s *Mrt) Attach() error {
 		return err
 	}
 
-	// MRT-BGP reader writing to s.Upstream().In
+	// MRT-BGP reader writing to s.Dir
 	s.mr = mrt.NewReader(s.Ctx)
 	mo := &s.mr.Options
 	mo.Logger = &s.Logger
-	mo.NewMsg = s.NewMsg
 
-	return s.mr.Attach(s.Upstream())
+	// attach as pipe input
+	return s.mr.Attach(s.P, s.Dir)
 }
 
 func (s *Mrt) Run() error {

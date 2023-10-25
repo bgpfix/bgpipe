@@ -3,6 +3,7 @@ package bgpipe
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
 )
@@ -42,11 +43,11 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		return
 	}
 
-	// enable callbacks and handlers
-	s.running.Store(true)
-
 	// start Stage.Run in background
 	go func() {
+		// wait for all stages started in this event to prepare
+		ev.Wait()
+
 		// catch stage panics
 		defer func() {
 			if r := recover(); r != nil {
@@ -57,21 +58,24 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		// block on Run if context still valid
 		err := context.Cause(s.Ctx)
 		if err == nil {
+			s.running.Store(true)
 			s.Trace().Msg("Run start")
 			s.Event("READY", nil)
+
 			err = s.Stage.Run()
+
+			s.running.Store(false)
 			s.Trace().Err(err).Msg("Run done")
 			s.Event("DONE", nil)
+			close(s.done)
 		}
 
-		// exit on fatal error
+		// fatal error?
 		if isfatal(err) {
-			return
+			return // the whole process will exit
+		} else {
+			s.runStop(nil) // cleanup
 		}
-
-		// cleanup & keep running otherwise
-		s.running.Store(false)
-		s.runStop(nil)
 	}()
 
 	return
@@ -85,7 +89,30 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 		s.Debug().Stringer("ev", ev).Msg("stopping")
 	}
 
-	s.Cancel(ErrStageStopped)
+	// request to stop
+	err := s.Stage.Stop()
+	if err == nil {
+		err = ErrStageStopped
+	}
+
+	// give it 1s to exit cleanly
+	if s.running.Load() {
+		select {
+		case <-s.done:
+		case <-time.After(time.Second):
+		}
+	}
+
+	// close all inputs and wait for them to finish
+	for _, in := range s.inputs {
+		in.Close()
+	}
+	for _, in := range s.inputs {
+		in.Wait()
+	}
+
+	// pull the plug
+	s.Cancel(err)
 	s.running.Store(false)
 	s.wgAdd(-1)
 

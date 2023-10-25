@@ -79,19 +79,19 @@ $ cat input.json | bgpipe --stdin speaker 1.2.3.4 | tee output.json
 $ bgpipe updates.20230301.0000.bz2 > output.json
 
 # proxy a connection, print the conversation to stdout
-# 1st stage: bind to TCP *:179
-# 2nd stage: wait for connection, and proxy to 1.2.3.4 adding TCP-MD5
+# 1st stage: listen on TCP *:179 for new connection
+# 2nd stage: wait for new connection and proxy it to 1.2.3.4, adding TCP-MD5
 $ bgpipe \
 	-- listen :179 \
-	-- connect --wait listen/connected --md5 solarwinds123 1.2.3.4
+	-- connect --wait listen --md5 solarwinds123 1.2.3.4
 
-# a BGP speaker that streams MRT file after the session is established
-# 1st stage: active BGP speaker (AS65055), starting when client connects
-# 2nd stage: MRT file reader, starting after session is established
-# 3rd stage: bind to TCP *:179
+# a BGP speaker that streams an MRT file
+# 1st stage: active BGP speaker for AS65055
+# 2nd stage: MRT file reader, starting when the BGP session is established
+# 3rd stage: listen on TCP *:179 for new connection
 $ bgpipe \
-    -- speaker --wait listen/connected --active --asn 65055 \
-    -- mrt --wait established updates.20230301.0000.bz2 \
+    -- speaker --active --asn 65055 \
+    -- mrt --wait ESTABLISHED updates.20230301.0000.bz2 \
     -- listen :179
 ```
 

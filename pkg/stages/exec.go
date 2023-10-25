@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"sync"
 	"time"
@@ -18,6 +19,8 @@ import (
 
 type Exec struct {
 	*bgpipe.StageBase
+	inL *pipe.Input
+	inR *pipe.Input
 
 	cmd_path string
 	cmd_args []string
@@ -55,7 +58,7 @@ func NewExec(parent *bgpipe.StageBase) bgpipe.Stage {
 
 	o.Descr = "pass through a background JSON processor"
 	o.IsProducer = true
-	o.AllowLR = true
+	o.Bidir = true
 
 	s.output = make(chan []byte, EXEC_OUTPUT_BUF)
 
@@ -82,7 +85,6 @@ func (s *Exec) Attach() error {
 
 	// create cmd
 	s.cmd = exec.CommandContext(s.Ctx, s.cmd_path, s.cmd_args...)
-	s.cmd.WaitDelay = time.Second
 
 	// get I/O pipes
 	var err error
@@ -99,9 +101,21 @@ func (s *Exec) Attach() error {
 		return err
 	}
 
-	// attach to pipe OnMsg, write to cmd stdin
-	s.P.Options.OnMsg(s.onMsg, s.Dst())
+	// cleanup procedure
+	s.cmd.Cancel = s.closeOutput
+	s.cmd.WaitDelay = time.Second
 
+	// attach to pipe
+	s.P.OnMsg(s.onMsg, s.Dir)
+	s.inL = s.P.AddInput(msg.DIR_L)
+	s.inR = s.P.AddInput(msg.DIR_R)
+
+	return nil
+}
+
+func (s *Exec) closeOutput() error {
+	defer func() { recover() }()
+	close(s.output)
 	return nil
 }
 
@@ -126,12 +140,7 @@ func (s *Exec) Run() (err error) {
 
 	// cleanup on exit
 	defer func() {
-		// possibly unblock [1]
-		if ch_stdin != nil {
-			close(s.output)
-		}
-
-		// kill the command and wait for it to exit
+		// wait for the command
 		s.cmd.Cancel()
 		cmd_err := s.cmd.Wait()
 		s.Err(cmd_err).Msg("command terminated")
@@ -155,33 +164,40 @@ func (s *Exec) Run() (err error) {
 			return fmt.Errorf("stdout closed: %w", err)
 		case err := <-ch_stdin:
 			s.Debug().Err(err).Msg("stdin writer done")
-			close(s.output)
-			ch_stdin = nil // continue, ignore stderr
+			s.closeOutput()
+			ch_stdin = nil // continue, ignore stdin
 		case err := <-ch_stderr:
 			s.Debug().Err(err).Msg("stderr reader done")
 			ch_stderr = nil // continue, ignore stderr
 		case <-s.Ctx.Done():
-			return context.Cause(s.Ctx)
+			err := context.Cause(s.Ctx)
+			s.Debug().Err(err).Msg("context cancel")
+			return err
 		}
 	}
 }
 
-func (s *Exec) stdoutReader(done chan error) {
-	defer close(done)
+func (s *Exec) Stop() error {
+	s.closeOutput()
+	return nil
+}
 
+func (s *Exec) stdoutReader(done chan error) {
 	var (
 		p   = s.P
 		in  = bufio.NewScanner(s.cmd_out)
-		dst = s.Dst()
-		def = msg.DST_R
+		def = msg.DIR_R
 	)
 
-	for m := s.NewMsg(); in.Scan(); m = s.NewMsg() {
+	defer close(done)
+
+	for in.Scan() {
 		// trim
 		buf := bytes.TrimSpace(in.Bytes())
 		// s.Trace().Msgf("out: %s", buf)
 
-		// detect the format
+		// parse into m
+		m := p.Get()
 		var err error
 		switch {
 		case buf[0] == '[': // full message
@@ -189,7 +205,7 @@ func (s *Exec) stdoutReader(done chan error) {
 			err = m.FromJSON(buf)
 
 		case buf[0] >= 'A' && buf[0] <= 'Z':
-			s.Event(string(buf), nil)
+			s.Event(string(buf))
 
 		default:
 			err = errors.New("invalid input")
@@ -206,17 +222,17 @@ func (s *Exec) stdoutReader(done chan error) {
 		}
 
 		// fix direction?
-		if dst != 0 {
-			m.Dst = dst
-		} else if m.Dst == 0 {
-			m.Dst = def
+		if s.Dir != 0 {
+			m.Dir = s.Dir
+		} else if m.Dir == 0 {
+			m.Dir = def
 		}
 
 		// sail
-		if m.Dst == msg.DST_L {
-			p.L.ProcessMsg(m)
+		if m.Dir == msg.DIR_L {
+			s.inL.WriteMsg(m)
 		} else {
-			p.R.ProcessMsg(m)
+			s.inR.WriteMsg(m)
 		}
 	}
 	done <- in.Err()
@@ -233,15 +249,27 @@ func (s *Exec) stderrReader(done chan error) {
 }
 
 func (s *Exec) stdinWriter(done chan error) {
-	defer close(done)
+	defer func() {
+		s.closeOutput()
+		s.cmd_in.Close()
+		close(done)
+	}()
 
 	out := s.cmd_in
+	fh, _ := out.(*os.File)
+
 	for buf := range s.output {
 		_, err := out.Write(buf)
 		s.pool.Put(buf)
+
 		if err != nil {
 			done <- err
-			break
+			return
+		}
+
+		// TODO: has any effect?
+		if fh != nil {
+			fh.Sync()
 		}
 	}
 }
@@ -250,7 +278,7 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 	pc := pipe.Context(m)
 
 	// skip our messages?
-	if pc.SourceId == s.Index && !s.own {
+	if pc.Input.Id == s.Index && !s.own {
 		return
 	}
 
@@ -266,6 +294,7 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 	buf = append(buf, '\n')
 
 	// try writing, don't panic on channel closed [1]
+	// TODO: optimize and avoid JSON serialization on next call?
 	defer func() { recover() }()
 	s.output <- buf
 

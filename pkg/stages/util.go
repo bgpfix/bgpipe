@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 	"github.com/spf13/pflag"
 	"golang.org/x/sys/unix"
@@ -49,7 +50,7 @@ func tcp_md5(md5pass string) func(net, addr string, c syscall.RawConn) error {
 
 }
 
-func tcp_handle(s *bgpipe.StageBase, conn net.Conn) error {
+func tcp_handle(s *bgpipe.StageBase, conn net.Conn, in *pipe.Input) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
@@ -74,7 +75,7 @@ func tcp_handle(s *bgpipe.StageBase, conn net.Conn) error {
 
 	// read from conn -> write to s.Input
 	go func() {
-		n, err := io.Copy(s.Upstream(), conn)
+		n, err := io.Copy(in, conn)
 		s.Trace().Err(err).Msg("connection reader returned")
 		tcp.CloseRead()
 		rch <- retval{n, err}
@@ -82,7 +83,7 @@ func tcp_handle(s *bgpipe.StageBase, conn net.Conn) error {
 
 	// write to conn <- read from s.Output
 	go func() {
-		n, err := tcp.ReadFrom(s.Downstream())
+		n, err := tcp.ReadFrom(s.Downstream)
 		s.Trace().Err(err).Msg("connection writer returned")
 		tcp.CloseWrite()
 		wch <- retval{n, err}

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
 
 type Connect struct {
 	*bgpipe.StageBase
+	in *pipe.Input
 
 	target string
 	conn   net.Conn
@@ -27,8 +29,8 @@ func NewConnect(parent *bgpipe.StageBase) bgpipe.Stage {
 	o.Args = []string{"addr"}
 
 	o.Descr = "connect to a TCP endpoint"
-	o.IsRawReader = true
-	o.IsRawWriter = true
+	o.IsProducer = true
+	o.IsConsumer = true
 
 	return s
 }
@@ -46,6 +48,7 @@ func (s *Connect) Attach() error {
 		s.target += ":179" // best-effort try
 	}
 
+	s.in = s.P.AddInput(s.Dir)
 	return nil
 }
 
@@ -75,5 +78,5 @@ func (s *Connect) Prepare() error {
 }
 
 func (s *Connect) Run() error {
-	return tcp_handle(s.StageBase, s.conn)
+	return tcp_handle(s.StageBase, s.conn, s.in)
 }

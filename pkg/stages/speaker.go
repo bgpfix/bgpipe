@@ -36,7 +36,6 @@ func (s *Speaker) Attach() error {
 
 	so := &spk.Options
 	so.Logger = &s.Logger
-	so.NewMsg = s.NewMsg
 	so.Passive = !k.Bool("active")
 	so.LocalASN = k.Int("asn")
 	so.LocalHoldTime = k.Int("hold")
@@ -50,5 +49,5 @@ func (s *Speaker) Attach() error {
 		so.LocalId = netip.MustParseAddr("0.0.0.1")
 	}
 
-	return spk.Attach(s.Upstream())
+	return spk.Attach(s.P, s.Dir)
 }

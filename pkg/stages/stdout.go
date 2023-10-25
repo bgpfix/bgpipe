@@ -21,22 +21,20 @@ func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
 	o := &s.Options
 	o.Descr = "print JSON representation to stdout"
 	s.Options.IsStdout = true
-	o.AllowLR = true
+	o.Bidir = true
 
 	return s
 }
 
 func (s *Stdout) Attach() error {
-	po := &s.P.Options
-
 	if s.Index == 0 { // auto stdout
-		po.AddCallback(s.OnMsg, &pipe.Callback{
+		s.P.AddCallback(s.OnMsg, &pipe.Callback{
 			Post:  true,
 			Order: math.MaxInt,
-			Dst:   s.Dst(),
+			Dir:   s.Dir,
 		})
 	} else {
-		po.OnMsg(s.OnMsg, s.Dst())
+		s.P.OnMsg(s.OnMsg, s.Dir)
 	}
 
 	return nil

@@ -6,16 +6,17 @@ import (
 	"context"
 	"errors"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/bgpfix/bgpfix/msg"
+	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
 
 type Stdin struct {
 	*bgpipe.StageBase
-	pool sync.Pool
+	inL *pipe.Input
+	inR *pipe.Input
 }
 
 func NewStdin(parent *bgpipe.StageBase) bgpipe.Stage {
@@ -25,13 +26,19 @@ func NewStdin(parent *bgpipe.StageBase) bgpipe.Stage {
 	o.Descr = "read JSON representation from stdin"
 	o.IsStdin = true
 	o.IsProducer = true
-	o.AllowLR = true
+	o.Bidir = true
 
 	f := o.Flags
 	f.Bool("seq", false, "ignore sequence numbers")
 	f.Bool("time", false, "ignore message time")
 
 	return s
+}
+
+func (s *Stdin) Attach() error {
+	s.inL = s.P.AddInput(msg.DIR_L)
+	s.inR = s.P.AddInput(msg.DIR_R)
+	return nil
 }
 
 func (s *Stdin) Run() error {
@@ -41,21 +48,20 @@ func (s *Stdin) Run() error {
 		opt_time = s.K.Bool("time")
 		stdin    = bufio.NewScanner(os.Stdin)
 		ctx      = s.Ctx
-		dst      = s.Dst()
-		def      = msg.DST_R
+		def      = msg.DIR_R
 	)
 
 	// default direction?
-	if s.B.StageCount() < 2 {
-		def = msg.DST_L
+	if s.B.StageCount() == 1 {
+		def = msg.DIR_L
 	}
 
-	m := s.NewMsg()
 	for stdin.Scan() {
 		buf := bytes.TrimSpace(stdin.Bytes())
 		// s.Trace().Msgf("stdin: %s", buf)
 
-		// detect the format
+		// parse into m
+		m := p.Get()
 		var err error
 		switch {
 		case len(buf) == 0 || buf[0] == '#':
@@ -74,7 +80,6 @@ func (s *Stdin) Run() error {
 
 		if err != nil {
 			s.Error().Err(err).Bytes("input", buf).Msg("parse error")
-			m = s.NewMsg()
 			continue
 		}
 
@@ -92,10 +97,10 @@ func (s *Stdin) Run() error {
 		}
 
 		// fix direction?
-		if dst != 0 {
-			m.Dst = dst
-		} else if m.Dst == 0 {
-			m.Dst = def
+		if s.Dir != 0 {
+			m.Dir = s.Dir
+		} else if m.Dir == 0 {
+			m.Dir = def
 		}
 
 		// context still valid?
@@ -104,13 +109,11 @@ func (s *Stdin) Run() error {
 		}
 
 		// sail
-		if m.Dst == msg.DST_L {
-			p.L.WriteMsg(m)
+		if m.Dir == msg.DIR_L {
+			s.inL.WriteMsg(m)
 		} else {
-			p.R.WriteMsg(m)
+			s.inR.WriteMsg(m)
 		}
-
-		m = s.NewMsg()
 	}
 
 	if ctx.Err() != nil {

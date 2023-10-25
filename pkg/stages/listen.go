@@ -5,11 +5,13 @@ import (
 	"net"
 	"time"
 
+	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/pkg/bgpipe"
 )
 
 type Listen struct {
 	*bgpipe.StageBase
+	in *pipe.Input
 
 	bind string
 	conn net.Conn
@@ -27,8 +29,8 @@ func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
 	o.Args = []string{"addr"}
 
 	o.Descr = "wait for a TCP client to connect"
-	o.IsRawReader = true
-	o.IsRawWriter = true
+	o.IsProducer = true
+	o.IsConsumer = true
 
 	return s
 }
@@ -46,6 +48,7 @@ func (s *Listen) Attach() error {
 		s.bind += ":179" // best-effort try
 	}
 
+	s.in = s.P.AddInput(s.Dir)
 	return nil
 }
 
@@ -83,5 +86,5 @@ func (s *Listen) Prepare() error {
 }
 
 func (s *Listen) Run() error {
-	return tcp_handle(s.StageBase, s.conn)
+	return tcp_handle(s.StageBase, s.conn, s.in)
 }

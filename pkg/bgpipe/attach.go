@@ -7,7 +7,9 @@ import (
 	"strconv"
 
 	"github.com/bgpfix/bgpfix/caps"
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
+	"github.com/rs/zerolog"
 )
 
 // Attach attaches all stages to pipe
@@ -120,10 +122,10 @@ func (s *StageBase) attach() error {
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
 	if s.IsLeft && s.IsRight {
-		if !s.Options.AllowLR {
+		if !s.Options.Bidir {
 			return ErrLR
 		}
-	} else if s.IsLeft == s.IsRight { // both false
+	} else if s.IsLeft == s.IsRight { // both false = apply a default
 		s.IsRight = true // the default
 
 		// exceptions
@@ -137,36 +139,23 @@ func (s *StageBase) attach() error {
 		s.IsLeft = !s.IsRight
 	}
 
-	// where to inject new messages?
-	switch v := k.String("in"); v {
-	case "next", "":
-		s.SkipId = -s.Index
-	case "here":
-		s.SkipId = s.Index
-	case "first":
-		s.SkipId = 0
-	default:
-		if id, err := strconv.Atoi(v); err == nil {
-			// an integer
-			s.SkipId = id
-			break
-		} else if len(v) > 0 && v[0] == '@' {
-			// a stage name reference?
-			for _, s2 := range s.B.Stages {
-				if s2 != nil && s2.Name == v {
-					s.SkipId = s2.Index
-					break
-				}
-			}
-		}
-		if s.SkipId == 0 {
-			return fmt.Errorf("%w: %s", ErrInject, v)
-		}
+	// set s.Dir
+	if s.IsLeft && s.IsRight {
+		s.Dir = msg.DIR_LR
+	} else if s.IsLeft {
+		s.Dir = msg.DIR_L
+		s.Upstream = p.L
+		s.Downstream = p.R
+	} else {
+		s.Dir = msg.DIR_R
+		s.Upstream = p.R
+		s.Downstream = p.L
 	}
 
 	// call child attach
 	cbs := len(po.Callbacks)
 	hds := len(po.Handlers)
+	ins := len(po.Inputs)
 	if err := s.Stage.Attach(); err != nil {
 		return err
 	}
@@ -180,23 +169,72 @@ func (s *StageBase) attach() error {
 		}
 		s.Logger = s.B.With().Str("stage", name).Logger()
 
-		// needs raw stream access?
-		if s.Options.IsRawReader || s.Options.IsRawWriter {
+		// consumes messages?
+		if s.Options.IsConsumer {
 			if !(s.IsFirst || s.IsLast) {
 				return ErrFirstOrLast
 			}
 		}
 
-		// make stage callbacks and handlers depend on s.enabled
-		s.Callbacks = po.Callbacks[cbs:]
-		for _, cb := range s.Callbacks {
+		// fix callbacks
+		s.callbacks = po.Callbacks[cbs:]
+		for _, cb := range s.callbacks {
 			cb.Id = s.Index
 			cb.Enabled = &s.running
 		}
-		s.Handlers = po.Handlers[hds:]
-		for _, h := range s.Handlers {
+
+		// fix handlers
+		s.handlers = po.Handlers[hds:]
+		for _, h := range s.handlers {
 			h.Id = s.Index
 			h.Enabled = &s.running
+		}
+
+		// where to inject new messages?
+		var frev, ffwd pipe.FilterMode // input filter mode
+		var fid int                    // input filter callback id
+		switch v := k.String("in"); v {
+		case "next", "":
+			frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
+			fid = s.Index
+		case "here":
+			frev, ffwd = pipe.FILTER_GT, pipe.FILTER_LT
+			fid = s.Index
+		case "first":
+			frev, ffwd = pipe.FILTER_NONE, pipe.FILTER_NONE
+		case "last":
+			frev, ffwd = pipe.FILTER_ALL, pipe.FILTER_ALL
+		default:
+			frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
+			if id, err := strconv.Atoi(v); err == nil {
+				fid = id
+			} else if len(v) > 0 && v[0] == '@' {
+				// a stage name reference?
+				for _, s2 := range s.B.Stages {
+					if s2 != nil && s2.Name == v {
+						fid = s2.Index
+						break
+					}
+				}
+			}
+			if fid <= 0 {
+				return fmt.Errorf("%w: %s", ErrInject, v)
+			}
+		}
+
+		// fix inputs
+		s.inputs = po.Inputs[ins:]
+		for _, li := range s.inputs {
+			li.Id = s.Index
+			li.FilterValue = fid
+
+			if li.Dir == msg.DIR_L {
+				li.Reverse = true // CLI gives L stages in reverse
+				li.CallbackFilter = frev
+			} else {
+				li.Reverse = false
+				li.CallbackFilter = ffwd
+			}
 		}
 	}
 
@@ -208,7 +246,7 @@ func (s *StageBase) attach() error {
 		po.OnEventPre(s.runStart, evs...)
 
 		// re-target pipe.EVENT_START handlers to the --wait events
-		for _, h := range s.Handlers {
+		for _, h := range s.handlers {
 			for i, t := range h.Types {
 				if t == pipe.EVENT_START {
 					h.Types[i] = evs[0]
@@ -225,8 +263,21 @@ func (s *StageBase) attach() error {
 		po.OnEventPost(s.runStop, evs...)
 	}
 
-	s.Trace().Msgf("attached [%d] first/last=%v/%v L/R=%v,%v startat=%d",
-		s.Index, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight, s.SkipId)
+	// debug?
+	if s.GetLevel() <= zerolog.TraceLevel {
+		s.Trace().Msgf("[%d] attached %s first/last=%v/%v L/R=%v,%v",
+			s.Index, s.Name, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight)
+		for _, cb := range s.callbacks {
+			s.Trace().Msgf("  callback %#v", cb)
+		}
+		for _, hd := range s.handlers {
+			s.Trace().Msgf("  handler %#v", hd)
+		}
+		for _, in := range s.inputs {
+			s.Trace().Msgf("  input %s dir=%s reverse=%v filt=%d filt_id=%d",
+				in.Name, in.Dir, in.Reverse, in.CallbackFilter, in.FilterValue)
+		}
+	}
 
 	return nil
 }
