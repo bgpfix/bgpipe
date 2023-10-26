@@ -46,6 +46,9 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		s.Event("READY")
 	}
 
+	// enable callbacks and handlers
+	s.running.Store(true)
+
 	// start Stage.Run in background
 	go func() {
 		// wait for all stages started in this event to finish Prepare()
@@ -61,16 +64,15 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		// block on Run if context still valid
 		err := context.Cause(s.Ctx)
 		if err == nil {
-			s.running.Store(true)
 			s.Trace().Msg("Run() starting")
 			s.Event("START")
-
 			err = s.Stage.Run()
-
-			s.running.Store(false)
 			s.Trace().Err(err).Msg("Run() returned")
-			close(s.done)
 		}
+
+		// disable callbacks and handlers
+		s.running.Store(false)
+		close(s.done)
 
 		// fatal error?
 		if isfatal(err) {
@@ -80,32 +82,35 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		}
 	}()
 
-	return
+	return false // unregister
 }
 
 // runStop requests to stop Stage.Run
 func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	if s.stopped.Swap(true) {
-		return // already stopped
+		return // already stopped, or not started yet
 	} else {
 		s.Debug().Stringer("ev", ev).Msg("stopping")
 	}
 
-	// request to stop
-	err := s.Stage.Stop()
-	if err == nil {
-		err = ErrStageStopped
-	}
+	err := ErrStageStopped
 
-	// give it 1s to exit cleanly
+	// still running?
 	if s.running.Load() {
+		// request to stop
+		err_stop := s.Stage.Stop()
+		if err_stop != nil {
+			err = err_stop
+		}
+
+		// give it 1s to exit cleanly
 		select {
 		case <-s.done:
 		case <-time.After(time.Second):
 		}
 	}
 
-	// close all inputs and wait for them to finish
+	// close all inputs and wait for them to finish processing
 	for _, in := range s.inputs {
 		in.Close()
 	}
@@ -117,8 +122,7 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	s.Cancel(err)
 	s.running.Store(false)
 	s.wgAdd(-1)
-
 	s.Event("STOP")
 
-	return
+	return false // unregister
 }

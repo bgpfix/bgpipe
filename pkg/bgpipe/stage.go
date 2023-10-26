@@ -71,20 +71,22 @@ type Stage interface {
 	// It should check the config and attach to the bgpfix pipe.
 	Attach() error
 
-	// Prepare is called after the pipe starts, and just before Run.
+	// Prepare is called when the stage starts, but before Run, callbacks, and handlers.
 	// It should prepare required I/O, eg. files, network connections, etc.
-	// If no error is returned, the stage emits a "READY" event, and
-	// all callbacks and handlers are enabled.
+	//
+	// If no error is returned, the stage emits a "READY" event, all callbacks and handlers
+	// are enabled, and Run is called when all stages starting in parallel are ready too.
 	Prepare() error
 
 	// Run runs the stage and returns after all work has finished.
 	// It must respect StageBase.Ctx. Returning a non-nil error different
 	// than ErrStopped results in a fatal error that stops the whole pipe.
-	// Emits a "DONE" event after return.
+	//
+	// Emits "START" just before, and "STOP" after stage operation is finished.
 	Run() error
 
 	// Stop is called when the stage is requested to stop.
-	// It should safely finish all I/O and make Run() return if it's still running.
+	// It should safely finish all I/O and make Run return if it's still running.
 	Stop() error
 }
 
