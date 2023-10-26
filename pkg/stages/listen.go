@@ -3,6 +3,7 @@ package stages
 import (
 	"fmt"
 	"net"
+	"runtime"
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
@@ -25,7 +26,9 @@ func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
 	)
 
 	f.Duration("timeout", 0, "connect timeout (0 means none)")
-	f.String("md5", "", "TCP MD5 password")
+	if runtime.GOOS == "linux" {
+		f.String("md5", "", "TCP MD5 password")
+	}
 	o.Args = []string{"addr"}
 
 	o.Descr = "wait for a TCP client to connect"
