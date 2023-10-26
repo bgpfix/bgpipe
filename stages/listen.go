@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/pkg/bgpipe"
+	"github.com/bgpfix/bgpipe/bgpipe"
 )
 
 type Listen struct {

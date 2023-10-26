@@ -10,7 +10,7 @@ import (
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/pkg/bgpipe"
+	"github.com/bgpfix/bgpipe/bgpipe"
 )
 
 type Stdin struct {

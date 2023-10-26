@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/bgpfix/bgpipe/pkg/bgpipe"
-	"github.com/bgpfix/bgpipe/pkg/stages"
+	"github.com/bgpfix/bgpipe/bgpipe"
+	"github.com/bgpfix/bgpipe/stages"
 )
 
 func main() {

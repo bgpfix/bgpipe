@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/bgpfix/bgpfix/mrt"
-	"github.com/bgpfix/bgpipe/pkg/bgpipe"
+	"github.com/bgpfix/bgpipe/bgpipe"
 )
 
 type Mrt struct {

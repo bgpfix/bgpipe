@@ -1,6 +1,6 @@
 package stages
 
-import "github.com/bgpfix/bgpipe/pkg/bgpipe"
+import "github.com/bgpfix/bgpipe/bgpipe"
 
 var Repo = map[string]bgpipe.NewStage{
 	"connect": NewConnect,
