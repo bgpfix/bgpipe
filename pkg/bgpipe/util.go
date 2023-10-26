@@ -45,17 +45,18 @@ func IsFile(v string) bool {
 }
 
 // parseEvents returns events from given koanf key, or nil if none found
-func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string) []string {
-	events := k.Strings(key)
-	if len(events) == 0 {
+func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string, sds ...string) []string {
+	input := k.Strings(key)
+	if len(input) == 0 {
 		return nil
 	}
 
 	// rewrite
-	for i, et := range events {
+	var output []string
+	for _, et := range input {
 		// special values
 		if et == "all" || et == "*" {
-			events[i] = "*"
+			output = append(output, "*")
 			continue
 		}
 
@@ -81,16 +82,20 @@ func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string) []string {
 		case has_slash:
 			et = fmt.Sprintf("%s/%s", slash, et_upper) // stage event
 		default:
-			if et == et_lower {
-				et = fmt.Sprintf("%s/READY", et) // stage ready
-			} else {
-				et = fmt.Sprintf("bgpfix/pipe.%s", et_upper)
+			// stage name + stage defaults?
+			if et == et_lower && len(sds) > 0 {
+				for _, sd := range sds {
+					output = append(output, fmt.Sprintf("%s/%s", et, sd))
+				}
+				continue
 			}
+
+			et = fmt.Sprintf("bgpfix/pipe.%s", et_upper)
 		}
 
-		b.Trace().Msgf("parseEvents(): '%s' -> '%s'", events[i], et)
-		events[i] = et
+		output = append(output, et)
 	}
 
-	return events
+	b.Trace().Msgf("parseEvents(): %s -> %s", input, output)
+	return output
 }

@@ -36,16 +36,19 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 	}
 
 	// run Prepare, make sure to get the error back
-	s.Trace().Msg("Prepare start")
+	s.Trace().Msg("Prepare()")
+	s.Event("PREPARE")
 	err := s.Stage.Prepare()
-	s.Trace().Err(err).Msg("Prepare done")
+	s.Trace().Err(err).Msg("Prepare() done")
 	if isfatal(err) {
 		return
+	} else {
+		s.Event("READY")
 	}
 
 	// start Stage.Run in background
 	go func() {
-		// wait for all stages started in this event to prepare
+		// wait for all stages started in this event to finish Prepare()
 		ev.Wait()
 
 		// catch stage panics
@@ -59,14 +62,13 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		err := context.Cause(s.Ctx)
 		if err == nil {
 			s.running.Store(true)
-			s.Trace().Msg("Run start")
-			s.Event("READY", nil)
+			s.Trace().Msg("Run() starting")
+			s.Event("START")
 
 			err = s.Stage.Run()
 
 			s.running.Store(false)
-			s.Trace().Err(err).Msg("Run done")
-			s.Event("DONE", nil)
+			s.Trace().Err(err).Msg("Run() returned")
 			close(s.done)
 		}
 
@@ -115,6 +117,8 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	s.Cancel(err)
 	s.running.Store(false)
 	s.wgAdd(-1)
+
+	s.Event("STOP")
 
 	return
 }

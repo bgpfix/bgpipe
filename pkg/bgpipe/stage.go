@@ -177,10 +177,19 @@ func (s *StageBase) Errorf(format string, a ...any) error {
 
 // Event sends an event, prefixing et with stage name + slash
 func (s *StageBase) Event(et string, args ...any) *pipe.Event {
-	return s.B.Pipe.Event(s.Name+"/"+et, args...)
+	return s.B.Pipe.Event(s.Name+"/"+et, append(args, s)...)
 }
 
 // Running returns true if the stage is in Run(), false otherwise.
 func (s *StageBase) Running() bool {
 	return s.running.Load()
+}
+
+// String returns stage "[index] name" or "name" if index is 0
+func (s *StageBase) String() string {
+	if s.Index != 0 {
+		return fmt.Sprintf("[%d] %s", s.Index, s.Name)
+	} else {
+		return s.Name
+	}
 }

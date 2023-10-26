@@ -91,7 +91,7 @@ func (b *Bgpipe) Attach() error {
 	}
 
 	// log events?
-	if evs := b.parseEvents(k, "events"); len(evs) > 0 {
+	if evs := b.parseEvents(k, "events", "START", "STOP", "READY", "PREPARE"); len(evs) > 0 {
 		p.Options.AddHandler(b.LogEvent, &pipe.Handler{
 			Pre:   true,
 			Order: math.MinInt,
@@ -163,11 +163,7 @@ func (s *StageBase) attach() error {
 	// if not an internal stage...
 	if s.Index > 0 {
 		// update the logger
-		name := s.Name
-		if name[0] != '[' {
-			name = fmt.Sprintf("[%d] %s", s.Index, name)
-		}
-		s.Logger = s.B.With().Str("stage", name).Logger()
+		s.Logger = s.B.With().Str("stage", s.String()).Logger()
 
 		// consumes messages?
 		if s.Options.IsConsumer {
@@ -242,15 +238,14 @@ func (s *StageBase) attach() error {
 	s.wgAdd(1)
 
 	// has trigger-on events?
-	if evs := b.parseEvents(k, "wait"); len(evs) > 0 {
+	if evs := b.parseEvents(k, "wait", "START"); len(evs) > 0 {
 		po.OnEventPre(s.runStart, evs...)
 
-		// re-target pipe.EVENT_START handlers to the --wait events
+		// trigger pipe start handlers by --wait events
 		for _, h := range s.handlers {
-			for i, t := range h.Types {
+			for _, t := range h.Types {
 				if t == pipe.EVENT_START {
-					h.Types[i] = evs[0]
-					h.Types = append(h.Types, evs[1:]...)
+					h.Types = append(h.Types, evs...)
 				}
 			}
 		}
@@ -259,7 +254,7 @@ func (s *StageBase) attach() error {
 	}
 
 	// has trigger-off events?
-	if evs := b.parseEvents(k, "stop"); len(evs) > 0 {
+	if evs := b.parseEvents(k, "stop", "STOP"); len(evs) > 0 {
 		po.OnEventPost(s.runStop, evs...)
 	}
 

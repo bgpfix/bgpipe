@@ -154,8 +154,15 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 		l = l.Uint64("seq", ev.Seq)
 	}
 
-	if ev.Value != nil {
-		l = l.Interface("val", ev.Value)
+	if vals, ok := ev.Value.([]any); ok {
+		for i, val := range vals {
+			switch v := val.(type) {
+			case *StageBase:
+				l = l.Stringer("stage", v)
+			default:
+				l = l.Interface(fmt.Sprintf("%T[%d]", v, i), v)
+			}
+		}
 	}
 
 	l.Msgf("event %s", ev.Type)
