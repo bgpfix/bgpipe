@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bgpfix/bgpipe/bgpipe"
+	bgpipe "github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/stages"
 )
 

@@ -1,6 +1,6 @@
 package stages
 
-import "github.com/bgpfix/bgpipe/bgpipe"
+import bgpipe "github.com/bgpfix/bgpipe/core"
 
 var Repo = map[string]bgpipe.NewStage{
 	"connect": NewConnect,
@@ -10,4 +10,5 @@ var Repo = map[string]bgpipe.NewStage{
 	"stdout":  NewStdout,
 	"stdin":   NewStdin,
 	"exec":    NewExec,
+	"limit":   NewLimit,
 }

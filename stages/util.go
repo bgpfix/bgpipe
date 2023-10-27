@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/bgpipe"
+	"github.com/bgpfix/bgpipe/core"
 	"github.com/spf13/pflag"
 )
 

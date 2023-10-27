@@ -14,7 +14,7 @@ import (
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/bgpipe"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Exec struct {

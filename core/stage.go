@@ -53,7 +53,7 @@ type StageBase struct {
 // StageOptions describe high-level settings of a stage
 type StageOptions struct {
 	Descr  string            // one-line description
-	Flags  *pflag.FlagSet    // flags
+	Flags  *pflag.FlagSet    // CLI flags
 	Usage  string            // usage string
 	Args   []string          // argument names
 	Events map[string]string // event names and descriptions
