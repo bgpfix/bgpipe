@@ -3,7 +3,6 @@ package bgpipe
 import (
 	"fmt"
 	"math"
-	"slices"
 	"strconv"
 
 	"github.com/bgpfix/bgpfix/caps"
@@ -24,21 +23,6 @@ func (b *Bgpipe) Attach() error {
 	if b.StageCount() < 1 {
 		b.F.Usage()
 		return fmt.Errorf("bgpipe needs at least 1 stage")
-	}
-
-	// reverse the pipe?
-	if k.Bool("reverse") {
-		slices.Reverse(b.Stages[1:])
-		for idx, s := range b.Stages {
-			if s == nil {
-				continue
-			}
-			s.Index = idx
-
-			left, right := s.K.Bool("left"), s.K.Bool("right")
-			s.K.Set("left", right)
-			s.K.Set("right", left)
-		}
 	}
 
 	// attach stages
@@ -77,7 +61,7 @@ func (b *Bgpipe) Attach() error {
 		s.K.Set("left", true)
 		s.K.Set("right", true)
 		s.K.Set("in", "first")
-		s.K.Set("wait", "ESTABLISHED")
+		s.K.Set("wait", []string{"ESTABLISHED"})
 		if err := s.attach(); err != nil {
 			return fmt.Errorf("auto stdin: %w", err)
 		}
@@ -152,13 +136,16 @@ func (s *StageBase) attach() error {
 		s.Downstream = p.L
 	}
 
-	// call child attach
+	// call child attach, collect what was attached to
 	cbs := len(po.Callbacks)
 	hds := len(po.Handlers)
 	ins := len(po.Inputs)
 	if err := s.Stage.Attach(); err != nil {
 		return err
 	}
+	s.callbacks = po.Callbacks[cbs:]
+	s.handlers = po.Handlers[hds:]
+	s.inputs = po.Inputs[ins:]
 
 	// if not an internal stage...
 	if s.Index > 0 {
@@ -171,66 +158,63 @@ func (s *StageBase) attach() error {
 				return ErrFirstOrLast
 			}
 		}
+	}
 
-		// fix callbacks
-		s.callbacks = po.Callbacks[cbs:]
-		for _, cb := range s.callbacks {
-			cb.Id = s.Index
-			cb.Enabled = &s.running
-		}
+	// fix callbacks
+	for _, cb := range s.callbacks {
+		cb.Id = s.Index
+		cb.Enabled = &s.running
+	}
 
-		// fix handlers
-		s.handlers = po.Handlers[hds:]
-		for _, h := range s.handlers {
-			h.Id = s.Index
-			h.Enabled = &s.running
-		}
+	// fix handlers
+	for _, h := range s.handlers {
+		h.Id = s.Index
+		h.Enabled = &s.running
+	}
 
-		// where to inject new messages?
-		var frev, ffwd pipe.FilterMode // input filter mode
-		var fid int                    // input filter callback id
-		switch v := k.String("in"); v {
-		case "next", "":
-			frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
-			fid = s.Index
-		case "here":
-			frev, ffwd = pipe.FILTER_GT, pipe.FILTER_LT
-			fid = s.Index
-		case "first":
-			frev, ffwd = pipe.FILTER_NONE, pipe.FILTER_NONE
-		case "last":
-			frev, ffwd = pipe.FILTER_ALL, pipe.FILTER_ALL
-		default:
-			frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
-			if id, err := strconv.Atoi(v); err == nil {
-				fid = id
-			} else if len(v) > 0 && v[0] == '@' {
-				// a stage name reference?
-				for _, s2 := range s.B.Stages {
-					if s2 != nil && s2.Name == v {
-						fid = s2.Index
-						break
-					}
+	// where to inject new messages?
+	var frev, ffwd pipe.FilterMode // input filter mode
+	var fid int                    // input filter callback id
+	switch v := k.String("in"); v {
+	case "next", "":
+		frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
+		fid = s.Index
+	case "here":
+		frev, ffwd = pipe.FILTER_GT, pipe.FILTER_LT
+		fid = s.Index
+	case "first":
+		frev, ffwd = pipe.FILTER_NONE, pipe.FILTER_NONE
+	case "last":
+		frev, ffwd = pipe.FILTER_ALL, pipe.FILTER_ALL
+	default:
+		frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
+		if id, err := strconv.Atoi(v); err == nil {
+			fid = id
+		} else if len(v) > 0 && v[0] == '@' {
+			// a stage name reference?
+			for _, s2 := range s.B.Stages {
+				if s2 != nil && s2.Name == v {
+					fid = s2.Index
+					break
 				}
 			}
-			if fid <= 0 {
-				return fmt.Errorf("%w: %s", ErrInject, v)
-			}
 		}
+		if fid <= 0 {
+			return fmt.Errorf("%w: %s", ErrInject, v)
+		}
+	}
 
-		// fix inputs
-		s.inputs = po.Inputs[ins:]
-		for _, li := range s.inputs {
-			li.Id = s.Index
-			li.FilterValue = fid
+	// fix inputs
+	for _, li := range s.inputs {
+		li.Id = s.Index
+		li.FilterValue = fid
 
-			if li.Dir == msg.DIR_L {
-				li.Reverse = true // CLI gives L stages in reverse
-				li.CallbackFilter = frev
-			} else {
-				li.Reverse = false
-				li.CallbackFilter = ffwd
-			}
+		if li.Dir == msg.DIR_L {
+			li.Reverse = true // CLI gives L stages in reverse
+			li.CallbackFilter = frev
+		} else {
+			li.Reverse = false
+			li.CallbackFilter = ffwd
 		}
 	}
 

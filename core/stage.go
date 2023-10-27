@@ -135,18 +135,23 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.done = make(chan struct{})
 
 	// common CLI flags
-	s.Options.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
-	f := s.Options.Flags
+	so := &s.Options
+	so.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
+	f := so.Flags
 	f.SortFlags = false
 	f.SetInterspersed(false)
+
+	// create s
+	s.Stage = newfunc(s)
+
+	// add global flags
 	f.BoolP("left", "L", false, "operate in L direction")
 	f.BoolP("right", "R", false, "operate in R direction")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
-	f.StringP("in", "I", "next", "where to inject new messages (next/here/first/last/@name)")
-
-	// create s
-	s.Stage = newfunc(s)
+	if so.IsProducer {
+		f.StringP("in", "I", "next", "where to inject new messages (next/here/first/last/@name)")
+	}
 
 	return s
 }

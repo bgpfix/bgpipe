@@ -19,9 +19,6 @@ func (b *Bgpipe) Configure() error {
 	}
 
 	// debugging level
-	if b.K.Bool("debug") {
-		b.K.Set("log", "debug")
-	}
 	if ll := b.K.String("log"); len(ll) > 0 {
 		lvl, err := zerolog.ParseLevel(ll)
 		if err != nil {
@@ -39,16 +36,14 @@ func (b *Bgpipe) addFlags() {
 	f.Usage = b.usage
 	f.SetInterspersed(false)
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
-	f.BoolP("debug", "D", false, "alias for --log debug")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given events (\"all\" means all events)")
 	f.BoolP("stdin", "i", false, "read stdin after session is established (unless explicitly configured)")
 	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly configured)")
-	f.BoolP("reverse", "r", false, "reverse the pipe direction")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 }
 
 func (b *Bgpipe) usage() {
-	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS...] [--] ...
+	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [ARGUMENTS...] [--] STAGE...
 
 Options:
 `)
@@ -74,6 +69,47 @@ Supported stages (run stage -h to get its help)
 		fmt.Fprintf(os.Stderr, "  %-22s %s\n", cmd, descr)
 	}
 	fmt.Fprintf(os.Stderr, "\n")
+}
+
+// Usage prints usage screen to stderr
+func (s *StageBase) usage() {
+	var (
+		o = &s.Options
+		f = o.Flags
+		e = os.Stderr
+	)
+
+	if len(o.Usage) > 0 {
+		fmt.Fprintf(e, "Stage usage: %s\n", o.Usage)
+	} else {
+		fmt.Fprintf(e, "Stage usage: %s [OPTIONS] %s\n\n%s\n",
+			s.Cmd,
+			strings.ToUpper(strings.Join(o.Args, " ")),
+			s.Options.Descr)
+	}
+
+	for i, l := range strings.Split(f.FlagUsages(), "\n") {
+		if strings.HasPrefix(l, "  -L, --left") {
+			fmt.Fprint(e, "\nGlobal Options:\n")
+		} else if i == 0 {
+			fmt.Fprint(e, "\nStage Options:\n")
+		}
+		fmt.Fprintf(e, "%s\n", l)
+	}
+
+	// iterate over events?
+	if len(o.Events) > 0 {
+		fmt.Fprint(e, "Stage Events:\n")
+		var events []string
+		for e := range o.Events {
+			events = append(events, e)
+		}
+		slices.Sort(events)
+		for _, ev := range events {
+			fmt.Fprintf(e, "  %-24s %s\n", ev, o.Events[ev])
+		}
+		fmt.Fprint(e, "\n")
+	}
 }
 
 // parseArgs adds and configures stages from CLI args
@@ -144,39 +180,6 @@ func (b *Bgpipe) parseArgs(args []string) error {
 	}
 
 	return nil
-}
-
-// Usage prints usage screen to stderr
-func (s *StageBase) usage() {
-	o := &s.Options
-	f := o.Flags
-
-	if len(o.Usage) > 0 {
-		fmt.Fprintf(os.Stderr, "Stage usage: %s\n", o.Usage)
-	} else {
-		fmt.Fprintf(os.Stderr, "Stage usage: %s [OPTIONS] %s\n\n%s\n",
-			s.Cmd,
-			strings.ToUpper(strings.Join(o.Args, " ")),
-			s.Options.Descr)
-	}
-
-	fmt.Fprintf(os.Stderr, "\nOptions:\n")
-	fmt.Fprint(os.Stderr, f.FlagUsages())
-
-	// iterate over events?
-	if len(o.Events) > 0 {
-		fmt.Fprintf(os.Stderr, "\nEvents:\n")
-		var events []string
-		for e := range o.Events {
-			events = append(events, e)
-		}
-		slices.Sort(events)
-		for _, e := range events {
-			fmt.Fprintf(os.Stderr, "  %-24s %s\n", e, o.Events[e])
-		}
-	}
-
-	fmt.Fprintf(os.Stderr, "\n")
 }
 
 // parseArgs parses CLI flags and arguments, exporting to K.
