@@ -83,6 +83,15 @@ func (b *Bgpipe) Attach() error {
 		})
 	}
 
+	// kill events?
+	if evs := b.parseEvents(k, "kill", "STOP"); len(evs) > 0 {
+		p.Options.AddHandler(b.KillEvent, &pipe.Handler{
+			Pre:   true,
+			Order: math.MinInt + 1,
+			Types: evs,
+		})
+	}
+
 	return nil
 }
 

@@ -154,19 +154,24 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 		l = l.Uint64("seq", ev.Seq)
 	}
 
-	if vals, ok := ev.Value.([]any); ok {
-		for i, val := range vals {
-			switch v := val.(type) {
-			case *StageBase:
-				l = l.Stringer("stage", v)
-			default:
-				l = l.Interface(fmt.Sprintf("%T[%d]", v, i), v)
-			}
+	if vals, ok := ev.Value.([]any); ok && len(vals) > 0 {
+		is := len(vals) - 1
+		if s, _ := vals[is].(*StageBase); s != nil {
+			l = l.Stringer("stage", s)
+			vals = vals[:is]
 		}
+		l = l.Interface("vals", vals)
 	}
 
 	l.Msgf("event %s", ev.Type)
 	return true
+}
+
+// KillEvent kills session because of given event ev
+func (b *Bgpipe) KillEvent(ev *pipe.Event) bool {
+	b.Cancel(fmt.Errorf("%w: %s", ErrKill, ev))
+	// TODO: why not pipe.Stop()?
+	return false
 }
 
 // AddRepo adds mapping between stage commands and their NewStageFunc

@@ -80,7 +80,7 @@ func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string, sds ...string) []string
 		case has_dot:
 			et = fmt.Sprintf("bgpfix/%s.%s", dot, et_upper)
 		case has_slash:
-			et = fmt.Sprintf("%s/%s", slash, et_upper) // stage event
+			et = fmt.Sprintf("%s/%s", slash, et) // stage event
 		default:
 			// stage name + stage defaults?
 			if et == et_lower && len(sds) > 0 {

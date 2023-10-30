@@ -37,6 +37,7 @@ func (b *Bgpipe) addFlags() {
 	f.SetInterspersed(false)
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given events (\"all\" means all events)")
+	f.StringSliceP("kill", "k", []string{}, "kill session on given events")
 	f.BoolP("stdin", "i", false, "read stdin after session is established (unless explicitly configured)")
 	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly configured)")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")

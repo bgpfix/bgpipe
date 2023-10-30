@@ -1,9 +1,7 @@
 github.com/RoaringBitmap/roaring v1.6.0 h1:dc7kRiroETgJcHhWX6BerXkZz2b3JgLGg9nTURJL/og=
 github.com/RoaringBitmap/roaring v1.6.0/go.mod h1:plvDsJQpxOC5bw8LRteu/MLWHsHez/3y6cubLI4/1yE=
-github.com/bgpfix/bgpfix v0.1.3 h1:SJKS2MqWBwxJJGPxTjx364cCj9h2QS+dXH7HF1bwSt4=
-github.com/bgpfix/bgpfix v0.1.3/go.mod h1:Cz+WLqKyf4nTNnmBZwtvrd3gib+VzU6moK5KzviCPrk=
-github.com/bgpfix/bgpfix v0.1.4-0.20231030120927-ee68b7c36a96 h1:gtmiyM0AHv+lXkvwUWkOIyDivNQ1+HFp4uHnk99J7Jw=
-github.com/bgpfix/bgpfix v0.1.4-0.20231030120927-ee68b7c36a96/go.mod h1:Cz+WLqKyf4nTNnmBZwtvrd3gib+VzU6moK5KzviCPrk=
+github.com/bgpfix/bgpfix v0.1.4 h1:mRaGgX4CGWyuV7VeF3zE4OCRbNjYiYSZvdiKILr80bg=
+github.com/bgpfix/bgpfix v0.1.4/go.mod h1:Cz+WLqKyf4nTNnmBZwtvrd3gib+VzU6moK5KzviCPrk=
 github.com/bits-and-blooms/bitset v1.2.0 h1:Kn4yilvwNtMACtf1eYDlG8H77R07mZSPbMjLyS07ChA=
 github.com/bits-and-blooms/bitset v1.2.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edYb8uY+O0FJTyyDA=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=

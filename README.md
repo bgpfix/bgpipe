@@ -18,30 +18,32 @@ Under the hood, it works as a pipeline of data processing stages that slice and 
 
 ## Install and usage
 
+See [bgpipe releases](https://github.com/bgpfix/bgpipe/releases/) on GitHub, or compile from source:
+
 ```
 # install golang, eg. https://go.dev/dl/
 $ go version
-go version go1.21.1 linux/amd64
+go version go1.21.3 linux/amd64
 
 # install bgpipe
 $ go install github.com/bgpfix/bgpipe@latest
 
 # bgpipe has built-in docs
 $ bgpipe -h
-Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS...] [--] ...
+Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [ARGUMENTS...] [--] STAGE...
 
 Options:
   -l, --log string       log level (debug/info/warn/error/disabled) (default "info")
-  -D, --debug            alias for --log debug
   -e, --events strings   log given events ("all" means all events) (default [PARSE,ESTABLISHED])
+  -k, --kill strings     kill session on given events
   -i, --stdin            read stdin after session is established (unless explicitly configured)
   -s, --silent           do not write stdout (unless explicitly configured)
-  -r, --reverse          reverse the pipe direction
   -2, --short-asn        use 2-byte ASN numbers
 
 Supported stages (run stage -h to get its help)
   connect                connect to a TCP endpoint
   exec                   pass through a background JSON processor
+  limit                  limit prefix lengths and counts
   listen                 wait for a TCP client to connect
   mrt                    read MRT file with BGP4MP messages (uncompress if needed)
   speaker                run a simple local BGP speaker
@@ -54,14 +56,16 @@ Stage usage: connect [OPTIONS] ADDR
 
 connect to a TCP endpoint
 
-Options:
+Stage Options:
+      --timeout duration   connect timeout (0 means none)
+      --md5 string         TCP MD5 password
+
+Global Options:
   -L, --left               operate in L direction
   -R, --right              operate in R direction
   -W, --wait strings       wait for given event before starting
   -S, --stop strings       stop after given event is handled
   -I, --in string          where to inject new messages (default "next")
-      --timeout duration   connect timeout (0 means none)
-      --md5 string         TCP MD5 password
 ```
 
 ## Examples
@@ -88,15 +92,22 @@ $ bgpipe \
 # 2nd stage: MRT file reader, starting when the BGP session is established
 # 3rd stage: listen on TCP *:179 for new connection
 $ bgpipe \
-    -- speaker --active --asn 65055 \
-    -- mrt --wait ESTABLISHED updates.20230301.0000.bz2 \
-    -- listen :179
+  -- speaker --active --asn 65055 \
+  -- mrt --wait ESTABLISHED updates.20230301.0000.bz2 \
+  -- listen :179
 
 # a BGP sed-in-the-middle proxy rewriting ASNs in OPEN messages
 $ bgpipe \
-    -- connect 1.2.3.4 \
-    -- exec -LR -c sed -ure '/"OPEN"/{ s/65055/65001/g; s/57355/65055/g }' \
-    -- connect 85.232.240.179
+  -- connect 1.2.3.4 \
+  -- exec -LR -c sed -ure '/"OPEN"/{ s/65055/65001/g; s/57355/65055/g }' \
+  -- connect 85.232.240.179
+
+# filter prefixes lengths and add max-prefix session limits
+$ bgpipe --kill limit/session \
+  -- connect 1.2.3.4 \
+  -- limit -LR --ipv4 --min-length  8 --max-length 24 --session 1000000 \
+  -- limit -LR --ipv6 --min-length 16 --max-length 48 --session 250000 \
+  -- connect 5.6.7.8
 ```
 
 ## Author
