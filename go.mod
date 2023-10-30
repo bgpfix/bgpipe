@@ -2,9 +2,13 @@ module github.com/bgpfix/bgpipe
 
 go 1.21.0
 
+require github.com/spf13/pflag v1.0.5
+
 require (
-	github.com/bgpfix/bgpfix v0.1.3
-	github.com/spf13/pflag v1.0.5
+	github.com/RoaringBitmap/roaring v1.6.0 // indirect
+	github.com/bgpfix/bgpfix v0.1.4-0.20231030120927-ee68b7c36a96 // indirect
+	github.com/bits-and-blooms/bitset v1.2.0 // indirect
+	github.com/mschoch/smat v0.2.0 // indirect
 )
 
 require (
