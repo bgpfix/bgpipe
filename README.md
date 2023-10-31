@@ -102,7 +102,7 @@ $ bgpipe \
   -- exec -LR -c sed -ure '/"OPEN"/{ s/65055/65001/g; s/57355/65055/g }' \
   -- connect 85.232.240.179
 
-# filter prefixes lengths and add max-prefix session limits
+# filter prefix lengths and add max-prefix session limits
 $ bgpipe --kill limit/session \
   -- connect 1.2.3.4 \
   -- limit -LR --ipv4 --min-length  8 --max-length 24 --session 1000000 \
