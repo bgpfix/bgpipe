@@ -58,7 +58,6 @@ func NewLimit(parent *bgpipe.StageBase) bgpipe.Stage {
 	sf.IntP("block-length", "B", 0, "IP block length (max. 64, 0 = 8/32 for v4/v6)")
 
 	so.Descr = "limit prefix lengths and counts"
-	so.Usage = "limit [OPTIONS]"
 
 	so.Events = map[string]string{
 		"long":   "too long prefix announced",
