@@ -1,12 +1,12 @@
 package stages
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net/netip"
 	"slices"
 	"sync"
 
-	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/bgpfix/bgpfix/af"
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/msg"
@@ -33,14 +33,10 @@ type Limit struct {
 	limit_origin  int64 // max prefix count for single origin
 	limit_block   int64 // max prefix count for IP block
 
-	session *limitDb                       // global db
-	origin  *xsync.MapOf[uint32, *limitDb] // per-origin db
-	block   *xsync.MapOf[uint64, *limitDb] // per-block db
+	session *xsync.MapOf[netip.Prefix, *limitPrefix] // session db
+	origin  *xsync.MapOf[uint32, *limitCounter]      // per-origin db
+	block   *xsync.MapOf[uint64, *limitCounter]      // per-block db
 }
-
-const (
-	MAX_IPV6 = 58 // 58 bits for prefix + 6 bits for length
-)
 
 func NewLimit(parent *bgpipe.StageBase) bgpipe.Stage {
 	var (
@@ -59,7 +55,7 @@ func NewLimit(parent *bgpipe.StageBase) bgpipe.Stage {
 	sf.IntP("session", "s", 0, "global session limit (0 = no limit)")
 	sf.IntP("origin", "o", 0, "per-AS origin limit (0 = no limit)")
 	sf.IntP("block", "b", 0, "per-IP block limit (0 = no limit)")
-	sf.IntP("block-length", "B", 0, "IP block length (max. 56, 0 = 8/32 for v4/v6)")
+	sf.IntP("block-length", "B", 0, "IP block length (max. 64, 0 = 8/32 for v4/v6)")
 
 	so.Descr = "limit prefix lengths and counts"
 	so.Usage = "limit [OPTIONS]"
@@ -75,9 +71,9 @@ func NewLimit(parent *bgpipe.StageBase) bgpipe.Stage {
 	so.Bidir = true // will aggregate both directions
 
 	s.afs = make(map[af.AF]bool)
-	s.session = s.newDb()
-	s.origin = xsync.NewMapOf[uint32, *limitDb]()
-	s.block = xsync.NewMapOf[uint64, *limitDb]()
+	s.session = xsync.NewMapOf[netip.Prefix, *limitPrefix]()
+	s.origin = xsync.NewMapOf[uint32, *limitCounter]()
+	s.block = xsync.NewMapOf[uint64, *limitCounter]()
 
 	return s
 }
@@ -121,7 +117,7 @@ func (s *Limit) Attach() error {
 	s.limit_block = k.Int64("block")
 
 	s.blen6 = k.Int("block-length")
-	if s.blen6 < 0 || s.blen6 >= MAX_IPV6 {
+	if s.blen6 < 0 || s.blen6 > 64 {
 		return fmt.Errorf("invalid IP block length %d", s.blen6)
 	}
 	if s.blen6 == 0 {
@@ -165,34 +161,28 @@ func (s *Limit) isLong(p netip.Prefix) bool {
 	return s.maxlen > 0 && p.Bits() > s.maxlen
 }
 
-// translates IP prefix to uint64 key, assuming prefix length <=/58 for IPv6
-func (s *Limit) p2key(p netip.Prefix) (ret uint64) {
-	// addr in the top bytes
-	for i, b := range p.Addr().AsSlice() {
-		if i > 0 {
-			ret <<= 8
-		}
-		ret |= uint64(b)
+// translates IP prefix to IP block, assuming prefix length <=/64
+func (s *Limit) p2b(p netip.Prefix) uint64 {
+	b := p.Addr().AsSlice()
+	switch len(b) {
+	case 4:
+		val := uint64(binary.BigEndian.Uint32(b))
+		bitmask := ^(uint64(1)<<(32-s.blen4) - 1)
+		return val & bitmask
+	case 16:
+		val := binary.BigEndian.Uint64(b) // ignore bottom 64 bits
+		bitmask := ^(uint64(1)<<(64-s.blen6) - 1)
+		return val & bitmask
+	default:
+		return 0
 	}
-
-	// still have space?
-	if p.Addr().Is4() {
-		ret <<= 8
-	}
-
-	// prefix length in the bottom 6 bits
-	m := uint64(0b111111)
-	ret &= ^m
-	ret |= uint64(p.Bits()) & m
-
-	return ret
 }
 
 func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	origin := u.Attrs.AsOrigin()
 
 	// drops p from u if violates the rules
-	dropPrefix := func(p netip.Prefix) (drop bool) {
+	dropReach := func(p netip.Prefix) (drop bool) {
 		defer func() {
 			if drop {
 				u.Msg.Dirty = true
@@ -208,56 +198,90 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 			return true
 		}
 
-		// is over per-origin limit?
-		if s.limit_origin > 0 {
-			db, _ := s.origin.LoadOrCompute(origin, s.newDb)
-			count, isover := s.dbAdd(db, p, s.limit_origin)
-			if isover {
-				s.Event("origin", p.String(), origin, count)
+		// get pp
+	retry:
+		pp, loaded := s.session.LoadOrCompute(p, newLimitPrefix)
+		pp.Lock()
+		if pp.dropped {
+			pp.Unlock()
+			goto retry
+		}
+
+		// cleanup on exit
+		defer func() {
+			if drop && !loaded {
+				pp.dropped = true
+				s.session.Delete(p) // revert what we added
+			}
+			pp.Unlock()
+		}()
+
+		// check AS origin limit
+		if s.limit_origin > 0 && slices.Index(pp.origins, origin) < 0 {
+			po, _ := s.origin.LoadOrCompute(origin, newLimitCounter)
+			po.Lock()
+			defer po.Unlock()
+
+			// can't add more to origin?
+			if po.counter >= s.limit_origin {
+				s.Event("origin", p.String(), origin, po.counter)
+				return true
+			}
+
+			// add to origin iff other checks ok
+			defer func() {
+				if !drop {
+					pp.origins = append(pp.origins, origin)
+					po.counter++
+				}
+			}()
+		}
+
+		// check IP block limit
+		if s.limit_block > 0 && !loaded {
+			pb, _ := s.block.LoadOrCompute(s.p2b(p), newLimitCounter)
+			pb.Lock()
+			defer pb.Unlock()
+
+			// can't add more to block?
+			if pb.counter >= s.limit_block {
+				s.Event("block", p.String(), origin, pb.counter)
+				return true
+			}
+
+			// add to block iff other checks ok
+			defer func() {
+				if !drop {
+					pb.counter++
+				}
+			}()
+		}
+
+		// check session limit
+		if s.limit_session > 0 && !loaded {
+			// can't add more to session?
+			if size := s.session.Size(); int64(size) >= s.limit_session {
+				s.Event("session", p.String(), origin, size)
 				return true
 			}
 		}
 
-		// is over per-block limit?
-		if s.limit_block > 0 {
-			var block netip.Prefix
-			if p.Addr().Is6() {
-				block, _ = p.Addr().Prefix(s.blen6)
-			} else {
-				block, _ = p.Addr().Prefix(s.blen4)
-			}
-
-			db, _ := s.block.LoadOrCompute(s.p2key(block), s.newDb)
-			count, isover := s.dbAdd(db, p, s.limit_block)
-			if isover {
-				s.Event("block", p.String(), origin, count, block.String())
-				return true
-			}
-		}
-
-		// is over session limit?
-		if s.limit_session > 0 {
-			count, isover := s.dbAdd(s.session, p, s.limit_session)
-			if isover {
-				s.Event("session", p.String(), origin, count)
-				return true
-			}
-		}
-
+		// accept the prefix
+		pp.accepted = true
 		return false
 	}
 
 	// prefixes in the non-MP IPv4 part?
 	if s.ipv4 {
 		before += len(u.Reach)
-		u.Reach = slices.DeleteFunc(u.Reach, dropPrefix)
+		u.Reach = slices.DeleteFunc(u.Reach, dropReach)
 		after += len(u.Reach)
 	}
 
 	// prefixes in the MP part?
 	if mp := u.Attrs.MPPrefixes(attrs.ATTR_MP_REACH); mp != nil && s.afs[mp.AF] {
 		before += len(mp.Prefixes)
-		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropPrefix)
+		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropReach)
 		after += len(mp.Prefixes)
 
 		// anything left?
@@ -271,37 +295,50 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 
 func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	// drops p from u if violates the rules
-	dropPrefix := func(p netip.Prefix) (drop bool) {
+	dropUnreach := func(p netip.Prefix) (drop bool) {
 		// too long or short?
 		if s.isShort(p) || s.isLong(p) {
 			u.Msg.Dirty = true
 			return true
 		}
 
-		// per-origin limit?
+		// remove from session
+		pp, ok := s.session.LoadAndDelete(p)
+		if pp == nil || !ok {
+			return false // nothing to do
+		}
+
+		// wait for lock
+		pp.Lock()
+		defer func() {
+			pp.dropped = true
+			pp.Unlock()
+		}()
+
+		// done already?
+		if pp.dropped || !pp.accepted {
+			return false
+		}
+
+		// remove from origins
 		if s.limit_origin > 0 {
-			// FIXME: there's no such thing as origin for withdrawals
-			origin := u.Attrs.AsOrigin()
-			db, _ := s.origin.Load(origin)
-			s.dbDel(db, p)
-		}
-
-		// per-block limit?
-		if s.limit_block > 0 {
-			var block netip.Prefix
-			if p.Addr().Is6() {
-				block, _ = p.Addr().Prefix(s.blen6)
-			} else {
-				block, _ = p.Addr().Prefix(s.blen4)
+			for _, origin := range pp.origins {
+				po, ok := s.origin.Load(origin)
+				if ok && po != nil {
+					po.Lock()
+					po.counter--
+					po.Unlock()
+				}
 			}
-
-			db, _ := s.block.Load(s.p2key(block))
-			s.dbDel(db, p)
 		}
 
-		// session limit?
-		if s.limit_session > 0 {
-			s.dbDel(s.session, p)
+		// remove from IP block
+		if s.limit_block > 0 {
+			if pb, ok := s.block.Load(s.p2b(p)); ok && pb != nil {
+				pb.Lock()
+				pb.counter--
+				pb.Unlock()
+			}
 		}
 
 		return false
@@ -310,14 +347,14 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	// prefixes in the non-MP IPv4 part?
 	if s.ipv4 {
 		before += len(u.Unreach)
-		u.Unreach = slices.DeleteFunc(u.Unreach, dropPrefix)
+		u.Unreach = slices.DeleteFunc(u.Unreach, dropUnreach)
 		after += len(u.Reach)
 	}
 
 	// prefixes in the MP part?
 	if mp := u.Attrs.MPPrefixes(attrs.ATTR_MP_UNREACH); mp != nil && s.afs[mp.AF] {
 		before += len(mp.Prefixes)
-		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropPrefix)
+		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropUnreach)
 		after += len(mp.Prefixes)
 
 		// anything left?
@@ -329,92 +366,24 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	return before, after
 }
 
-type limitDb struct {
+type limitPrefix struct {
 	sync.Mutex
-	count int64
-	db    map[netip.Prefix]struct{}
-	roar  *roaring64.Bitmap
+	accepted bool
+	dropped  bool
+	origins  []uint32
 }
 
-func (s *Limit) newDb() *limitDb {
-	return &limitDb{}
+func newLimitPrefix() *limitPrefix {
+	return &limitPrefix{
+		origins: make([]uint32, 0, 1),
+	}
 }
 
-func (s *Limit) dbAdd(lp *limitDb, p netip.Prefix, limit int64) (count int64, isover bool) {
-	if lp == nil || limit == 0 {
-		return 0, false
-	}
-	lp.Lock()
-	defer lp.Unlock()
-
-	// where to look for p?
-	indb := lp.roar == nil || p.Bits() > MAX_IPV6
-
-	// already seen?
-	var key uint64
-	if indb {
-		if lp.db != nil {
-			if _, ok := lp.db[p]; ok {
-				return lp.count, false
-			}
-		} else {
-			lp.db = make(map[netip.Prefix]struct{})
-		}
-	} else {
-		key = s.p2key(p)
-		if lp.roar.Contains(key) {
-			return lp.count, false
-		}
-	}
-
-	// already at the limit? drop it
-	if limit > 0 && lp.count >= limit {
-		return lp.count, true
-	}
-
-	// add the new prefix
-	lp.count++
-	if !indb {
-		lp.roar.Add(key)
-	} else {
-		lp.db[p] = struct{}{}
-
-		// lazy rewrite to roar?
-		if lp.roar == nil && len(lp.db) > 10 {
-			lp.roar = roaring64.New()
-			for p2 := range lp.db {
-				if p2.Bits() <= MAX_IPV6 {
-					lp.roar.Add(s.p2key(p2))
-					delete(lp.db, p2)
-				}
-			}
-			if len(lp.db) == 0 {
-				lp.db = nil
-			}
-		}
-	}
-
-	// ok, new prefix but still under the limit
-	return lp.count, false
+type limitCounter struct {
+	sync.Mutex
+	counter int64
 }
 
-func (s *Limit) dbDel(lp *limitDb, p netip.Prefix) {
-	if lp == nil {
-		return
-	}
-	lp.Lock()
-	defer lp.Unlock()
-
-	if lp.roar == nil || p.Bits() > MAX_IPV6 {
-		if lp.db != nil {
-			if _, ok := lp.db[p]; ok {
-				delete(lp.db, p)
-				lp.count--
-			}
-		}
-	} else {
-		if lp.roar.CheckedRemove(s.p2key(p)) {
-			lp.count--
-		}
-	}
+func newLimitCounter() *limitCounter {
+	return &limitCounter{}
 }
