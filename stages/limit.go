@@ -1,3 +1,12 @@
+/*
+ * limit: implement per-session, per-IP-block and per-AS-origin limits on prefix counts
+ *
+ * Released as part of the Kirin paper (Prehn, Foremski, Gasser).
+ *
+ * License: MIT
+ * Author: Pawel Foremski <pjf@foremski.pl, Nov 2023
+ */
+
 package stages
 
 import (
