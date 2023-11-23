@@ -183,7 +183,7 @@ func (b *Bgpipe) parseArgs(args []string) error {
 	return nil
 }
 
-// parseArgs parses CLI flags and arguments, exporting to K.
+// parseArgs parses CLI flags and arguments and exports to s.K.
 // May return unused args.
 func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 	o := &s.Options
@@ -204,7 +204,7 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 	// uses CLI arguments?
 	sargs := f.Args()
 	if o.Args != nil {
-		// special case: all arguments
+		// special case: eat all arguments till --
 		if len(o.Args) == 0 {
 			s.K.Set("args", sargs)
 			return nil, nil

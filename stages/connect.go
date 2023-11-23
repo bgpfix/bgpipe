@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/netip"
+	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/core"
+	bgpipe "github.com/bgpfix/bgpipe/core"
 )
 
 type Connect struct {
@@ -24,7 +26,7 @@ func NewConnect(parent *bgpipe.StageBase) bgpipe.Stage {
 		f = o.Flags
 	)
 
-	f.Duration("timeout", 0, "connect timeout (0 means none)")
+	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
 	f.String("md5", "", "TCP MD5 password")
 	o.Args = []string{"addr"}
 
@@ -45,7 +47,12 @@ func (s *Connect) Attach() error {
 	// target needs a port number?
 	_, _, err := net.SplitHostPort(s.target)
 	if err != nil {
-		s.target += ":179" // best-effort try
+		// a literal IP address?
+		if a, err := netip.ParseAddr(s.target); err == nil {
+			s.target = netip.AddrPortFrom(a, 179).String()
+		} else {
+			s.target += ":179" // no idea, best-effort try
+		}
 	}
 
 	s.in = s.P.AddInput(s.Dir)
@@ -67,6 +74,7 @@ func (s *Connect) Prepare() error {
 	dialer.Control = tcp_md5(s.K.String("md5"))
 
 	// dial
+	s.Debug().Msgf("dialing %s", s.target)
 	conn, err := dialer.DialContext(ctx, "tcp", s.target)
 	if err != nil {
 		return err

@@ -74,13 +74,13 @@ func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
 func (b *Bgpipe) Run() error {
 	// configure bgpipe and its stages
 	if err := b.Configure(); err != nil {
-		b.Fatal().Err(err).Msg("configuration error")
+		b.Error().Err(err).Msg("configuration error")
 		return err
 	}
 
 	// attach stages to pipe
 	if err := b.Attach(); err != nil {
-		b.Fatal().Err(err).Msg("could not attach stages to the pipe")
+		b.Error().Err(err).Msg("could not attach stages to the pipe")
 		return err
 	}
 
