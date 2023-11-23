@@ -91,7 +91,7 @@ func (s *StageBase) usage() {
 
 	for i, l := range strings.Split(f.FlagUsages(), "\n") {
 		if strings.HasPrefix(l, "  -L, --left") {
-			fmt.Fprint(e, "\nGlobal Options:\n")
+			fmt.Fprint(e, "\nCommon Options:\n")
 		} else if i == 0 {
 			fmt.Fprint(e, "\nStage Options:\n")
 		}
@@ -201,28 +201,20 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 		s.K.Load(posflag.Provider(f, ".", s.K), nil)
 	}
 
-	// uses CLI arguments?
+	// rewrite required CLI arguments?
 	sargs := f.Args()
-	if o.Args != nil {
-		// special case: eat all arguments till --
-		if len(o.Args) == 0 {
-			s.K.Set("args", sargs)
-			return nil, nil
+	for _, name := range o.Args {
+		if len(sargs) == 0 {
+			return sargs, s.Errorf("needs an argument: %s", name)
 		}
-
-		// rewrite into k
-		for _, name := range o.Args {
-			if len(sargs) == 0 || sargs[0] == "--" {
-				return sargs, s.Errorf("needs an argument: %s", name)
-			}
-			s.K.Set(name, sargs[0])
-			sargs = sargs[1:]
-		}
+		s.K.Set(name, sargs[0])
+		sargs = sargs[1:]
 	}
 
-	// drop explicit --
-	if len(sargs) > 0 && sargs[0] == "--" {
-		sargs = sargs[1:]
+	// consume the rest of arguments till -- ?
+	if v, _ := f.GetBool("args"); v {
+		s.K.Set("args", sargs)
+		return nil, nil
 	}
 
 	return sargs, nil

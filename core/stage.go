@@ -52,11 +52,12 @@ type StageBase struct {
 
 // StageOptions describe high-level settings of a stage
 type StageOptions struct {
-	Descr  string            // one-line description
-	Flags  *pflag.FlagSet    // CLI flags
-	Usage  string            // usage string
-	Args   []string          // argument names
-	Events map[string]string // event names and descriptions
+	Descr   string            // one-line description
+	Flags   *pflag.FlagSet    // CLI flags
+	Usage   string            // usage string
+	Args    []string          // required argument names
+	ArgsOpt bool              // supports optional arguments?
+	Events  map[string]string // event names and descriptions
 
 	IsProducer bool // produces messages? (writes to Line input)
 	IsConsumer bool // consumes messages? (reads from Line output)
@@ -134,23 +135,26 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 	s.done = make(chan struct{})
 
-	// common CLI flags
+	// CLI flags
 	so := &s.Options
 	so.Flags = pflag.NewFlagSet(cmd, pflag.ExitOnError)
 	f := so.Flags
 	f.SortFlags = false
 	f.SetInterspersed(false)
 
-	// create s
+	// create s, which should add specific CLI flags
 	s.Stage = newfunc(s)
 
-	// add global flags
+	// add global CLI flags
 	f.BoolP("left", "L", false, "operate in L direction")
 	f.BoolP("right", "R", false, "operate in R direction")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
 	if so.IsProducer {
 		f.StringP("in", "I", "next", "where to inject new messages (next/here/first/last/@name)")
+	}
+	if so.ArgsOpt {
+		f.BoolP("args", "c", false, "use all arguments till a double-dash marker (--)")
 	}
 
 	return s

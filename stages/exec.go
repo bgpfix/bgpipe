@@ -14,7 +14,7 @@ import (
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/core"
+	bgpipe "github.com/bgpfix/bgpipe/core"
 )
 
 type Exec struct {
@@ -47,14 +47,12 @@ func NewExec(parent *bgpipe.StageBase) bgpipe.Stage {
 		f = o.Flags
 	)
 
-	o.Args = []string{"cmd"}
 	o.Usage = "exec COMMAND | exec -c COMMAND [ARGUMENTS...] --"
+	o.Args = []string{"cmd"}
+	o.ArgsOpt = true
+
 	f.Bool("own", false, "do not skip own messages")
 	f.Bool("copy", false, "copy messages to command (instead of moving)")
-	f.AddFlag(FnFlag("args", "c", "read a list of command arguments until a double-dash marker",
-		func() {
-			o.Args = make([]string, 0)
-		}))
 
 	o.Descr = "pass through a background JSON processor"
 	o.IsProducer = true
@@ -73,12 +71,8 @@ func (s *Exec) Attach() error {
 	s.copy = k.Bool("copy")
 
 	// check command
-	if args := k.Strings("args"); len(args) > 0 {
-		s.cmd_path = args[0]
-		s.cmd_args = args[1:]
-	} else {
-		s.cmd_path = k.String("cmd")
-	}
+	s.cmd_path = k.String("cmd")
+	s.cmd_args = k.Strings("args")
 	if len(s.cmd_path) == 0 {
 		return errors.New("needs path to the executable")
 	}
@@ -200,6 +194,9 @@ func (s *Exec) stdoutReader(done chan error) {
 		m := p.Get()
 		var err error
 		switch {
+		case len(buf) == 0 || buf[0] == '#':
+			continue
+
 		case buf[0] == '[': // full message
 			// TODO: can re-use recent message?
 			err = m.FromJSON(buf)
