@@ -3,6 +3,7 @@ package bgpipe
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"slices"
 	"strings"
 
@@ -35,6 +36,7 @@ func (b *Bgpipe) addFlags() {
 	f.SortFlags = false
 	f.Usage = b.usage
 	f.SetInterspersed(false)
+	f.BoolP("version", "v", false, "print detailed version info and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given events (\"all\" means all events)")
 	f.StringSliceP("kill", "k", []string{}, "kill session on given events")
@@ -44,7 +46,7 @@ func (b *Bgpipe) addFlags() {
 }
 
 func (b *Bgpipe) usage() {
-	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [ARGUMENTS...] [--] STAGE...
+	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS] [--] ...
 
 Options:
 `)
@@ -119,6 +121,14 @@ func (b *Bgpipe) parseArgs(args []string) error {
 		return err
 	} else {
 		b.K.Load(posflag.Provider(b.F, ".", b.K), nil)
+	}
+
+	// print version and quit?
+	if b.K.Bool("version") {
+		if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
+			fmt.Fprintf(os.Stderr, "bgpipe build info:\n%s", bi)
+		}
+		os.Exit(1)
 	}
 
 	// parse stages and their args
