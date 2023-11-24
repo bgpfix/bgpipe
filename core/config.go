@@ -81,26 +81,25 @@ func (s *StageBase) usage() {
 	)
 
 	if len(o.Usage) > 0 {
-		fmt.Fprintf(e, "Stage usage: %s\n", o.Usage)
+		fmt.Fprintf(e, "Stage usage: %s", o.Usage)
 	} else {
-		fmt.Fprintf(e, "Stage usage: %s [OPTIONS] %s\n\n%s\n",
-			s.Cmd,
-			strings.ToUpper(strings.Join(o.Args, " ")),
-			s.Options.Descr)
+		fmt.Fprintf(e, "Stage usage: %s [OPTIONS] %s",
+			s.Cmd, strings.ToUpper(strings.Join(o.Args, " ")))
 	}
+	fmt.Fprintf(e, "\n\nDescription: %s\n", o.Descr)
 
 	for i, l := range strings.Split(f.FlagUsages(), "\n") {
-		if strings.HasPrefix(l, "  -L, --left") {
+		if strings.HasPrefix(l, "  -A, --args") {
 			fmt.Fprint(e, "\nCommon Options:\n")
 		} else if i == 0 {
-			fmt.Fprint(e, "\nStage Options:\n")
+			fmt.Fprint(e, "\nOptions:\n")
 		}
 		fmt.Fprintf(e, "%s\n", l)
 	}
 
 	// iterate over events?
 	if len(o.Events) > 0 {
-		fmt.Fprint(e, "Stage Events:\n")
+		fmt.Fprint(e, "Events:\n")
 		var events []string
 		for e := range o.Events {
 			events = append(events, e)
@@ -211,7 +210,7 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 		sargs = sargs[1:]
 	}
 
-	// consume the rest of arguments till -- ?
+	// consume the rest of arguments?
 	if v, _ := f.GetBool("args"); v {
 		s.K.Set("args", sargs)
 		return nil, nil

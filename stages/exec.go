@@ -47,9 +47,8 @@ func NewExec(parent *bgpipe.StageBase) bgpipe.Stage {
 		f = o.Flags
 	)
 
-	o.Usage = "exec COMMAND | exec -c COMMAND [ARGUMENTS...] --"
+	o.Usage = "exec COMMAND | exec -A COMMAND [COMMAND-ARGUMENTS...] --"
 	o.Args = []string{"cmd"}
-	o.ArgsOpt = true
 
 	f.Bool("own", false, "do not skip own messages")
 	f.Bool("copy", false, "copy messages to command (instead of moving)")
