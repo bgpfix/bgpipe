@@ -271,17 +271,17 @@ func (s *Exec) stdinWriter(done chan error) {
 }
 
 func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
-	pc := pipe.Context(m)
+	mx := pipe.MsgContext(m)
 
 	// skip our messages?
-	if pc.Input.Id == s.Index && !s.own {
+	if mx.Input.Id == s.Index && !s.own {
 		return
 	}
 
 	// drop the message?
 	if !s.copy {
 		// TODO: add borrow if not set already, and keep for later re-use
-		pc.Action.Add(pipe.ACTION_DROP)
+		mx.Action.Add(pipe.ACTION_DROP)
 	}
 
 	// get from pool, marshal
