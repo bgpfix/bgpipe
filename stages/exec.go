@@ -9,12 +9,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"sync"
 	"time"
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/valyala/bytebufferpool"
 )
 
 type Exec struct {
@@ -32,8 +32,8 @@ type Exec struct {
 	cmd_out io.ReadCloser
 	cmd_err io.ReadCloser
 
-	pool   sync.Pool
-	output chan []byte
+	pool   bytebufferpool.Pool
+	output chan *bytebufferpool.ByteBuffer
 }
 
 const (
@@ -57,7 +57,7 @@ func NewExec(parent *bgpipe.StageBase) bgpipe.Stage {
 	o.IsProducer = true
 	o.Bidir = true
 
-	s.output = make(chan []byte, EXEC_OUTPUT_BUF)
+	s.output = make(chan *bytebufferpool.ByteBuffer, EXEC_OUTPUT_BUF)
 
 	return s
 }
@@ -254,9 +254,9 @@ func (s *Exec) stdinWriter(done chan error) {
 	out := s.cmd_in
 	fh, _ := out.(*os.File)
 
-	for buf := range s.output {
-		_, err := out.Write(buf)
-		s.pool.Put(buf)
+	for bb := range s.output {
+		_, err := bb.WriteTo(out)
+		s.pool.Put(bb)
 
 		if err != nil {
 			done <- err
@@ -285,14 +285,14 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 	}
 
 	// get from pool, marshal
-	buf, _ := s.pool.Get().([]byte)
-	buf = m.ToJSON(buf[:0])
-	buf = append(buf, '\n')
+	bb := s.pool.Get()
+	bb.B = m.ToJSON(bb.B)
+	bb.WriteByte('\n')
 
 	// try writing, don't panic on channel closed [1]
 	// TODO: optimize and avoid JSON serialization on next call?
 	defer func() { recover() }()
-	s.output <- buf
+	s.output <- bb
 
 	// output full?
 	// if len(s.output) == EXEC_OUTPUT_BUF {
