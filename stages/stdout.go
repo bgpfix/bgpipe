@@ -3,16 +3,16 @@ package stages
 import (
 	"math"
 	"os"
-	"sync"
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/core"
+	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/valyala/bytebufferpool"
 )
 
 type Stdout struct {
 	*bgpipe.StageBase
-	pool sync.Pool
+	pool bytebufferpool.Pool
 }
 
 func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
@@ -42,13 +42,13 @@ func (s *Stdout) Attach() error {
 
 func (s *Stdout) OnMsg(m *msg.Msg) (action pipe.Action) {
 	// get from pool, marshal
-	buf, _ := s.pool.Get().([]byte)
-	buf = m.ToJSON(buf[:0])
-	buf = append(buf, '\n')
+	bb := s.pool.Get()
+	bb.B = m.ToJSON(bb.B)
+	bb.WriteByte('\n')
 
 	// write, re-use
-	os.Stdout.Write(buf)
-	s.pool.Put(buf)
+	bb.WriteTo(os.Stdout)
+	s.pool.Put(bb)
 
 	return
 }
