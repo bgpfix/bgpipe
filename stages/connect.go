@@ -26,13 +26,13 @@ func NewConnect(parent *bgpipe.StageBase) bgpipe.Stage {
 		f = o.Flags
 	)
 
-	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
-	f.String("md5", "", "TCP MD5 password")
-	o.Args = []string{"addr"}
-
 	o.Descr = "connect to a BGP endpoint over TCP"
 	o.IsProducer = true
 	o.IsConsumer = true
+
+	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
+	f.String("md5", "", "TCP MD5 password")
+	o.Args = []string{"addr"}
 
 	return s
 }

@@ -12,9 +12,12 @@ require (
 	golang.org/x/sys v0.17.0
 )
 
+require golang.org/x/net v0.17.0 // indirect
+
 require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1 // indirect
+	github.com/gorilla/websocket v1.5.1
 	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
