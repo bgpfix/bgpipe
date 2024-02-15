@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/core"
+	bgpipe "github.com/bgpfix/bgpipe/core"
 )
 
 type Listen struct {
@@ -31,7 +31,7 @@ func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
 	}
 	o.Args = []string{"addr"}
 
-	o.Descr = "wait for a TCP client to connect"
+	o.Descr = "wait for a BGP client to connect over TCP"
 	o.IsProducer = true
 	o.IsConsumer = true
 

@@ -30,7 +30,7 @@ func NewConnect(parent *bgpipe.StageBase) bgpipe.Stage {
 	f.String("md5", "", "TCP MD5 password")
 	o.Args = []string{"addr"}
 
-	o.Descr = "connect to a TCP endpoint"
+	o.Descr = "connect to a BGP endpoint over TCP"
 	o.IsProducer = true
 	o.IsConsumer = true
 
