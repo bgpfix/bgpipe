@@ -12,7 +12,7 @@ import (
 
 type Listen struct {
 	*bgpipe.StageBase
-	in *pipe.Input
+	in *pipe.Proc
 
 	bind string
 	conn net.Conn
@@ -51,7 +51,7 @@ func (s *Listen) Attach() error {
 		s.bind += ":179" // best-effort try
 	}
 
-	s.in = s.P.AddInput(s.Dir)
+	s.in = s.P.AddProc(s.Dir)
 	return nil
 }
 

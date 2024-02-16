@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"strconv"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/core"
-	"github.com/spf13/pflag"
+	bgpipe "github.com/bgpfix/bgpipe/core"
 )
 
-func tcp_handle(s *bgpipe.StageBase, conn net.Conn, in *pipe.Input) error {
+func tcp_handle(s *bgpipe.StageBase, conn net.Conn, in *pipe.Proc) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
@@ -77,36 +75,20 @@ func tcp_handle(s *bgpipe.StageBase, conn net.Conn, in *pipe.Input) error {
 	return nil
 }
 
-func FnFlag(name, short, usage string, fn func()) *pflag.Flag {
-	v := fnValue(fn)
-	return &pflag.Flag{
-		Name:        name,
-		Shorthand:   short,
-		Usage:       usage,
-		Value:       &v,
-		NoOptDefVal: "true",
+func close_safe[T any](ch chan T) (ok bool) {
+	if ch != nil {
+		defer func() { recover() }()
+		close(ch)
+		return true
 	}
+	return
 }
 
-type fnValue func()
-
-func (fn *fnValue) IsBoolFlag() bool { return true }
-
-func (fn *fnValue) String() string {
-	return "fn"
-}
-
-func (fn *fnValue) Set(s string) error {
-	v, err := strconv.ParseBool(s)
-	if err != nil {
-		return err
+func send_safe[T any](ch chan T, v T) (ok bool) {
+	if ch != nil {
+		defer func() { recover() }()
+		ch <- v
+		return true
 	}
-	if v {
-		(*fn)()
-	}
-	return nil
-}
-
-func (b *fnValue) Type() string {
-	return "bool"
+	return
 }

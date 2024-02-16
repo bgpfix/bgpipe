@@ -20,7 +20,7 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 	}
 
 	// check if err and s.Ctx ok; cancel global ctx otherwise
-	isfatal := func(err error) bool {
+	check_fatal := func(err error) bool {
 		if err == nil {
 			err = context.Cause(s.Ctx)
 			if err == context.Canceled {
@@ -40,7 +40,7 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 	s.Event("PREPARE")
 	err := s.Stage.Prepare()
 	s.Trace().Err(err).Msg("Prepare() done")
-	if isfatal(err) {
+	if check_fatal(err) {
 		return
 	} else {
 		s.Event("READY")
@@ -75,7 +75,7 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		close(s.done)
 
 		// fatal error?
-		if isfatal(err) {
+		if check_fatal(err) {
 			return // the whole process will exit
 		} else {
 			s.runStop(nil) // cleanup
@@ -111,10 +111,10 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	}
 
 	// close all inputs and wait for them to finish processing
-	for _, in := range s.inputs {
+	for _, in := range s.procs {
 		in.Close()
 	}
-	for _, in := range s.inputs {
+	for _, in := range s.procs {
 		in.Wait()
 	}
 

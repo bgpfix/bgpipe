@@ -12,6 +12,47 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// Stage implements a bgpipe stage
+type Stage interface {
+	// Attach is run before the pipe starts.
+	// It should check the config and attach to the bgpfix pipe.
+	Attach() error
+
+	// Prepare is called when the stage starts, but before Run, callbacks, and handlers.
+	// It should prepare required I/O, eg. files, network connections, etc.
+	//
+	// If no error is returned, the stage emits a "READY" event, all callbacks and handlers
+	// are enabled, and Run is called when all stages starting in parallel are ready too.
+	Prepare() error
+
+	// Run runs the stage and returns after all work has finished.
+	// It must respect StageBase.Ctx. Returning a non-nil error different
+	// than ErrStopped results in a fatal error that stops the whole pipe.
+	//
+	// Emits "START" just before, and "STOP" after stage operation is finished.
+	Run() error
+
+	// Stop is called when the stage is requested to stop (by an event),
+	// or after Run() exits (in order to clean-up).
+	// It should safely finish all I/O and make Run return if it's still running.
+	Stop() error
+}
+
+// StageOptions describe high-level settings of a stage
+type StageOptions struct {
+	Descr  string            // one-line description
+	Flags  *pflag.FlagSet    // CLI flags
+	Usage  string            // usage string
+	Args   []string          // required argument names
+	Events map[string]string // event names and descriptions
+
+	IsProducer bool // produces messages? (writes to Line input)
+	IsConsumer bool // consumes messages? (reads from Line output)
+	IsStdin    bool // reads from stdin?
+	IsStdout   bool // writes to stdout?
+	Bidir      bool // allow -LR (bidir mode)?
+}
+
 // StageBase represents a bgpipe stage base
 type StageBase struct {
 	zerolog.Logger // logger with stage name
@@ -47,47 +88,7 @@ type StageBase struct {
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
-	inputs    []*pipe.Input    // registered inputs
-}
-
-// StageOptions describe high-level settings of a stage
-type StageOptions struct {
-	Descr  string            // one-line description
-	Flags  *pflag.FlagSet    // CLI flags
-	Usage  string            // usage string
-	Args   []string          // required argument names
-	Events map[string]string // event names and descriptions
-
-	IsProducer bool // produces messages? (writes to Line input)
-	IsConsumer bool // consumes messages? (reads from Line output)
-	IsStdin    bool // reads from stdin?
-	IsStdout   bool // writes to stdout?
-	Bidir      bool // allow -LR (bidir mode)?
-}
-
-// Stage implements a bgpipe stage
-type Stage interface {
-	// Attach is run before the pipe starts.
-	// It should check the config and attach to the bgpfix pipe.
-	Attach() error
-
-	// Prepare is called when the stage starts, but before Run, callbacks, and handlers.
-	// It should prepare required I/O, eg. files, network connections, etc.
-	//
-	// If no error is returned, the stage emits a "READY" event, all callbacks and handlers
-	// are enabled, and Run is called when all stages starting in parallel are ready too.
-	Prepare() error
-
-	// Run runs the stage and returns after all work has finished.
-	// It must respect StageBase.Ctx. Returning a non-nil error different
-	// than ErrStopped results in a fatal error that stops the whole pipe.
-	//
-	// Emits "START" just before, and "STOP" after stage operation is finished.
-	Run() error
-
-	// Stop is called when the stage is requested to stop.
-	// It should safely finish all I/O and make Run return if it's still running.
-	Stop() error
+	procs     []*pipe.Proc     // registered processors
 }
 
 // Attach is the default Stage implementation that does nothing.

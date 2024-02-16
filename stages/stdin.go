@@ -10,13 +10,13 @@ import (
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	"github.com/bgpfix/bgpipe/core"
+	bgpipe "github.com/bgpfix/bgpipe/core"
 )
 
 type Stdin struct {
 	*bgpipe.StageBase
-	inL *pipe.Input
-	inR *pipe.Input
+	inL *pipe.Proc
+	inR *pipe.Proc
 }
 
 func NewStdin(parent *bgpipe.StageBase) bgpipe.Stage {
@@ -36,8 +36,8 @@ func NewStdin(parent *bgpipe.StageBase) bgpipe.Stage {
 }
 
 func (s *Stdin) Attach() error {
-	s.inL = s.P.AddInput(msg.DIR_L)
-	s.inR = s.P.AddInput(msg.DIR_R)
+	s.inL = s.P.AddProc(msg.DIR_L)
+	s.inR = s.P.AddProc(msg.DIR_R)
 	return nil
 }
 
@@ -46,7 +46,7 @@ func (s *Stdin) Run() error {
 		p        = s.P
 		opt_seq  = s.K.Bool("seq")
 		opt_time = s.K.Bool("time")
-		stdin    = bufio.NewScanner(os.Stdin)
+		stdin    = bufio.NewScanner(os.Stdin) // TODO: bigger buffer than 64KiB?
 		ctx      = s.Ctx
 		def      = msg.DIR_R
 	)

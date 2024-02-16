@@ -19,8 +19,8 @@ import (
 
 type Exec struct {
 	*bgpipe.StageBase
-	inL *pipe.Input
-	inR *pipe.Input
+	inL *pipe.Proc
+	inR *pipe.Proc
 
 	cmd_path string
 	cmd_args []string
@@ -32,13 +32,9 @@ type Exec struct {
 	cmd_out io.ReadCloser
 	cmd_err io.ReadCloser
 
-	pool   bytebufferpool.Pool
-	output chan *bytebufferpool.ByteBuffer
+	pool   bytebufferpool.Pool             // mem re-use
+	output chan *bytebufferpool.ByteBuffer // our output to cmd
 }
-
-const (
-	EXEC_OUTPUT_BUF = 100
-)
 
 func NewExec(parent *bgpipe.StageBase) bgpipe.Stage {
 	var (
@@ -48,24 +44,20 @@ func NewExec(parent *bgpipe.StageBase) bgpipe.Stage {
 	)
 
 	o.Usage = "exec COMMAND | exec -A COMMAND [COMMAND-ARGUMENTS...] --"
-	o.Args = []string{"cmd"}
-
-	f.Bool("own", false, "do not skip own messages")
-	f.Bool("copy", false, "copy messages to command (instead of moving)")
-
-	o.Descr = "pass through a background JSON processor"
+	o.Descr = "filter messages through a background JSON processor"
 	o.IsProducer = true
 	o.Bidir = true
 
-	s.output = make(chan *bytebufferpool.ByteBuffer, EXEC_OUTPUT_BUF)
+	f.Bool("own", false, "do not skip own messages")
+	f.Bool("copy", false, "copy messages to command (instead of moving)")
+	o.Args = []string{"cmd"}
 
 	return s
 }
 
 func (s *Exec) Attach() error {
-	k := s.K
-
 	// misc options
+	k := s.K
 	s.own = k.Bool("own")
 	s.copy = k.Bool("copy")
 
@@ -95,20 +87,15 @@ func (s *Exec) Attach() error {
 	}
 
 	// cleanup procedure
-	s.cmd.Cancel = s.closeOutput
+	s.cmd.Cancel = func() error { close_safe(s.output); return nil }
 	s.cmd.WaitDelay = time.Second
 
 	// attach to pipe
 	s.P.OnMsg(s.onMsg, s.Dir)
-	s.inL = s.P.AddInput(msg.DIR_L)
-	s.inR = s.P.AddInput(msg.DIR_R)
+	s.inL = s.P.AddProc(msg.DIR_L)
+	s.inR = s.P.AddProc(msg.DIR_R)
 
-	return nil
-}
-
-func (s *Exec) closeOutput() error {
-	defer func() { recover() }()
-	close(s.output)
+	s.output = make(chan *bytebufferpool.ByteBuffer, 100)
 	return nil
 }
 
@@ -120,16 +107,16 @@ func (s *Exec) Prepare() (err error) {
 
 func (s *Exec) Run() (err error) {
 	// start stdout reader
-	ch_stdout := make(chan error, 1)
-	go s.stdoutReader(ch_stdout)
+	stdout_reader_done := make(chan error, 1)
+	go s.stdoutReader(stdout_reader_done)
 
 	// start stderr reader
-	ch_stderr := make(chan error, 1)
-	go s.stderrReader(ch_stderr)
+	stderr_reader_done := make(chan error, 1)
+	go s.stderrReader(stderr_reader_done)
 
 	// start stdin writer
-	ch_stdin := make(chan error, 1)
-	go s.stdinWriter(ch_stdin)
+	stdin_writer_done := make(chan error, 1)
+	go s.stdinWriter(stdin_writer_done)
 
 	// cleanup on exit
 	defer func() {
@@ -139,29 +126,26 @@ func (s *Exec) Run() (err error) {
 		s.Err(cmd_err).Msg("command terminated")
 
 		// escalate the error?
-		if cmd_err != nil {
-			if err == nil {
-				err = cmd_err
-			}
+		if cmd_err != nil && err == nil {
+			err = cmd_err
 		}
 	}()
 
 	// wait
 	for {
 		select {
-		case err := <-ch_stdout:
+		case err := <-stdout_reader_done:
 			s.Debug().Err(err).Msg("stdout reader done")
 			if err == nil {
 				err = io.EOF
 			}
 			return fmt.Errorf("stdout closed: %w", err)
-		case err := <-ch_stdin:
+		case err := <-stdin_writer_done:
 			s.Debug().Err(err).Msg("stdin writer done")
-			s.closeOutput()
-			ch_stdin = nil // continue, ignore stdin
-		case err := <-ch_stderr:
+			stdin_writer_done = nil // continue, ignore stdin
+		case err := <-stderr_reader_done:
 			s.Debug().Err(err).Msg("stderr reader done")
-			ch_stderr = nil // continue, ignore stderr
+			stderr_reader_done = nil // continue, ignore stderr
 		case <-s.Ctx.Done():
 			err := context.Cause(s.Ctx)
 			s.Debug().Err(err).Msg("context cancel")
@@ -171,7 +155,7 @@ func (s *Exec) Run() (err error) {
 }
 
 func (s *Exec) Stop() error {
-	s.closeOutput()
+	close_safe(s.output)
 	return nil
 }
 
@@ -208,7 +192,8 @@ func (s *Exec) stdoutReader(done chan error) {
 		}
 
 		if err != nil {
-			s.Error().Err(err).Bytes("input", buf).Msg("parse error")
+			s.Error().Err(err).Bytes("buf", buf).Msg("parse error")
+			p.Put(m)
 			continue
 		}
 
@@ -246,7 +231,7 @@ func (s *Exec) stderrReader(done chan error) {
 
 func (s *Exec) stdinWriter(done chan error) {
 	defer func() {
-		s.closeOutput()
+		close_safe(s.output)
 		s.cmd_in.Close()
 		close(done)
 	}()
@@ -258,6 +243,7 @@ func (s *Exec) stdinWriter(done chan error) {
 		_, err := bb.WriteTo(out)
 		s.pool.Put(bb)
 
+		// success?
 		if err != nil {
 			done <- err
 			return
@@ -280,7 +266,7 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 
 	// drop the message?
 	if !s.copy {
-		// TODO: add borrow if not set already, and keep for later re-use
+		// TODO: if enabled, add borrow if not set already, and keep for later re-use
 		mx.Action.Add(pipe.ACTION_DROP)
 	}
 
@@ -290,9 +276,10 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 	bb.WriteByte('\n')
 
 	// try writing, don't panic on channel closed [1]
-	// TODO: optimize and avoid JSON serialization on next call?
-	defer func() { recover() }()
-	s.output <- bb
+	// TODO: optimize and avoid JSON serialization on next stage (if needed again)?
+	if !send_safe(s.output, bb) {
+		return
+	}
 
 	// output full?
 	// if len(s.output) == EXEC_OUTPUT_BUF {

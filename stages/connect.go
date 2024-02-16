@@ -13,7 +13,7 @@ import (
 
 type Connect struct {
 	*bgpipe.StageBase
-	in *pipe.Input
+	in *pipe.Proc
 
 	target string
 	conn   net.Conn
@@ -55,7 +55,7 @@ func (s *Connect) Attach() error {
 		}
 	}
 
-	s.in = s.P.AddInput(s.Dir)
+	s.in = s.P.AddProc(s.Dir)
 	return nil
 }
 

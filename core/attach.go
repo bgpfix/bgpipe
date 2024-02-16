@@ -148,13 +148,13 @@ func (s *StageBase) attach() error {
 	// call child attach, collect what was attached to
 	cbs := len(po.Callbacks)
 	hds := len(po.Handlers)
-	ins := len(po.Inputs)
+	ins := len(po.Procs)
 	if err := s.Stage.Attach(); err != nil {
 		return err
 	}
 	s.callbacks = po.Callbacks[cbs:]
 	s.handlers = po.Handlers[hds:]
-	s.inputs = po.Inputs[ins:]
+	s.procs = po.Procs[ins:]
 
 	// if not an internal stage...
 	if s.Index > 0 {
@@ -214,7 +214,7 @@ func (s *StageBase) attach() error {
 	}
 
 	// fix inputs
-	for _, li := range s.inputs {
+	for _, li := range s.procs {
 		li.Id = s.Index
 		li.FilterValue = fid
 
@@ -261,7 +261,7 @@ func (s *StageBase) attach() error {
 		for _, hd := range s.handlers {
 			s.Trace().Msgf("  handler %#v", hd)
 		}
-		for _, in := range s.inputs {
+		for _, in := range s.procs {
 			s.Trace().Msgf("  input %s dir=%s reverse=%v filt=%d filt_id=%d",
 				in.Name, in.Dir, in.Reverse, in.CallbackFilter, in.FilterValue)
 		}
