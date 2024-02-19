@@ -19,8 +19,8 @@ type Websocket struct {
 	inL *pipe.Proc
 	inR *pipe.Proc
 
-	copy bool
-	url  string
+	filter bool
+	url    string
 
 	conn   *websocket.Conn                 // websocket conn
 	pool   bytebufferpool.Pool             // for mem re-use
@@ -31,25 +31,20 @@ func NewWebsocket(parent *bgpipe.StageBase) bgpipe.Stage {
 	s := &Websocket{StageBase: parent}
 
 	o := &s.Options
-	o.Descr = "connect a remote JSON processor over websocket"
+	o.Descr = "copy messages to remote JSON processor over websocket"
 	o.IsProducer = true
 	o.Bidir = true
 
 	f := o.Flags
 	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
-	f.Bool("copy", false, "copy messages to remote processor (instead of moving)")
+	f.Bool("filter", false, "filter messages instead of copying")
 	o.Args = []string{"url"}
 
 	return s
 }
 
 func (s *Websocket) Attach() error {
-	s.copy = s.K.Bool("copy")
-
-	// FIXME FIXME FIXME
-	s.Dir = s.Dir.Flip()
-	s.IsLeft, s.IsRight = s.IsRight, s.IsLeft
-	// FIXME FIXME FIXME
+	s.filter = s.K.Bool("filter")
 
 	// check config
 	s.url = s.K.String("url")
@@ -77,7 +72,7 @@ func (s *Websocket) Attach() error {
 	s.url = url.String()
 
 	// attach to pipe
-	s.P.OnMsg(s.pipeMsg, s.Dir)
+	s.P.OnMsg(s.onMsg, s.Dir)
 	s.inL = s.P.AddProc(msg.DIR_L)
 	s.inR = s.P.AddProc(msg.DIR_R)
 
@@ -99,7 +94,7 @@ func (s *Websocket) Prepare() error {
 	dialer := *websocket.DefaultDialer
 
 	// dial
-	s.Debug().Msgf("dialing %s", s.url)
+	s.Info().Msgf("dialing %s", s.url)
 	conn, resp, err := dialer.DialContext(ctx, s.url, nil)
 	if err != nil {
 		return err
@@ -163,8 +158,7 @@ func (s *Websocket) Run() (err error) {
 
 func (s *Websocket) connReader(done chan error) {
 	var (
-		p   = s.P
-		def = msg.DIR_R
+		p = s.P
 	)
 	defer close(done)
 
@@ -190,10 +184,8 @@ func (s *Websocket) connReader(done chan error) {
 		}
 
 		// fix direction?
-		if s.Dir != 0 {
+		if m.Dir == 0 {
 			m.Dir = s.Dir
-		} else if m.Dir == 0 {
-			m.Dir = def
 		}
 
 		// sail
@@ -224,9 +216,9 @@ func (s *Websocket) connWriter(done chan error) {
 	}
 }
 
-func (s *Websocket) pipeMsg(m *msg.Msg) (action pipe.Action) {
+func (s *Websocket) onMsg(m *msg.Msg) (action pipe.Action) {
 	// drop the message after?
-	if !s.copy {
+	if s.filter {
 		// TODO: if enabled, add borrow if not set already, and keep for later re-use
 		action |= pipe.ACTION_DROP
 	}
@@ -234,7 +226,7 @@ func (s *Websocket) pipeMsg(m *msg.Msg) (action pipe.Action) {
 	// get from pool, marshal
 	bb := s.pool.Get()
 	bb.B = m.ToJSON(bb.B)
-	// bb.WriteByte('\n')
+	bb.WriteByte('\n')
 
 	// try writing, don't panic on channel closed
 	if !send_safe(s.output, bb) {

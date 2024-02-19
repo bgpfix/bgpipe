@@ -3,6 +3,7 @@ package bgpipe
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync/atomic"
 
 	"github.com/bgpfix/bgpfix/msg"
@@ -77,14 +78,11 @@ type StageBase struct {
 
 	// set during StageBase.attach
 
-	IsFirst bool // is the first stage in pipe? (L peer)
-	IsLast  bool // is the last stage in pipe? (R peer)
-	IsLeft  bool // operates on L direction?
-	IsRight bool // operates on R direction?
-
-	Dir        msg.Dir    // -L/-R translated to Dir (can be DIR_LR)
-	Upstream   *pipe.Line // pipeline processing messages to Dst (may be nil)
-	Downstream *pipe.Line // pipeline processing messages from Dst (may be nil)
+	IsFirst bool    // is the first stage in pipe? (the L peer)
+	IsLast  bool    // is the last stage in pipe? (the R peer)
+	IsRight bool    // write L->R msgs + capture L->R msgs?
+	IsLeft  bool    // write R->L msgs + capture R->L msgs?
+	Dir     msg.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
@@ -146,9 +144,9 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Stage = newfunc(s)
 
 	// add global CLI flags
-	f.BoolP("args", "A", false, "use all arguments till --")
-	f.BoolP("left", "L", false, "operate in L direction")
-	f.BoolP("right", "R", false, "operate in R direction")
+	f.BoolP("args", "A", false, "consume all arguments till --")
+	f.BoolP("right", "R", false, "operate in the R direction")
+	f.BoolP("left", "L", false, "operate in the L direction")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
 	if so.IsProducer {
@@ -201,4 +199,23 @@ func (s *StageBase) String() string {
 	} else {
 		return s.Name
 	}
+}
+
+// StringDir returns eg. "-LR [FIRST]" depending on stage direction
+func (s *StageBase) StringLR() string {
+	var str strings.Builder
+	str.WriteByte('-')
+	if s.IsLeft {
+		str.WriteByte('L')
+	}
+	if s.IsRight {
+		str.WriteByte('R')
+	}
+	if s.IsFirst {
+		str.WriteString(" [FIRST]")
+	}
+	if s.IsLast {
+		str.WriteString(" [LAST]")
+	}
+	return str.String()
 }

@@ -161,9 +161,8 @@ func (s *Exec) Stop() error {
 
 func (s *Exec) stdoutReader(done chan error) {
 	var (
-		p   = s.P
-		in  = bufio.NewScanner(s.cmd_out)
-		def = msg.DIR_R
+		p  = s.P
+		in = bufio.NewScanner(s.cmd_out)
 	)
 
 	defer close(done)
@@ -203,10 +202,8 @@ func (s *Exec) stdoutReader(done chan error) {
 		}
 
 		// fix direction?
-		if s.Dir != 0 {
+		if m.Dir == 0 {
 			m.Dir = s.Dir
-		} else if m.Dir == 0 {
-			m.Dir = def
 		}
 
 		// sail

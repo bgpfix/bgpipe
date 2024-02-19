@@ -97,10 +97,12 @@ func (s *Stdin) Run() error {
 		}
 
 		// fix direction?
-		if s.Dir != 0 {
-			m.Dir = s.Dir
-		} else if m.Dir == 0 {
-			m.Dir = def
+		if m.Dir == 0 {
+			if s.Dir == 0 {
+				m.Dir = def
+			} else {
+				m.Dir = s.Dir
+			}
 		}
 
 		// context still valid?

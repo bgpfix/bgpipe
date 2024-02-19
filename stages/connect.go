@@ -74,7 +74,7 @@ func (s *Connect) Prepare() error {
 	dialer.Control = tcp_md5(s.K.String("md5"))
 
 	// dial
-	s.Debug().Msgf("dialing %s", s.target)
+	s.Info().Msgf("dialing %s", s.target)
 	conn, err := dialer.DialContext(ctx, "tcp", s.target)
 	if err != nil {
 		return err

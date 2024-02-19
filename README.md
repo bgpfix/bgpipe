@@ -1,6 +1,6 @@
 # bgpipe: a BGP reverse proxy
 
-**WORK IN PROGRESS PREVIEW 10/2023**
+**WORK IN PROGRESS PREVIEW 02/2024**
 
 This project provides an open-source BGP reverse proxy based on [the BGPFix library](https://github.com/bgpfix/bgpfix).
 
@@ -23,16 +23,17 @@ See [bgpipe releases](https://github.com/bgpfix/bgpipe/releases/) on GitHub, or 
 ```
 # install golang, eg. https://go.dev/dl/
 $ go version
-go version go1.21.3 linux/amd64
+go version go1.22.0 linux/amd64
 
 # install bgpipe
 $ go install github.com/bgpfix/bgpipe@latest
 
 # bgpipe has built-in docs
 $ bgpipe -h
-Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [ARGUMENTS...] [--] STAGE...
+Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS] [--] ...
 
 Options:
+  -v, --version          print detailed version info and quit
   -l, --log string       log level (debug/info/warn/error/disabled) (default "info")
   -e, --events strings   log given events ("all" means all events) (default [PARSE,ESTABLISHED])
   -k, --kill strings     kill session on given events
@@ -41,28 +42,30 @@ Options:
   -2, --short-asn        use 2-byte ASN numbers
 
 Supported stages (run stage -h to get its help)
-  connect                connect to a TCP endpoint
-  exec                   pass through a background JSON processor
+  connect                connect to a BGP endpoint over TCP
+  exec                   filter messages through a background JSON processor
   limit                  limit prefix lengths and counts
-  listen                 wait for a TCP client to connect
+  listen                 wait for a BGP client to connect over TCP
   mrt                    read MRT file with BGP4MP messages (uncompress if needed)
   speaker                run a simple local BGP speaker
   stdin                  read JSON representation from stdin
   stdout                 print JSON representation to stdout
+  websocket              copy messages to remote JSON processor over websocket
 
 # see docs for "connect" stage
 $ bgpipe connect -h
 Stage usage: connect [OPTIONS] ADDR
 
-connect to a TCP endpoint
+Description: connect to a BGP endpoint over TCP
 
-Stage Options:
-      --timeout duration   connect timeout (0 means none)
+Options:
+      --timeout duration   connect timeout (0 means none) (default 1m0s)
       --md5 string         TCP MD5 password
 
-Global Options:
-  -L, --left               operate in L direction
-  -R, --right              operate in R direction
+Common Options:
+  -A, --args               consume all arguments till --
+  -R, --right              operate in the R direction
+  -L, --left               operate in the L direction
   -W, --wait strings       wait for given event before starting
   -S, --stop strings       stop after given event is handled
   -I, --in string          where to inject new messages (default "next")
@@ -80,7 +83,7 @@ $ cat input.json | bgpipe --stdin speaker 1.2.3.4 | tee output.json
 # dump mrt updates to json
 $ bgpipe updates.20230301.0000.bz2 > output.json
 
-# proxy a connection, print the conversation to stdout
+# proxy a connection, print the conversation to stdout by default
 # 1st stage: listen on TCP *:179 for new connection
 # 2nd stage: wait for new connection and proxy it to 1.2.3.4, adding TCP-MD5
 $ bgpipe \
@@ -108,6 +111,12 @@ $ bgpipe --kill limit/session \
   -- limit -LR --ipv4 --min-length  8 --max-length 24 --session 1000000 \
   -- limit -LR --ipv6 --min-length 16 --max-length 48 --session 250000 \
   -- connect 5.6.7.8
+
+# stream a log of BGP session in JSON to a remote websocket
+$ bgpipe \
+  -- connect 1.2.3.4 \
+  -- websocket -LR wss://bgpfix.com/log?user=demo \
+  -- connect 85.232.240.179
 ```
 
 ## Author

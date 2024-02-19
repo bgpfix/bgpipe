@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Attach attaches all stages to pipe
-func (b *Bgpipe) Attach() error {
+// AttachStages attaches all stages to pipe
+func (b *Bgpipe) AttachStages() error {
 	// shortcuts
 	var (
 		k = b.K
@@ -137,12 +137,8 @@ func (s *StageBase) attach() error {
 		s.Dir = msg.DIR_LR
 	} else if s.IsLeft {
 		s.Dir = msg.DIR_L
-		s.Upstream = p.L
-		s.Downstream = p.R
 	} else {
 		s.Dir = msg.DIR_R
-		s.Upstream = p.R
-		s.Downstream = p.L
 	}
 
 	// call child attach, collect what was attached to
@@ -252,9 +248,8 @@ func (s *StageBase) attach() error {
 	}
 
 	// debug?
+	s.Debug().Msgf("[%d] attached %s %s", s.Index, s.Cmd, s.StringLR())
 	if s.GetLevel() <= zerolog.TraceLevel {
-		s.Trace().Msgf("[%d] attached %s first/last=%v/%v L/R=%v,%v",
-			s.Index, s.Name, s.IsFirst, s.IsLast, s.IsLeft, s.IsRight)
 		for _, cb := range s.callbacks {
 			s.Trace().Msgf("  callback %#v", cb)
 		}

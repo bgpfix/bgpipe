@@ -33,7 +33,7 @@ func tcp_handle(s *bgpipe.StageBase, conn net.Conn, in *pipe.Proc) error {
 	rch := make(chan retval, 1)
 	wch := make(chan retval, 1)
 
-	// read from conn -> write to s.Input
+	// read from conn
 	go func() {
 		n, err := io.Copy(in, conn)
 		s.Trace().Err(err).Msg("connection reader returned")
@@ -41,9 +41,10 @@ func tcp_handle(s *bgpipe.StageBase, conn net.Conn, in *pipe.Proc) error {
 		rch <- retval{n, err}
 	}()
 
-	// write to conn <- read from s.Output
+	// write to conn
 	go func() {
-		n, err := tcp.ReadFrom(s.Downstream)
+		pipeline := s.P.LineFor(s.Dir.Flip())
+		n, err := tcp.ReadFrom(pipeline)
 		s.Trace().Err(err).Msg("connection writer returned")
 		tcp.CloseWrite()
 		wch <- retval{n, err}

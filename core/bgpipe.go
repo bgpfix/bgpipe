@@ -79,7 +79,7 @@ func (b *Bgpipe) Run() error {
 	}
 
 	// attach stages to pipe
-	if err := b.Attach(); err != nil {
+	if err := b.AttachStages(); err != nil {
 		b.Error().Err(err).Msg("could not attach stages to the pipe")
 		return err
 	}

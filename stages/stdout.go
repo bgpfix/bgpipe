@@ -31,7 +31,6 @@ func (s *Stdout) Attach() error {
 		s.P.AddCallback(s.OnMsg, &pipe.Callback{
 			Post:  true,
 			Order: math.MaxInt,
-			Dir:   s.Dir,
 		})
 	} else {
 		s.P.OnMsg(s.OnMsg, s.Dir)

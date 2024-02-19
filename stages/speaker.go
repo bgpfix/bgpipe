@@ -4,7 +4,7 @@ import (
 	"net/netip"
 
 	"github.com/bgpfix/bgpfix/speaker"
-	"github.com/bgpfix/bgpipe/core"
+	bgpipe "github.com/bgpfix/bgpipe/core"
 )
 
 type Speaker struct {
