@@ -7,12 +7,10 @@ import (
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	bgpipe "github.com/bgpfix/bgpipe/core"
-	"github.com/valyala/bytebufferpool"
 )
 
 type Stdout struct {
 	*bgpipe.StageBase
-	pool bytebufferpool.Pool
 }
 
 func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
@@ -39,15 +37,7 @@ func (s *Stdout) Attach() error {
 	return nil
 }
 
-func (s *Stdout) OnMsg(m *msg.Msg) (action pipe.Action) {
-	// get from pool, marshal
-	bb := s.pool.Get()
-	bb.B = m.ToJSON(bb.B)
-	bb.WriteByte('\n')
-
-	// write, re-use
-	bb.WriteTo(os.Stdout)
-	s.pool.Put(bb)
-
-	return
+func (s *Stdout) OnMsg(m *msg.Msg) {
+	os.Stdout.Write(m.GetJSON())
+	os.Stdout.WriteString("\n")
 }

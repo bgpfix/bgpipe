@@ -307,22 +307,20 @@ func (s *Websocket) connWriter(done chan error) {
 	}
 }
 
-func (s *Websocket) onMsg(m *msg.Msg) (action pipe.Action) {
+func (s *Websocket) onMsg(m *msg.Msg) {
 	// drop the message after?
 	if s.filter {
 		// TODO: if enabled, add borrow if not set already, and keep for later re-use
-		action |= pipe.ACTION_DROP
+		pipe.ActionDrop(m)
 	}
 
 	// get from pool, marshal
 	bb := s.pool.Get()
-	bb.B = m.ToJSON(bb.B)
+	bb.Write(m.GetJSON())
 	bb.WriteByte('\n')
 
 	// try writing, don't panic on channel closed
 	if !send_safe(s.output, bb) {
 		return
 	}
-
-	return
 }

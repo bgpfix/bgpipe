@@ -141,7 +141,7 @@ func (s *Limit) Attach() error {
 	return nil
 }
 
-func (s *Limit) onMsg(m *msg.Msg) (action pipe.Action) {
+func (s *Limit) onMsg(m *msg.Msg) {
 	var rbefore, rafter, ubefore, uafter int
 
 	// process reachable prefixes
@@ -155,10 +155,11 @@ func (s *Limit) onMsg(m *msg.Msg) (action pipe.Action) {
 
 	// need to drop the whole message?
 	if rafter+uafter == 0 && rbefore+ubefore > 0 {
-		return pipe.ACTION_DROP
+		pipe.ActionDrop(m)
+		return
 	}
 
-	return pipe.ACTION_OK
+	// limits OK, take it
 }
 
 func (s *Limit) isShort(p netip.Prefix) bool {
@@ -193,7 +194,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	dropReach := func(p netip.Prefix) (drop bool) {
 		defer func() {
 			if drop {
-				u.Msg.Dirty = true
+				u.Msg.Dirty()
 			}
 		}()
 
@@ -306,7 +307,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	dropUnreach := func(p netip.Prefix) (drop bool) {
 		// too long or short?
 		if s.isShort(p) || s.isLong(p) {
-			u.Msg.Dirty = true
+			u.Msg.Dirty()
 			return true
 		}
 

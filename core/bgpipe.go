@@ -33,8 +33,6 @@ type Bgpipe struct {
 	wg_lread  sync.WaitGroup // stages that read from pipe L
 	wg_rwrite sync.WaitGroup // stages that write to pipe R
 	wg_rread  sync.WaitGroup // stages that read from pipe R
-
-	logbuf []byte // buffer for LogEvent
 }
 
 // NewBgpipe creates a new bgpipe instance using given
@@ -142,8 +140,7 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 	l := b.Err(ev.Error)
 
 	if ev.Msg != nil {
-		b.logbuf = ev.Msg.ToJSON(b.logbuf[:0])
-		l = l.Bytes("msg", b.logbuf)
+		l = l.Bytes("msg", ev.Msg.GetJSON())
 	}
 
 	if ev.Dir != 0 {

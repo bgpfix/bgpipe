@@ -235,7 +235,6 @@ func (s *Exec) stdinWriter(done chan error) {
 
 	out := s.cmd_in
 	fh, _ := out.(*os.File)
-
 	for bb := range s.output {
 		_, err := bb.WriteTo(out)
 		s.pool.Put(bb)
@@ -253,7 +252,7 @@ func (s *Exec) stdinWriter(done chan error) {
 	}
 }
 
-func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
+func (s *Exec) onMsg(m *msg.Msg) {
 	mx := pipe.MsgContext(m)
 
 	// skip our messages?
@@ -264,12 +263,12 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 	// drop the message?
 	if !s.copy {
 		// TODO: if enabled, add borrow if not set already, and keep for later re-use
-		mx.Action.Add(pipe.ACTION_DROP)
+		mx.ActionDrop()
 	}
 
 	// get from pool, marshal
 	bb := s.pool.Get()
-	bb.B = m.ToJSON(bb.B)
+	bb.Write(m.GetJSON())
 	bb.WriteByte('\n')
 
 	// try writing, don't panic on channel closed [1]
@@ -282,6 +281,4 @@ func (s *Exec) onMsg(m *msg.Msg) (action pipe.Action) {
 	// if len(s.output) == EXEC_OUTPUT_BUF {
 	// 	s.Warn().Msg("output buffer full")
 	// }
-
-	return
 }
