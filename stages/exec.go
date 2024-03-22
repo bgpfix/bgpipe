@@ -173,7 +173,7 @@ func (s *Exec) stdoutReader(done chan error) {
 		// s.Trace().Msgf("out: %s", buf)
 
 		// parse into m
-		m := p.Get()
+		m := p.GetMsg()
 		var err error
 		switch {
 		case len(buf) == 0 || buf[0] == '#':
@@ -192,7 +192,7 @@ func (s *Exec) stdoutReader(done chan error) {
 
 		if err != nil {
 			s.Error().Err(err).Bytes("buf", buf).Msg("parse error")
-			p.Put(m)
+			p.PutMsg(m)
 			continue
 		}
 

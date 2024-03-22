@@ -236,11 +236,11 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 		}
 
 		// parse into m
-		m := p.Get()
+		m := p.GetMsg()
 		err = m.FromJSON(buf)
 		if err != nil {
 			s.Err(err).Bytes("buf", buf).Msgf("%s: read parse error", conn.RemoteAddr())
-			p.Put(m)
+			p.PutMsg(m)
 			continue
 		}
 

@@ -58,10 +58,9 @@ func (s *Stdin) Run() error {
 
 	for stdin.Scan() {
 		buf := bytes.TrimSpace(stdin.Bytes())
-		// s.Trace().Msgf("stdin: %s", buf)
 
 		// parse into m
-		m := p.Get()
+		m := p.GetMsg()
 		var err error
 		switch {
 		case len(buf) == 0 || buf[0] == '#':
