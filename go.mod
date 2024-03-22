@@ -3,7 +3,7 @@ module github.com/bgpfix/bgpipe
 go 1.21
 
 require (
-	github.com/bgpfix/bgpfix v0.1.7
+	github.com/bgpfix/bgpfix v0.0.0-00010101000000-000000000000
 	github.com/gorilla/websocket v1.5.1
 	github.com/knadh/koanf/providers/posflag v0.1.0
 	github.com/knadh/koanf/v2 v2.1.0
@@ -24,3 +24,5 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	golang.org/x/net v0.22.0 // indirect
 )
+
+replace github.com/bgpfix/bgpfix => ../bgpfix
