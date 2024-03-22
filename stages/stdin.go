@@ -70,7 +70,7 @@ func (s *Stdin) Run() error {
 			err = m.FromJSON(buf)
 
 		case buf[0] == '{': // update
-			m.Up(msg.UPDATE)
+			m.Use(msg.UPDATE)
 			err = m.Update.FromJSON(buf)
 
 		default:
@@ -92,7 +92,7 @@ func (s *Stdin) Run() error {
 
 		// fix type?
 		if m.Type == msg.INVALID {
-			m.Up(msg.KEEPALIVE)
+			m.Use(msg.KEEPALIVE)
 		}
 
 		// fix direction?

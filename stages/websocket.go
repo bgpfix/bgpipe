@@ -317,7 +317,6 @@ func (s *Websocket) onMsg(m *msg.Msg) {
 	// get from pool, marshal
 	bb := s.pool.Get()
 	bb.Write(m.GetJSON())
-	bb.WriteByte('\n')
 
 	// try writing, don't panic on channel closed
 	if !send_safe(s.output, bb) {

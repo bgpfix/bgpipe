@@ -140,7 +140,8 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 	l := b.Err(ev.Error)
 
 	if ev.Msg != nil {
-		l = l.Bytes("msg", ev.Msg.GetJSON())
+		j := ev.Msg.GetJSON()
+		l = l.Bytes("msg", j[:len(j)-1])
 	}
 
 	if ev.Dir != 0 {

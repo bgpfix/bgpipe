@@ -39,5 +39,4 @@ func (s *Stdout) Attach() error {
 
 func (s *Stdout) OnMsg(m *msg.Msg) {
 	os.Stdout.Write(m.GetJSON())
-	os.Stdout.WriteString("\n")
 }

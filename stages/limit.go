@@ -194,7 +194,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	dropReach := func(p netip.Prefix) (drop bool) {
 		defer func() {
 			if drop {
-				u.Msg.Dirty()
+				u.Msg.Modified()
 			}
 		}()
 
@@ -307,7 +307,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	dropUnreach := func(p netip.Prefix) (drop bool) {
 		// too long or short?
 		if s.isShort(p) || s.isLong(p) {
-			u.Msg.Dirty()
+			u.Msg.Modified()
 			return true
 		}
 

@@ -198,7 +198,7 @@ func (s *Exec) stdoutReader(done chan error) {
 
 		// fix type?
 		if m.Type == msg.INVALID {
-			m.Up(msg.KEEPALIVE)
+			m.Use(msg.KEEPALIVE)
 		}
 
 		// fix direction?
@@ -269,10 +269,8 @@ func (s *Exec) onMsg(m *msg.Msg) {
 	// get from pool, marshal
 	bb := s.pool.Get()
 	bb.Write(m.GetJSON())
-	bb.WriteByte('\n')
 
 	// try writing, don't panic on channel closed [1]
-	// TODO: optimize and avoid JSON serialization on next stage (if needed again)?
 	if !send_safe(s.output, bb) {
 		return
 	}
