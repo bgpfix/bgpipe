@@ -6,14 +6,14 @@ import (
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Stdout struct {
-	*bgpipe.StageBase
+	*core.StageBase
 }
 
-func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewStdout(parent *core.StageBase) core.Stage {
 	s := &Stdout{StageBase: parent}
 
 	o := &s.Options

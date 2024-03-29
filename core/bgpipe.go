@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"context"
@@ -106,7 +106,7 @@ func (b *Bgpipe) Run() error {
 }
 
 // Start is called after the bgpfix pipe starts
-func (b *Bgpipe) Start(ev *pipe.Event) bool {
+func (b *Bgpipe) Start(ev *pipe.Event) {
 	// wait for writers
 	go func() {
 		b.wg_lwrite.Wait()
@@ -131,11 +131,11 @@ func (b *Bgpipe) Start(ev *pipe.Event) bool {
 		b.Pipe.R.CloseOutput()
 	}()
 
-	return false
+	ev.Handler.Drop()
 }
 
 // LogEvent logs given event
-func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
+func (b *Bgpipe) LogEvent(ev *pipe.Event) {
 	// will b.Info() if ev.Error is nil
 	l := b.Err(ev.Error)
 
@@ -162,14 +162,12 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 	}
 
 	l.Msgf("event %s", ev.Type)
-	return true
 }
 
 // KillEvent kills session because of given event ev
-func (b *Bgpipe) KillEvent(ev *pipe.Event) bool {
-	b.Cancel(fmt.Errorf("%w: %s", ErrKill, ev))
+func (b *Bgpipe) KillEvent(ev *pipe.Event) {
 	// TODO: why not pipe.Stop()?
-	return false
+	b.Cancel(fmt.Errorf("%w: %s", ErrKill, ev))
 }
 
 // AddRepo adds mapping between stage commands and their NewStageFunc
@@ -214,6 +212,7 @@ func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
 	return s, nil
 }
 
+// StageCount returns the number of stages added to the pipe
 func (b *Bgpipe) StageCount() int {
 	return max(0, len(b.Stages)-1)
 }

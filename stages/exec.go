@@ -2,66 +2,53 @@ package stages
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"time"
 
-	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
-	"github.com/valyala/bytebufferpool"
+	"github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/pkg/extio"
 )
 
 type Exec struct {
-	*bgpipe.StageBase
-	inL *pipe.Proc
-	inR *pipe.Proc
+	*core.StageBase
 
 	cmd_path string
 	cmd_args []string
-	own      bool
-	copy     bool
+	cmd_exec *exec.Cmd
+	cmd_in   io.WriteCloser // stdin
+	cmd_out  io.ReadCloser  // stdout
+	cmd_err  io.ReadCloser  // stderr
 
-	cmd     *exec.Cmd
-	cmd_in  io.WriteCloser
-	cmd_out io.ReadCloser
-	cmd_err io.ReadCloser
-
-	pool   bytebufferpool.Pool             // mem re-use
-	output chan *bytebufferpool.ByteBuffer // our output to cmd
+	eio *extio.Extio
 }
 
-func NewExec(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewExec(parent *core.StageBase) core.Stage {
 	var (
 		s = &Exec{StageBase: parent}
 		o = &s.Options
-		f = o.Flags
 	)
 
 	o.Usage = "exec COMMAND | exec -A COMMAND [COMMAND-ARGUMENTS...] --"
-	o.Descr = "filter messages through a background JSON processor"
+	o.Descr = "filter JSON messages through a background process"
 	o.IsProducer = true
 	o.Bidir = true
-
-	f.Bool("own", false, "do not skip own messages")
-	f.Bool("copy", false, "copy messages to command (instead of moving)")
 	o.Args = []string{"cmd"}
 
+	f := o.Flags
+	f.Bool("keep-stdin", false, "keep running if stdin is closed")
+	f.Bool("keep-stdout", false, "keep running if stdout is closed")
+
+	s.eio = extio.NewExtio(parent)
 	return s
 }
 
 func (s *Exec) Attach() error {
-	// misc options
-	k := s.K
-	s.own = k.Bool("own")
-	s.copy = k.Bool("copy")
-
 	// check command
+	k := s.K
 	s.cmd_path = k.String("cmd")
 	s.cmd_args = k.Strings("args")
 	if len(s.cmd_path) == 0 {
@@ -69,45 +56,46 @@ func (s *Exec) Attach() error {
 	}
 
 	// create cmd
-	s.cmd = exec.CommandContext(s.Ctx, s.cmd_path, s.cmd_args...)
-
-	// get I/O pipes
 	var err error
-	s.cmd_in, err = s.cmd.StdinPipe()
+	s.cmd_exec = exec.CommandContext(s.Ctx, s.cmd_path, s.cmd_args...)
+	s.cmd_in, err = s.cmd_exec.StdinPipe()
 	if err != nil {
 		return err
 	}
-	s.cmd_out, err = s.cmd.StdoutPipe()
+	s.cmd_out, err = s.cmd_exec.StdoutPipe()
 	if err != nil {
 		return err
 	}
-	s.cmd_err, err = s.cmd.StderrPipe()
+	s.cmd_err, err = s.cmd_exec.StderrPipe()
 	if err != nil {
 		return err
 	}
 
 	// cleanup procedure
-	s.cmd.Cancel = func() error { close_safe(s.output); return nil }
-	s.cmd.WaitDelay = time.Second
+	// s.cmd_exec.Cancel = func() error { close_safe(s.eio.Output); return nil }
+	s.cmd_exec.WaitDelay = time.Second
 
-	// attach to pipe
-	s.P.OnMsg(s.onMsg, s.Dir)
-	s.inL = s.P.AddProc(msg.DIR_L)
-	s.inR = s.P.AddProc(msg.DIR_R)
-
-	s.output = make(chan *bytebufferpool.ByteBuffer, 100)
-	return nil
+	return s.eio.Attach()
 }
 
 // Prepare starts the command in background
 func (s *Exec) Prepare() (err error) {
-	s.Info().Msgf("running %s", s.cmd.String())
-	return s.cmd.Start()
+	s.Info().Msgf("running %s", s.cmd_exec.String())
+	return s.cmd_exec.Start()
 }
 
+// Stop stops the flow of data
+func (s *Exec) Stop() error {
+	s.eio.InputClose()
+	s.eio.OutputClose()
+	return nil
+}
+
+// Run runs the data flow
 func (s *Exec) Run() (err error) {
 	// start stdout reader
 	stdout_reader_done := make(chan error, 1)
+	stdout_ok := s.K.Bool("keep-stdout")
 	go s.stdoutReader(stdout_reader_done)
 
 	// start stderr reader
@@ -116,13 +104,14 @@ func (s *Exec) Run() (err error) {
 
 	// start stdin writer
 	stdin_writer_done := make(chan error, 1)
+	stdin_ok := s.K.Bool("keep-stdin")
 	go s.stdinWriter(stdin_writer_done)
 
 	// cleanup on exit
 	defer func() {
 		// wait for the command
-		s.cmd.Cancel()
-		cmd_err := s.cmd.Wait()
+		s.cmd_exec.Cancel()
+		cmd_err := s.cmd_exec.Wait()
 		s.Err(cmd_err).Msg("command terminated")
 
 		// escalate the error?
@@ -137,12 +126,20 @@ func (s *Exec) Run() (err error) {
 		case err := <-stdout_reader_done:
 			s.Debug().Err(err).Msg("stdout reader done")
 			if err == nil {
-				err = io.EOF
+				if stdout_ok {
+					continue // it's fine
+				} else {
+					err = io.EOF // it shouldn't end
+				}
 			}
 			return fmt.Errorf("stdout closed: %w", err)
 		case err := <-stdin_writer_done:
 			s.Debug().Err(err).Msg("stdin writer done")
-			stdin_writer_done = nil // continue, ignore stdin
+			if err != nil && stdin_ok {
+				stdin_writer_done = nil // continue, ignore stdin
+				continue
+			}
+			return fmt.Errorf("stdin closed: %w", err)
 		case err := <-stderr_reader_done:
 			s.Debug().Err(err).Msg("stderr reader done")
 			stderr_reader_done = nil // continue, ignore stderr
@@ -154,63 +151,15 @@ func (s *Exec) Run() (err error) {
 	}
 }
 
-func (s *Exec) Stop() error {
-	close_safe(s.output)
-	return nil
-}
-
 func (s *Exec) stdoutReader(done chan error) {
-	var (
-		p  = s.P
-		in = bufio.NewScanner(s.cmd_out)
-	)
-
 	defer close(done)
 
+	in := bufio.NewScanner(s.cmd_out)
 	for in.Scan() {
-		// trim
-		buf := bytes.TrimSpace(in.Bytes())
-		// s.Trace().Msgf("out: %s", buf)
-
-		// parse into m
-		m := p.GetMsg()
-		var err error
-		switch {
-		case len(buf) == 0 || buf[0] == '#':
-			continue
-
-		case buf[0] == '[': // full message
-			// TODO: can re-use recent message?
-			err = m.FromJSON(buf)
-
-		case buf[0] >= 'A' && buf[0] <= 'Z':
-			s.Event(string(buf))
-
-		default:
-			err = errors.New("invalid input")
-		}
-
+		err := s.eio.Read(in.Bytes(), nil)
 		if err != nil {
-			s.Error().Err(err).Bytes("buf", buf).Msg("parse error")
-			p.PutMsg(m)
-			continue
-		}
-
-		// fix type?
-		if m.Type == msg.INVALID {
-			m.Use(msg.KEEPALIVE)
-		}
-
-		// fix direction?
-		if m.Dir == 0 {
-			m.Dir = s.Dir
-		}
-
-		// sail
-		if m.Dir == msg.DIR_L {
-			s.inL.WriteMsg(m)
-		} else {
-			s.inR.WriteMsg(m)
+			done <- err
+			return
 		}
 	}
 	done <- in.Err()
@@ -227,56 +176,18 @@ func (s *Exec) stderrReader(done chan error) {
 }
 
 func (s *Exec) stdinWriter(done chan error) {
-	defer func() {
-		close_safe(s.output)
-		s.cmd_in.Close()
-		close(done)
-	}()
+	defer close(done)
 
-	out := s.cmd_in
-	fh, _ := out.(*os.File)
-	for bb := range s.output {
-		_, err := bb.WriteTo(out)
-		s.pool.Put(bb)
-
-		// success?
-		if err != nil {
+	eio := s.eio
+	for bb := range eio.Output {
+		_, err := bb.WriteTo(s.cmd_in)
+		if err == nil {
+			eio.Pool.Put(bb)
+		} else {
 			done <- err
-			return
-		}
-
-		// TODO: has any effect?
-		if fh != nil {
-			fh.Sync()
+			break
 		}
 	}
-}
-
-func (s *Exec) onMsg(m *msg.Msg) {
-	mx := pipe.MsgContext(m)
-
-	// skip our messages?
-	if mx.Input.Id == s.Index && !s.own {
-		return
-	}
-
-	// drop the message?
-	if !s.copy {
-		// TODO: if enabled, add borrow if not set already, and keep for later re-use
-		mx.ActionDrop()
-	}
-
-	// get from pool, marshal
-	bb := s.pool.Get()
-	bb.Write(m.GetJSON())
-
-	// try writing, don't panic on channel closed [1]
-	if !send_safe(s.output, bb) {
-		return
-	}
-
-	// output full?
-	// if len(s.output) == EXEC_OUTPUT_BUF {
-	// 	s.Warn().Msg("output buffer full")
-	// }
+	eio.OutputClose()
+	s.cmd_in.Close()
 }

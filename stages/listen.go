@@ -7,18 +7,18 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Listen struct {
-	*bgpipe.StageBase
+	*core.StageBase
 	in *pipe.Proc
 
 	bind string
 	conn net.Conn
 }
 
-func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewListen(parent *core.StageBase) core.Stage {
 	var (
 		s = &Listen{StageBase: parent}
 		o = &s.Options

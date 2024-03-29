@@ -1,8 +1,8 @@
 package stages
 
-import bgpipe "github.com/bgpfix/bgpipe/core"
+import "github.com/bgpfix/bgpipe/core"
 
-var Repo = map[string]bgpipe.NewStage{
+var Repo = map[string]core.NewStage{
 	"connect":   NewConnect,
 	"listen":    NewListen,
 	"speaker":   NewSpeaker,

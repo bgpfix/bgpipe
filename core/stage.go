@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"context"
@@ -144,9 +144,9 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Stage = newfunc(s)
 
 	// add global CLI flags
-	f.BoolP("args", "A", false, "consume all arguments till --")
-	f.BoolP("right", "R", false, "operate in the R direction")
+	f.BoolP("args", "A", false, "consume all CLI arguments till --")
 	f.BoolP("left", "L", false, "operate in the L direction")
+	f.BoolP("right", "R", false, "operate in the R direction")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
 	if so.IsProducer {

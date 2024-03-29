@@ -6,17 +6,17 @@ import (
 	"os"
 
 	"github.com/bgpfix/bgpfix/mrt"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Mrt struct {
-	*bgpipe.StageBase
+	*core.StageBase
 
 	fpath string
 	mr    *mrt.Reader
 }
 
-func NewMrt(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewMrt(parent *core.StageBase) core.Stage {
 	s := &Mrt{StageBase: parent}
 	o := &s.Options
 

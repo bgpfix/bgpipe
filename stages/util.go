@@ -7,10 +7,10 @@ import (
 	"net"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
-func tcp_handle(s *bgpipe.StageBase, conn net.Conn, in *pipe.Proc) error {
+func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Proc) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 

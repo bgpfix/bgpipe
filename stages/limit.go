@@ -20,12 +20,12 @@ import (
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 	"github.com/puzpuzpuz/xsync/v3"
 )
 
 type Limit struct {
-	*bgpipe.StageBase
+	*core.StageBase
 
 	afs  map[af.AF]bool // address families to consider
 	ipv4 bool           // consider IPv4
@@ -47,7 +47,7 @@ type Limit struct {
 	block   *xsync.MapOf[uint64, *limitCounter]      // per-block db
 }
 
-func NewLimit(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewLimit(parent *core.StageBase) core.Stage {
 	var (
 		s  = &Limit{StageBase: parent}
 		so = &s.Options

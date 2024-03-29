@@ -1,6 +1,7 @@
 package stages
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -11,47 +12,41 @@ import (
 
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/pkg/extio"
 	"github.com/gorilla/websocket"
-	"github.com/valyala/bytebufferpool"
 )
 
 type Websocket struct {
-	*bgpipe.StageBase
-	inL *pipe.Proc
-	inR *pipe.Proc
+	*core.StageBase
 
-	filter bool
-	url    url.URL
+	url        url.URL              // URL adress
+	srv        *http.Server         // http server (may be nil)
+	clientConn *websocket.Conn      // websocket client conn
+	serverConn chan *websocket.Conn // websocket server conns
 
-	srv        *http.Server                    // http server (may be nil)
-	clientConn *websocket.Conn                 // websocket client conn
-	serverConn chan *websocket.Conn            // websocket server conns
-	pool       bytebufferpool.Pool             // for mem re-use
-	output     chan *bytebufferpool.ByteBuffer // our output to conn
+	eio *extio.Extio
 }
 
-func NewWebsocket(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewWebsocket(parent *core.StageBase) core.Stage {
 	s := &Websocket{StageBase: parent}
 
 	o := &s.Options
-	o.Descr = "copy messages over websocket"
+	o.Descr = "filter JSON messages over websocket"
 	o.IsProducer = true
 	o.Bidir = true
 
 	f := o.Flags
 	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
-	f.Bool("filter", false, "filter messages instead of copying")
-	f.Bool("listen", false, "listen on given URL instead of dialing it")                      // TODO
-	f.String("auth", "", "use HTTP basic auth (user:pass, $ENV_VARIABLE, or /absolute/path)") // TODO
+	f.Bool("listen", false, "listen on given URL instead of dialing it")
+	// f.String("auth", "", "use HTTP basic auth (user:pass, $ENV_VARIABLE, or /absolute/path)") // TODO
 	o.Args = []string{"url"}
 
+	s.eio = extio.NewExtio(parent)
 	return s
 }
 
 func (s *Websocket) Attach() error {
-	s.filter = s.K.Bool("filter")
-
 	// check URL
 	url, err := url.Parse(s.K.String("url"))
 	if err != nil {
@@ -73,15 +68,9 @@ func (s *Websocket) Attach() error {
 		url.Path = "/"
 	}
 	s.url = *url
-
-	// attach to pipe
-	s.P.OnMsg(s.onMsg, s.Dir)
-	s.inL = s.P.AddProc(msg.DIR_L)
-	s.inR = s.P.AddProc(msg.DIR_R)
-
 	s.serverConn = make(chan *websocket.Conn, 10)
-	s.output = make(chan *bytebufferpool.ByteBuffer, 100)
-	return nil
+
+	return s.eio.Attach()
 }
 
 func (s *Websocket) Prepare() error {
@@ -158,7 +147,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 
 	// publish conn for broadcasts
 	s.serverConn <- conn
-	s.output <- nil // a signal value
+	s.eio.Output <- nil // a signal value
 
 	// block on conn reader
 	err = s.connReader(conn, nil)
@@ -172,13 +161,15 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Websocket) Stop() error {
-	close_safe(s.output)
+	close_safe(s.eio.Output)
 	if s.clientConn != nil {
 		s.clientConn.Close()
 	}
 	if s.srv != nil {
 		s.srv.Close()
 	}
+	s.eio.InputClose()
+	s.eio.OutputClose()
 	return nil
 }
 
@@ -217,14 +208,18 @@ func (s *Websocket) Run() (err error) {
 }
 
 func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
-	var (
-		p      = s.P
-		remote = conn.RemoteAddr().String()
-	)
 	defer close_safe(done)
 
+	// tag incoming messages with the remote
+	remote := conn.RemoteAddr().String()
+	cb := func(m *msg.Msg) bool {
+		mx := pipe.MsgContext(m)
+		mx.SetTag("websocket-remote", remote)
+		return true
+	}
+
+	// read messages from conn
 	for {
-		// block on conn read
 		mt, buf, err := conn.ReadMessage()
 		if err != nil {
 			send_safe(done, err)
@@ -234,37 +229,17 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 			s.Warn().Msgf("%s: read invalid message type: %d", conn.RemoteAddr(), mt)
 			continue
 		}
-
-		// parse into m
-		m := p.GetMsg()
-		err = m.FromJSON(buf)
+		err = s.eio.Read(buf, cb)
 		if err != nil {
-			s.Err(err).Bytes("buf", buf).Msgf("%s: read parse error", conn.RemoteAddr())
-			p.PutMsg(m)
-			continue
-		}
-
-		// fix direction?
-		if m.Dir == 0 {
-			m.Dir = s.Dir
-		}
-
-		// tag
-		mx := pipe.MsgContext(m)
-		mx.SetTag("websocket-remote", remote)
-
-		// sail
-		if m.Dir == msg.DIR_L {
-			s.inL.WriteMsg(m)
-		} else {
-			s.inR.WriteMsg(m)
+			send_safe(done, err)
+			return err
 		}
 	}
 }
 
 func (s *Websocket) connWriter(done chan error) {
 	defer func() {
-		close_safe(s.output)
+		close_safe(s.eio.Output)
 		close_safe(done)
 	}()
 
@@ -277,7 +252,7 @@ func (s *Websocket) connWriter(done chan error) {
 		conns[<-s.serverConn] = false
 	}
 
-	for bb := range s.output {
+	for bb := range s.eio.Output {
 		// signal to reload the server conns?
 		if bb == nil {
 			for len(s.serverConn) > 0 {
@@ -286,9 +261,10 @@ func (s *Websocket) connWriter(done chan error) {
 			continue
 		}
 
-		// broadcast bb to all conns
+		// broadcast buf to all conns
+		buf := bytes.TrimSpace(bb.B)
 		for conn, critical := range conns {
-			err := conn.WriteMessage(websocket.TextMessage, bb.B)
+			err := conn.WriteMessage(websocket.TextMessage, buf)
 			if err == nil {
 				continue
 			}
@@ -303,23 +279,6 @@ func (s *Websocket) connWriter(done chan error) {
 		}
 
 		// re-use bb
-		s.pool.Put(bb)
-	}
-}
-
-func (s *Websocket) onMsg(m *msg.Msg) {
-	// drop the message after?
-	if s.filter {
-		// TODO: if enabled, add borrow if not set already, and keep for later re-use
-		pipe.ActionDrop(m)
-	}
-
-	// get from pool, marshal
-	bb := s.pool.Get()
-	bb.Write(m.GetJSON())
-
-	// try writing, don't panic on channel closed
-	if !send_safe(s.output, bb) {
-		return
+		s.eio.Put(bb)
 	}
 }

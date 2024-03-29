@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"fmt"

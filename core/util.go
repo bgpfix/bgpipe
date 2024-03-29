@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"fmt"
@@ -11,6 +11,9 @@ import (
 )
 
 func IsAddr(v string) bool {
+	if v == "localhost" || strings.HasPrefix(v, "localhost:") {
+		return true
+	}
 	if _, err := netip.ParseAddrPort(v); err == nil {
 		return true
 	}

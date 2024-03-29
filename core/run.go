@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"context"
@@ -12,7 +12,8 @@ import (
 // Cancels the main bgpipe context on error,
 // or calls s.runStop otherwise (which respects b.wg_*).
 // Controls the s.enabled switch.
-func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
+func (s *StageBase) runStart(ev *pipe.Event) {
+	ev.Handler.Drop() // run once
 	if s.started.Swap(true) || s.stopped.Load() {
 		return // already started or stopped
 	} else {
@@ -81,12 +82,13 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 			s.runStop(nil) // cleanup
 		}
 	}()
-
-	return false // unregister
 }
 
 // runStop requests to stop Stage.Run
-func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
+func (s *StageBase) runStop(ev *pipe.Event) {
+	if ev != nil {
+		ev.Handler.Drop() // run once
+	}
 	if s.stopped.Swap(true) {
 		return // already stopped, or not started yet
 	} else {
@@ -123,6 +125,4 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	s.running.Store(false)
 	s.wgAdd(-1)
 	s.Event("STOP")
-
-	return false // unregister
 }

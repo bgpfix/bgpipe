@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Connect struct {
-	*bgpipe.StageBase
+	*core.StageBase
 	in *pipe.Proc
 
 	target string
 	conn   net.Conn
 }
 
-func NewConnect(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewConnect(parent *core.StageBase) core.Stage {
 	var (
 		s = &Connect{StageBase: parent}
 		o = &s.Options
