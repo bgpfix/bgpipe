@@ -114,7 +114,8 @@ func (s *StageBase) attach() error {
 	// left / right?
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
-	if s.IsLeft && s.IsRight {
+	s.IsBidir = s.IsLeft && s.IsRight
+	if s.IsBidir {
 		if !s.Options.Bidir {
 			return ErrLR
 		}
@@ -133,7 +134,7 @@ func (s *StageBase) attach() error {
 	}
 
 	// set s.Dir
-	if s.IsLeft && s.IsRight {
+	if s.IsBidir {
 		s.Dir = msg.DIR_LR
 	} else if s.IsLeft {
 		s.Dir = msg.DIR_L

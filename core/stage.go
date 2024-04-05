@@ -82,6 +82,7 @@ type StageBase struct {
 	IsLast  bool    // is the last stage in pipe? (the R peer)
 	IsRight bool    // write L->R msgs + capture L->R msgs?
 	IsLeft  bool    // write R->L msgs + capture R->L msgs?
+	IsBidir bool    // true iff IsRight && IsLeft
 	Dir     msg.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
 
 	callbacks []*pipe.Callback // registered callbacks

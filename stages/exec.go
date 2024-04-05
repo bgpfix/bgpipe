@@ -156,7 +156,7 @@ func (s *Exec) stdoutReader(done chan error) {
 
 	in := bufio.NewScanner(s.cmd_out)
 	for in.Scan() {
-		err := s.eio.Read(in.Bytes(), nil)
+		err := s.eio.ReadInput(in.Bytes(), nil)
 		if err != nil {
 			done <- err
 			return
@@ -182,7 +182,7 @@ func (s *Exec) stdinWriter(done chan error) {
 	for bb := range eio.Output {
 		_, err := bb.WriteTo(s.cmd_in)
 		if err == nil {
-			eio.Pool.Put(bb)
+			eio.Put(bb)
 		} else {
 			done <- err
 			break

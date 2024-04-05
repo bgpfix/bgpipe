@@ -115,7 +115,7 @@ $ bgpipe --kill limit/session \
 # stream a log of BGP session in JSON to a remote websocket
 $ bgpipe \
   -- connect 1.2.3.4 \
-  -- websocket -LR --copy wss://bgpfix.com/archive?user=demo \
+  -- websocket -LR --write wss://bgpfix.com/archive?user=demo \
   -- connect 85.232.240.179
 ```
 
