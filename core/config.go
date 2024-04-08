@@ -91,7 +91,7 @@ func (s *StageBase) usage() {
 	fmt.Fprintf(e, "\n\nDescription: %s\n", o.Descr)
 
 	for i, l := range strings.Split(f.FlagUsages(), "\n") {
-		if strings.HasPrefix(l, "  -A, --args") {
+		if strings.HasPrefix(l, "  -L, --left") {
 			fmt.Fprint(e, "\nCommon Options:\n")
 		} else if i == 0 {
 			fmt.Fprint(e, "\nOptions:\n")

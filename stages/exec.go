@@ -153,10 +153,11 @@ func (s *Exec) Run() (err error) {
 
 func (s *Exec) stdoutReader(done chan error) {
 	defer close(done)
+	eio := s.eio
 
 	in := bufio.NewScanner(s.cmd_out)
 	for in.Scan() {
-		err := s.eio.ReadInput(in.Bytes(), nil)
+		err := eio.ReadInput(in.Bytes(), nil)
 		if err != nil {
 			done <- err
 			return

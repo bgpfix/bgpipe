@@ -60,7 +60,7 @@ func (b *Bgpipe) AttachStages() error {
 		s := b.NewStage("stdin")
 		s.K.Set("left", true)
 		s.K.Set("right", true)
-		s.K.Set("in", "first")
+		s.K.Set("inject", "first")
 		s.K.Set("wait", []string{"ESTABLISHED"})
 		if err := s.attach(); err != nil {
 			return fmt.Errorf("auto stdin: %w", err)
@@ -115,12 +115,8 @@ func (s *StageBase) attach() error {
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
 	s.IsBidir = s.IsLeft && s.IsRight
-	if s.IsBidir {
-		if !s.Options.Bidir {
-			return ErrLR
-		}
-	} else if s.IsLeft == s.IsRight { // both false = apply a default
-		s.IsRight = true // the default
+	if !s.IsLeft && !s.IsRight { // apply a default
+		s.IsRight = true
 
 		// exceptions
 		if s.IsLast && s.Options.IsProducer {
@@ -153,6 +149,11 @@ func (s *StageBase) attach() error {
 	s.handlers = po.Handlers[hds:]
 	s.procs = po.Procs[ins:]
 
+	// can run in bidir mode?
+	if s.IsBidir && !s.Options.Bidir {
+		return ErrLR
+	}
+
 	// if not an internal stage...
 	if s.Index > 0 {
 		// update the logger
@@ -181,7 +182,7 @@ func (s *StageBase) attach() error {
 	// where to inject new messages?
 	var frev, ffwd pipe.FilterMode // input filter mode
 	var fid int                    // input filter callback id
-	switch v := k.String("in"); v {
+	switch v := k.String("inject"); v {
 	case "next", "":
 		frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
 		fid = s.Index

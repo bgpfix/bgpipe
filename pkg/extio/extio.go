@@ -59,9 +59,9 @@ func NewExtio(parent *core.StageBase, out ...chan *bytebufferpool.ByteBuffer) *E
 	if f.Lookup("seq") == nil {
 		f.Bool("raw", false, "speak raw BGP instead of JSON")
 		f.StringSlice("type", []string{}, "skip if message is not of specified type(s)")
-		f.Bool("read", false, "read-only mode: no output from bgpipe, copy input to bgpipe")
-		f.Bool("write", false, "write-only mode: no input to bgpipe, copy output from bgpipe")
-		f.Bool("copy", false, "copy messages instead of filtering (mirroring)")
+		f.Bool("read", false, "read-only mode (no output from bgpipe)")
+		f.Bool("write", false, "write-only mode (no input to bgpipe)")
+		f.Bool("copy", false, "copy messages instead of filtering (mirror)")
 		f.Bool("seq", false, "overwrite message sequence number in input")
 		f.Bool("time", false, "overwrite message time in input")
 	}

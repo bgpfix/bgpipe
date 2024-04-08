@@ -10,7 +10,6 @@ import (
 
 type Stdin struct {
 	*core.StageBase
-	in  *os.File
 	eio *extio.Extio
 }
 
@@ -28,22 +27,8 @@ func NewStdin(parent *core.StageBase) core.Stage {
 	f.Lookup("copy").Hidden = true
 	f.Lookup("write").Hidden = true
 	f.Lookup("read").Hidden = true
-	f.String("file", "", "read given file instead of stdin")
 
 	return s
-}
-
-func (s *Stdin) Prepare() error {
-	if v := s.K.String("file"); len(v) > 0 {
-		fh, err := os.Open(v)
-		if err != nil {
-			return err
-		}
-		s.in = fh
-	} else {
-		s.in = os.Stdin
-	}
-	return nil
 }
 
 func (s *Stdin) Attach() error {
@@ -52,8 +37,9 @@ func (s *Stdin) Attach() error {
 }
 
 func (s *Stdin) Run() error {
-	stdin := bufio.NewScanner(s.in) // TODO: bigger buffer than 64KiB?
-	for stdin.Scan() {
+	stdin := bufio.NewScanner(os.Stdin)
+	stdin.Buffer(nil, 1024*1024)
+	for s.Ctx.Err() == nil && stdin.Scan() {
 		err := s.eio.ReadInput(stdin.Bytes(), nil)
 		if err != nil {
 			return err
@@ -63,9 +49,6 @@ func (s *Stdin) Run() error {
 }
 
 func (s *Stdin) Stop() error {
-	if s.in != os.Stdin {
-		return s.in.Close()
-	}
 	s.eio.InputClose()
 	return nil
 }
