@@ -45,6 +45,7 @@ func (s *Read) Attach() error {
 	s.fpath = filepath.Clean(s.fpath)
 	s.flag = os.O_RDONLY
 
+	s.K.Set("read", true)
 	return s.eio.Attach()
 }
 
