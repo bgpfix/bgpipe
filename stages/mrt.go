@@ -24,11 +24,17 @@ func NewMrt(parent *core.StageBase) core.Stage {
 	o.Descr = "read MRT file with BGP4MP messages (uncompress if needed)"
 	o.Args = []string{"path"}
 
+	f := o.Flags
+	f.Bool("time", false, "overwrite MRT message time")
+	f.Bool("notags", false, "do not set tags using BGP4MP header")
+
 	return s
 }
 
 func (s *Mrt) Attach() error {
-	s.fpath = s.K.String("path")
+	k := s.K
+
+	s.fpath = k.String("path")
 	if len(s.fpath) == 0 {
 		return errors.New("needs source file path")
 	}
@@ -42,6 +48,8 @@ func (s *Mrt) Attach() error {
 	s.mr = mrt.NewReader(s.Ctx)
 	mo := &s.mr.Options
 	mo.Logger = &s.Logger
+	mo.NoTime = k.Bool("time")
+	mo.NoTags = k.Bool("notags")
 
 	// attach as pipe input
 	return s.mr.Attach(s.P, s.Dir)
