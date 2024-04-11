@@ -26,7 +26,7 @@ func NewMrt(parent *core.StageBase) core.Stage {
 
 	f := o.Flags
 	f.Bool("time", false, "overwrite MRT message time")
-	f.Bool("notags", false, "do not set tags using BGP4MP header")
+	f.Bool("tags", false, "overwrite tags using BGP4MP header")
 
 	return s
 }
@@ -49,7 +49,7 @@ func (s *Mrt) Attach() error {
 	mo := &s.mr.Options
 	mo.Logger = &s.Logger
 	mo.NoTime = k.Bool("time")
-	mo.NoTags = k.Bool("notags")
+	mo.NoTags = !k.Bool("tags")
 
 	// attach as pipe input
 	return s.mr.Attach(s.P, s.Dir)

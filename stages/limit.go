@@ -19,7 +19,6 @@ import (
 	"github.com/bgpfix/bgpfix/af"
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/puzpuzpuz/xsync/v3"
 )
@@ -141,7 +140,7 @@ func (s *Limit) Attach() error {
 	return nil
 }
 
-func (s *Limit) onMsg(m *msg.Msg) {
+func (s *Limit) onMsg(m *msg.Msg) bool {
 	var rbefore, rafter, ubefore, uafter int
 
 	// process reachable prefixes
@@ -155,11 +154,11 @@ func (s *Limit) onMsg(m *msg.Msg) {
 
 	// need to drop the whole message?
 	if rafter+uafter == 0 && rbefore+ubefore > 0 {
-		pipe.ActionDrop(m)
-		return
+		return false
 	}
 
 	// limits OK, take it
+	return true
 }
 
 func (s *Limit) isShort(p netip.Prefix) bool {

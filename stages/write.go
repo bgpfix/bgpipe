@@ -25,13 +25,9 @@ func NewWrite(parent *core.StageBase) core.Stage {
 	o.Descr = "write messages to file"
 	o.Args = []string{"path"}
 
-	s.eio = extio.NewExtio(parent)
+	s.eio = extio.NewExtio(parent, 2)
 	f := s.Options.Flags
 	f.Lookup("copy").Hidden = true
-	f.Lookup("write").Hidden = true
-	f.Lookup("read").Hidden = true
-	f.Lookup("seq").Hidden = true
-	f.Lookup("time").Hidden = true
 	f.Bool("append", false, "append to file if already exists")
 	f.Bool("create", false, "file must not already exist")
 	return s
@@ -55,7 +51,7 @@ func (s *Write) Attach() error {
 		s.flag |= os.O_TRUNC
 	}
 
-	s.K.Set("write", true)
+	k.Set("copy", true)
 	return s.eio.Attach()
 }
 

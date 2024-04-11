@@ -54,7 +54,7 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
 	o.Args = []string{"url"}
 
-	s.eio = extio.NewExtio(parent)
+	s.eio = extio.NewExtio(parent, 0)
 	return s
 }
 
@@ -321,8 +321,8 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 	// tag incoming messages with the remote
 	remote := conn.RemoteAddr().String()
 	cb := func(m *msg.Msg) bool {
-		mx := pipe.MsgContext(m)
-		mx.SetTag("websocket-remote", remote)
+		tags := pipe.MsgTags(m)
+		tags["websocket/remote"] = remote
 		return true
 	}
 
@@ -344,7 +344,7 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 			continue
 		}
 
-		err = s.eio.ReadInput(buf, cb)
+		err = s.eio.ReadSingle(buf, cb)
 		if err != nil {
 			send_safe(done, err)
 			return err

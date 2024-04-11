@@ -106,7 +106,7 @@ func (b *Bgpipe) Run() error {
 }
 
 // Start is called after the bgpfix pipe starts
-func (b *Bgpipe) Start(ev *pipe.Event) {
+func (b *Bgpipe) Start(ev *pipe.Event) bool {
 	// wait for writers
 	go func() {
 		b.wg_lwrite.Wait()
@@ -131,11 +131,11 @@ func (b *Bgpipe) Start(ev *pipe.Event) {
 		b.Pipe.R.CloseOutput()
 	}()
 
-	ev.Handler.Drop()
+	return false
 }
 
 // LogEvent logs given event
-func (b *Bgpipe) LogEvent(ev *pipe.Event) {
+func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 	// will b.Info() if ev.Error is nil
 	l := b.Err(ev.Error)
 
@@ -162,12 +162,14 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) {
 	}
 
 	l.Msgf("event %s", ev.Type)
+	return true
 }
 
 // KillEvent kills session because of given event ev
-func (b *Bgpipe) KillEvent(ev *pipe.Event) {
+func (b *Bgpipe) KillEvent(ev *pipe.Event) bool {
 	// TODO: why not pipe.Stop()?
 	b.Cancel(fmt.Errorf("%w: %s", ErrKill, ev))
+	return false
 }
 
 // AddRepo adds mapping between stage commands and their NewStageFunc

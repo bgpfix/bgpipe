@@ -1,7 +1,6 @@
 package stages
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"os"
@@ -28,10 +27,7 @@ func NewPipe(parent *core.StageBase) core.Stage {
 	o.Descr = "filter messages through named pipe"
 	o.Args = []string{"path"}
 
-	s.eio = extio.NewExtio(parent)
-	f := s.Options.Flags
-	f.Lookup("write").Hidden = true
-	f.Lookup("read").Hidden = true
+	s.eio = extio.NewExtio(parent, 0)
 
 	return s
 }
@@ -93,33 +89,11 @@ func (s *Pipe) Stop() error {
 }
 
 func (s *Pipe) pipeReader(done chan error) {
-	defer close(done)
-	eio := s.eio
-
-	input := bufio.NewScanner(s.fh)
-	input.Buffer(nil, 1024*1024)
-	for input.Scan() {
-		err := eio.ReadInput(input.Bytes(), nil)
-		if err != nil {
-			done <- err
-			return
-		}
-	}
-	done <- input.Err()
+	done <- s.eio.ReadStream(s.fh, nil)
+	close(done)
 }
 
 func (s *Pipe) pipeWriter(done chan error) {
-	defer close(done)
-	eio := s.eio
-
-	for bb := range eio.Output {
-		_, err := bb.WriteTo(s.fh)
-		if err == nil {
-			eio.Put(bb)
-		} else {
-			done <- err
-			break
-		}
-	}
-	eio.OutputClose()
+	done <- s.eio.WriteStream(s.fh)
+	close(done)
 }

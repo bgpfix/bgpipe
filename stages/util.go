@@ -10,7 +10,7 @@ import (
 	"github.com/bgpfix/bgpipe/core"
 )
 
-func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Proc) error {
+func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 

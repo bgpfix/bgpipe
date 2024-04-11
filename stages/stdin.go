@@ -1,7 +1,6 @@
 package stages
 
 import (
-	"bufio"
 	"os"
 
 	"github.com/bgpfix/bgpipe/core"
@@ -22,12 +21,7 @@ func NewStdin(parent *core.StageBase) core.Stage {
 	o.IsProducer = true
 	o.Bidir = true
 
-	f := s.Options.Flags
-	s.eio = extio.NewExtio(parent)
-	f.Lookup("copy").Hidden = true
-	f.Lookup("write").Hidden = true
-	f.Lookup("read").Hidden = true
-
+	s.eio = extio.NewExtio(parent, 1)
 	return s
 }
 
@@ -37,15 +31,7 @@ func (s *Stdin) Attach() error {
 }
 
 func (s *Stdin) Run() error {
-	stdin := bufio.NewScanner(os.Stdin)
-	stdin.Buffer(nil, 1024*1024)
-	for s.Ctx.Err() == nil && stdin.Scan() {
-		err := s.eio.ReadInput(stdin.Bytes(), nil)
-		if err != nil {
-			return err
-		}
-	}
-	return stdin.Err()
+	return s.eio.ReadStream(os.Stdin, nil)
 }
 
 func (s *Stdin) Stop() error {

@@ -42,7 +42,7 @@ func NewExec(parent *core.StageBase) core.Stage {
 	f.Bool("keep-stdin", false, "keep running if stdin is closed")
 	f.Bool("keep-stdout", false, "keep running if stdout is closed")
 
-	s.eio = extio.NewExtio(parent)
+	s.eio = extio.NewExtio(parent, 0)
 	return s
 }
 
@@ -74,6 +74,11 @@ func (s *Exec) Attach() error {
 	// cleanup procedure
 	// s.cmd_exec.Cancel = func() error { close_safe(s.eio.Output); return nil }
 	s.cmd_exec.WaitDelay = time.Second
+
+	// FIXME: move to extio
+	if k.Bool("write") {
+		s.Options.IsProducer = false
+	}
 
 	return s.eio.Attach()
 }
@@ -152,43 +157,21 @@ func (s *Exec) Run() (err error) {
 }
 
 func (s *Exec) stdoutReader(done chan error) {
-	defer close(done)
-	eio := s.eio
-
-	in := bufio.NewScanner(s.cmd_out)
-	for in.Scan() {
-		err := eio.ReadInput(in.Bytes(), nil)
-		if err != nil {
-			done <- err
-			return
-		}
-	}
-	done <- in.Err()
+	done <- s.eio.ReadStream(s.cmd_out, nil)
+	close(done)
 }
 
 func (s *Exec) stderrReader(done chan error) {
-	defer close(done)
-
 	in := bufio.NewScanner(s.cmd_err)
 	for in.Scan() {
 		s.Info().Msg(in.Text())
 	}
 	done <- in.Err()
+	close(done)
 }
 
 func (s *Exec) stdinWriter(done chan error) {
-	defer close(done)
-
-	eio := s.eio
-	for bb := range eio.Output {
-		_, err := bb.WriteTo(s.cmd_in)
-		if err == nil {
-			eio.Put(bb)
-		} else {
-			done <- err
-			break
-		}
-	}
-	eio.OutputClose()
+	done <- s.eio.WriteStream(s.cmd_in)
 	s.cmd_in.Close()
+	close(done)
 }

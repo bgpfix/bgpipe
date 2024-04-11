@@ -141,13 +141,13 @@ func (s *StageBase) attach() error {
 	// call child attach, collect what was attached to
 	cbs := len(po.Callbacks)
 	hds := len(po.Handlers)
-	ins := len(po.Procs)
+	ins := len(po.Inputs)
 	if err := s.Stage.Attach(); err != nil {
 		return err
 	}
 	s.callbacks = po.Callbacks[cbs:]
 	s.handlers = po.Handlers[hds:]
-	s.procs = po.Procs[ins:]
+	s.inputs = po.Inputs[ins:]
 
 	// can run in bidir mode?
 	if s.IsBidir && !s.Options.Bidir {
@@ -212,7 +212,7 @@ func (s *StageBase) attach() error {
 	}
 
 	// fix inputs
-	for _, li := range s.procs {
+	for _, li := range s.inputs {
 		li.Id = s.Index
 		li.FilterValue = fid
 
@@ -258,7 +258,7 @@ func (s *StageBase) attach() error {
 		for _, hd := range s.handlers {
 			s.Trace().Msgf("  handler %#v", hd)
 		}
-		for _, in := range s.procs {
+		for _, in := range s.inputs {
 			s.Trace().Msgf("  input %s dir=%s reverse=%v filt=%d filt_id=%d",
 				in.Name, in.Dir, in.Reverse, in.CallbackFilter, in.FilterValue)
 		}

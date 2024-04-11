@@ -1,7 +1,6 @@
 package stages
 
 import (
-	"bufio"
 	"errors"
 	"os"
 	"path/filepath"
@@ -27,11 +26,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 	o.Descr = "read messages from file"
 	o.Args = []string{"path"}
 
-	s.eio = extio.NewExtio(parent)
-	f := s.Options.Flags
-	f.Lookup("copy").Hidden = true
-	f.Lookup("write").Hidden = true
-	f.Lookup("read").Hidden = true
+	s.eio = extio.NewExtio(parent, 1)
 	return s
 }
 
@@ -45,7 +40,7 @@ func (s *Read) Attach() error {
 	s.fpath = filepath.Clean(s.fpath)
 	s.flag = os.O_RDONLY
 
-	s.K.Set("read", true)
+	k.Set("read", true)
 	return s.eio.Attach()
 }
 
@@ -60,15 +55,7 @@ func (s *Read) Prepare() error {
 }
 
 func (s *Read) Run() error {
-	input := bufio.NewScanner(s.fh)
-	input.Buffer(nil, 1024*1024)
-	for s.Ctx.Err() == nil && input.Scan() {
-		err := s.eio.ReadInput(input.Bytes(), nil)
-		if err != nil {
-			return err
-		}
-	}
-	return input.Err()
+	return s.eio.ReadStream(s.fh, nil)
 }
 
 func (s *Read) Stop() error {

@@ -89,7 +89,7 @@ type StageBase struct {
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
-	procs     []*pipe.Proc     // registered processors
+	inputs    []*pipe.Input    // registered inputs
 }
 
 // Attach is the default Stage implementation that does nothing.

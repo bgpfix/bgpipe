@@ -108,7 +108,7 @@ func (s *StageBase) usage() {
 		}
 		slices.Sort(events)
 		for _, ev := range events {
-			fmt.Fprintf(e, "  %-24s %s\n", ev, o.Events[ev])
+			fmt.Fprintf(e, "  %-24s %s\n", s.Name+"/"+ev, o.Events[ev])
 		}
 		fmt.Fprint(e, "\n")
 	}

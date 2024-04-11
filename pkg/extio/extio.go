@@ -2,8 +2,8 @@ package extio
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"strconv"
 	"time"
@@ -22,35 +22,32 @@ var bbpool bytebufferpool.Pool
 type Extio struct {
 	*core.StageBase
 
-	opt_type  []msg.Type // --type
-	opt_read  bool       // --read
-	opt_write bool       // --write
-	opt_copy  bool       // --copy
-	opt_seq   bool       // --seq
-	opt_time  bool       // --time
-	opt_raw   bool       // --raw
+	opt_type   []msg.Type // --type
+	opt_read   bool       // --read
+	opt_write  bool       // --write
+	opt_copy   bool       // --copy
+	opt_seq    bool       // --seq
+	opt_time   bool       // --time
+	opt_raw    bool       // --raw
+	opt_pardon bool       // --pardon
 
-	Callback *pipe.Callback // callback for bgpipe output
-	InputL   *pipe.Proc     // L input to bgpipe
-	InputR   *pipe.Proc     // R input to bgpipe
-	InputD   *pipe.Proc     // default input if data doesn't specify the direction
+	buf bytes.Buffer // for ReadBuf()
+
+	Callback *pipe.Callback // our callback for capturing bgpipe output
+	InputL   *pipe.Input    // our L input to bgpipe
+	InputR   *pipe.Input    // our R input to bgpipe
+	InputD   *pipe.Input    // default input if data doesn't specify the direction
 
 	Output chan *bytebufferpool.ByteBuffer // output ready to be sent to the process
 	Pool   *bytebufferpool.Pool            // pool of byte buffers
 }
 
-// NewExtio creates a new object for given stage. If out is not defined, creates a new chan(100).
-func NewExtio(parent *core.StageBase, out ...chan *bytebufferpool.ByteBuffer) *Extio {
-	var output chan *bytebufferpool.ByteBuffer
-	if len(out) > 0 && out[0] != nil {
-		output = out[0]
-	} else {
-		output = make(chan *bytebufferpool.ByteBuffer, 100)
-	}
-
+// NewExtio creates a new object for given stage.
+// mode: 1=read-only (to pipe); 2=write-only (from pipe)
+func NewExtio(parent *core.StageBase, mode int) *Extio {
 	eio := &Extio{
 		StageBase: parent,
-		Output:    output,
+		Output:    make(chan *bytebufferpool.ByteBuffer, 100),
 		Pool:      &bbpool,
 	}
 
@@ -59,11 +56,27 @@ func NewExtio(parent *core.StageBase, out ...chan *bytebufferpool.ByteBuffer) *E
 	if f.Lookup("seq") == nil {
 		f.Bool("raw", false, "speak raw BGP instead of JSON")
 		f.StringSlice("type", []string{}, "skip if message is not of specified type(s)")
+
 		f.Bool("read", false, "read-only mode (no output from bgpipe)")
 		f.Bool("write", false, "write-only mode (no input to bgpipe)")
-		f.Bool("copy", false, "copy messages instead of filtering (mirror)")
-		f.Bool("seq", false, "overwrite message sequence number in input")
-		f.Bool("time", false, "overwrite message time in input")
+
+		if mode == 1 {
+			read, write := f.Lookup("read"), f.Lookup("write")
+			read.Hidden, write.Hidden = true, true
+			read.Value.Set("true")
+		} else {
+			f.Bool("copy", false, "copy messages instead of filtering (mirror)")
+		}
+
+		if mode == 2 {
+			read, write := f.Lookup("read"), f.Lookup("write")
+			read.Hidden, write.Hidden = true, true
+			write.Value.Set("true")
+		} else {
+			f.Bool("seq", false, "overwrite input message sequence number")
+			f.Bool("time", false, "overwrite input message time")
+			f.Bool("pardon", false, "ignore input parse errors")
+		}
 	}
 
 	return eio
@@ -81,6 +94,7 @@ func (eio *Extio) Attach() error {
 	eio.opt_seq = k.Bool("seq")
 	eio.opt_time = k.Bool("time")
 	eio.opt_raw = k.Bool("raw")
+	eio.opt_pardon = k.Bool("pardon")
 
 	// parse --type
 	for _, v := range k.Strings("type") {
@@ -118,19 +132,19 @@ func (eio *Extio) Attach() error {
 	// not write-only? read input to bgpipe
 	if !eio.opt_write {
 		if eio.IsBidir {
-			eio.InputL = p.AddProc(msg.DIR_L)
-			eio.InputR = p.AddProc(msg.DIR_R)
+			eio.InputL = p.AddInput(msg.DIR_L)
+			eio.InputR = p.AddInput(msg.DIR_R)
 			if eio.IsLast {
 				eio.InputD = eio.InputL
 			} else {
 				eio.InputD = eio.InputR
 			}
 		} else if eio.IsLeft {
-			eio.InputL = p.AddProc(msg.DIR_L)
+			eio.InputL = p.AddInput(msg.DIR_L)
 			eio.InputR = eio.InputL // redirect R messages to L
 			eio.InputD = eio.InputL
 		} else {
-			eio.InputR = p.AddProc(msg.DIR_R)
+			eio.InputR = p.AddInput(msg.DIR_R)
 			eio.InputL = eio.InputR // redirect L messages to R
 			eio.InputD = eio.InputR
 		}
@@ -138,97 +152,79 @@ func (eio *Extio) Attach() error {
 
 	// not read-only? write bgpipe output
 	if !eio.opt_read {
-		eio.Callback = p.OnMsg(eio.WriteOutput, eio.Dir, eio.opt_type...)
+		eio.Callback = p.OnMsg(eio.SendMsg, eio.Dir, eio.opt_type...)
 	}
 
 	return nil
 }
 
-// ReadInput reads data in buf from the process. Can be used concurrently.
+// ReadSingle reads single message from the process, as bytes in buf.
 // Does not keep a reference to buf (copies buf if needed).
-// If cb() is nil, it is called just before bgpipe input write.
-// If cb() returns false, the message is dropped.
-func (eio *Extio) ReadInput(buf []byte, cb func(m *msg.Msg) bool) error {
+// Can be used concurrently. cb may be nil.
+func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 	// write-only to process?
 	if eio.opt_write {
 		return nil
 	}
 
-	var (
-		p   = eio.P
-		m   *msg.Msg
-		err error
-	)
+	// use callback?
+	check := eio.checkMsg
+	if cb != nil {
+		check = func(m *msg.Msg) bool {
+			return eio.checkMsg(m) && cb(m)
+		}
+	}
 
 	// raw message?
-	if eio.opt_raw {
-		m = p.GetMsg()
-		_, err = m.FromBytes(buf)
-		if err == nil {
+	m := eio.P.GetMsg()
+	if eio.opt_raw { // raw message, must be exactly 1
+		n, err := m.FromBytes(buf)
+		switch {
+		case err != nil:
+			read_err = err // parse error
+		case n != len(buf):
+			read_err = ErrLength // dangling bytes after msg?
+		default:
 			m.CopyData() // can't keep reference to buf
 		}
 	} else { // parse text in buf into m
 		buf = bytes.TrimSpace(buf)
 		switch {
 		case len(buf) == 0 || buf[0] == '#': // comment
+			eio.P.PutMsg(m)
 			return nil
 		case buf[0] == '[': // a BGP message
 			// TODO: optimize unmarshal (lookup cache of recently marshaled msgs)
-			m = p.GetMsg()
-			err = m.FromJSON(buf)
-
-			// shortcut
+			read_err = m.FromJSON(buf)
 			if m.Type == msg.INVALID {
-				m.Use(msg.KEEPALIVE)
+				m.Use(msg.KEEPALIVE) // for convenience
 			}
 		case buf[0] == '{': // an UPDATE
-			m = p.GetMsg().Use(msg.UPDATE)
-			err = m.Update.FromJSON(buf)
-		case bytes.HasPrefix(buf, msg.BgpMarker): // a raw message
-			m = p.GetMsg()
-			_, err = m.FromBytes(buf)
-			if err == nil {
-				m.CopyData() // can't reference buf
-			}
+			m.Use(msg.UPDATE)
+			read_err = m.Update.FromJSON(buf)
 		default:
 			// TODO: add exabgp?
-			err = errors.New("unrecognized format")
+			read_err = ErrFormat
 		}
 	}
 
 	// parse error?
-	if err != nil {
-		if eio.opt_raw {
-			eio.Err(err).Hex("input", buf).Msg("input parse error")
+	if read_err != nil {
+		if eio.opt_pardon {
+			read_err = nil
+		} else if eio.opt_raw {
+			eio.Err(read_err).Hex("input", buf).Msg("input read single error")
 		} else {
-			eio.Err(err).Bytes("input", buf).Msg("input parse error")
+			eio.Err(read_err).Bytes("input", buf).Msg("input read single error")
 		}
-		p.PutMsg(m)
+		eio.P.PutMsg(m)
+		return read_err
+	}
+
+	// pre-process
+	if !check(m) {
+		eio.P.PutMsg(m)
 		return nil
-	}
-
-	// filter type?
-	if len(eio.opt_type) > 0 {
-		if slices.Index(eio.opt_type, m.Type) < 0 {
-			p.PutMsg(m)
-			return nil
-		}
-	}
-
-	// overwrite message metadata?
-	if eio.opt_seq {
-		m.Seq = 0
-	}
-	if eio.opt_time {
-		m.Time = time.Now().UTC()
-	}
-
-	// callback?
-	if cb != nil {
-		if !cb(m) {
-			p.PutMsg(m)
-			return nil
-		}
 	}
 
 	// sail!
@@ -242,11 +238,107 @@ func (eio *Extio) ReadInput(buf []byte, cb func(m *msg.Msg) bool) error {
 	}
 }
 
-// WriteOutput sends BGP message to the process. Can be used concurrently.
-func (eio *Extio) WriteOutput(m *msg.Msg) {
+// ReadBuf reads all messages from the process, as bytes in buf, buffering if needed.
+// Must not be used concurrently. cb may be nil.
+func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
+	// write-only to process?
+	if eio.opt_write {
+		return nil
+	}
+
+	check := eio.checkMsg
+	if cb != nil {
+		check = func(m *msg.Msg) bool {
+			return eio.checkMsg(m) && cb(m)
+		}
+	}
+
+	// raw message?
+	if eio.opt_raw { // raw message(s)
+		_, err := eio.InputD.WriteFunc(buf, check)
+		switch err {
+		case nil:
+			break // success
+		case io.ErrUnexpectedEOF:
+			return nil // wait for more
+		default:
+			read_err = err
+		}
+	} else {
+		// buffer
+		if eio.buf.Len() < 1024*1024 {
+			eio.buf.Write(buf)
+		} else {
+			return ErrLength
+		}
+
+		// parse all lines in buf so far
+		for {
+			i := bytes.IndexByte(eio.buf.Bytes(), '\n')
+			if i < 0 {
+				break
+			}
+			err := eio.ReadSingle(eio.buf.Next(i+1), cb)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// parse error?
+	if read_err != nil && !eio.opt_pardon {
+		eio.Err(read_err).Msg("input read stream error")
+		return read_err
+	}
+
+	return nil
+}
+
+// ReadStream is a ReadBuf wrapper that reads from an io.Reader.
+// Must not be used concurrently. cb may be nil.
+func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error) {
+	var buf [64 * 1024]byte
+	for {
+		n, err := rd.Read(buf[:])
+		if n > 0 {
+			read_err = eio.ReadBuf(buf[:n], cb)
+		}
+		switch {
+		case read_err != nil:
+			return read_err
+		case err == nil:
+			continue
+		case err == io.EOF:
+			return nil
+		default:
+			return err
+		}
+	}
+}
+
+func (eio *Extio) checkMsg(m *msg.Msg) bool {
+	// filter message types?
+	if len(eio.opt_type) > 0 && slices.Index(eio.opt_type, m.Type) < 0 {
+		return false
+	}
+
+	// overwrite message metadata?
+	if eio.opt_seq {
+		m.Seq = 0
+	}
+	if eio.opt_time {
+		m.Time = time.Now().UTC()
+	}
+
+	// take it
+	return true
+}
+
+// SendMsg queues BGP message to the process. Can be used concurrently.
+func (eio *Extio) SendMsg(m *msg.Msg) bool {
 	// read-only from process?
 	if eio.opt_read {
-		return
+		return true
 	}
 
 	// filter the message?
@@ -271,14 +363,29 @@ func (eio *Extio) WriteOutput(m *msg.Msg) {
 	}
 	if err != nil {
 		eio.Warn().Err(err).Msg("extio write error")
-		return
+		return true
 	}
 
 	// try writing, don't panic on channel closed [1]
 	if !send_safe(eio.Output, bb) {
 		mx.Callback.Drop()
-		return
+		return true
 	}
+
+	return true
+}
+
+// WriteStream rewrites eio.Output to w.
+func (eio *Extio) WriteStream(w io.Writer) error {
+	for bb := range eio.Output {
+		_, err := bb.WriteTo(w)
+		eio.Pool.Put(bb)
+		if err != nil {
+			eio.OutputClose()
+			return err
+		}
+	}
+	return nil
 }
 
 // Put puts a byte buffer back to pool
