@@ -23,7 +23,7 @@ See [bgpipe releases](https://github.com/bgpfix/bgpipe/releases/) on GitHub, or 
 ```
 # install golang, eg. https://go.dev/dl/
 $ go version
-go version go1.22.1 linux/amd64
+go version go1.22.2 linux/amd64
 
 # install bgpipe
 $ go install github.com/bgpfix/bgpipe@latest
@@ -46,11 +46,13 @@ Supported stages (run stage -h to get its help)
   exec                   filter JSON messages through a background process
   limit                  limit prefix lengths and counts
   listen                 wait for a BGP client to connect over TCP
-  mrt                    read MRT file with BGP4MP messages (uncompress if needed)
+  pipe                   filter messages through named pipe
+  read                   read messages from file
   speaker                run a simple local BGP speaker
-  stdin                  read JSON representation from stdin
-  stdout                 print JSON representation to stdout
+  stdin                  read messages from stdin
+  stdout                 print messages to stdout
   websocket              filter JSON messages over websocket
+  write                  write messages to file
 
 # see docs for "connect" stage
 $ bgpipe connect -h
@@ -63,12 +65,12 @@ Options:
       --md5 string         TCP MD5 password
 
 Common Options:
-  -A, --args               consume all CLI arguments till --
   -L, --left               operate in the L direction
   -R, --right              operate in the R direction
+  -A, --args               consume all CLI arguments till --
   -W, --wait strings       wait for given event before starting
   -S, --stop strings       stop after given event is handled
-  -I, --in string          where to inject new messages (default "next")
+  -I, --inject string      where to inject new messages (default "next")
 ```
 
 ## Examples
@@ -81,7 +83,7 @@ $ bgpipe speaker 1.2.3.4
 $ cat input.json | bgpipe --stdin speaker 1.2.3.4 | tee output.json
 
 # dump mrt updates to json
-$ bgpipe updates.20230301.0000.bz2 > output.json
+$ bgpipe read --mrt updates.20230301.0000.bz2 > output.json
 
 # proxy a connection, print the conversation to stdout by default
 # 1st stage: listen on TCP *:179 for new connection
@@ -96,7 +98,7 @@ $ bgpipe \
 # 3rd stage: listen on TCP *:179 for new connection
 $ bgpipe \
   -- speaker --active --asn 65055 \
-  -- mrt --wait ESTABLISHED updates.20230301.0000.bz2 \
+  -- read --mrt --wait ESTABLISHED updates.20230301.0000.bz2 \
   -- listen :179
 
 # a BGP sed-in-the-middle proxy rewriting ASNs in OPEN messages
