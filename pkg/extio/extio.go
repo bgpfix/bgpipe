@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
@@ -23,14 +24,17 @@ type Extio struct {
 	*core.StageBase
 
 	opt_type   []msg.Type // --type
+	opt_raw    bool       // --raw
+	opt_mrt    bool       // --mrt
 	opt_read   bool       // --read
 	opt_write  bool       // --write
 	opt_copy   bool       // --copy
-	opt_seq    bool       // --seq
-	opt_time   bool       // --time
-	opt_raw    bool       // --raw
+	opt_noseq  bool       // --no-seq
+	opt_notime bool       // --no-time
+	opt_notags bool       // --no-tags
 	opt_pardon bool       // --pardon
 
+	mrt *mrt.Reader  // MRT reader
 	buf bytes.Buffer // for ReadBuf()
 
 	Callback *pipe.Callback // our callback for capturing bgpipe output
@@ -53,14 +57,15 @@ func NewExtio(parent *core.StageBase, mode int) *Extio {
 
 	// add CLI options iff needed
 	f := eio.Options.Flags
-	if f.Lookup("seq") == nil {
+	if f.Lookup("raw") == nil {
 		f.Bool("raw", false, "speak raw BGP instead of JSON")
+		f.Bool("mrt", false, "speak MRT-BGP4MP instead of JSON")
 		f.StringSlice("type", []string{}, "skip if message is not of specified type(s)")
 
 		f.Bool("read", false, "read-only mode (no output from bgpipe)")
 		f.Bool("write", false, "write-only mode (no input to bgpipe)")
 
-		if mode == 1 {
+		if mode == 1 { // read-only
 			read, write := f.Lookup("read"), f.Lookup("write")
 			read.Hidden, write.Hidden = true, true
 			read.Value.Set("true")
@@ -68,14 +73,15 @@ func NewExtio(parent *core.StageBase, mode int) *Extio {
 			f.Bool("copy", false, "copy messages instead of filtering (mirror)")
 		}
 
-		if mode == 2 {
+		if mode == 2 { // write-only
 			read, write := f.Lookup("read"), f.Lookup("write")
 			read.Hidden, write.Hidden = true, true
 			write.Value.Set("true")
 		} else {
-			f.Bool("seq", false, "overwrite input message sequence number")
-			f.Bool("time", false, "overwrite input message time")
 			f.Bool("pardon", false, "ignore input parse errors")
+			f.Bool("no-seq", false, "overwrite input message sequence number")
+			f.Bool("no-time", false, "overwrite input message time")
+			f.Bool("no-tags", false, "drop input message tags")
 		}
 	}
 
@@ -88,12 +94,14 @@ func (eio *Extio) Attach() error {
 	k := eio.K
 
 	// options
-	eio.opt_copy = k.Bool("copy")
+	eio.opt_raw = k.Bool("raw")
+	eio.opt_mrt = k.Bool("mrt")
 	eio.opt_read = k.Bool("read")
 	eio.opt_write = k.Bool("write")
-	eio.opt_seq = k.Bool("seq")
-	eio.opt_time = k.Bool("time")
-	eio.opt_raw = k.Bool("raw")
+	eio.opt_copy = k.Bool("copy")
+	eio.opt_noseq = k.Bool("no-seq")
+	eio.opt_notime = k.Bool("no-time")
+	eio.opt_notags = k.Bool("no-tags")
 	eio.opt_pardon = k.Bool("pardon")
 
 	// parse --type
@@ -128,6 +136,9 @@ func (eio *Extio) Attach() error {
 			eio.opt_copy = true // read/write-only doesn't make sense without --copy
 		}
 	}
+	if eio.opt_raw && eio.opt_mrt {
+		return fmt.Errorf("--raw and --mrt: must not use both at the same time")
+	}
 
 	// not write-only? read input to bgpipe
 	if !eio.opt_write {
@@ -148,6 +159,9 @@ func (eio *Extio) Attach() error {
 			eio.InputL = eio.InputR // redirect L messages to R
 			eio.InputD = eio.InputR
 		}
+
+		eio.mrt = mrt.NewReader(p, eio.InputD)
+		eio.mrt.NoTags = eio.opt_notags
 	}
 
 	// not read-only? write bgpipe output
@@ -161,7 +175,7 @@ func (eio *Extio) Attach() error {
 // ReadSingle reads single message from the process, as bytes in buf.
 // Does not keep a reference to buf (copies buf if needed).
 // Can be used concurrently. cb may be nil.
-func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) {
+func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (parse_err error) {
 	// write-only to process?
 	if eio.opt_write {
 		return nil
@@ -175,18 +189,27 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 		}
 	}
 
-	// raw message?
+	// parse
 	m := eio.P.GetMsg()
-	if eio.opt_raw { // raw message, must be exactly 1
-		n, err := m.FromBytes(buf)
-		switch {
+	if eio.opt_raw { // raw message
+		switch n, err := m.FromBytes(buf); {
 		case err != nil:
-			read_err = err // parse error
+			parse_err = err // parse error
 		case n != len(buf):
-			read_err = ErrLength // dangling bytes after msg?
-		default:
-			m.CopyData() // can't keep reference to buf
+			parse_err = ErrLength // dangling bytes after msg?
 		}
+
+	} else if eio.opt_mrt { // MRT message
+		switch n, err := eio.mrt.FromBytes(buf, m, nil); {
+		case err == mrt.ErrSub:
+			eio.P.PutMsg(m)
+			return nil // silent skip, BGP4MP but not a message
+		case err != nil:
+			parse_err = err // parse error
+		case n != len(buf):
+			parse_err = ErrLength // dangling bytes after msg?
+		}
+
 	} else { // parse text in buf into m
 		buf = bytes.TrimSpace(buf)
 		switch {
@@ -195,30 +218,30 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 			return nil
 		case buf[0] == '[': // a BGP message
 			// TODO: optimize unmarshal (lookup cache of recently marshaled msgs)
-			read_err = m.FromJSON(buf)
+			parse_err = m.FromJSON(buf)
 			if m.Type == msg.INVALID {
 				m.Use(msg.KEEPALIVE) // for convenience
 			}
 		case buf[0] == '{': // an UPDATE
 			m.Use(msg.UPDATE)
-			read_err = m.Update.FromJSON(buf)
+			parse_err = m.Update.FromJSON(buf)
 		default:
 			// TODO: add exabgp?
-			read_err = ErrFormat
+			parse_err = ErrFormat
 		}
 	}
 
 	// parse error?
-	if read_err != nil {
+	if parse_err != nil {
 		if eio.opt_pardon {
-			read_err = nil
+			parse_err = nil
 		} else if eio.opt_raw {
-			eio.Err(read_err).Hex("input", buf).Msg("input read single error")
+			eio.Err(parse_err).Hex("input", buf).Msg("input read single error")
 		} else {
-			eio.Err(read_err).Bytes("input", buf).Msg("input read single error")
+			eio.Err(parse_err).Bytes("input", buf).Msg("input read single error")
 		}
 		eio.P.PutMsg(m)
-		return read_err
+		return parse_err
 	}
 
 	// pre-process
@@ -228,6 +251,7 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 	}
 
 	// sail!
+	m.CopyData()
 	switch m.Dir {
 	case msg.DIR_L:
 		return eio.InputL.WriteMsg(m)
@@ -240,7 +264,7 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 
 // ReadBuf reads all messages from the process, as bytes in buf, buffering if needed.
 // Must not be used concurrently. cb may be nil.
-func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
+func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (parse_err error) {
 	// write-only to process?
 	if eio.opt_write {
 		return nil
@@ -262,17 +286,20 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 		case io.ErrUnexpectedEOF:
 			return nil // wait for more
 		default:
-			read_err = err
+			parse_err = err
 		}
-	} else {
-		// buffer
-		if eio.buf.Len() < 1024*1024 {
-			eio.buf.Write(buf)
-		} else {
-			return ErrLength
+	} else if eio.opt_mrt { // MRT message(s)
+		_, err := eio.mrt.WriteFunc(buf, check)
+		switch err {
+		case nil:
+			break // success
+		case io.ErrUnexpectedEOF:
+			return nil // wait for more
+		default:
+			parse_err = err
 		}
-
-		// parse all lines in buf so far
+	} else { // buffer and parse all lines in buf so far
+		eio.buf.Write(buf)
 		for {
 			i := bytes.IndexByte(eio.buf.Bytes(), '\n')
 			if i < 0 {
@@ -286,9 +313,9 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 	}
 
 	// parse error?
-	if read_err != nil && !eio.opt_pardon {
-		eio.Err(read_err).Msg("input read stream error")
-		return read_err
+	if parse_err != nil && !eio.opt_pardon {
+		eio.Err(parse_err).Msg("input read stream error")
+		return parse_err
 	}
 
 	return nil
@@ -296,22 +323,28 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 
 // ReadStream is a ReadBuf wrapper that reads from an io.Reader.
 // Must not be used concurrently. cb may be nil.
-func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error) {
-	var buf [64 * 1024]byte
+func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (parse_err error) {
+	buf := make([]byte, 64*1024)
 	for {
-		n, err := rd.Read(buf[:])
+		// block on read, try parsing
+		n, err := rd.Read(buf)
 		if n > 0 {
-			read_err = eio.ReadBuf(buf[:n], cb)
+			parse_err = eio.ReadBuf(buf[:n], cb)
 		}
+
+		// should stop here?
 		switch {
-		case read_err != nil:
-			return read_err
-		case err == nil:
-			continue
+		case parse_err != nil:
+			return parse_err
 		case err == io.EOF:
 			return nil
-		default:
+		case err != nil:
 			return err
+		}
+
+		// grow buffer?
+		if l := len(buf); n > l/2 && l <= 4*1024*1024 {
+			buf = make([]byte, l*2)
 		}
 	}
 }
@@ -323,11 +356,14 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 	}
 
 	// overwrite message metadata?
-	if eio.opt_seq {
+	if eio.opt_noseq {
 		m.Seq = 0
 	}
-	if eio.opt_time {
+	if eio.opt_notime {
 		m.Time = time.Now().UTC()
+	}
+	if eio.opt_notags {
+		pipe.MsgContext(m).DropTags()
 	}
 
 	// take it
@@ -358,6 +394,9 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 		if err == nil {
 			_, err = m.WriteTo(bb)
 		}
+	case eio.opt_mrt:
+		panic("TODO")
+
 	default:
 		_, err = bb.Write(m.GetJSON())
 	}
