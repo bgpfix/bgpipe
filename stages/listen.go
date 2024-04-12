@@ -7,18 +7,18 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Listen struct {
-	*bgpipe.StageBase
-	in *pipe.Proc
+	*core.StageBase
+	in *pipe.Input
 
 	bind string
 	conn net.Conn
 }
 
-func NewListen(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewListen(parent *core.StageBase) core.Stage {
 	var (
 		s = &Listen{StageBase: parent}
 		o = &s.Options
@@ -51,7 +51,7 @@ func (s *Listen) Attach() error {
 		s.bind += ":179" // best-effort try
 	}
 
-	s.in = s.P.AddProc(s.Dir)
+	s.in = s.P.AddInput(s.Dir)
 	return nil
 }
 

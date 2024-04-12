@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"context"
@@ -12,9 +12,9 @@ import (
 // Cancels the main bgpipe context on error,
 // or calls s.runStop otherwise (which respects b.wg_*).
 // Controls the s.enabled switch.
-func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
+func (s *StageBase) runStart(ev *pipe.Event) bool {
 	if s.started.Swap(true) || s.stopped.Load() {
-		return // already started or stopped
+		return false // already started or stopped
 	} else {
 		s.Debug().Stringer("ev", ev).Msg("starting")
 	}
@@ -41,7 +41,7 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 	err := s.Stage.Prepare()
 	s.Trace().Err(err).Msg("Prepare() done")
 	if check_fatal(err) {
-		return
+		return false
 	} else {
 		s.Event("READY")
 	}
@@ -55,11 +55,11 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		ev.Wait()
 
 		// catch stage panics
-		defer func() {
-			if r := recover(); r != nil {
-				s.B.Cancel(s.Errorf("panic: %v", r)) // game over
-			}
-		}()
+		// defer func() {
+		// 	if r := recover(); r != nil {
+		// 		s.B.Cancel(s.Errorf("panic: %v", r)) // game over
+		// 	}
+		// }()
 
 		// block on Run if context still valid
 		err := context.Cause(s.Ctx)
@@ -82,13 +82,13 @@ func (s *StageBase) runStart(ev *pipe.Event) (keep bool) {
 		}
 	}()
 
-	return false // unregister
+	return false
 }
 
-// runStop requests to stop Stage.Run
-func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
+// runStop requests to stop Stage.Run; ev may be nil
+func (s *StageBase) runStop(ev *pipe.Event) bool {
 	if s.stopped.Swap(true) {
-		return // already stopped, or not started yet
+		return false // already stopped, or not started yet
 	} else {
 		s.Debug().Stringer("ev", ev).Msg("stopping")
 	}
@@ -111,10 +111,10 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	}
 
 	// close all inputs and wait for them to finish processing
-	for _, in := range s.procs {
+	for _, in := range s.inputs {
 		in.Close()
 	}
-	for _, in := range s.procs {
+	for _, in := range s.inputs {
 		in.Wait()
 	}
 
@@ -123,6 +123,5 @@ func (s *StageBase) runStop(ev *pipe.Event) (keep bool) {
 	s.running.Store(false)
 	s.wgAdd(-1)
 	s.Event("STOP")
-
-	return false // unregister
+	return false
 }

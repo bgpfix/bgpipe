@@ -1,6 +1,6 @@
 # bgpipe: a BGP reverse proxy
 
-**WORK IN PROGRESS PREVIEW 02/2024**
+**WORK IN PROGRESS PREVIEW 04/2024**
 
 This project provides an open-source BGP reverse proxy based on [the BGPFix library](https://github.com/bgpfix/bgpfix).
 
@@ -8,9 +8,9 @@ For example, bgpipe can be used to run:
 
  * a BGP man-in-the-middle proxy that dumps and controls all conversation
  * a bidirectional BGP to JSON bridge
- * a BGP listener on one end that connects adding (or changing) TCP-MD5 password on the other end
+ * a BGP listener on one side, connecting with a TCP-MD5 password on the other side
  * a speaker (or proxy) that streams an MRT file after the session is established
- * a fast MRT to JSON dumper (eg. for data analysis)
+ * a fast MRT to JSON dumper
  
 The vision for bgpipe is to be a powerful *BGP firewall* that transparently secures, enhances, and audits existing BGP speakers. The hope is to bolster open source innovation in the closed world of big BGP router vendors.
 
@@ -23,7 +23,7 @@ See [bgpipe releases](https://github.com/bgpfix/bgpipe/releases/) on GitHub, or 
 ```
 # install golang, eg. https://go.dev/dl/
 $ go version
-go version go1.22.0 linux/amd64
+go version go1.22.1 linux/amd64
 
 # install bgpipe
 $ go install github.com/bgpfix/bgpipe@latest
@@ -43,14 +43,14 @@ Options:
 
 Supported stages (run stage -h to get its help)
   connect                connect to a BGP endpoint over TCP
-  exec                   filter messages through a background JSON processor
+  exec                   filter JSON messages through a background process
   limit                  limit prefix lengths and counts
   listen                 wait for a BGP client to connect over TCP
   mrt                    read MRT file with BGP4MP messages (uncompress if needed)
   speaker                run a simple local BGP speaker
   stdin                  read JSON representation from stdin
   stdout                 print JSON representation to stdout
-  websocket              copy messages to remote JSON processor over websocket
+  websocket              filter JSON messages over websocket
 
 # see docs for "connect" stage
 $ bgpipe connect -h
@@ -63,9 +63,9 @@ Options:
       --md5 string         TCP MD5 password
 
 Common Options:
-  -A, --args               consume all arguments till --
-  -R, --right              operate in the R direction
+  -A, --args               consume all CLI arguments till --
   -L, --left               operate in the L direction
+  -R, --right              operate in the R direction
   -W, --wait strings       wait for given event before starting
   -S, --stop strings       stop after given event is handled
   -I, --in string          where to inject new messages (default "next")
@@ -102,7 +102,7 @@ $ bgpipe \
 # a BGP sed-in-the-middle proxy rewriting ASNs in OPEN messages
 $ bgpipe \
   -- connect 1.2.3.4 \
-  -- exec -LR -c sed -ure '/"OPEN"/{ s/65055/65001/g; s/57355/65055/g }' \
+  -- exec -LR --args sed -ure '/"OPEN"/{ s/65055/65001/g; s/57355/65055/g }' \
   -- connect 85.232.240.179
 
 # filter prefix lengths and add max-prefix session limits
@@ -115,10 +115,10 @@ $ bgpipe --kill limit/session \
 # stream a log of BGP session in JSON to a remote websocket
 $ bgpipe \
   -- connect 1.2.3.4 \
-  -- websocket -LR wss://bgpfix.com/log?user=demo \
+  -- websocket -LR --write wss://bgpfix.com/archive?user=demo \
   -- connect 85.232.240.179
 ```
 
 ## Author
 
-Pawel Foremski [@pforemski](https://twitter.com/pforemski) 2023
+Pawel Foremski [@pforemski](https://twitter.com/pforemski) 2023-2024

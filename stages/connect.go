@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Connect struct {
-	*bgpipe.StageBase
-	in *pipe.Proc
+	*core.StageBase
+	in *pipe.Input
 
 	target string
 	conn   net.Conn
 }
 
-func NewConnect(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewConnect(parent *core.StageBase) core.Stage {
 	var (
 		s = &Connect{StageBase: parent}
 		o = &s.Options
@@ -55,7 +55,7 @@ func (s *Connect) Attach() error {
 		}
 	}
 
-	s.in = s.P.AddProc(s.Dir)
+	s.in = s.P.AddInput(s.Dir)
 	return nil
 }
 

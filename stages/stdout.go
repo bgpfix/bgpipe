@@ -4,40 +4,50 @@ import (
 	"math"
 	"os"
 
-	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/pkg/extio"
 )
 
 type Stdout struct {
-	*bgpipe.StageBase
+	*core.StageBase
+	eio *extio.Extio
 }
 
-func NewStdout(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewStdout(parent *core.StageBase) core.Stage {
 	s := &Stdout{StageBase: parent}
 
 	o := &s.Options
-	o.Descr = "print JSON representation to stdout"
-	s.Options.IsStdout = true
+	o.Descr = "print messages to stdout"
+	o.IsStdout = true
 	o.Bidir = true
+
+	f := s.Options.Flags
+	s.eio = extio.NewExtio(parent, 2)
+	f.Lookup("copy").Hidden = true
 
 	return s
 }
-
 func (s *Stdout) Attach() error {
-	if s.Index == 0 { // auto stdout
-		s.P.AddCallback(s.OnMsg, &pipe.Callback{
-			Post:  true,
-			Order: math.MaxInt,
-		})
-	} else {
-		s.P.OnMsg(s.OnMsg, s.Dir)
+	s.K.Set("copy", true)
+	err := s.eio.Attach()
+	if err != nil {
+		return err
+	}
+
+	// auto stdout? always run as very last
+	if s.Index == 0 {
+		s.eio.Callback.Post = true
+		s.eio.Callback.Order = math.MaxInt
 	}
 
 	return nil
 }
 
-func (s *Stdout) OnMsg(m *msg.Msg) {
-	os.Stdout.Write(m.GetJSON())
-	os.Stdout.WriteString("\n")
+func (s *Stdout) Run() (err error) {
+	return s.eio.WriteStream(os.Stdout)
+}
+
+func (s *Stdout) Stop() error {
+	s.eio.OutputClose()
+	return nil
 }

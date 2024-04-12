@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"context"
@@ -47,6 +47,8 @@ type StageOptions struct {
 	Args   []string          // required argument names
 	Events map[string]string // event names and descriptions
 
+	// these can be modified before Attach(), and even inside (with care)
+
 	IsProducer bool // produces messages? (writes to Line input)
 	IsConsumer bool // consumes messages? (reads from Line output)
 	IsStdin    bool // reads from stdin?
@@ -74,19 +76,20 @@ type StageBase struct {
 	Index   int          // stage index (zero means internal)
 	Cmd     string       // stage command name
 	Name    string       // human-friendly stage name
-	Options StageOptions // stage options, can be updated in NewStage
+	Options StageOptions // stage options
 
-	// set during StageBase.attach
+	// properties set during before Attach()
 
 	IsFirst bool    // is the first stage in pipe? (the L peer)
 	IsLast  bool    // is the last stage in pipe? (the R peer)
 	IsRight bool    // write L->R msgs + capture L->R msgs?
 	IsLeft  bool    // write R->L msgs + capture R->L msgs?
+	IsBidir bool    // true iff IsRight && IsLeft
 	Dir     msg.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
-	procs     []*pipe.Proc     // registered processors
+	inputs    []*pipe.Input    // registered inputs
 }
 
 // Attach is the default Stage implementation that does nothing.
@@ -144,13 +147,13 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Stage = newfunc(s)
 
 	// add global CLI flags
-	f.BoolP("args", "A", false, "consume all arguments till --")
-	f.BoolP("right", "R", false, "operate in the R direction")
 	f.BoolP("left", "L", false, "operate in the L direction")
+	f.BoolP("right", "R", false, "operate in the R direction")
+	f.BoolP("args", "A", false, "consume all CLI arguments till --")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
 	if so.IsProducer {
-		f.StringP("in", "I", "next", "where to inject new messages (next/here/first/last/@name)")
+		f.StringP("inject", "I", "next", "where to inject new messages")
 	}
 
 	return s

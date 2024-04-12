@@ -4,16 +4,16 @@ import (
 	"net/netip"
 
 	"github.com/bgpfix/bgpfix/speaker"
-	bgpipe "github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 type Speaker struct {
-	*bgpipe.StageBase
+	*core.StageBase
 
 	spk *speaker.Speaker
 }
 
-func NewSpeaker(parent *bgpipe.StageBase) bgpipe.Stage {
+func NewSpeaker(parent *core.StageBase) core.Stage {
 	s := &Speaker{StageBase: parent}
 
 	o := &s.Options

@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"fmt"
@@ -91,7 +91,7 @@ func (s *StageBase) usage() {
 	fmt.Fprintf(e, "\n\nDescription: %s\n", o.Descr)
 
 	for i, l := range strings.Split(f.FlagUsages(), "\n") {
-		if strings.HasPrefix(l, "  -A, --args") {
+		if strings.HasPrefix(l, "  -L, --left") {
 			fmt.Fprint(e, "\nCommon Options:\n")
 		} else if i == 0 {
 			fmt.Fprint(e, "\nOptions:\n")
@@ -108,7 +108,7 @@ func (s *StageBase) usage() {
 		}
 		slices.Sort(events)
 		for _, ev := range events {
-			fmt.Fprintf(e, "  %-24s %s\n", ev, o.Events[ev])
+			fmt.Fprintf(e, "  %-24s %s\n", s.Name+"/"+ev, o.Events[ev])
 		}
 		fmt.Fprint(e, "\n")
 	}
@@ -155,7 +155,8 @@ func (b *Bgpipe) parseArgs(args []string) error {
 		case IsBind(cmd):
 			cmd = "listen"
 		case IsFile(cmd):
-			cmd = "mrt" // TODO: stat -> mrt / exec / json / etc.
+			cmd = "read" // TODO: stat -> mrt / json / exec / etc.
+			args = slices.Insert(args, 0, "--mrt")
 		default:
 			args = args[1:]
 		}

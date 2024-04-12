@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"context"
@@ -140,7 +140,8 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 	l := b.Err(ev.Error)
 
 	if ev.Msg != nil {
-		l = l.Bytes("msg", ev.Msg.GetJSON())
+		j := ev.Msg.GetJSON()
+		l = l.Bytes("msg", j[:len(j)-1])
 	}
 
 	if ev.Dir != 0 {
@@ -166,8 +167,8 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 
 // KillEvent kills session because of given event ev
 func (b *Bgpipe) KillEvent(ev *pipe.Event) bool {
-	b.Cancel(fmt.Errorf("%w: %s", ErrKill, ev))
 	// TODO: why not pipe.Stop()?
+	b.Cancel(fmt.Errorf("%w: %s", ErrKill, ev))
 	return false
 }
 
@@ -213,6 +214,7 @@ func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
 	return s, nil
 }
 
+// StageCount returns the number of stages added to the pipe
 func (b *Bgpipe) StageCount() int {
 	return max(0, len(b.Stages)-1)
 }

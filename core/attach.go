@@ -1,4 +1,4 @@
-package bgpipe
+package core
 
 import (
 	"fmt"
@@ -60,7 +60,7 @@ func (b *Bgpipe) AttachStages() error {
 		s := b.NewStage("stdin")
 		s.K.Set("left", true)
 		s.K.Set("right", true)
-		s.K.Set("in", "first")
+		s.K.Set("inject", "first")
 		s.K.Set("wait", []string{"ESTABLISHED"})
 		if err := s.attach(); err != nil {
 			return fmt.Errorf("auto stdin: %w", err)
@@ -114,12 +114,9 @@ func (s *StageBase) attach() error {
 	// left / right?
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
-	if s.IsLeft && s.IsRight {
-		if !s.Options.Bidir {
-			return ErrLR
-		}
-	} else if s.IsLeft == s.IsRight { // both false = apply a default
-		s.IsRight = true // the default
+	s.IsBidir = s.IsLeft && s.IsRight
+	if !s.IsLeft && !s.IsRight { // apply a default
+		s.IsRight = true
 
 		// exceptions
 		if s.IsLast && s.Options.IsProducer {
@@ -133,7 +130,7 @@ func (s *StageBase) attach() error {
 	}
 
 	// set s.Dir
-	if s.IsLeft && s.IsRight {
+	if s.IsBidir {
 		s.Dir = msg.DIR_LR
 	} else if s.IsLeft {
 		s.Dir = msg.DIR_L
@@ -144,13 +141,18 @@ func (s *StageBase) attach() error {
 	// call child attach, collect what was attached to
 	cbs := len(po.Callbacks)
 	hds := len(po.Handlers)
-	ins := len(po.Procs)
+	ins := len(po.Inputs)
 	if err := s.Stage.Attach(); err != nil {
 		return err
 	}
 	s.callbacks = po.Callbacks[cbs:]
 	s.handlers = po.Handlers[hds:]
-	s.procs = po.Procs[ins:]
+	s.inputs = po.Inputs[ins:]
+
+	// can run in bidir mode?
+	if s.IsBidir && !s.Options.Bidir {
+		return ErrLR
+	}
 
 	// if not an internal stage...
 	if s.Index > 0 {
@@ -180,7 +182,7 @@ func (s *StageBase) attach() error {
 	// where to inject new messages?
 	var frev, ffwd pipe.FilterMode // input filter mode
 	var fid int                    // input filter callback id
-	switch v := k.String("in"); v {
+	switch v := k.String("inject"); v {
 	case "next", "":
 		frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
 		fid = s.Index
@@ -210,7 +212,7 @@ func (s *StageBase) attach() error {
 	}
 
 	// fix inputs
-	for _, li := range s.procs {
+	for _, li := range s.inputs {
 		li.Id = s.Index
 		li.FilterValue = fid
 
@@ -256,7 +258,7 @@ func (s *StageBase) attach() error {
 		for _, hd := range s.handlers {
 			s.Trace().Msgf("  handler %#v", hd)
 		}
-		for _, in := range s.procs {
+		for _, in := range s.inputs {
 			s.Trace().Msgf("  input %s dir=%s reverse=%v filt=%d filt_id=%d",
 				in.Name, in.Dir, in.Reverse, in.CallbackFilter, in.FilterValue)
 		}
