@@ -108,9 +108,7 @@ func (s *Write) reopenFile(now time.Time) error {
 		go func(wr io.WriteCloser, fh *os.File) {
 			s.Debug().Msgf("closing %s", fh.Name())
 			wr.Close()
-			if err := fh.Close(); err != nil {
-				s.Err(err).Msgf("closing %s failed", fh.Name())
-			}
+			fh.Close()
 		}(s.wr, s.fh)
 	}
 
