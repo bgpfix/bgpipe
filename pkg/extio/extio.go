@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -219,8 +220,11 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (parse_err error)
 		case buf[0] == '[': // a BGP message
 			// TODO: optimize unmarshal (lookup cache of recently marshaled msgs)
 			parse_err = m.FromJSON(buf)
-			if m.Type == msg.INVALID {
-				m.Use(msg.KEEPALIVE) // for convenience
+
+			// convenience
+			if parse_err == nil && m.Type == msg.INVALID {
+				m.Use(msg.KEEPALIVE)
+				m.Marshal(caps.Caps{}) // empty Data
 			}
 		case buf[0] == '{': // an UPDATE
 			m.Use(msg.UPDATE)
@@ -391,12 +395,26 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 	switch {
 	case eio.opt_raw:
 		err = m.Marshal(eio.P.Caps)
-		if err == nil {
-			_, err = m.WriteTo(bb)
+		if err != nil {
+			break
 		}
+		_, err = m.WriteTo(bb)
 	case eio.opt_mrt:
-		panic("TODO")
+		mr := mrt.NewMrt().Use(mrt.BGP4MP_ET)
 
+		// marshal into BGP4MP
+		err = mr.Bgp4.FromMsg(m)
+		if err != nil {
+			break
+		}
+
+		// marshal into MRT
+		err = mr.Marshal()
+		if err != nil {
+			break
+		}
+
+		_, err = mr.WriteTo(bb)
 	default:
 		_, err = bb.Write(m.GetJSON())
 	}
