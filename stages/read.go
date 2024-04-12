@@ -56,9 +56,9 @@ func (s *Read) Prepare() error {
 		return err
 	}
 	s.fh = fh // closed in .Stop()
-	s.rd = fh
 
 	// transparent uncompress?
+	s.rd = fh
 	if s.K.Bool("uncompress") {
 		switch filepath.Ext(s.fpath) {
 		case ".bz2":
