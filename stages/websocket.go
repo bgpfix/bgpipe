@@ -147,9 +147,8 @@ func (s *Websocket) Attach() error {
 		}
 
 		// add HTTP header
-		auth := []byte("Basic ")
-		auth = base64.StdEncoding.AppendEncode(auth, cred)
-		s.headers.Set("Authorization", string(auth))
+		auth := "Basic " + base64.StdEncoding.EncodeToString(cred)
+		s.headers.Set("Authorization", auth)
 	}
 
 	s.serverConn = make(chan *websocket.Conn, 10)
