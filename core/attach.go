@@ -225,6 +225,13 @@ func (s *StageBase) attach() error {
 		}
 	}
 
+	// is really a producer?
+	has_inputs := len(s.inputs) > 0
+	if s.Options.IsProducer != has_inputs {
+		s.Debug().Msgf("IsProducer=%v but has_inputs=%v - correcting", s.Options.IsProducer, has_inputs)
+		s.Options.IsProducer = has_inputs
+	}
+
 	// update related waitgroups
 	s.wgAdd(1)
 

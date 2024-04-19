@@ -24,7 +24,7 @@ func NewPipe(parent *core.StageBase) core.Stage {
 	o := &s.Options
 	o.IsProducer = true
 	o.Bidir = true
-	o.Descr = "filter messages through named pipe"
+	o.Descr = "filter messages through a named pipe"
 	o.Args = []string{"path"}
 
 	s.eio = extio.NewExtio(parent, 0)

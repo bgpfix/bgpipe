@@ -17,7 +17,7 @@ func NewSpeaker(parent *core.StageBase) core.Stage {
 	s := &Speaker{StageBase: parent}
 
 	o := &s.Options
-	o.Descr = "run a simple local BGP speaker"
+	o.Descr = "run a simple BGP speaker"
 	o.IsProducer = true
 
 	do := &speaker.DefaultOptions

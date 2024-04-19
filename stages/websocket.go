@@ -40,7 +40,7 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 	s := &Websocket{StageBase: parent}
 
 	o := &s.Options
-	o.Descr = "filter JSON messages over websocket"
+	o.Descr = "filter messages over websocket"
 	o.IsProducer = true
 	o.Bidir = true
 

@@ -1,16 +1,19 @@
-# bgpipe: a BGP reverse proxy
+# bgpipe: BGP reverse proxy and firewall
 
 **WORK IN PROGRESS PREVIEW 04/2024**
 
-This project provides an open-source BGP reverse proxy based on [the BGPFix library](https://github.com/bgpfix/bgpfix).
+This project provides an open-source BGP reverse proxy and firewall based on [the BGPFix library](https://github.com/bgpfix/bgpfix).
 
 For example, bgpipe can be used to run:
 
- * a BGP man-in-the-middle proxy that dumps and controls all conversation
- * a bidirectional BGP to JSON bridge
- * a BGP listener on one side, connecting with a TCP-MD5 password on the other side
- * a speaker (or proxy) that streams an MRT file after the session is established
- * a fast MRT to JSON dumper
+ * BGP man-in-the-middle proxy that dumps all conversation
+ * bidirectional BGP to JSON bridge to a background process (filter or mirror mode)
+ * websocket + TLS transport of BGP sessions over the public Internet
+ * BGP listener on one side, connecting with a TCP-MD5 password on the other side
+ * BGP speaker that streams an MRT file after the session is established
+ * fast MRT to JSON converter (and back)
+ * IP prefix limits enforcer
+ * router control plane firewall (drop, modify, and synthesize BGP messages)
  
 The vision for bgpipe is to be a powerful *BGP firewall* that transparently secures, enhances, and audits existing BGP speakers. The hope is to bolster open source innovation in the closed world of big BGP router vendors.
 

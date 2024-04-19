@@ -46,7 +46,7 @@ func (b *Bgpipe) addFlags() {
 }
 
 func (b *Bgpipe) usage() {
-	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS] [--] ...
+	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGUMENTS] [--] STAGE2...
 
 Options:
 `)

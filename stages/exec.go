@@ -33,7 +33,7 @@ func NewExec(parent *core.StageBase) core.Stage {
 	)
 
 	o.Usage = "exec COMMAND | exec -A COMMAND [COMMAND-ARGUMENTS...] --"
-	o.Descr = "filter JSON messages through a background process"
+	o.Descr = "filter messages through a background process"
 	o.IsProducer = true
 	o.Bidir = true
 	o.Args = []string{"cmd"}

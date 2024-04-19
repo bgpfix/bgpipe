@@ -21,12 +21,11 @@ func NewStdin(parent *core.StageBase) core.Stage {
 	o.IsProducer = true
 	o.Bidir = true
 
-	s.eio = extio.NewExtio(parent, 1)
+	s.eio = extio.NewExtio(parent, extio.MODE_READ)
 	return s
 }
 
 func (s *Stdin) Attach() error {
-	s.K.Set("read", true)
 	return s.eio.Attach()
 }
 
