@@ -24,6 +24,7 @@ func NewStdout(parent *core.StageBase) core.Stage {
 	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY)
 	return s
 }
+
 func (s *Stdout) Attach() error {
 	err := s.eio.Attach()
 	if err != nil {
