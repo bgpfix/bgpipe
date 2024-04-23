@@ -62,7 +62,7 @@ func (b *Bgpipe) AttachStages() error {
 		s.K.Set("left", true)
 		s.K.Set("right", true)
 		if k.Bool("stdout-wait") {
-			s.K.Set("wait", []string{"ESTABLISHED"})
+			s.K.Set("wait", []string{"EOR"})
 		}
 		if err := s.attach(); err != nil {
 			return fmt.Errorf("--stdout: %w", err)
