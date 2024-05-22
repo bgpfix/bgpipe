@@ -1,7 +1,5 @@
 # bgpipe: BGP reverse proxy and firewall
 
-**WORK IN PROGRESS PREVIEW 04/2024**
-
 This project provides an open-source BGP reverse proxy and firewall based on [the BGPFix library](https://github.com/bgpfix/bgpfix).
 
 For example, bgpipe can be used to run:
@@ -26,7 +24,7 @@ See [bgpipe releases](https://github.com/bgpfix/bgpipe/releases/) on GitHub, or 
 ```
 # install golang, eg. https://go.dev/dl/
 $ go version
-go version go1.22.2 linux/amd64
+go version go1.22.3 linux/amd64
 
 # install bgpipe
 $ go install github.com/bgpfix/bgpipe@latest
@@ -38,23 +36,25 @@ Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS] [--] ...
 Options:
   -v, --version          print detailed version info and quit
   -l, --log string       log level (debug/info/warn/error/disabled) (default "info")
-  -e, --events strings   log given events ("all" means all events) (default [PARSE,ESTABLISHED])
-  -k, --kill strings     kill session on given events
-  -i, --stdin            read stdin after session is established (unless explicitly configured)
-  -s, --silent           do not write stdout (unless explicitly configured)
+  -e, --events strings   log given events ("all" means all events) (default [PARSE,ESTABLISHED,EOR])
+  -k, --kill strings     kill session on any of these events
+  -i, --stdin            read JSON from stdin
+  -o, --stdout           write JSON to stdout
+  -I, --stdin-wait       like --stdin but wait for EVENT_ESTABLISHED
+  -O, --stdout-wait      like --stdout but wait for EVENT_EOR
   -2, --short-asn        use 2-byte ASN numbers
 
 Supported stages (run stage -h to get its help)
   connect                connect to a BGP endpoint over TCP
-  exec                   filter JSON messages through a background process
+  exec                   filter messages through a background process
   limit                  limit prefix lengths and counts
   listen                 wait for a BGP client to connect over TCP
-  pipe                   filter messages through named pipe
+  pipe                   filter messages through a named pipe
   read                   read messages from file
-  speaker                run a simple local BGP speaker
+  speaker                run a simple BGP speaker
   stdin                  read messages from stdin
   stdout                 print messages to stdout
-  websocket              filter JSON messages over websocket
+  websocket              filter messages over websocket
   write                  write messages to file
 
 # see docs for "connect" stage
@@ -79,19 +79,19 @@ Common Options:
 ## Examples
 
 ```bash
-# connect to a BGP speaker, respond to OPEN
-$ bgpipe speaker 1.2.3.4
+# connect to a BGP speaker, respond to OPEN, dump to JSON
+$ bgpipe -o speaker 1.2.3.4
 
-# bidir bgp to json
-$ cat input.json | bgpipe --stdin speaker 1.2.3.4 | tee output.json
+# JSON to BGP and back
+$ cat input.json | bgpipe -io speaker 1.2.3.4 | tee output.json
 
-# dump mrt updates to json
-$ bgpipe read --mrt updates.20230301.0000.bz2 > output.json
+# dump MRT updates to JSON
+$ bgpipe read --mrt updates.20230301.0000.bz2 -- write output.json
 
 # proxy a connection, print the conversation to stdout by default
 # 1st stage: listen on TCP *:179 for new connection
 # 2nd stage: wait for new connection and proxy it to 1.2.3.4, adding TCP-MD5
-$ bgpipe \
+$ bgpipe -o \
 	-- listen :179 \
 	-- connect --wait listen --md5 solarwinds123 1.2.3.4
 
