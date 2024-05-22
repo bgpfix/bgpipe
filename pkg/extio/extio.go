@@ -24,6 +24,7 @@ var bbpool bytebufferpool.Pool
 type Extio struct {
 	*core.StageBase
 
+	mode       Mode
 	opt_type   []msg.Type // --type
 	opt_raw    bool       // --raw
 	opt_mrt    bool       // --mrt
@@ -47,13 +48,22 @@ type Extio struct {
 	Pool   *bytebufferpool.Pool            // pool of byte buffers
 }
 
+type Mode = int
+
+const (
+	MODE_DEFAULT      = 0
+	MODE_READ    Mode = 0x01 // no output from bgpipe
+	MODE_WRITE   Mode = 0x02 // no input to bgpipe
+	MODE_COPY    Mode = 0x10 // copy from pipe, don't drop
+)
+
 // NewExtio creates a new object for given stage.
-// mode: 1=read-only (to pipe); 2=write-only (from pipe)
-func NewExtio(parent *core.StageBase, mode int) *Extio {
+func NewExtio(parent *core.StageBase, mode Mode) *Extio {
 	eio := &Extio{
 		StageBase: parent,
 		Output:    make(chan *bytebufferpool.ByteBuffer, 100),
 		Pool:      &bbpool,
+		mode:      mode,
 	}
 
 	// add CLI options iff needed
@@ -63,22 +73,16 @@ func NewExtio(parent *core.StageBase, mode int) *Extio {
 		f.Bool("mrt", false, "speak MRT-BGP4MP instead of JSON")
 		f.StringSlice("type", []string{}, "skip if message is not of specified type(s)")
 
-		f.Bool("read", false, "read-only mode (no output from bgpipe)")
-		f.Bool("write", false, "write-only mode (no input to bgpipe)")
+		if mode&(MODE_READ|MODE_WRITE) == 0 {
+			f.Bool("read", false, "read-only mode (no output from bgpipe)")
+			f.Bool("write", false, "write-only mode (no input to bgpipe)")
+		}
 
-		if mode == 1 { // read-only
-			read, write := f.Lookup("read"), f.Lookup("write")
-			read.Hidden, write.Hidden = true, true
-			read.Value.Set("true")
-		} else {
+		if mode&MODE_READ == 0 && mode&MODE_COPY == 0 {
 			f.Bool("copy", false, "copy messages instead of filtering (mirror)")
 		}
 
-		if mode == 2 { // write-only
-			read, write := f.Lookup("read"), f.Lookup("write")
-			read.Hidden, write.Hidden = true, true
-			write.Value.Set("true")
-		} else {
+		if mode&MODE_WRITE == 0 {
 			f.Bool("pardon", false, "ignore input parse errors")
 			f.Bool("no-seq", false, "overwrite input message sequence number")
 			f.Bool("no-time", false, "overwrite input message time")
@@ -104,6 +108,17 @@ func (eio *Extio) Attach() error {
 	eio.opt_notime = k.Bool("no-time")
 	eio.opt_notags = k.Bool("no-tags")
 	eio.opt_pardon = k.Bool("pardon")
+
+	// overrides
+	if eio.mode&MODE_READ != 0 {
+		eio.opt_read = true
+	}
+	if eio.mode&MODE_WRITE != 0 {
+		eio.opt_write = true
+	}
+	if eio.mode&MODE_COPY != 0 {
+		eio.opt_copy = true
+	}
 
 	// parse --type
 	for _, v := range k.Strings("type") {

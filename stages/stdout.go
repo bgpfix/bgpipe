@@ -21,14 +21,11 @@ func NewStdout(parent *core.StageBase) core.Stage {
 	o.IsStdout = true
 	o.Bidir = true
 
-	f := s.Options.Flags
-	s.eio = extio.NewExtio(parent, 2)
-	f.Lookup("copy").Hidden = true
-
+	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY)
 	return s
 }
+
 func (s *Stdout) Attach() error {
-	s.K.Set("copy", true)
 	err := s.eio.Attach()
 	if err != nil {
 		return err

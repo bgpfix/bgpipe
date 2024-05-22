@@ -32,7 +32,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 	f := o.Flags
 	f.Bool("uncompress", true, "uncompress based on file extension (.gz/.bz2)")
 
-	s.eio = extio.NewExtio(parent, 1)
+	s.eio = extio.NewExtio(parent, extio.MODE_READ)
 	return s
 }
 
@@ -45,7 +45,6 @@ func (s *Read) Attach() error {
 	}
 	s.fpath = filepath.Clean(s.fpath)
 
-	k.Set("read", true)
 	return s.eio.Attach()
 }
 

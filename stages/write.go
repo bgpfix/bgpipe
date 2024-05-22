@@ -37,9 +37,8 @@ func NewWrite(parent *core.StageBase) core.Stage {
 	o.Descr = "write messages to file"
 	o.Args = []string{"path"}
 
-	s.eio = extio.NewExtio(parent, 2)
+	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY)
 	f := s.Options.Flags
-	f.Lookup("copy").Hidden = true
 	f.Bool("append", false, "append to file if already exists")
 	f.Bool("create", false, "file must not already exist")
 	f.Bool("compress", true, "compress based on file extension (.gz only)")
@@ -86,7 +85,6 @@ func (s *Write) Attach() error {
 		}
 	}
 
-	k.Set("copy", true)
 	return s.eio.Attach()
 }
 

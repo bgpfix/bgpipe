@@ -27,8 +27,9 @@ func (b *Bgpipe) AttachStages() error {
 
 	// attach stages
 	var (
-		has_stdin  bool
-		has_stdout bool
+		stdin_stage  *StageBase
+		stdout_stage *StageBase
+		count_stage  int
 	)
 	for _, s := range b.Stages {
 		if s == nil {
@@ -38,33 +39,59 @@ func (b *Bgpipe) AttachStages() error {
 		// run stage attach
 		if err := s.attach(); err != nil {
 			return s.Errorf("%w", err)
+		} else {
+			count_stage++
 		}
 
 		// does stdin/stdout?
-		has_stdin = has_stdin || s.Options.IsStdin
-		has_stdout = has_stdout || s.Options.IsStdout
-	}
-
-	// add automatic stdout?
-	if !k.Bool("silent") && !has_stdout {
-		s := b.NewStage("stdout")
-		s.K.Set("left", true)
-		s.K.Set("right", true)
-		if err := s.attach(); err != nil {
-			return fmt.Errorf("auto stdout: %w", err)
+		if s.Options.IsStdin && stdin_stage == nil {
+			stdin_stage = s
+		}
+		if s.Options.IsStdout && stdout_stage == nil {
+			stdout_stage = s
 		}
 	}
 
-	// add automatic stdin?
-	if k.Bool("stdin") && !has_stdin {
+	// add stdout?
+	if k.Bool("stdout") || k.Bool("stdout-wait") {
+		if stdout_stage != nil {
+			return fmt.Errorf("could not use --stdout: stage '%s' already writes to stdout", stdout_stage)
+		}
+
+		s := b.NewStage("stdout")
+		s.K.Set("left", true)
+		s.K.Set("right", true)
+		if k.Bool("stdout-wait") {
+			s.K.Set("wait", []string{"EOR"})
+		}
+		if err := s.attach(); err != nil {
+			return fmt.Errorf("--stdout: %w", err)
+		}
+		stdout_stage = s
+	}
+
+	// add stdin?
+	if k.Bool("stdin") || k.Bool("stdin-wait") {
+		if stdin_stage != nil {
+			return fmt.Errorf("could not use --stdin: stage '%s' already reads from stdin", stdin_stage)
+		}
+
 		s := b.NewStage("stdin")
 		s.K.Set("left", true)
 		s.K.Set("right", true)
 		s.K.Set("inject", "first")
-		s.K.Set("wait", []string{"ESTABLISHED"})
-		if err := s.attach(); err != nil {
-			return fmt.Errorf("auto stdin: %w", err)
+		if k.Bool("stdin-wait") {
+			s.K.Set("wait", []string{"ESTABLISHED"})
 		}
+		if err := s.attach(); err != nil {
+			return fmt.Errorf("--stdin: %w", err)
+		}
+		stdin_stage = s
+	}
+
+	// only 1 stage without I/O?
+	if count_stage == 1 && stdin_stage == nil && stdout_stage == nil {
+		return fmt.Errorf("single stage without I/O makes little sense, sorry")
 	}
 
 	// force 2-byte ASNs?
@@ -223,6 +250,13 @@ func (s *StageBase) attach() error {
 			li.Reverse = false
 			li.CallbackFilter = ffwd
 		}
+	}
+
+	// is really a producer?
+	has_inputs := len(s.inputs) > 0
+	if s.Options.IsProducer != has_inputs {
+		s.Debug().Msgf("IsProducer=%v but has_inputs=%v - correcting", s.Options.IsProducer, has_inputs)
+		s.Options.IsProducer = has_inputs
 	}
 
 	// update related waitgroups

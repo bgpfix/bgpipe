@@ -38,15 +38,17 @@ func (b *Bgpipe) addFlags() {
 	f.SetInterspersed(false)
 	f.BoolP("version", "v", false, "print detailed version info and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
-	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED"}, "log given events (\"all\" means all events)")
-	f.StringSliceP("kill", "k", []string{}, "kill session on given events")
-	f.BoolP("stdin", "i", false, "read stdin after session is established (unless explicitly configured)")
-	f.BoolP("silent", "s", false, "do not write stdout (unless explicitly configured)")
+	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
+	f.StringSliceP("kill", "k", []string{}, "kill session on any of these events")
+	f.BoolP("stdin", "i", false, "read JSON from stdin")
+	f.BoolP("stdout", "o", false, "write JSON to stdout")
+	f.BoolP("stdin-wait", "I", false, "like --stdin but wait for EVENT_ESTABLISHED")
+	f.BoolP("stdout-wait", "O", false, "like --stdout but wait for EVENT_EOR")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
 }
 
 func (b *Bgpipe) usage() {
-	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS] [--] ...
+	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGUMENTS] [--] STAGE2...
 
 Options:
 `)
