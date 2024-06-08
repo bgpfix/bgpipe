@@ -4,10 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
@@ -82,8 +86,17 @@ func (b *Bgpipe) Run() error {
 		return err
 	}
 
+	// print the pipeline and quit?
+	if b.K.Bool("explain") {
+		fmt.Printf("--> RIGHT DIRECTION -->\n")
+		b.StageDump(msg.DIR_R, os.Stdout)
+		fmt.Printf("\n<-- LEFT DIRECTION <--\n")
+		b.StageDump(msg.DIR_L, os.Stdout)
+		return nil
+	}
+
 	// attach our b.Start
-	b.Pipe.Options.OnStart(b.Start)
+	b.Pipe.Options.OnStart(b.onStart)
 
 	// start the pipeline and block
 	b.Pipe.Start() // will call b.Start
@@ -105,8 +118,8 @@ func (b *Bgpipe) Run() error {
 	return err
 }
 
-// Start is called after the bgpfix pipe starts
-func (b *Bgpipe) Start(ev *pipe.Event) bool {
+// onStart is called after the bgpfix pipe starts
+func (b *Bgpipe) onStart(ev *pipe.Event) bool {
 	// wait for writers
 	go func() {
 		b.wg_lwrite.Wait()
@@ -217,4 +230,143 @@ func (b *Bgpipe) AddStage(idx int, cmd string) (*StageBase, error) {
 // StageCount returns the number of stages added to the pipe
 func (b *Bgpipe) StageCount() int {
 	return max(0, len(b.Stages)-1)
+}
+
+// StageDump prints all stages in dir direction in textual form to w (by default stdout)
+func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
+	// use default w?
+	if w == nil {
+		w = os.Stdout
+	}
+	colors := w == os.Stdout
+
+	// print function shortcut
+	pr := func(style string, format string, a ...any) {
+		if colors && style != StyleNone {
+			fmt.Fprintf(w, style+format+StyleReset, a...)
+		} else {
+			fmt.Fprintf(w, format, a...)
+		}
+	}
+
+	// if only Go had a reverse iterator...
+	indices := make([]int, 0, len(b.Stages))
+	for i, s := range b.Stages {
+		if s != nil {
+			indices = append(indices, i)
+		}
+	}
+	if dir == msg.DIR_L {
+		slices.Reverse(indices)
+	}
+
+	// iterate through stages in good direction
+	for i, idx := range indices {
+		s := b.Stages[idx]
+
+		// analyze callbacks
+		var cb_count int
+		var cb_all bool
+		var cb_types []msg.Type
+		for _, cb := range s.callbacks {
+			if cb.Dir&dir == 0 {
+				continue
+			}
+			cb_count++
+			if len(cb.Types) == 0 {
+				cb_all = true
+			} else {
+				cb_types = append(cb_types, cb.Types...)
+			}
+		}
+
+		// is the last stage and a consumer? treat as a callback
+		if s.Options.IsConsumer && i == len(indices)-1 {
+			cb_count++
+			cb_all = true
+		}
+
+		// analyze inputs
+		var in_count int
+		for _, in := range s.inputs {
+			if in.Dir&dir == 0 {
+				continue
+			}
+			in_count++
+		}
+
+		// analyze event handlers
+		var eh_count int
+		var eh_all bool
+		var eh_types []string
+		for _, eh := range s.handlers {
+			if eh.Dir&dir == 0 {
+				continue
+			}
+			eh_count++
+			if len(eh.Types) == 0 {
+				eh_all = true
+			} else {
+				eh_types = append(eh_types, eh.Types...)
+			}
+		}
+
+		// should skip?
+		switch {
+		case cb_count > 0:
+			total++ // has callbacks in this direction
+		case in_count > 0:
+			total++ // has inputs in this direction
+		case len(s.callbacks)+len(s.inputs) == 0 && eh_count > 0:
+			total++ // no inputs or callbacks at all, but reacts to events
+		default:
+			continue // skip
+		}
+
+		pr(StyleNone, "  [%d] ", s.Index)
+		pr(StyleBold, "%s", s.Name)
+		if len(s.Flags) > 0 {
+			pr(StyleGreen, " %s", strings.Join(s.Flags, " "))
+		}
+		for _, arg := range s.Args {
+			pr(StyleNone, " ")
+			pr(StyleRed+StyleUnderline, "%s", arg)
+		}
+		pr(StyleNone, "\n")
+
+		if cb_count > 0 {
+			pr(StyleNone, "      reads BGP messages from pipeline")
+			pr(StyleMagenta, " callbacks=%d", cb_count)
+			if !cb_all {
+				slices.Sort(cb_types)
+				pr(StyleMagenta, " types=%v", slices.Compact(cb_types))
+			} else {
+				pr(StyleMagenta, " types=[ALL]")
+			}
+			pr(StyleNone, "\n")
+		}
+
+		if in_count > 0 {
+			pr(StyleNone, "      writes BGP messages to pipeline")
+			pr(StyleMagenta, " inputs=%d\n", in_count)
+		}
+
+		if eh_count > 0 {
+			pr(StyleNone, "      handles BGP events")
+			pr(StyleMagenta, " handlers=%d", eh_count)
+			if !eh_all {
+				slices.Sort(eh_types)
+				pr(StyleMagenta, " types=%v", slices.Compact(eh_types))
+			} else {
+				pr(StyleMagenta, " types=[ALL]")
+			}
+			pr(StyleNone, "\n")
+		}
+	}
+
+	if total == 0 {
+		pr(StyleNone, "  (none)\n")
+	}
+
+	return total
 }

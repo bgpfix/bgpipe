@@ -10,6 +10,21 @@ import (
 	"github.com/knadh/koanf/v2"
 )
 
+const (
+	StyleNone      = ""
+	StyleBlack     = "\033[30m"
+	StyleRed       = "\033[31m"
+	StyleGreen     = "\033[32m"
+	StyleYellow    = "\033[33m"
+	StyleBlue      = "\033[34m"
+	StyleMagenta   = "\033[35m"
+	StyleCyan      = "\033[36m"
+	StyleWhite     = "\033[37m"
+	StyleBold      = "\033[1m"
+	StyleUnderline = "\033[4m"
+	StyleReset     = "\033[0m"
+)
+
 func IsAddr(v string) bool {
 	if v == "localhost" || strings.HasPrefix(v, "localhost:") {
 		return true

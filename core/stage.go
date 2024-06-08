@@ -76,6 +76,8 @@ type StageBase struct {
 	Index   int          // stage index (zero means internal)
 	Cmd     string       // stage command name
 	Name    string       // human-friendly stage name
+	Flags   []string     // consumed flags
+	Args    []string     // consumed args
 	Options StageOptions // stage options
 
 	// properties set during before Attach()

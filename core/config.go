@@ -37,6 +37,7 @@ func (b *Bgpipe) addFlags() {
 	f.Usage = b.usage
 	f.SetInterspersed(false)
 	f.BoolP("version", "v", false, "print detailed version info and quit")
+	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
 	f.StringSliceP("kill", "k", []string{}, "kill session on any of these events")
@@ -206,28 +207,35 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 		f.Usage = s.usage
 	}
 
-	// parse stage flags, export to koanf
+	// parse stage flags
 	if err := f.Parse(args); err != nil {
 		return args, s.Errorf("%w", err)
-	} else {
-		s.K.Load(posflag.Provider(f, ".", s.K), nil)
 	}
 
-	// rewrite required CLI arguments?
-	sargs := f.Args()
+	// export flags to koanf, collect remaining args
+	s.K.Load(posflag.Provider(f, ".", s.K), nil)
+	rem := f.Args()
+
+	// compare original args vs remaining -> consumed flags
+	consumed := max(0, len(args)-len(rem))
+	s.Flags = args[:consumed]
+
+	// rewrite required arguments?
 	for _, name := range o.Args {
-		if len(sargs) == 0 {
-			return sargs, s.Errorf("needs an argument: %s", name)
+		if len(rem) == 0 {
+			return rem, s.Errorf("needs an argument: %s", name)
 		}
-		s.K.Set(name, sargs[0])
-		sargs = sargs[1:]
+		s.K.Set(name, rem[0])
+		s.Args = append(s.Args, rem[0])
+		rem = rem[1:]
 	}
 
 	// consume the rest of arguments?
 	if v, _ := f.GetBool("args"); v {
-		s.K.Set("args", sargs)
+		s.K.Set("args", rem)
+		s.Args = append(s.Args, rem...)
 		return nil, nil
 	}
 
-	return sargs, nil
+	return rem, nil
 }
