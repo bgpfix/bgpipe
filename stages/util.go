@@ -39,6 +39,7 @@ func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		s.Trace().Err(err).Msg("connection reader returned")
 		tcp.CloseRead()
 		rch <- retval{n, err}
+		in.Pipe.Stop()
 	}()
 
 	// write to conn
@@ -48,6 +49,7 @@ func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		s.Trace().Err(err).Msg("connection writer returned")
 		tcp.CloseWrite()
 		wch <- retval{n, err}
+		in.Pipe.Stop()
 	}()
 
 	// wait for error on any side, or both sides EOF
