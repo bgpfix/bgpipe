@@ -26,6 +26,7 @@ func NewListen(parent *core.StageBase) core.Stage {
 	)
 
 	f.Duration("timeout", 0, "connect timeout (0 means none)")
+	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
 	if runtime.GOOS == "linux" {
 		f.String("md5", "", "TCP MD5 password")
 	}
@@ -89,5 +90,5 @@ func (s *Listen) Prepare() error {
 }
 
 func (s *Listen) Run() error {
-	return tcp_handle(s.StageBase, s.conn, s.in)
+	return tcp_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
 }

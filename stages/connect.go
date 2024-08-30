@@ -31,6 +31,7 @@ func NewConnect(parent *core.StageBase) core.Stage {
 	o.IsConsumer = true
 
 	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
+	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
 	f.String("md5", "", "TCP MD5 password")
 	o.Args = []string{"addr"}
 
@@ -86,5 +87,5 @@ func (s *Connect) Prepare() error {
 }
 
 func (s *Connect) Run() error {
-	return tcp_handle(s.StageBase, s.conn, s.in)
+	return tcp_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
 }

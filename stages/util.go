@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 )
 
-func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
+func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.Duration) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
@@ -39,7 +40,11 @@ func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		s.Trace().Err(err).Msg("connection reader returned")
 		tcp.CloseRead()
 		rch <- retval{n, err}
-		in.Pipe.Stop()
+
+		if timeout > 0 {
+			time.Sleep(timeout)
+			s.Cancel(io.EOF)
+		}
 	}()
 
 	// write to conn
@@ -49,33 +54,39 @@ func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		s.Trace().Err(err).Msg("connection writer returned")
 		tcp.CloseWrite()
 		wch <- retval{n, err}
-		in.Pipe.Stop()
+
+		if timeout > 0 {
+			time.Sleep(timeout)
+			s.Cancel(io.EOF)
+		}
 	}()
 
 	// wait for error on any side, or both sides EOF
 	var read, wrote int64
+	var err error
 	running := 2
-	for running > 0 {
+	for err == nil && running > 0 {
 		select {
 		case <-s.Ctx.Done():
-			return context.Cause(s.Ctx)
+			err = context.Cause(s.Ctx)
+			running = 0
 		case r := <-rch:
-			read = r.n
+			read, err = r.n, r.err
 			running--
-			if r.err != nil && r.err != io.EOF {
-				return r.err
+			if err == io.EOF {
+				err = nil
 			}
 		case w := <-wch:
-			wrote = w.n
+			wrote, err = w.n, w.err
 			running--
-			if w.err != nil && w.err != io.EOF {
-				return w.err
+			if err == io.EOF {
+				err = nil
 			}
 		}
 	}
 
-	s.Info().Int64("read", read).Int64("wrote", wrote).Msg("connection closed")
-	return nil
+	s.Info().Err(err).Int64("read", read).Int64("wrote", wrote).Msg("connection closed")
+	return err
 }
 
 func close_safe[T any](ch chan T) (ok bool) {

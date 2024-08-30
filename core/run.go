@@ -23,11 +23,8 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	check_fatal := func(err error) bool {
 		if err == nil {
 			err = context.Cause(s.Ctx)
-			if err == context.Canceled {
-				err = nil
-			}
 		}
-		if err == nil || errors.Is(err, ErrStageStopped) {
+		if err == nil || err == context.Canceled || errors.Is(err, ErrStageStopped) {
 			return false
 		} else {
 			s.B.Cancel(s.Errorf("%w", err)) // game over
