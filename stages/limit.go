@@ -12,13 +12,13 @@ package stages
 import (
 	"encoding/binary"
 	"fmt"
-	"net/netip"
 	"slices"
 	"sync"
 
 	"github.com/bgpfix/bgpfix/af"
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/msg"
+	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/puzpuzpuz/xsync/v3"
 )
@@ -41,9 +41,9 @@ type Limit struct {
 	limit_origin  int64 // max prefix count for single origin
 	limit_block   int64 // max prefix count for IP block
 
-	session *xsync.MapOf[netip.Prefix, *limitPrefix] // session db
-	origin  *xsync.MapOf[uint32, *limitCounter]      // per-origin db
-	block   *xsync.MapOf[uint64, *limitCounter]      // per-block db
+	session *xsync.MapOf[nlri.NLRI, *limitPrefix] // session db
+	origin  *xsync.MapOf[uint32, *limitCounter]   // per-origin db
+	block   *xsync.MapOf[uint64, *limitCounter]   // per-block db
 }
 
 func NewLimit(parent *core.StageBase) core.Stage {
@@ -78,7 +78,7 @@ func NewLimit(parent *core.StageBase) core.Stage {
 	so.Bidir = true // will aggregate both directions
 
 	s.afs = make(map[af.AF]bool)
-	s.session = xsync.NewMapOf[netip.Prefix, *limitPrefix]()
+	s.session = xsync.NewMapOf[nlri.NLRI, *limitPrefix]()
 	s.origin = xsync.NewMapOf[uint32, *limitCounter]()
 	s.block = xsync.NewMapOf[uint64, *limitCounter]()
 
@@ -95,15 +95,15 @@ func (s *Limit) Attach() error {
 		s.ipv4 = true // by default, IPv4 only
 	}
 	if s.ipv4 {
-		s.afs[af.New(af.AFI_IPV4, af.SAFI_UNICAST)] = true
+		s.afs[af.AF_IPV4_UNICAST] = true
 		if k.Bool("multicast") {
-			s.afs[af.New(af.AFI_IPV4, af.SAFI_MULTICAST)] = true
+			s.afs[af.AF_IPV4_MULTICAST] = true
 		}
 	}
 	if s.ipv6 {
-		s.afs[af.New(af.AFI_IPV6, af.SAFI_UNICAST)] = true
+		s.afs[af.AF_IPV6_UNICAST] = true
 		if k.Bool("multicast") {
-			s.afs[af.New(af.AFI_IPV6, af.SAFI_MULTICAST)] = true
+			s.afs[af.AF_IPV6_MULTICAST] = true
 		}
 	}
 
@@ -161,16 +161,16 @@ func (s *Limit) onMsg(m *msg.Msg) bool {
 	return true
 }
 
-func (s *Limit) isShort(p netip.Prefix) bool {
+func (s *Limit) isShort(p nlri.NLRI) bool {
 	return s.minlen > 0 && p.Bits() < s.minlen
 }
 
-func (s *Limit) isLong(p netip.Prefix) bool {
+func (s *Limit) isLong(p nlri.NLRI) bool {
 	return s.maxlen > 0 && p.Bits() > s.maxlen
 }
 
 // translates IP prefix to IP block, assuming prefix length <=/64
-func (s *Limit) p2b(p netip.Prefix) uint64 {
+func (s *Limit) p2b(p nlri.NLRI) uint64 {
 	b := p.Addr().AsSlice()
 	switch len(b) {
 	case 4:
@@ -190,7 +190,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	origin := u.Attrs.AsOrigin()
 
 	// drops p from u if violates the rules
-	dropReach := func(p netip.Prefix) (drop bool) {
+	dropReach := func(p nlri.NLRI) (drop bool) {
 		defer func() {
 			if drop {
 				u.Msg.Modified()
@@ -303,7 +303,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 
 func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	// drops p from u if violates the rules
-	dropUnreach := func(p netip.Prefix) (drop bool) {
+	dropUnreach := func(p nlri.NLRI) (drop bool) {
 		// too long or short?
 		if s.isShort(p) || s.isLong(p) {
 			u.Msg.Modified()
