@@ -88,9 +88,9 @@ func (b *Bgpipe) Run() error {
 
 	// print the pipeline and quit?
 	if b.K.Bool("explain") {
-		fmt.Printf("--> RIGHT DIRECTION -->\n")
+		fmt.Printf("--> MESSAGES FLOWING RIGHT -->\n")
 		b.StageDump(msg.DIR_R, os.Stdout)
-		fmt.Printf("\n<-- LEFT DIRECTION <--\n")
+		fmt.Printf("\n<-- MESSAGES FLOWING LEFT <--\n")
 		b.StageDump(msg.DIR_L, os.Stdout)
 		return nil
 	}
@@ -249,7 +249,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		}
 	}
 
-	// if only Go had a reverse iterator...
+	// if only Go had a (simple) reverse iterator...
 	indices := make([]int, 0, len(b.Stages))
 	for i, s := range b.Stages {
 		if s != nil {
@@ -269,7 +269,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		var cb_all bool
 		var cb_types []msg.Type
 		for _, cb := range s.callbacks {
-			if cb.Dir&dir == 0 {
+			if cb.Dir != 0 && cb.Dir&dir == 0 {
 				continue
 			}
 			cb_count++
@@ -300,7 +300,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		var eh_all bool
 		var eh_types []string
 		for _, eh := range s.handlers {
-			if eh.Dir&dir == 0 {
+			if eh.Dir != 0 && eh.Dir&dir == 0 {
 				continue
 			}
 			eh_count++
@@ -325,6 +325,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 
 		pr(StyleNone, "  [%d] ", s.Index)
 		pr(StyleBold, "%s", s.Name)
+		pr(StyleGreen, " -%s", s.Dir)
 		if len(s.Flags) > 0 {
 			pr(StyleGreen, " %s", strings.Join(s.Flags, " "))
 		}
@@ -335,7 +336,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		pr(StyleNone, "\n")
 
 		if cb_count > 0 {
-			pr(StyleNone, "      reads BGP messages from pipeline")
+			pr(StyleNone, "      reads messages from pipeline")
 			pr(StyleMagenta, " callbacks=%d", cb_count)
 			if !cb_all {
 				slices.Sort(cb_types)
@@ -347,12 +348,12 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		}
 
 		if in_count > 0 {
-			pr(StyleNone, "      writes BGP messages to pipeline")
+			pr(StyleNone, "      writes messages to pipeline")
 			pr(StyleMagenta, " inputs=%d\n", in_count)
 		}
 
 		if eh_count > 0 {
-			pr(StyleNone, "      handles BGP events")
+			pr(StyleNone, "      handles events")
 			pr(StyleMagenta, " handlers=%d", eh_count)
 			if !eh_all {
 				slices.Sort(eh_types)
