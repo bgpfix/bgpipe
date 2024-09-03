@@ -13,10 +13,20 @@ import (
 type Grep struct {
 	*core.StageBase
 
-	opt_type   []msg.Type // --type
+	opt_type_apply []msg.Type
+	// opt_and_event  string
+	// opt_or_event   string
 	opt_invert bool
-	opt_and    bool
-	opt_tag    map[string]string
+	opt_any    bool
+
+	// opt_type []msg.Type
+	// opt_af      []af.AF
+	// opt_asn     []int32
+	// opt_origin  []int32
+	// opt_prefix  []netip.Prefix
+	// opt_prefix_strict  []netip.Prefix
+	// opt_nexthop []netip.Prefix
+	opt_tag map[string]string
 }
 
 func NewGrep(parent *core.StageBase) core.Stage {
@@ -26,17 +36,27 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	)
 
 	o.Usage = "grep"
-	o.Descr = "filter messages by their contents"
+	o.Descr = "drop messages that do not match"
 	o.Bidir = true
 
 	f := o.Flags
-	f.StringSlice("type", []string{},
-		"apply only to messages of specified type(s)")
-	f.BoolP("invert", "v", false,
-		"invert the logic: allow only the messages that would have been dropped")
-	f.Bool("and", false,
-		"AND instead of OR: require all matches instead of any match")
-	f.StringSlice("tag", nil, "match message context tags (key=value)")
+	f.StringSlice("type-apply", []string{"UPDATE"},
+		"apply the stage only for messages of the specified type(s)")
+
+	// f.String("and-event", "", "on match failure, emit given event and drop the message")
+	// f.String("or-event", "", "on match failure, emit given event instead of dropping the message")
+
+	f.BoolP("invert", "v", false, "invert the logic: drop messages that DO match")
+	f.BoolP("any", "a", false, "require success from ANY of the selected matchers, instead of all")
+
+	// f.StringSlice("type", nil, "match message type(s)")
+	// f.StringSlice("af", nil, "match address families (format: AFI/SAFI)")
+	// f.Int32Slice("asn", nil, "match ASNs in the AS_PATH")
+	// f.Int32Slice("origin", nil, "match origin ASNs")
+	// f.StringSlice("prefix", nil, "match if given prefixes cover ANY message prefix, drop not covered")
+	// f.StringSlice("prefix-strict", nil, "match if given prefixes cover ALL message prefixes")
+	// f.StringSlice("nexthop", nil, "match if given prefixes contain the NEXT_HOP attribute")
+	f.StringSlice("tag", nil, "match message context tag values (format: key=value)")
 
 	return s
 }
@@ -45,10 +65,11 @@ func (s *Grep) Attach() error {
 	k := s.K
 
 	s.opt_invert = k.Bool("invert")
-	s.opt_and = k.Bool("and")
+	s.opt_any = k.Bool("any")
 
-	// parse --type
-	for _, t := range k.Strings("type") {
+	// TODO
+	// parse --type-apply
+	for _, t := range k.Strings("type-apply") {
 		// skip empty types
 		if len(t) == 0 {
 			continue
@@ -57,18 +78,18 @@ func (s *Grep) Attach() error {
 		// canonical name?
 		typ, err := msg.TypeString(t)
 		if err == nil {
-			s.opt_type = append(s.opt_type, typ)
+			s.opt_type_apply = append(s.opt_type_apply, typ)
 			continue
 		}
 
 		// a plain integer?
 		tnum, err2 := strconv.Atoi(t)
 		if err2 == nil && tnum >= 0 && tnum <= 0xff {
-			s.opt_type = append(s.opt_type, msg.Type(tnum))
+			s.opt_type_apply = append(s.opt_type_apply, msg.Type(tnum))
 			continue
 		}
 
-		return fmt.Errorf("--type %s: %w", t, err)
+		return fmt.Errorf("--type-apply %s: %w", t, err)
 	}
 
 	// parse tags
@@ -94,7 +115,7 @@ func (s *Grep) Attach() error {
 	}
 
 	// register a raw callback
-	cb := s.P.OnMsg(s.check, s.Dir, s.opt_type...)
+	cb := s.P.OnMsg(s.check, s.Dir, s.opt_type_apply...)
 	cb.Raw = true
 
 	return nil
@@ -110,7 +131,7 @@ func (s *Grep) check(m *msg.Msg) (keep_message bool) {
 	// (which still may be inverted in the defer, though)
 	stop := func(result bool) bool {
 		switch {
-		case s.opt_and: // AND
+		case !s.opt_any: // AND
 			if !result {
 				keep_message = false // any fail = drop
 				return true          // stop here
