@@ -102,7 +102,8 @@ func (b *Bgpipe) AttachStages() error {
 	}
 
 	// log events?
-	if evs := b.parseEvents(k, "events", "START", "STOP", "READY", "PREPARE"); len(evs) > 0 {
+	if evs := ParseEvents(k.Strings("events"), "START", "STOP", "READY", "PREPARE"); len(evs) > 0 {
+		b.Debug().Strs("events", evs).Msg("monitored events will be logged")
 		p.Options.AddHandler(b.LogEvent, &pipe.Handler{
 			Pre:   true,
 			Order: math.MinInt,
@@ -111,7 +112,8 @@ func (b *Bgpipe) AttachStages() error {
 	}
 
 	// kill events?
-	if evs := b.parseEvents(k, "kill", "STOP"); len(evs) > 0 {
+	if evs := ParseEvents(k.Strings("kill"), "STOP"); len(evs) > 0 {
+		b.Debug().Strs("events", evs).Msg("will kill the session on given events")
 		p.Options.AddHandler(b.KillEvent, &pipe.Handler{
 			Pre:   true,
 			Order: math.MinInt + 1,
@@ -263,7 +265,8 @@ func (s *StageBase) attach() error {
 	s.wgAdd(1)
 
 	// has trigger-on events?
-	if evs := b.parseEvents(k, "wait", "START"); len(evs) > 0 {
+	if evs := ParseEvents(k.Strings("wait"), "START"); len(evs) > 0 {
+		s.Debug().Strs("events", evs).Msg("waiting for given events before start")
 		po.OnEventPre(s.runStart, evs...)
 
 		// trigger pipe start handlers by --wait events
@@ -279,7 +282,8 @@ func (s *StageBase) attach() error {
 	}
 
 	// has trigger-off events?
-	if evs := b.parseEvents(k, "stop", "STOP"); len(evs) > 0 {
+	if evs := ParseEvents(k.Strings("stop"), "STOP"); len(evs) > 0 {
+		s.Debug().Strs("events", evs).Msg("will stop after given events")
 		po.OnEventPost(s.runStop, evs...)
 	}
 

@@ -98,6 +98,11 @@ func (b *Bgpipe) Run() error {
 	// attach our b.Start
 	b.Pipe.Options.OnStart(b.onStart)
 
+	// if ap, ok := b.Pipe.Caps.Use(caps.CAP_ADDPATH).(*caps.AddPath); ok {
+	// 	ap.Add(af.AF_IPV4_UNICAST, caps.ADDPATH_BIDIR)
+	// 	ap.Add(af.AF_IPV6_UNICAST, caps.ADDPATH_BIDIR)
+	// }
+
 	// start the pipeline and block
 	b.Pipe.Start() // will call b.Start
 	b.Pipe.Wait()  // until error or all processing is done
@@ -152,17 +157,16 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 	// will b.Info() if ev.Error is nil
 	l := b.Err(ev.Error)
 
-	if ev.Msg != nil {
-		j := ev.Msg.GetJSON()
-		l = l.Bytes("msg", j[:len(j)-1])
+	if ev.Msg != "" {
+		l = l.Str("msg", ev.Msg)
 	}
 
 	if ev.Dir != 0 {
-		l = l.Stringer("dir", ev.Dir)
+		l = l.Stringer("evdir", ev.Dir)
 	}
 
 	if ev.Seq != 0 {
-		l = l.Uint64("seq", ev.Seq)
+		l = l.Uint64("evseq", ev.Seq)
 	}
 
 	if vals, ok := ev.Value.([]any); ok && len(vals) > 0 {
@@ -178,10 +182,11 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 	return true
 }
 
-// KillEvent kills session because of given event ev
+// KillEvent brutally kills the session because of given event ev
 func (b *Bgpipe) KillEvent(ev *pipe.Event) bool {
-	// TODO: why not pipe.Stop()?
-	b.Cancel(fmt.Errorf("%w: %s", ErrKill, ev))
+	b.LogEvent(ev)
+	b.Warn().Stringer("ev", ev).Msg("session killed by event")
+	os.Exit(1)
 	return false
 }
 

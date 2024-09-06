@@ -13,11 +13,11 @@ import (
 type Grep struct {
 	*core.StageBase
 
-	opt_apply []msg.Type
-	// opt_and_event  string
-	// opt_or_event   string
-	opt_invert bool
-	opt_any    bool
+	opt_apply       []msg.Type
+	opt_fail_accept string
+	opt_fail_event  string
+	opt_invert      bool
+	opt_any         bool
 
 	opt_type []msg.Type
 	// opt_af      []af.AF
@@ -43,8 +43,8 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	f.StringSlice("apply", []string{"UPDATE"},
 		"apply the stage only to messages of the specified type(s)")
 
-	// f.String("and-event", "", "on match failure, emit given event and drop the message")
-	// f.String("or-event", "", "on match failure, emit given event instead of dropping the message")
+	f.String("fail-event", "", "on match failure, emit given event and DROP the message")
+	f.String("fail-accept", "", "on match failure, emit given event and ACCEPT the message")
 
 	f.BoolP("invert", "v", false, "invert the logic: drop messages that DO match")
 	f.BoolP("any", "a", false, "require success from ANY of the selected matchers, instead of all")
@@ -66,6 +66,13 @@ func (s *Grep) Attach() error {
 
 	s.opt_invert = k.Bool("invert")
 	s.opt_any = k.Bool("any")
+
+	// events?
+	s.opt_fail_event = k.String("fail-event")
+	s.opt_fail_accept = k.String("fail-accept")
+	if s.opt_fail_accept != "" && s.opt_fail_event != "" {
+		return fmt.Errorf("--fail-event and --fail-accept must not be used together")
+	}
 
 	// types
 	var err error
@@ -122,10 +129,25 @@ func (s *Grep) Attach() error {
 }
 
 func (s *Grep) check(m *msg.Msg) (keep_message bool) {
-	// invert the final result, whatever it is?
-	if s.opt_invert {
-		defer func() { keep_message = !keep_message }()
-	}
+	defer func() {
+		// invert the final result?
+		if s.opt_invert {
+			keep_message = !keep_message
+		}
+
+		// message accepted, we're done?
+		if keep_message {
+			return
+		}
+
+		// fire an event?
+		if s.opt_fail_event != "" {
+			s.Event(s.opt_fail_event, m)
+		} else if s.opt_fail_accept != "" {
+			s.Event(s.opt_fail_accept, m)
+			keep_message = true // accept the message
+		}
+	}()
 
 	// stop returns true iff keep_message already has the result
 	// (which still may be inverted in the defer, though)
