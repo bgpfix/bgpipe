@@ -2,7 +2,7 @@ package stages
 
 import (
 	"fmt"
-	"strconv"
+	"slices"
 	"strings"
 
 	"github.com/bgpfix/bgpfix/msg"
@@ -13,13 +13,13 @@ import (
 type Grep struct {
 	*core.StageBase
 
-	opt_type_apply []msg.Type
+	opt_apply []msg.Type
 	// opt_and_event  string
 	// opt_or_event   string
 	opt_invert bool
 	opt_any    bool
 
-	// opt_type []msg.Type
+	opt_type []msg.Type
 	// opt_af      []af.AF
 	// opt_asn     []int32
 	// opt_origin  []int32
@@ -40,8 +40,8 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	o.Bidir = true
 
 	f := o.Flags
-	f.StringSlice("type-apply", []string{"UPDATE"},
-		"apply the stage only for messages of the specified type(s)")
+	f.StringSlice("apply", []string{"UPDATE"},
+		"apply the stage only to messages of the specified type(s)")
 
 	// f.String("and-event", "", "on match failure, emit given event and drop the message")
 	// f.String("or-event", "", "on match failure, emit given event instead of dropping the message")
@@ -49,7 +49,7 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	f.BoolP("invert", "v", false, "invert the logic: drop messages that DO match")
 	f.BoolP("any", "a", false, "require success from ANY of the selected matchers, instead of all")
 
-	// f.StringSlice("type", nil, "match message type(s)")
+	f.StringSlice("type", nil, "match message type(s)")
 	// f.StringSlice("af", nil, "match address families (format: AFI/SAFI)")
 	// f.Int32Slice("asn", nil, "match ASNs in the AS_PATH")
 	// f.Int32Slice("origin", nil, "match origin ASNs")
@@ -67,29 +67,29 @@ func (s *Grep) Attach() error {
 	s.opt_invert = k.Bool("invert")
 	s.opt_any = k.Bool("any")
 
-	// TODO
-	// parse --type-apply
-	for _, t := range k.Strings("type-apply") {
-		// skip empty types
-		if len(t) == 0 {
-			continue
-		}
+	// types
+	var err error
+	s.opt_type, err = core.ParseTypes(k.Strings("type"), nil)
+	if err != nil {
+		return fmt.Errorf("--type: %w", err)
+	}
+	slices.Sort(s.opt_type)
 
-		// canonical name?
-		typ, err := msg.TypeString(t)
-		if err == nil {
-			s.opt_type_apply = append(s.opt_type_apply, typ)
-			continue
+	if len(s.opt_type) == 0 || s.Options.Flags.Changed("apply") {
+		s.opt_apply, err = core.ParseTypes(k.Strings("apply"), nil)
+		if err != nil {
+			return fmt.Errorf("--apply: %w", err)
 		}
+		slices.Sort(s.opt_apply)
+	}
 
-		// a plain integer?
-		tnum, err2 := strconv.Atoi(t)
-		if err2 == nil && tnum >= 0 && tnum <= 0xff {
-			s.opt_type_apply = append(s.opt_type_apply, msg.Type(tnum))
-			continue
+	// is --type a proper subset of --apply?
+	if len(s.opt_apply) > 0 {
+		for _, typ := range s.opt_type {
+			if _, found := slices.BinarySearch(s.opt_apply, typ); !found {
+				return fmt.Errorf("--type %s not found in the --apply set: %v", typ, s.opt_apply)
+			}
 		}
-
-		return fmt.Errorf("--type-apply %s: %w", t, err)
 	}
 
 	// parse tags
@@ -108,15 +108,15 @@ func (s *Grep) Attach() error {
 
 	// check if anything to do?
 	switch {
+	case len(s.opt_type) > 0:
 	case len(s.opt_tag) > 0:
-		break
 	default:
 		return fmt.Errorf("nothing to do (no filters specified)")
 	}
 
 	// register a raw callback
-	cb := s.P.OnMsg(s.check, s.Dir, s.opt_type_apply...)
-	cb.Raw = true
+	cb := s.P.OnMsg(s.check, s.Dir, s.opt_apply...)
+	cb.Raw = true // prevent parsing if possible
 
 	return nil
 }
@@ -149,7 +149,15 @@ func (s *Grep) check(m *msg.Msg) (keep_message bool) {
 		}
 	}
 
-	// should check tags?
+	// check type?
+	if len(s.opt_type) > 0 {
+		_, found := slices.BinarySearch(s.opt_type, m.Type)
+		if stop(found) {
+			return
+		}
+	}
+
+	// check tags?
 	if len(s.opt_tag) > 0 {
 		if !pipe.HasTags(m) {
 			return false

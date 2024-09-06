@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/knadh/koanf/v2"
 )
 
@@ -116,4 +117,31 @@ func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string, sds ...string) []string
 
 	b.Trace().Msgf("parseEvents(): %s -> %s", input, output)
 	return output
+}
+
+func ParseTypes(src []string, dst []msg.Type) ([]msg.Type, error) {
+	for _, t := range src {
+		// skip empty types
+		if len(t) == 0 {
+			continue
+		}
+
+		// canonical name?
+		typ, err := msg.TypeString(t)
+		if err == nil {
+			dst = append(dst, typ)
+			continue
+		}
+
+		// a plain integer?
+		tnum, err2 := strconv.ParseUint(t, 0, 8)
+		if err2 == nil {
+			dst = append(dst, msg.Type(tnum))
+			continue
+		}
+
+		return dst, err
+	}
+
+	return dst, nil
 }

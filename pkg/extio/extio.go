@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/bgpfix/bgpfix/caps"
@@ -121,26 +120,9 @@ func (eio *Extio) Attach() error {
 	}
 
 	// parse --type
-	for _, v := range k.Strings("type") {
-		// skip empty types
-		if len(v) == 0 {
-			continue
-		}
-
-		// canonical name?
-		typ, err := msg.TypeString(v)
-		if err == nil {
-			eio.opt_type = append(eio.opt_type, typ)
-			continue
-		}
-
-		// a plain integer?
-		tnum, err2 := strconv.Atoi(v)
-		if err2 == nil && tnum >= 0 && tnum <= 0xff {
-			eio.opt_type = append(eio.opt_type, msg.Type(tnum))
-			continue
-		}
-
+	var err error
+	eio.opt_type, err = core.ParseTypes(k.Strings("type"), nil)
+	if err != nil {
 		return fmt.Errorf("--type: %w", err)
 	}
 
