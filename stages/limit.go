@@ -187,7 +187,7 @@ func (s *Limit) p2b(p nlri.NLRI) uint64 {
 }
 
 func (s *Limit) checkReach(u *msg.Update) (before, after int) {
-	origin := u.Attrs.AsOrigin()
+	origin := u.AsPath().Origin()
 
 	// drops p from u if violates the rules
 	dropReach := func(p nlri.NLRI) (drop bool) {
@@ -287,7 +287,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	}
 
 	// prefixes in the MP part?
-	if mp := u.Attrs.MPPrefixes(attrs.ATTR_MP_REACH); mp != nil && s.afs[mp.AF] {
+	if mp := u.MP(attrs.ATTR_MP_REACH).Prefixes(); mp != nil && s.afs[mp.AF] {
 		before += len(mp.Prefixes)
 		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropReach)
 		after += len(mp.Prefixes)
@@ -360,7 +360,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	}
 
 	// prefixes in the MP part?
-	if mp := u.Attrs.MPPrefixes(attrs.ATTR_MP_UNREACH); mp != nil && s.afs[mp.AF] {
+	if mp := u.MP(attrs.ATTR_MP_UNREACH).Prefixes(); mp != nil && s.afs[mp.AF] {
 		before += len(mp.Prefixes)
 		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropUnreach)
 		after += len(mp.Prefixes)

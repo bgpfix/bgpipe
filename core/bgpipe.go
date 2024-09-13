@@ -98,11 +98,6 @@ func (b *Bgpipe) Run() error {
 	// attach our b.Start
 	b.Pipe.Options.OnStart(b.onStart)
 
-	// if ap, ok := b.Pipe.Caps.Use(caps.CAP_ADDPATH).(*caps.AddPath); ok {
-	// 	ap.Add(af.AF_IPV4_UNICAST, caps.ADDPATH_BIDIR)
-	// 	ap.Add(af.AF_IPV6_UNICAST, caps.ADDPATH_BIDIR)
-	// }
-
 	// start the pipeline and block
 	b.Pipe.Start() // will call b.Start
 	b.Pipe.Wait()  // until error or all processing is done
