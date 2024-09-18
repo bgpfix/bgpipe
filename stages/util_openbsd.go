@@ -15,8 +15,13 @@ func tcp_md5(md5pass string) func(net, addr string, c syscall.RawConn) error {
 	return func(net, addr string, c syscall.RawConn) error {
 
     // * Check whether the tcpmd5 SA already exists
-    // * If it doesn't, create a temporary file that can be used to load rules
-    // * Execute ipsecctl -f /path/to/file to load the sa
+    // * If it doesn't, depending on flags:
+    //   * return an error and docs around setting up the sa.
+    //   or
+    //   * create a temporary file that can be used to load rules
+    //   * Execute ipsecctl -f /path/to/file to load the sa
+
+    // https://blog.habets.se/2019/11/TCP-MD5.html
 
 		// setsockopt
 		var err error
