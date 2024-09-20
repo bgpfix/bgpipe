@@ -28,6 +28,16 @@ func (b *Bgpipe) Configure() error {
 		zerolog.SetGlobalLevel(lvl)
 	}
 
+	// capabilities?
+	if v := b.K.Bytes("caps"); len(v) > 0 {
+		err := b.Pipe.Caps.FromJSON(v)
+		if err != nil {
+			return fmt.Errorf("could not apply --caps: %w", err)
+		} else {
+			b.Debug().Str("caps", b.Pipe.Caps.String()).Msg("parsed capabilities")
+		}
+	}
+
 	return nil
 }
 
@@ -40,12 +50,13 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
-	f.StringSliceP("kill", "k", []string{}, "kill session on any of these events")
+	f.StringSliceP("kill", "k", nil, "kill session on any of these events")
 	f.BoolP("stdin", "i", false, "read JSON from stdin")
 	f.BoolP("stdout", "o", false, "write JSON to stdout")
 	f.BoolP("stdin-wait", "I", false, "like --stdin but wait for EVENT_ESTABLISHED")
 	f.BoolP("stdout-wait", "O", false, "like --stdout but wait for EVENT_EOR")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
+	f.String("caps", "", "use given BGP capabilities (in JSON object format)")
 }
 
 func (b *Bgpipe) usage() {
