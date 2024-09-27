@@ -29,12 +29,13 @@ func (b *Bgpipe) Configure() error {
 	}
 
 	// capabilities?
-	if v := b.K.Bytes("caps"); len(v) > 0 {
-		err := b.Pipe.Caps.FromJSON(v)
+	for i, fpath := range b.K.Strings("caps") {
+		v, err := os.ReadFile(fpath)
 		if err != nil {
-			return fmt.Errorf("could not apply --caps: %w", err)
-		} else {
-			b.Debug().Str("caps", b.Pipe.Caps.String()).Msg("parsed capabilities")
+			return fmt.Errorf("could not read --caps[%d]: %w", i, err)
+		}
+		if err := b.Pipe.Caps.FromJSON(v); err != nil {
+			return fmt.Errorf("could not parse --caps[%d]: %w", i, err)
 		}
 	}
 
@@ -56,7 +57,7 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("stdin-wait", "I", false, "like --stdin but wait for EVENT_ESTABLISHED")
 	f.BoolP("stdout-wait", "O", false, "like --stdout but wait for EVENT_EOR")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
-	f.String("caps", "", "use given BGP capabilities (in JSON object format)")
+	f.StringSliceP("caps", "C", nil, "read BGP capabilities from given JSON file(s)")
 }
 
 func (b *Bgpipe) usage() {
