@@ -51,13 +51,6 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 		// wait for all stages started in this event to finish Prepare()
 		ev.Wait()
 
-		// catch stage panics
-		// defer func() {
-		// 	if r := recover(); r != nil {
-		// 		s.B.Cancel(s.Errorf("panic: %v", r)) // game over
-		// 	}
-		// }()
-
 		// block on Run if context still valid
 		err := context.Cause(s.Ctx)
 		if err == nil {

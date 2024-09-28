@@ -15,7 +15,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/bgpfix/bgpfix/af"
+	"github.com/bgpfix/bgpfix/afi"
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
@@ -26,9 +26,9 @@ import (
 type Limit struct {
 	*core.StageBase
 
-	afs  map[af.AF]bool // address families to consider
-	ipv4 bool           // consider IPv4
-	ipv6 bool           // consider IPv6
+	afs  map[afi.AS]bool // address families to consider
+	ipv4 bool            // consider IPv4
+	ipv6 bool            // consider IPv6
 
 	minlen int // max prefix length
 	maxlen int // max prefix length
@@ -77,7 +77,7 @@ func NewLimit(parent *core.StageBase) core.Stage {
 
 	so.Bidir = true // will aggregate both directions
 
-	s.afs = make(map[af.AF]bool)
+	s.afs = make(map[afi.AS]bool)
 	s.session = xsync.NewMapOf[nlri.NLRI, *limitPrefix]()
 	s.origin = xsync.NewMapOf[uint32, *limitCounter]()
 	s.block = xsync.NewMapOf[uint64, *limitCounter]()
@@ -95,15 +95,15 @@ func (s *Limit) Attach() error {
 		s.ipv4 = true // by default, IPv4 only
 	}
 	if s.ipv4 {
-		s.afs[af.AF_IPV4_UNICAST] = true
+		s.afs[afi.AS_IPV4_UNICAST] = true
 		if k.Bool("multicast") {
-			s.afs[af.AF_IPV4_MULTICAST] = true
+			s.afs[afi.AS_IPV4_MULTICAST] = true
 		}
 	}
 	if s.ipv6 {
-		s.afs[af.AF_IPV6_UNICAST] = true
+		s.afs[afi.AS_IPV6_UNICAST] = true
 		if k.Bool("multicast") {
-			s.afs[af.AF_IPV6_MULTICAST] = true
+			s.afs[afi.AS_IPV6_MULTICAST] = true
 		}
 	}
 
@@ -287,7 +287,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	}
 
 	// prefixes in the MP part?
-	if mp := u.MP(attrs.ATTR_MP_REACH).Prefixes(); mp != nil && s.afs[mp.AF] {
+	if mp := u.MP(attrs.ATTR_MP_REACH).Prefixes(); mp != nil && s.afs[mp.AS] {
 		before += len(mp.Prefixes)
 		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropReach)
 		after += len(mp.Prefixes)
@@ -360,7 +360,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	}
 
 	// prefixes in the MP part?
-	if mp := u.MP(attrs.ATTR_MP_UNREACH).Prefixes(); mp != nil && s.afs[mp.AF] {
+	if mp := u.MP(attrs.ATTR_MP_UNREACH).Prefixes(); mp != nil && s.afs[mp.AS] {
 		before += len(mp.Prefixes)
 		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropUnreach)
 		after += len(mp.Prefixes)

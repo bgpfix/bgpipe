@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bgpfix/bgpfix/caps"
-	"github.com/bgpfix/bgpfix/msg"
+	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/rs/zerolog"
 )
@@ -160,11 +160,11 @@ func (s *StageBase) attach() error {
 
 	// set s.Dir
 	if s.IsBidir {
-		s.Dir = msg.DIR_LR
+		s.Dir = dir.DIR_LR
 	} else if s.IsLeft {
-		s.Dir = msg.DIR_L
+		s.Dir = dir.DIR_L
 	} else {
-		s.Dir = msg.DIR_R
+		s.Dir = dir.DIR_R
 	}
 
 	// call child attach, collect what was attached to
@@ -245,7 +245,7 @@ func (s *StageBase) attach() error {
 		li.Id = s.Index
 		li.FilterValue = fid
 
-		if li.Dir == msg.DIR_L {
+		if li.Dir == dir.DIR_L {
 			li.Reverse = true // CLI gives L stages in reverse
 			li.CallbackFilter = frev
 		} else {

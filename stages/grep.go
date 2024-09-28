@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bgpfix/bgpfix/af"
+	"github.com/bgpfix/bgpfix/afi"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
@@ -31,7 +31,7 @@ type Grep struct {
 	opt_type        []msg.Type
 	opt_reach       bool
 	opt_unreach     bool
-	opt_af          []af.AF
+	opt_af          []afi.AS
 	opt_asn         []uint32
 	opt_origin      []uint32
 	// opt_prefix  []netip.Prefix
@@ -174,17 +174,17 @@ func (s *Grep) Attach() error {
 
 	// parse AF
 	for _, afs := range k.Strings("af") {
-		var af af.AF
-		if err := af.FromJSON([]byte(afs)); err != nil {
+		var as afi.AS
+		if err := as.FromJSON([]byte(afs)); err != nil {
 			return fmt.Errorf("--af %s: %w", afs, err)
 		}
-		s.opt_af = append(s.opt_af, af)
+		s.opt_af = append(s.opt_af, as)
 	}
 	if k.Bool("ipv4") {
-		s.opt_af = append(s.opt_af, af.AF_IPV4_UNICAST)
+		s.opt_af = append(s.opt_af, afi.AS_IPV4_UNICAST)
 	}
 	if k.Bool("ipv6") {
-		s.opt_af = append(s.opt_af, af.AF_IPV6_UNICAST)
+		s.opt_af = append(s.opt_af, afi.AS_IPV6_UNICAST)
 	}
 	if len(s.opt_af) > 0 {
 		s.opt_type = append(s.opt_type, msg.UPDATE) // --type UPDATE
@@ -493,8 +493,8 @@ func (s *Grep) check_unreach(m *msg.Msg) bool {
 }
 
 func (s *Grep) check_af(m *msg.Msg) bool {
-	val := m.Update.AF()
-	if val == af.AF_INVALID {
+	val := m.Update.AS()
+	if val == afi.AS_INVALID {
 		return false
 	}
 

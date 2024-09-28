@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/v2"
@@ -89,9 +90,9 @@ func (b *Bgpipe) Run() error {
 	// print the pipeline and quit?
 	if b.K.Bool("explain") {
 		fmt.Printf("--> MESSAGES FLOWING RIGHT -->\n")
-		b.StageDump(msg.DIR_R, os.Stdout)
+		b.StageDump(dir.DIR_R, os.Stdout)
 		fmt.Printf("\n<-- MESSAGES FLOWING LEFT <--\n")
-		b.StageDump(msg.DIR_L, os.Stdout)
+		b.StageDump(dir.DIR_L, os.Stdout)
 		return nil
 	}
 
@@ -233,7 +234,7 @@ func (b *Bgpipe) StageCount() int {
 }
 
 // StageDump prints all stages in dir direction in textual form to w (by default stdout)
-func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
+func (b *Bgpipe) StageDump(d dir.Dir, w io.Writer) (total int) {
 	// use default w?
 	if w == nil {
 		w = os.Stdout
@@ -256,7 +257,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 			indices = append(indices, i)
 		}
 	}
-	if dir == msg.DIR_L {
+	if d == dir.DIR_L {
 		slices.Reverse(indices)
 	}
 
@@ -269,7 +270,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		var cb_all bool
 		var cb_types []msg.Type
 		for _, cb := range s.callbacks {
-			if cb.Dir != 0 && cb.Dir&dir == 0 {
+			if cb.Dir != 0 && cb.Dir&d == 0 {
 				continue
 			}
 			cb_count++
@@ -289,7 +290,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		// analyze inputs
 		var in_count int
 		for _, in := range s.inputs {
-			if in.Dir&dir == 0 {
+			if in.Dir&d == 0 {
 				continue
 			}
 			in_count++
@@ -300,7 +301,7 @@ func (b *Bgpipe) StageDump(dir msg.Dir, w io.Writer) (total int) {
 		var eh_all bool
 		var eh_types []string
 		for _, eh := range s.handlers {
-			if eh.Dir != 0 && eh.Dir&dir == 0 {
+			if eh.Dir != 0 && eh.Dir&d == 0 {
 				continue
 			}
 			eh_count++

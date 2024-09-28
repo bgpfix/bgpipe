@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/bgpfix/bgpfix/msg"
+	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
@@ -87,7 +87,7 @@ type StageBase struct {
 	IsRight bool    // write L->R msgs + capture L->R msgs?
 	IsLeft  bool    // write R->L msgs + capture R->L msgs?
 	IsBidir bool    // true iff IsRight && IsLeft
-	Dir     msg.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
+	Dir     dir.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
