@@ -7,6 +7,9 @@ import (
 	"slices"
 	"strings"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/rs/zerolog"
 )
@@ -18,9 +21,10 @@ func (b *Bgpipe) Configure() error {
 	if err != nil {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
 	}
+	k := b.K
 
 	// debugging level
-	if ll := b.K.String("log"); len(ll) > 0 {
+	if ll := k.String("log"); len(ll) > 0 {
 		lvl, err := zerolog.ParseLevel(ll)
 		if err != nil {
 			return err
@@ -28,8 +32,15 @@ func (b *Bgpipe) Configure() error {
 		zerolog.SetGlobalLevel(lvl)
 	}
 
+	// pprof?
+	if v := k.String("pprof"); len(v) > 0 {
+		go func() {
+			b.Fatal().Err(http.ListenAndServe(v, nil)).Msg("pprof failed")
+		}()
+	}
+
 	// capabilities?
-	for i, fpath := range b.K.Strings("caps") {
+	for i, fpath := range k.Strings("caps") {
 		v, err := os.ReadFile(fpath)
 		if err != nil {
 			return fmt.Errorf("could not read --caps[%d]: %w", i, err)
@@ -50,6 +61,7 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("version", "v", false, "print detailed version info and quit")
 	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
+	f.String("pprof", "", "bind pprof to given listen address")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
 	f.StringSliceP("kill", "k", nil, "kill session on any of these events")
 	f.BoolP("stdin", "i", false, "read JSON from stdin")
