@@ -9,6 +9,7 @@ import (
 
 	"github.com/bgpfix/bgpfix/afi"
 	"github.com/bgpfix/bgpfix/msg"
+	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 )
@@ -34,10 +35,9 @@ type Grep struct {
 	opt_af          []afi.AS
 	opt_asn         []uint32
 	opt_origin      []uint32
-	// opt_prefix  []netip.Prefix
-	// opt_prefix_strict  []netip.Prefix
-	opt_nexthop []netip.Prefix
-	opt_tag     map[string]string
+	opt_prefix      []netip.Prefix
+	opt_nexthop     []netip.Prefix
+	opt_tag         map[string]string
 }
 
 func NewGrep(parent *core.StageBase) core.Stage {
@@ -72,8 +72,7 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	f.Bool("ipv6", false, "add IPV6/UNICAST to --af")
 	f.IntSlice("asn", nil, "require ASNs in the AS_PATH")
 	f.IntSlice("origin", nil, "require origin ASN")
-	// f.StringSlice("prefix", nil, "drop non-matching prefixes, or the whole message if nothing left")
-	// f.StringSlice("prefix-strict", nil, "require match on ALL message prefixes")
+	f.StringSlice("prefix", nil, "require given IP prefixes")
 	f.StringSlice("nexthop", nil, "require NEXT_HOP inside given prefix(es)")
 	f.StringSlice("tag", nil, "require context tag values (format: key=value)")
 
@@ -214,6 +213,19 @@ func (s *Grep) Attach() error {
 		s.opt_type = append(s.opt_type, msg.UPDATE) // --type UPDATE
 	}
 
+	// parse IP prefixes
+	for _, ps := range k.Strings("prefix") {
+		p, err := netip.ParsePrefix(ps)
+		if err != nil {
+			return fmt.Errorf("--prefix %s: %w", ps, err)
+		}
+		s.opt_prefix = append(s.opt_prefix, p)
+	}
+	// require UPDATEs if --prefix used
+	if len(s.opt_prefix) > 0 {
+		s.opt_type = append(s.opt_type, msg.UPDATE) // --type UPDATE
+	}
+
 	// dedup --type
 	slices.Sort(s.opt_type)
 	s.opt_type = slices.Compact(s.opt_type)
@@ -243,6 +255,9 @@ func (s *Grep) Attach() error {
 		s.enabled_matches++
 	}
 	if len(s.opt_nexthop) > 0 {
+		s.enabled_matches++
+	}
+	if len(s.opt_prefix) > 0 {
 		s.enabled_matches++
 	}
 	if len(s.opt_tag) > 0 {
@@ -437,6 +452,11 @@ func (s *Grep) check(m *msg.Msg) (accept_message bool) {
 		return
 	}
 
+	// check prefix?
+	if !run_match(s.check_prefix, len(s.opt_prefix) > 0) {
+		return
+	}
+
 	// if AND, no failures so far is a success
 	// if OR, no successes so far is a failure
 	return !s.opt_or_match
@@ -544,18 +564,39 @@ func (s *Grep) check_origin(m *msg.Msg) bool {
 
 func (s *Grep) check_nexthop(m *msg.Msg) bool {
 	nh := m.Update.NextHop()
-	if nh == nil {
+	if !nh.IsValid() {
 		return false
 	}
 
-	// check at AS_PATH origin
 	for _, p := range s.opt_nexthop {
-		ok := p.Contains(*nh)
+		ok := p.Contains(nh)
 		switch s.check_if(ok) {
 		case 1:
 			return true
 		case -1:
 			return false
+		}
+	}
+
+	return s.opt_and_value
+}
+
+func (s *Grep) check_prefix(m *msg.Msg) bool {
+	// collect all prefixes in message
+	var inmsg []nlri.NLRI
+	inmsg = m.Update.GetReach(inmsg)
+	inmsg = m.Update.GetUnreach(inmsg)
+
+	for _, mp := range inmsg {
+		for _, p := range s.opt_prefix {
+			// FIXME: not overlaps?, must fully contain
+			ok := p.Overlaps(mp.Prefix)
+			switch s.check_if(ok) {
+			case 1:
+				return true
+			case -1:
+				return false
+			}
 		}
 	}
 
