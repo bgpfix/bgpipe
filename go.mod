@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.23.1
 
 require (
-	github.com/bgpfix/bgpfix v0.0.0-00010101000000-000000000000
+	github.com/bgpfix/bgpfix v0.4.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/knadh/koanf/providers/posflag v0.1.0
 	github.com/knadh/koanf/v2 v2.1.1
@@ -25,5 +25,3 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 )
-
-replace github.com/bgpfix/bgpfix => ../bgpfix
