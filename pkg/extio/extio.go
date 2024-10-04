@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/bgpfix/bgpfix/caps"
+	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -121,26 +121,9 @@ func (eio *Extio) Attach() error {
 	}
 
 	// parse --type
-	for _, v := range k.Strings("type") {
-		// skip empty types
-		if len(v) == 0 {
-			continue
-		}
-
-		// canonical name?
-		typ, err := msg.TypeString(v)
-		if err == nil {
-			eio.opt_type = append(eio.opt_type, typ)
-			continue
-		}
-
-		// a plain integer?
-		tnum, err2 := strconv.Atoi(v)
-		if err2 == nil && tnum >= 0 && tnum <= 0xff {
-			eio.opt_type = append(eio.opt_type, msg.Type(tnum))
-			continue
-		}
-
+	var err error
+	eio.opt_type, err = core.ParseTypes(k.Strings("type"), nil)
+	if err != nil {
 		return fmt.Errorf("--type: %w", err)
 	}
 
@@ -159,19 +142,19 @@ func (eio *Extio) Attach() error {
 	// not write-only? read input to bgpipe
 	if !eio.opt_write {
 		if eio.IsBidir {
-			eio.InputL = p.AddInput(msg.DIR_L)
-			eio.InputR = p.AddInput(msg.DIR_R)
+			eio.InputL = p.AddInput(dir.DIR_L)
+			eio.InputR = p.AddInput(dir.DIR_R)
 			if eio.IsLast {
 				eio.InputD = eio.InputL
 			} else {
 				eio.InputD = eio.InputR
 			}
 		} else if eio.IsLeft {
-			eio.InputL = p.AddInput(msg.DIR_L)
+			eio.InputL = p.AddInput(dir.DIR_L)
 			eio.InputR = eio.InputL // redirect R messages to L
 			eio.InputD = eio.InputL
 		} else {
-			eio.InputR = p.AddInput(msg.DIR_R)
+			eio.InputR = p.AddInput(dir.DIR_R)
 			eio.InputL = eio.InputR // redirect L messages to R
 			eio.InputD = eio.InputR
 		}
@@ -272,9 +255,9 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (parse_err error)
 	// sail!
 	m.CopyData()
 	switch m.Dir {
-	case msg.DIR_L:
+	case dir.DIR_L:
 		return eio.InputL.WriteMsg(m)
-	case msg.DIR_R:
+	case dir.DIR_R:
 		return eio.InputR.WriteMsg(m)
 	default:
 		return eio.InputD.WriteMsg(m)

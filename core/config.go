@@ -7,6 +7,9 @@ import (
 	"slices"
 	"strings"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/rs/zerolog"
 )
@@ -18,14 +21,40 @@ func (b *Bgpipe) Configure() error {
 	if err != nil {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
 	}
+	k := b.K
 
 	// debugging level
-	if ll := b.K.String("log"); len(ll) > 0 {
+	if ll := k.String("log"); len(ll) > 0 {
 		lvl, err := zerolog.ParseLevel(ll)
 		if err != nil {
 			return err
 		}
 		zerolog.SetGlobalLevel(lvl)
+	}
+
+	// pprof?
+	if v := k.String("pprof"); len(v) > 0 {
+		go func() {
+			b.Fatal().Err(http.ListenAndServe(v, nil)).Msg("pprof failed")
+		}()
+	}
+
+	// capabilities?
+	switch v := k.String("caps"); {
+	case len(v) == 0: // none
+		break
+	case v[0] == '@': // read from file
+		jsv, err := os.ReadFile(v[1:])
+		if err != nil {
+			return fmt.Errorf("could not read --caps file: %w", err)
+		}
+		if err := b.Pipe.Caps.FromJSON(jsv); err != nil {
+			return fmt.Errorf("could not parse --caps file: %w", err)
+		}
+	default: // parse JSON
+		if err := b.Pipe.Caps.FromJSON([]byte(v)); err != nil {
+			return fmt.Errorf("could not parse --caps: %w", err)
+		}
 	}
 
 	return nil
@@ -37,14 +66,17 @@ func (b *Bgpipe) addFlags() {
 	f.Usage = b.usage
 	f.SetInterspersed(false)
 	f.BoolP("version", "v", false, "print detailed version info and quit")
+	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
+	f.String("pprof", "", "bind pprof to given listen address")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
-	f.StringSliceP("kill", "k", []string{}, "kill session on any of these events")
+	f.StringSliceP("kill", "k", nil, "kill session on any of these events")
 	f.BoolP("stdin", "i", false, "read JSON from stdin")
 	f.BoolP("stdout", "o", false, "write JSON to stdout")
 	f.BoolP("stdin-wait", "I", false, "like --stdin but wait for EVENT_ESTABLISHED")
 	f.BoolP("stdout-wait", "O", false, "like --stdout but wait for EVENT_EOR")
 	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
+	f.String("caps", "", "use given BGP capabilities (JSON format)")
 }
 
 func (b *Bgpipe) usage() {
@@ -206,28 +238,35 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 		f.Usage = s.usage
 	}
 
-	// parse stage flags, export to koanf
+	// parse stage flags
 	if err := f.Parse(args); err != nil {
 		return args, s.Errorf("%w", err)
-	} else {
-		s.K.Load(posflag.Provider(f, ".", s.K), nil)
 	}
 
-	// rewrite required CLI arguments?
-	sargs := f.Args()
+	// export flags to koanf, collect remaining args
+	s.K.Load(posflag.Provider(f, ".", s.K), nil)
+	rem := f.Args()
+
+	// compare original args vs remaining -> consumed flags
+	consumed := max(0, len(args)-len(rem))
+	s.Flags = args[:consumed]
+
+	// rewrite required arguments?
 	for _, name := range o.Args {
-		if len(sargs) == 0 {
-			return sargs, s.Errorf("needs an argument: %s", name)
+		if len(rem) == 0 {
+			return rem, s.Errorf("needs an argument: %s", name)
 		}
-		s.K.Set(name, sargs[0])
-		sargs = sargs[1:]
+		s.K.Set(name, rem[0])
+		s.Args = append(s.Args, rem[0])
+		rem = rem[1:]
 	}
 
 	// consume the rest of arguments?
 	if v, _ := f.GetBool("args"); v {
-		s.K.Set("args", sargs)
+		s.K.Set("args", rem)
+		s.Args = append(s.Args, rem...)
 		return nil, nil
 	}
 
-	return sargs, nil
+	return rem, nil
 }

@@ -23,11 +23,8 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	check_fatal := func(err error) bool {
 		if err == nil {
 			err = context.Cause(s.Ctx)
-			if err == context.Canceled {
-				err = nil
-			}
 		}
-		if err == nil || errors.Is(err, ErrStageStopped) {
+		if err == nil || err == context.Canceled || errors.Is(err, ErrStageStopped) {
 			return false
 		} else {
 			s.B.Cancel(s.Errorf("%w", err)) // game over
@@ -53,13 +50,6 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	go func() {
 		// wait for all stages started in this event to finish Prepare()
 		ev.Wait()
-
-		// catch stage panics
-		// defer func() {
-		// 	if r := recover(); r != nil {
-		// 		s.B.Cancel(s.Errorf("panic: %v", r)) // game over
-		// 	}
-		// }()
 
 		// block on Run if context still valid
 		err := context.Cause(s.Ctx)

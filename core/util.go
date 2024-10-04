@@ -7,7 +7,22 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/knadh/koanf/v2"
+	"github.com/bgpfix/bgpfix/msg"
+)
+
+const (
+	StyleNone      = ""
+	StyleBlack     = "\033[30m"
+	StyleRed       = "\033[31m"
+	StyleGreen     = "\033[32m"
+	StyleYellow    = "\033[33m"
+	StyleBlue      = "\033[34m"
+	StyleMagenta   = "\033[35m"
+	StyleCyan      = "\033[36m"
+	StyleWhite     = "\033[37m"
+	StyleBold      = "\033[1m"
+	StyleUnderline = "\033[4m"
+	StyleReset     = "\033[0m"
 )
 
 func IsAddr(v string) bool {
@@ -47,58 +62,83 @@ func IsFile(v string) bool {
 	}
 }
 
-// parseEvents returns events from given koanf key, or nil if none found
-func (b *Bgpipe) parseEvents(k *koanf.Koanf, key string, sds ...string) []string {
-	input := k.Strings(key)
-	if len(input) == 0 {
-		return nil
-	}
-
-	// rewrite
-	var output []string
-	for _, et := range input {
-		// special values
-		if et == "all" || et == "*" {
-			output = append(output, "*")
+// ParseEvents parses events in src and returns the result, or nil.
+// If stage_defaults is given, events like "foobar" are translated to "foobar/stage_defaults[:]".
+func ParseEvents(src []string, stage_defaults ...string) []string {
+	var dst []string
+	for _, event := range src {
+		// special catch-all value?
+		if event == "all" || event == "*" {
+			dst = append(dst[:0], "*")
 			continue
 		}
 
-		// split slash/dot.event
-		slash, et, has_slash := strings.Cut(et, "/")
+		// split event into slash/dot.name
+		slash, name, has_slash := strings.Cut(event, "/")
 		if !has_slash {
-			et = slash
+			name = slash
 			slash = ""
 		}
-		dot, et, has_dot := strings.Cut(et, ".")
+		dot, name, has_dot := strings.Cut(name, ".")
 		if !has_dot {
-			et = dot
+			name = dot
 			dot = ""
 		}
-		et_lower := strings.ToLower(et)
-		et_upper := strings.ToUpper(et)
+
+		// get name as UPPER / lower case
+		UPPER := strings.ToUpper(name)
+		lower := strings.ToLower(name)
 
 		switch {
 		case has_dot && has_slash:
-			et = fmt.Sprintf("%s/%s.%s", slash, dot, et_upper)
+			// eg. foo/bar.name -> foo/bar.NAME
+			name = fmt.Sprintf("%s/%s.%s", slash, dot, UPPER)
 		case has_dot:
-			et = fmt.Sprintf("bgpfix/%s.%s", dot, et_upper)
+			// eg. bar.name -> bgpfix/bar.NAME
+			name = fmt.Sprintf("bgpfix/%s.%s", dot, UPPER)
 		case has_slash:
-			et = fmt.Sprintf("%s/%s", slash, et) // stage event
-		default:
-			// stage name + stage defaults?
-			if et == et_lower && len(sds) > 0 {
-				for _, sd := range sds {
-					output = append(output, fmt.Sprintf("%s/%s", et, sd))
-				}
-				continue
+			// eg. foo/name -> foo/name (specific stage event)
+			name = fmt.Sprintf("%s/%s", slash, name)
+		case name == lower && len(stage_defaults) > 0:
+			// eg. foo -> foo/sds[0], foo/sds[1], etc. (default stage events)
+			for _, sd := range stage_defaults {
+				dst = append(dst, fmt.Sprintf("%s/%s", name, sd))
 			}
-
-			et = fmt.Sprintf("bgpfix/pipe.%s", et_upper)
+			continue
+		default:
+			// eg. established -> bgpfix/pipe.ESTABLISHED
+			name = fmt.Sprintf("bgpfix/pipe.%s", UPPER)
 		}
 
-		output = append(output, et)
+		dst = append(dst, name)
 	}
 
-	b.Trace().Msgf("parseEvents(): %s -> %s", input, output)
-	return output
+	return dst
+}
+
+func ParseTypes(src []string, dst []msg.Type) ([]msg.Type, error) {
+	for _, t := range src {
+		// skip empty types
+		if len(t) == 0 {
+			continue
+		}
+
+		// canonical name?
+		typ, err := msg.TypeString(t)
+		if err == nil {
+			dst = append(dst, typ)
+			continue
+		}
+
+		// a plain integer?
+		tnum, err2 := strconv.ParseUint(t, 0, 8)
+		if err2 == nil {
+			dst = append(dst, msg.Type(tnum))
+			continue
+		}
+
+		return dst, err
+	}
+
+	return dst, nil
 }
