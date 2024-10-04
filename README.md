@@ -13,7 +13,7 @@ For example, bgpipe can be used to run:
  * IP prefix limits enforcer
  * router control plane firewall (drop, modify, and synthesize BGP messages)
  
-The vision for bgpipe is to be a powerful *BGP firewall* that transparently secures, enhances, and audits existing BGP speakers. The hope is to bolster open source innovation in the closed world of big BGP router vendors.
+The vision for bgpipe is to be a powerful *BGP firewall* that transparently secures, enhances, and audits existing BGP speakers. The hope is to bolster open source innovation in the closed world of big BGP router vendors. See the [RIPE 88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/) for more background.
 
 Under the hood, it works as a pipeline of data processing stages that slice and dice streams of BGP messages. See [BGPFix docs](https://github.com/bgpfix/bgpfix) for more background.
 
@@ -24,18 +24,20 @@ See [bgpipe releases](https://github.com/bgpfix/bgpipe/releases/) on GitHub, or 
 ```
 # install golang, eg. https://go.dev/dl/
 $ go version
-go version go1.22.3 linux/amd64
+go version go1.23.2 linux/amd64
 
 # install bgpipe
 $ go install github.com/bgpfix/bgpipe@latest
 
 # bgpipe has built-in docs
 $ bgpipe -h
-Usage: bgpipe [OPTIONS] [--] STAGE [STAGE-OPTIONS] [STAGE-ARGUMENTS] [--] ...
+Usage: bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGUMENTS] [--] STAGE2...
 
 Options:
   -v, --version          print detailed version info and quit
+  -n, --explain          print the pipeline as configured and quit
   -l, --log string       log level (debug/info/warn/error/disabled) (default "info")
+      --pprof string     bind pprof to given listen address
   -e, --events strings   log given events ("all" means all events) (default [PARSE,ESTABLISHED,EOR])
   -k, --kill strings     kill session on any of these events
   -i, --stdin            read JSON from stdin
@@ -43,10 +45,12 @@ Options:
   -I, --stdin-wait       like --stdin but wait for EVENT_ESTABLISHED
   -O, --stdout-wait      like --stdout but wait for EVENT_EOR
   -2, --short-asn        use 2-byte ASN numbers
+      --caps string      use given BGP capabilities (JSON format)
 
 Supported stages (run stage -h to get its help)
   connect                connect to a BGP endpoint over TCP
   exec                   filter messages through a background process
+  grep                   drop messages that do not match
   limit                  limit prefix lengths and counts
   listen                 wait for a BGP client to connect over TCP
   pipe                   filter messages through a named pipe
@@ -65,6 +69,7 @@ Description: connect to a BGP endpoint over TCP
 
 Options:
       --timeout duration   connect timeout (0 means none) (default 1m0s)
+      --closed duration    half-closed timeout (0 means none) (default 1s)
       --md5 string         TCP MD5 password
 
 Common Options:
@@ -121,6 +126,12 @@ $ bgpipe --kill limit/session \
 $ bgpipe \
   -- connect 1.2.3.4 \
   -- websocket -LR --write wss://bgpfix.com/archive?user=demo \
+  -- connect 85.232.240.179
+
+# proxy a connection dropping non-IPv4 updates
+$ bgpipe \
+  -- connect 1.2.3.4 \
+  -- grep -v --ipv4 \
   -- connect 85.232.240.179
 ```
 
