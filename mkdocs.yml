@@ -1,0 +1,5 @@
+site_name: bgpipe
+nav:
+  - Home: index.md
+theme:
+  name: material
