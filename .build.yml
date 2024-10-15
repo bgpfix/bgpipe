@@ -12,9 +12,9 @@ tasks:
       cd bgpipe
       go install .
   - setup_vether: |
-      ifconfig vether0 198.51.100.1 255.255.255.255 up
+      doas ifconfig vether0 198.51.100.1 255.255.255.0 up
   - setup_bgpd: |
-      cat <<EOF>/etc/bgpd.conf
+      doas cat <<EOF>/etc/bgpd.conf
         AS 65001
         router-id 198.51.100.1
 
@@ -29,6 +29,6 @@ tasks:
         allow to 192.0.2.1
       EOF
 
-      bgpd -vnf /etc/bgpd.conf
-      rcctl enable bgpd
-      rcctl start bgpd
+      doas bgpd -vnf /etc/bgpd.conf
+      doas rcctl enable bgpd
+      doas rcctl start bgpd
