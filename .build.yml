@@ -1,5 +1,5 @@
 image: openbsd/7.5
-shell: true
+shell: false
 secrets:
   - b2b00838-c8a8-441d-baaa-da121489d0bd
 sources:
