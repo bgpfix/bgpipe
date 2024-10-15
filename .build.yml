@@ -1,0 +1,12 @@
+image: openbsd/7.5
+shell: false
+secrets:
+  - b2b00838-c8a8-441d-baaa-da121489d0bd
+sources:
+  - git@git.sr.ht:~robertkeizer/bgpipe
+packages:
+  - go
+tasks:
+  - test: |
+      cd bgpipe
+      go install .
