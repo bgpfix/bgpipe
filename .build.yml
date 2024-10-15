@@ -12,9 +12,9 @@ tasks:
       cd bgpipe
       go install .
   - setup_networking: |
-      doas ifconfig vether0 198.51.100.1 255.255.255.0 up
-      doas ifconfig vether1 192.0.2.1 255.255.255.0 up
-      doas route -T1 add 198.51.100.0/24 192.0.2.1
+      doas ifconfig vether1 198.51.100.1 255.255.255.0 up
+      doas ifconfig vether2 192.0.2.1 255.255.255.0 up
+      doas route -T1 add default 198.51.100.1
       doas route -T1 sourceaddr 192.0.2.1
   - setup_bgpd: |
       cat <<EOF>/tmp/bgpd.conf
@@ -37,4 +37,4 @@ tasks:
       doas rcctl enable bgpd
       doas rcctl start bgpd
   - test: |
-      doas route -T1 exec /root/go/bin/bgpipe connect 198.51.100.1 stdout
+      doas route -T1 exec /home/build/go/bin/bgpipe connect 198.51.100.1 stdout
