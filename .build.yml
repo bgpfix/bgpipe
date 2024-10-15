@@ -34,4 +34,4 @@ tasks:
       doas rcctl enable bgpd
       doas rcctl start bgpd
   - test: |
-    /home/build/go/bin/bgpipe connect 198.51.100.1:1790 stdout
+      /home/build/go/bin/bgpipe connect 198.51.100.1:1790 stdout
