@@ -1,0 +1,37 @@
+image: openbsd/7.5
+shell: false
+secrets:
+  - b2b00838-c8a8-441d-baaa-da121489d0bd
+sources:
+  - git@git.sr.ht:~robertkeizer/bgpipe
+  - https://github.com/bgpfix/bgpfix.git
+packages:
+  - go
+tasks:
+  - install_bgpipe: |
+      cd bgpipe
+      go install .
+  - setup_networking: |
+      doas ifconfig vether1 198.51.100.1 255.255.255.0 up
+  - setup_bgpd: |
+      cat <<EOF>/tmp/bgpd.conf
+        AS 65001
+        router-id 198.51.100.1
+
+        listen on 198.51.100.1
+        network 198.51.100.0/24
+
+        neighbor 198.51.100.1 {
+          remote-as 65002
+        }
+
+        allow from 198.51.100.1
+        allow to 198.51.100.1
+      EOF
+
+      doas mv /tmp/bgpd.conf /etc
+      doas bgpd -vnf /etc/bgpd.conf
+      doas rcctl enable bgpd
+      doas rcctl start bgpd
+  - test: |
+      /home/build/go/bin/bgpipe connect 198.51.100.1 stdout
