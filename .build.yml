@@ -4,6 +4,7 @@ secrets:
   - b2b00838-c8a8-441d-baaa-da121489d0bd
 sources:
   - git@git.sr.ht:~robertkeizer/bgpipe
+  - https://github.com/bgpfix/bgpfix.git
 packages:
   - go
 tasks:
