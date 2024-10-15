@@ -25,8 +25,8 @@ tasks:
           remote-as 65002
         }
 
-        allow from 192.0.2.1
-        allow to 192.0.2.1
+        allow from 198.51.100.1
+        allow to 198.51.100.1
       EOF
 
       doas mv /tmp/bgpd.conf /etc
