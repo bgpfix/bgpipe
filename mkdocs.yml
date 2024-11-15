@@ -1,5 +1,5 @@
 site_name: bgpipe
 nav:
-  - Home: index.md
+  - Home: README.md
 theme:
   name: material
