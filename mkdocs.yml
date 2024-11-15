@@ -1,5 +1,31 @@
-site_name: bgpipe
+site_name: "bgpipe"
+site_url: 'https://bgpipe.org/'
+
 nav:
   - Home: README.md
 theme:
   name: material
+  features:
+    - header.autohide
+  icon:
+    logo: material/pipe-valve
+  palette:
+    - scheme: slate
+      primary: pink
+      accent: red
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+    - scheme: default
+      primary: pink
+      accent: red
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+
+extra:
+  generator: false
+
+# TODO: https://github.com/jimporter/mike
+#   version:
+#     provider: mike
