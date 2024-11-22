@@ -1,0 +1,11 @@
+/* light */
+[data-md-color-scheme="default"] {
+	--md-default-fg-color--light: #555;
+	--md-typeset-color: #222;
+}
+
+/* dark */
+[data-md-color-scheme="slate"] {
+	--md-default-fg-color--light: #aaa;
+	--md-typeset-color: #eee;
+}

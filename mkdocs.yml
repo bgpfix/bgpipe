@@ -1,5 +1,6 @@
 site_name: "bgpipe"
 site_url: 'https://bgpipe.org/'
+repo_url: https://github.com/bgpfix/bgpipe
 
 nav:
   - Home: README.md
@@ -25,7 +26,12 @@ theme:
 
 extra:
   generator: false
+  version:
+    provider: mike
+    alias: true
 
-# TODO: https://github.com/jimporter/mike
-#   version:
-#     provider: mike
+extra_css:
+  - css/extra.css
+
+extra_files:
+  - CNAME
