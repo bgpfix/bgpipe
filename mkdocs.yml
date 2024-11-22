@@ -6,20 +6,20 @@ nav:
   - Home: README.md
 theme:
   name: material
+  favicon: img/favicon.png
+  logo: img/logo-w.png
   features:
     - header.autohide
-  icon:
-    logo: material/pipe-valve
   palette:
     - scheme: slate
-      primary: pink
-      accent: red
+      primary: purple
+      accent: indigo
       toggle:
         icon: material/weather-sunny
         name: Light mode
     - scheme: default
-      primary: pink
-      accent: red
+      primary: purple
+      accent: indigo
       toggle:
         icon: material/weather-night
         name: Dark mode
@@ -32,6 +32,3 @@ extra:
 
 extra_css:
   - css/extra.css
-
-extra_files:
-  - CNAME
