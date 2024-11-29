@@ -1,15 +1,18 @@
+nav:
+  - Home: README.md
+  - Introduction: intro.md
+
 site_name: "bgpipe"
 site_url: 'https://bgpipe.org/'
 repo_url: https://github.com/bgpfix/bgpipe
 
-nav:
-  - Home: README.md
 theme:
   name: material
   favicon: img/favicon.png
   logo: img/logo-w.png
   features:
     - header.autohide
+    - content.code.copy
   palette:
     - scheme: slate
       primary: purple
@@ -32,3 +35,20 @@ extra:
 
 extra_css:
   - css/extra.css
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
