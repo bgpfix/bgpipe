@@ -1,5 +1,6 @@
 nav:
-  - Home: README.md
+  - Home: index.md
+  - Examples: examples.md
   - Introduction: intro.md
 
 site_name: "bgpipe"
