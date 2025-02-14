@@ -11,10 +11,8 @@
         <link rel="canonical" href="https://bgpipe.org/v0.9.0/examples/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../intro/">
       
-      
-        <link rel="next" href="../intro/">
       
       
       <link rel="icon" href="../img/favicon.png">
@@ -22,7 +20,7 @@
     
     
       
-        <title>Examples - bgpipe</title>
+        <title>Examples - bgpipe: a BGP firewall</title>
       
     
     
@@ -76,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#examples" class="md-skip">
+        <a href="#bgpipe-examples" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="bgpipe" class="md-header__button md-logo" aria-label="bgpipe" data-md-component="logo">
+    <a href=".." title="bgpipe: a BGP firewall" class="md-header__button md-logo" aria-label="bgpipe: a BGP firewall" data-md-component="logo">
       
   <img src="../img/logo-w.png" alt="logo">
 
@@ -109,7 +107,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            bgpipe
+            bgpipe: a BGP firewall
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -228,12 +226,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="bgpipe" class="md-nav__button md-logo" aria-label="bgpipe" data-md-component="logo">
+    <a href=".." title="bgpipe: a BGP firewall" class="md-nav__button md-logo" aria-label="bgpipe: a BGP firewall" data-md-component="logo">
       
   <img src="../img/logo-w.png" alt="logo">
 
     </a>
-    bgpipe
+    bgpipe: a BGP firewall
   </label>
   
     <div class="md-nav__source">
@@ -274,36 +272,6 @@
       
   
   
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    Examples
-  </span>
-  
-
-      </a>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
   
   
     <li class="md-nav__item">
@@ -316,6 +284,147 @@
   
 
       </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#connect-to-a-bgp-speaker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connect to a BGP speaker
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#json-to-bgp-and-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON to BGP and back
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-mrt-files-to-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      Convert MRT files to JSON
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-tcp-md5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding TCP-MD5
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stream-mrt-files-to-bgp-routers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stream MRT files to BGP routers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bgp-sed-in-the-middle-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      BGP sed-in-the-middle proxy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-prefix-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Applying prefix limits
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#archive-bgp-sessions-over-encrypted-websockets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Archive BGP sessions over encrypted WebSockets
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#grep-for-bgp-messages-in-live-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Grep for BGP messages in live sessions
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -340,6 +449,95 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#connect-to-a-bgp-speaker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connect to a BGP speaker
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#json-to-bgp-and-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON to BGP and back
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-mrt-files-to-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      Convert MRT files to JSON
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-tcp-md5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding TCP-MD5
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stream-mrt-files-to-bgp-routers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stream MRT files to BGP routers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bgp-sed-in-the-middle-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      BGP sed-in-the-middle proxy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-prefix-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Applying prefix limits
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#archive-bgp-sessions-over-encrypted-websockets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Archive BGP sessions over encrypted WebSockets
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#grep-for-bgp-messages-in-live-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Grep for BGP messages in live sessions
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -356,56 +554,67 @@
   
 
 
-<h1 id="examples">Examples</h1>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># connect to a BGP speaker, respond to OPEN, dump to JSON</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>speaker<span class="w"> </span><span class="m">1</span>.2.3.4
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># JSON to BGP and back</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>cat<span class="w"> </span>input.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>bgpipe<span class="w"> </span>-io<span class="w"> </span>speaker<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>output.json
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># dump MRT updates to JSON</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>bgpipe<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>updates.20230301.0000.bz2<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>output.json
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># proxy a connection, print the conversation to stdout by default</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># 1st stage: listen on TCP *:179 for new connection</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># 2nd stage: wait for new connection and proxy it to 1.2.3.4, adding TCP-MD5</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span>--md5<span class="w"> </span>solarwinds123<span class="w"> </span><span class="m">1</span>.2.3.4
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="c1"># a BGP speaker that streams an MRT file</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="c1"># 1st stage: active BGP speaker for AS65055</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="c1"># 2nd stage: MRT file reader, starting when the BGP session is established</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="c1"># 3rd stage: listen on TCP *:179 for new connection</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">  </span>--<span class="w"> </span>speaker<span class="w"> </span>--active<span class="w"> </span>--asn<span class="w"> </span><span class="m">65055</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>--wait<span class="w"> </span>ESTABLISHED<span class="w"> </span>updates.20230301.0000.bz2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="c1"># a BGP sed-in-the-middle proxy rewriting ASNs in OPEN messages</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>sed<span class="w"> </span>-ure<span class="w"> </span><span class="s1">&#39;/&quot;OPEN&quot;/{ s/65055/65001/g; s/57355/65055/g }&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="c1"># filter prefix lengths and add max-prefix session limits</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>bgpipe<span class="w"> </span>--kill<span class="w"> </span>limit/session<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">  </span>--<span class="w"> </span>limit<span class="w"> </span>-LR<span class="w"> </span>--ipv4<span class="w"> </span>--min-length<span class="w">  </span><span class="m">8</span><span class="w"> </span>--max-length<span class="w"> </span><span class="m">24</span><span class="w"> </span>--session<span class="w"> </span><span class="m">1000000</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="w">  </span>--<span class="w"> </span>limit<span class="w"> </span>-LR<span class="w"> </span>--ipv6<span class="w"> </span>--min-length<span class="w"> </span><span class="m">16</span><span class="w"> </span>--max-length<span class="w"> </span><span class="m">48</span><span class="w"> </span>--session<span class="w"> </span><span class="m">250000</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="c1"># stream a log of BGP session in JSON to a remote websocket</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">  </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--write<span class="w"> </span>wss://bgpfix.com/archive?user<span class="o">=</span>demo<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="c1"># proxy a connection dropping non-IPv4 updates</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>--ipv4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
+<h1 id="bgpipe-examples">bgpipe examples</h1>
+<p>The <strong>bgpipe</strong> command-line tool processes and filters BGP messages through a series of stages. Each stage performs a specific action, such as connecting to a BGP speaker, reading MRT files, or filtering BGP messages.</p>
+<p>Stages are specified in sequence, usually separated by <code>--</code>, and each stage can have its own set of options provided using flags. Global options that affect the entire bgpipe process are specified before the first stage.</p>
+<p>Below are practical examples to help you get started with <strong>bgpipe</strong>.</p>
+<h2 id="connect-to-a-bgp-speaker">Connect to a BGP speaker</h2>
+<p>Connect to a BGP speaker at IP address <code>1.2.3.4</code>. The command responds to the OPEN message from <code>1.2.3.4</code> (using the same ASN) and dumps the session in JSON format to stdout (the <code>-o</code> switch). It's useful for debugging and monitoring BGP sessions, allowing you to see the raw BGP messages.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>speaker<span class="w"> </span><span class="m">1</span>.2.3.4
+</span></code></pre></div>
+<h2 id="json-to-bgp-and-back">JSON to BGP and back</h2>
+<p>Convert a JSON input file to BGP messages, send them to a BGP speaker, and capture the output back in JSON format. This example is useful for testing BGP message processing in remote speakers.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cat<span class="w"> </span>input.json<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>bgpipe<span class="w"> </span>-io<span class="w"> </span>speaker<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>output.json
+</span></code></pre></div>
+<h2 id="convert-mrt-files-to-json">Convert MRT files to JSON</h2>
+<p>Read MRT updates from a compressed file and convert the updates to JSON format. This is particularly useful for analyzing historical BGP data stored in MRT files, which are often used for archiving BGP updates (e.g., see <a href="https://www.routeviews.org/">RouteViews.org</a>).</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>updates.20230301.0000.bz2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>output.json
+</span></code></pre></div>
+<h2 id="adding-tcp-md5">Adding TCP-MD5</h2>
+<p>Set up a proxy that listens on TCP port 179, waits for a connection, and then proxies it to <code>1.2.3.4</code> with a <a href="https://www.theregister.com/2020/12/16/solarwinds_github_password/">popular</a> TCP-MD5 password. The conversation is printed to stdout. This setup is useful for "securing" BGP sessions, ensuring that only authorized peers can establish a TCP connection. It supports multi-hop scenarios.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span>--md5<span class="w"> </span>solarwinds123<span class="w"> </span><span class="m">1</span>.2.3.4
+</span></code></pre></div>
+<h2 id="stream-mrt-files-to-bgp-routers">Stream MRT files to BGP routers</h2>
+<p>Listen for new connections on TCP port 179. Configure an active BGP speaker for <code>AS65055</code> that streams a given MRT file when the BGP session is established. This example demonstrates how to replay historical BGP data in a live BGP session, which can be useful for testing and analysis.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--<span class="w"> </span>speaker<span class="w"> </span>--active<span class="w"> </span>--asn<span class="w"> </span><span class="m">65055</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>--wait<span class="w"> </span>ESTABLISHED<span class="w"> </span>updates.20230301.0000.bz2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179
+</span></code></pre></div>
+<h2 id="bgp-sed-in-the-middle-proxy">BGP sed-in-the-middle proxy</h2>
+<p>Create a BGP proxy that connects <code>1.2.3.4</code> with <a href="https://lukasz.bromirski.net/post/bgp-w-labie-3/">85.232.240.179</a>, but rewrites ASNs in their OPEN messages using <a href="https://en.wikipedia.org/wiki/Sed">sed</a>. This is useful for quickly testing and modifying BGP sessions on the fly, allowing you to simulate different network scenarios.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>sed<span class="w"> </span>-ure<span class="w"> </span><span class="s1">&#39;/&quot;OPEN&quot;/{ s/65055/65001/g; s/57355/65055/g }&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
+</span></code></pre></div>
+<h2 id="applying-prefix-limits">Applying prefix limits</h2>
+<p>Filter BGP updates based on prefix lengths and enforce maximum prefix session limits for both IPv4 and IPv6 connections. This helps in managing and securing BGP sessions by limiting the number of prefixes, which can prevent <a href="https://kirin-attack.github.io/">resource exhaustion</a>.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span>--kill<span class="w"> </span>limit/session<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--<span class="w"> </span>limit<span class="w"> </span>-LR<span class="w"> </span>--ipv4<span class="w"> </span>--min-length<span class="w">  </span><span class="m">8</span><span class="w"> </span>--max-length<span class="w"> </span><span class="m">24</span><span class="w"> </span>--session<span class="w"> </span><span class="m">1000000</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--<span class="w"> </span>limit<span class="w"> </span>-LR<span class="w"> </span>--ipv6<span class="w"> </span>--min-length<span class="w"> </span><span class="m">16</span><span class="w"> </span>--max-length<span class="w"> </span><span class="m">48</span><span class="w"> </span>--session<span class="w"> </span><span class="m">250000</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
+</span></code></pre></div>
+<h2 id="archive-bgp-sessions-over-encrypted-websockets">Archive BGP sessions over encrypted WebSockets</h2>
+<p>Stream the BGP session log in JSON format to a remote WebSocket server for real-time monitoring and archiving. This is useful for integrating BGP session data with external monitoring systems, providing a live feed of BGP activity.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--write<span class="w"> </span>wss://bgpfix.com/archive?user<span class="o">=</span>demo<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
+</span></code></pre></div>
+<h2 id="grep-for-bgp-messages-in-live-sessions">Grep for BGP messages in live sessions</h2>
+<p>Proxy a connection between two BGP peers, dropping all IPv4 updates. This is useful for environments that wish to only support IPv6 on specific sessions. The <code>grep</code> stage allows for complex filtering based on various criteria such as message type, prefix, ASN, and more.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>--ipv4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
 </span></code></pre></div>
 
 

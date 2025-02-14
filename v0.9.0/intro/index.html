@@ -11,8 +11,10 @@
         <link rel="canonical" href="https://bgpipe.org/v0.9.0/intro/">
       
       
-        <link rel="prev" href="../examples/">
+        <link rel="prev" href="..">
       
+      
+        <link rel="next" href="../examples/">
       
       
       <link rel="icon" href="../img/favicon.png">
@@ -20,7 +22,7 @@
     
     
       
-        <title>Introduction - bgpipe</title>
+        <title>Introduction - bgpipe: a BGP firewall</title>
       
     
     
@@ -74,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-bgpipe-works" class="md-skip">
+        <a href="#what-is-bgpipe" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +96,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="bgpipe" class="md-header__button md-logo" aria-label="bgpipe" data-md-component="logo">
+    <a href=".." title="bgpipe: a BGP firewall" class="md-header__button md-logo" aria-label="bgpipe: a BGP firewall" data-md-component="logo">
       
   <img src="../img/logo-w.png" alt="logo">
 
@@ -107,7 +109,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            bgpipe
+            bgpipe: a BGP firewall
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,12 +228,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="bgpipe" class="md-nav__button md-logo" aria-label="bgpipe" data-md-component="logo">
+    <a href=".." title="bgpipe: a BGP firewall" class="md-nav__button md-logo" aria-label="bgpipe: a BGP firewall" data-md-component="logo">
       
   <img src="../img/logo-w.png" alt="logo">
 
     </a>
-    bgpipe
+    bgpipe: a BGP firewall
   </label>
   
     <div class="md-nav__source">
@@ -272,6 +274,80 @@
       
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-bgpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is bgpipe?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ripe-88-talk" class="md-nav__link">
+    <span class="md-ellipsis">
+      RIPE 88 talk
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
   
   
     <li class="md-nav__item">
@@ -284,36 +360,6 @@
   
 
       </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    Introduction
-  </span>
-  
-
-      </a>
-      
     </li>
   
 
@@ -335,8 +381,32 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-bgpipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is bgpipe?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ripe-88-talk" class="md-nav__link">
+    <span class="md-ellipsis">
+      RIPE 88 talk
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -354,11 +424,36 @@
   
 
 
-<h1 id="how-bgpipe-works">How bgpipe works?</h1>
-<p>For an introduction, watch the <a href="https://ripe88.ripe.net/archives/video/1365/">RIPE88 bgpipe talk</a> or read the <a href="https://blog.apnic.net/2024/06/11/routing-topics-at-ripe-88/">APNIC blog summary</a>.</p>
+  <h1>Introduction</h1>
+
+<h2 id="what-is-bgpipe">What is bgpipe?</h2>
+<p>bgpipe is a unique open-source tool that combines BGP monitoring with active message manipulation capabilities. While traditional BGP tools like BMP or MRT are limited to passive observation, bgpipe operates as a transparent proxy between BGP speakers, allowing real-time inspection and modification of BGP messages.</p>
+<p>At its core, bgpipe processes BGP sessions through a series of stages, where each stage performs specific actions such as message filtering, format conversion, or security enhancement. For example, you can:</p>
+<ul>
+<li>Convert BGP messages to JSON and back for easy processing</li>
+<li>Add TCP-MD5 authentication to existing BGP sessions</li>
+<li>Filter BGP updates based on prefix lengths or AS paths</li>
+<li>Apply rate limits and prefix thresholds to prevent flooding attacks</li>
+<li>Archive BGP sessions to MRT files or remote WebSocket servers</li>
+<li>Process messages through external programs like Python scripts</li>
+</ul>
+<p>bgpipe operates as a "man-in-the-middle" proxy, but with the explicit purpose of improving BGP session security and manageability. It's particularly useful for scenarios requiring BGP message manipulation, session monitoring, or enhanced security controls.</p>
+<p>For practical examples of how to use bgpipe, see the <a href="../examples/">examples section</a>.</p>
+<h2 id="ripe-88-talk">RIPE 88 talk</h2>
+<p>For a video introduction, you can watch the <a href="https://ripe88.ripe.net/archives/video/1365/">RIPE88 bgpipe talk</a>.</p>
 <video preload="metadata" style="width: 100%;" controls poster="https://ripe88.ripe.net/wp-content/themes/fluida-plus/images/webcast.jpg">
 <source type="video/mp4" src="https://ripe88.ripe.net/archive/video/pawel-foremski_bgp-pipe-open-source-bgp-reverse-proxy_side_20240523-140239.mp4">
 </video>
+
+<p>The talk was summarized in June 2024 by Geoff Huston <a href="https://blog.apnic.net/2024/06/11/routing-topics-at-ripe-88/">on the APNIC blog</a> as follows:</p>
+<blockquote>
+<p>Observing and measuring the dynamic behaviour of BGP has used a small set of tools for quite some time. There’s the BGP Monitoring Protocol (BMP, <a href="https://datatracker.ietf.org/doc/html/rfc7854">RFC 7854</a>), there’s the Multi-threaded Routing Toolkit (MRT) for BGP snapshot and update logs, and if you really want to head back to the earliest days of this work, there are scripts to interrogate a router via the command-line interface, CLI. All of these are observation tools, but they cannot alter the BGP messages that are being passed between BGP speakers.</p>
+<p>The bgpipe tool, presented by Paweł Foremski, is an interesting tool that operates both as a BGP ‘wire sniffer’ but also allows BGP messages to be altered on the fly (Figure 1).</p>
+<p><img alt="Figure 1 — bgpipe overview (from RIPE 88 presentation)" src="../img/bgpipe-flow.png" /></p>
+<p>Internally, the bgpipe process can be configured to invoke supplied ‘callback’ routines when part of a BGP message matches some provided pattern, such as a particular IP prefix, update attribute patterns or such, and it can also be configured to have ‘events’ which processing elements in bgpipe can subscribe to. Simple use cases are to take a BGP session and produce a JSON-formatted log of all BGP messages or take an unencrypted BGP session and add TCP-MD5 encryption. More advanced cases can make use of an external call interface to add route validation checks using RPKI credentials.</p>
+<p>There has been some concern about using IPv6 prefixes to perform a BGP more specific route flooding attack and its possible to use a bgpipe module to perform various forms of prefix thresholds (per origin Autonomous System (AS) or per aggregate prefix) to detect and filter out the effects of such flooding attacks.</p>
+<p>It’s early days in this work, but it is certainly an intriguing and novel BGP tool.</p>
+</blockquote>
 
 
 

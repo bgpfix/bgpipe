@@ -12,7 +12,7 @@
       
       
       
-        <link rel="next" href="examples/">
+        <link rel="next" href="intro/">
       
       
       <link rel="icon" href="img/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>bgpipe</title>
+        <title>bgpipe: a BGP firewall</title>
       
     
     
@@ -94,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="bgpipe" class="md-header__button md-logo" aria-label="bgpipe" data-md-component="logo">
+    <a href="." title="bgpipe: a BGP firewall" class="md-header__button md-logo" aria-label="bgpipe: a BGP firewall" data-md-component="logo">
       
   <img src="img/logo-w.png" alt="logo">
 
@@ -107,7 +107,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            bgpipe
+            bgpipe: a BGP firewall
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,12 +226,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="bgpipe" class="md-nav__button md-logo" aria-label="bgpipe" data-md-component="logo">
+    <a href="." title="bgpipe: a BGP firewall" class="md-nav__button md-logo" aria-label="bgpipe: a BGP firewall" data-md-component="logo">
       
   <img src="img/logo-w.png" alt="logo">
 
     </a>
-    bgpipe
+    bgpipe: a BGP firewall
   </label>
   
     <div class="md-nav__source">
@@ -324,11 +324,11 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/" class="md-nav__link">
+      <a href="intro/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Examples
+    Introduction
   </span>
   
 
@@ -344,11 +344,11 @@
   
   
     <li class="md-nav__item">
-      <a href="intro/" class="md-nav__link">
+      <a href="examples/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Introduction
+    Examples
   </span>
   
 
@@ -411,27 +411,31 @@
 
 
 <h1 id="bgpipe-a-bgp-firewall">bgpipe: a BGP firewall</h1>
-<p><strong>bgpipe</strong> is an open-source tool for processing and filtering messages exchanged by <a href="https://en.wikipedia.org/wiki/Border_Gateway_Protocol">the Border Gateway Protocol (BGP)</a>. BGP is <a href="https://learn.nsrc.org/bgp/bgp_intro">the routing protocol that makes the Internet work</a>, and thus it is considered to be <a href="https://www.whitehouse.gov/wp-content/uploads/2024/09/Roadmap-to-Enhancing-Internet-Routing-Security.pdf">critical to the global economic prosperity and security</a>.</p>
+<p><strong>bgpipe</strong> is an open-source tool for processing and filtering messages exchanged by <a href="https://en.wikipedia.org/wiki/Border_Gateway_Protocol">the Border Gateway Protocol (BGP)</a>. BGP is <a href="https://learn.nsrc.org/bgp/bgp_intro">the routing protocol that makes the Internet work</a>, and as such it is considered to be <a href="https://www.whitehouse.gov/wp-content/uploads/2024/09/Roadmap-to-Enhancing-Internet-Routing-Security.pdf">critical to the global economic prosperity and security</a>.</p>
 <p><strong>bgpipe</strong> operates as a proxy sitting between BGP routers, capable of auditing, fixing, and securing BGP sessions on the fly.
 It is based on the <a href="https://bgpfix.org/">BGPFix library</a>, distributed under the MIT license, and implemented in <a href="https://en.wikipedia.org/wiki/Go_(programming_language)">Go</a>, making it widely available for many platforms.</p>
-<p>Started in 2023 and currently in beta, bgpipe <a href="https://dl.acm.org/doi/10.1145/3634737.3657000">has its roots</a> in a research project developed at <a href="https://www.iitis.pl/en">the Institute of Theoretical and Applied Informatics, Polish Academy of Sciences</a>.</p>
+<p>Started in 2023, bgpipe <a href="https://dl.acm.org/doi/10.1145/3634737.3657000">has its roots</a> in a research project developed at <a href="https://www.iitis.pl/en">the Institute of Theoretical and Applied Informatics, Polish Academy of Sciences</a>.</p>
 <div class="grid cards">
 <ul>
+<li>
+<p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 22a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-6v7L9.5 7.5 7 9V2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/></svg></span> <strong>What is bgpipe?</strong></p>
+<p>Understand the basics<br>
+<a href="intro/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Introduction</a></p>
+</li>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m22.682 19.189-.002-.002-3.07-3.068a7.03 7.03 0 0 0 1.332-4.12 7.07 7.07 0 0 0-7.068-7.067V1.037A1.04 1.04 0 0 0 12.653.016L1.67 1.965a.83.83 0 0 0-.687.818v18.434c0 .403.29.748.687.818l10.982 1.949a1.04 1.04 0 0 0 1.22-1.022v-3.894a7.03 7.03 0 0 0 4.12-1.332l3.069 3.07c.446.446 1.17.447 1.617 0h.001c.447-.447.448-1.17.002-1.617zm-8.808-.62a6.576 6.576 0 0 1-6.569-6.57 6.576 6.576 0 0 1 6.569-6.567A6.576 6.576 0 0 1 20.442 12a6.576 6.576 0 0 1-6.568 6.568zm5.28-6.57a5.287 5.287 0 0 1-5.28 5.282c-2.913 0-5.282-2.369-5.282-5.28s2.37-5.282 5.282-5.282a5.287 5.287 0 0 1 5.28 5.28"/></svg></span> <strong>See examples</strong></p>
 <p>Get BGP pipeline ideas<br>
 <a href="examples/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Examples</a></p>
 </li>
-</ul>
-<!---   :material-book:{ .lg } __Read the docs__
-
-    Learn how bgpipe works and how to use it<br>
-    [:octicons-arrow-right-24: Introduction](intro.md)//-->
-<ul>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></span> <strong>Downloads</strong></p>
-<p>See released versions<br>
-<a href="https://github.com/bgpfix/bgpipe"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> GitHub Releases</a></p>
+<p>Download and install bgpipe<br>
+<a href="https://github.com/bgpfix/bgpipe/releases"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> GitHub Releases</a></p>
+</li>
+<li>
+<p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11.25 6a3.25 3.25 0 0 1 3.25-3.25A3.25 3.25 0 0 1 17.75 6c0 .42.33.75.75.75s.75-.33.75-.75v-.75h1.5V6a2.25 2.25 0 0 1-2.25 2.25A2.25 2.25 0 0 1 16.25 6a1.75 1.75 0 0 0-1.75-1.75A1.75 1.75 0 0 0 12.75 6H14v1.29c2.89.86 5 3.54 5 6.71a7 7 0 0 1-7 7 7 7 0 0 1-7-7c0-3.17 2.11-5.85 5-6.71V6zM22 6h2v1h-2zm-3-2V2h1v2zm1.91.38 1.42-1.42.71.71-1.42 1.42z"/></svg></span> <strong>Motivation</strong></p>
+<p>Read background paper<br>
+<a href="https://kirin-attack.github.io/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Kirin Attack</a></p>
 </li>
 </ul>
 </div>
