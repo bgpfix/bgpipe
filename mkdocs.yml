@@ -1,9 +1,9 @@
 nav:
   - Home: index.md
-  - Examples: examples.md
   - Introduction: intro.md
+  - Examples: examples.md
 
-site_name: "bgpipe"
+site_name: "bgpipe: a BGP firewall"
 site_url: 'https://bgpipe.org/'
 repo_url: https://github.com/bgpfix/bgpipe
 
