@@ -8,6 +8,7 @@ var Repo = map[string]core.NewStage{
 	"grep":      NewGrep,
 	"limit":     NewLimit,
 	"listen":    NewListen,
+	"modify":    NewModify,
 	"pipe":      NewPipe,
 	"read":      NewRead,
 	"speaker":   NewSpeaker,

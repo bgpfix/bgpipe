@@ -49,8 +49,8 @@ type StageOptions struct {
 
 	// these can be modified before Attach(), and even inside (with care)
 
-	IsProducer bool // produces messages? (writes to Line input)
-	IsConsumer bool // consumes messages? (reads from Line output)
+	IsProducer bool // produces messages? (= writes Line.Input?)
+	IsConsumer bool // consumes messages? (= reads Line.Out?)
 	IsStdin    bool // reads from stdin?
 	IsStdout   bool // writes to stdout?
 	Bidir      bool // allow -LR (bidir mode)?
