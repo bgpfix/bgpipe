@@ -50,7 +50,6 @@ func NewGrep(parent *core.StageBase) core.Stage {
 		o = &s.Options
 	)
 
-	o.Usage = "grep"
 	o.Descr = "drop messages that do not match"
 	o.Bidir = true
 
@@ -568,7 +567,7 @@ func (s *Grep) check_unreach(m *msg.Msg) bool {
 }
 
 func (s *Grep) check_af(m *msg.Msg) bool {
-	val := m.Update.AS()
+	val := m.Update.AfiSafi()
 	if val == afi.AS_INVALID {
 		return false
 	}

@@ -287,7 +287,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	}
 
 	// prefixes in the MP part?
-	if mp := u.MP(attrs.ATTR_MP_REACH).Prefixes(); mp != nil && s.afs[mp.AS] {
+	if mp := u.ReachMP().Prefixes(); mp != nil && s.afs[mp.AS] {
 		before += len(mp.Prefixes)
 		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropReach)
 		after += len(mp.Prefixes)
@@ -360,7 +360,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	}
 
 	// prefixes in the MP part?
-	if mp := u.MP(attrs.ATTR_MP_UNREACH).Prefixes(); mp != nil && s.afs[mp.AS] {
+	if mp := u.UnreachMP().Prefixes(); mp != nil && s.afs[mp.AS] {
 		before += len(mp.Prefixes)
 		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropUnreach)
 		after += len(mp.Prefixes)
