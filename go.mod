@@ -1,8 +1,8 @@
 module github.com/bgpfix/bgpipe
 
-go 1.22.0
+go 1.23.0
 
-toolchain go1.23.1
+toolchain go1.24.1
 
 require (
 	github.com/bgpfix/bgpfix v0.0.0-00010101000000-000000000000
@@ -10,10 +10,10 @@ require (
 	github.com/knadh/koanf/providers/posflag v0.1.0
 	github.com/knadh/koanf/v2 v2.1.2
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.6
 	github.com/valyala/bytebufferpool v1.0.0
-	golang.org/x/sys v0.30.0
+	golang.org/x/sys v0.32.0
 )
 
 require (

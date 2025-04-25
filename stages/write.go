@@ -35,6 +35,7 @@ func NewWrite(parent *core.StageBase) core.Stage {
 	o := &s.Options
 	o.Bidir = true
 	o.Descr = "write messages to file"
+	o.FilterIn = true
 	o.Args = []string{"path"}
 
 	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY)

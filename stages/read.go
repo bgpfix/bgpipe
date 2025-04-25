@@ -25,6 +25,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 
 	o := &s.Options
 	o.IsProducer = true
+	o.FilterOut = true
 	o.Bidir = true
 	o.Descr = "read messages from file"
 	o.Args = []string{"path"}

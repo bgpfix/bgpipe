@@ -11,32 +11,35 @@ import (
 	"github.com/bgpfix/bgpipe/core"
 )
 
-type Attr struct {
+type Update struct {
 	*core.StageBase
 
 	opt_nexthop4 netip.Addr
 	opt_nexthop6 netip.Addr
 	opt_add_com  attrs.Community
+	opt_drop_com bool
 }
 
-func NewAttr(parent *core.StageBase) core.Stage {
+func NewUpdate(parent *core.StageBase) core.Stage {
 	var (
-		s = &Attr{StageBase: parent}
+		s = &Update{StageBase: parent}
 		o = &s.Options
 	)
 
-	o.Descr = "change or add attributes in UPDATE messages"
+	o.Descr = "modify UPDATE messages"
+	o.FilterIn = true
 	o.Bidir = true
 
 	f := o.Flags
 	f.String("set-nexthop4", "", "use given next-hop address for IPv4 prefixes")
 	f.String("set-nexthop6", "", "use given next-hop address for IPv6 prefixes")
-	f.StringSlice("add-com", nil, "add given BGP community value(s)")
+	f.StringSlice("add-com", nil, "add given BGP community attribute (ASN:VALUE)")
+	f.Bool("drop-com", false, "drop all BGP community attributes")
 
 	return s
 }
 
-func (s *Attr) Attach() error {
+func (s *Update) Attach() error {
 	k := s.K
 
 	// parse --set-nexthop4
@@ -75,39 +78,53 @@ func (s *Attr) Attach() error {
 		}
 		s.opt_add_com.Add(uint16(asn), uint16(val))
 	}
+	s.opt_drop_com = k.Bool("drop-com")
 
 	// register our callback
 	s.P.OnMsg(s.modify, s.Dir, msg.UPDATE)
 	return nil
 }
 
-func (s *Attr) modify(m *msg.Msg) (accept_message bool) {
+func (s *Update) modify(m *msg.Msg) (accept_message bool) {
 	u := &m.Update
-	mp := u.ReachMP().Prefixes()
+	modified := false
 
 	// handle next-hops
+	mp := u.ReachMP().Prefixes()
 	if s.opt_nexthop4.IsValid() {
 		if len(u.Reach) > 0 {
 			nh := u.Attrs.Use(attrs.ATTR_NEXTHOP).(*attrs.IP)
 			nh.Addr = s.opt_nexthop4
+			modified = true
 		}
 
 		if mp != nil && mp.IsIPv4() {
 			mp.NextHop = s.opt_nexthop4
+			modified = true
 		}
 	}
 	if s.opt_nexthop6.IsValid() {
 		if mp != nil && mp.IsIPv6() {
 			mp.NextHop = s.opt_nexthop6
+			modified = true
 		}
 	}
 
-	// add BGP community attributes
-	if todo := s.opt_add_com; len(todo.ASN) > 0 {
+	// BGP communities
+	if s.opt_drop_com {
+		u.Attrs.Drop(attrs.ATTR_COMMUNITY)
+		modified = true
+	} else if todo := s.opt_add_com; len(todo.ASN) > 0 {
 		com := u.Attrs.Use(attrs.ATTR_COMMUNITY).(*attrs.Community)
 		for i := range todo.ASN {
 			com.Add(todo.ASN[i], todo.Value[i])
 		}
+		modified = true
+	}
+
+	// have we actually modified the message?
+	if modified {
+		m.Modified()
 	}
 
 	return true

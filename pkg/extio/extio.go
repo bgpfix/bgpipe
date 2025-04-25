@@ -161,6 +161,8 @@ func (eio *Extio) Attach() error {
 
 		eio.mrt = mrt.NewReader(p, eio.InputD)
 		eio.mrt.NoTags = eio.opt_notags
+	} else {
+		eio.Options.IsProducer = false
 	}
 
 	// not read-only? write bgpipe output
@@ -365,7 +367,7 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 		m.Time = time.Now().UTC()
 	}
 	if eio.opt_notags {
-		pipe.MsgContext(m).DropTags()
+		pipe.UseContext(m).DropTags()
 	}
 
 	// take it
@@ -380,7 +382,7 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 	}
 
 	// filter the message?
-	mx := pipe.MsgContext(m)
+	mx := pipe.UseContext(m)
 	if !eio.opt_copy {
 		// TODO: if borrow not set already, add the flag and keep m for later re-use (if enabled)
 		//       NB: in such a case, we won't be able to re-use m easily?

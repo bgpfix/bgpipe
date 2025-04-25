@@ -3,8 +3,8 @@ package stages
 import "github.com/bgpfix/bgpipe/core"
 
 var Repo = map[string]core.NewStage{
-	"attr":      NewAttr,
 	"connect":   NewConnect,
+	"drop":      NewGrep,
 	"exec":      NewExec,
 	"grep":      NewGrep,
 	"limit":     NewLimit,
@@ -14,6 +14,8 @@ var Repo = map[string]core.NewStage{
 	"speaker":   NewSpeaker,
 	"stdin":     NewStdin,
 	"stdout":    NewStdout,
+	"tag":       NewTag,
+	"update":    NewUpdate,
 	"websocket": NewWebsocket,
 	"write":     NewWrite,
 }

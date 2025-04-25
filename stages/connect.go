@@ -28,6 +28,7 @@ func NewConnect(parent *core.StageBase) core.Stage {
 
 	o.Descr = "connect to a BGP endpoint over TCP"
 	o.IsProducer = true
+	o.FilterOut = true
 	o.IsConsumer = true
 
 	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")

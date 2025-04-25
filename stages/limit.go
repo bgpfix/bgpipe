@@ -76,6 +76,7 @@ func NewLimit(parent *core.StageBase) core.Stage {
 	}
 
 	so.Bidir = true // will aggregate both directions
+	so.FilterIn = true
 
 	s.afs = make(map[afi.AS]bool)
 	s.session = xsync.NewMapOf[nlri.NLRI, *limitPrefix]()

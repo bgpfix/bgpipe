@@ -10,6 +10,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	"github.com/bgpfix/bgpfix/filter"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/rs/zerolog"
 )
@@ -86,7 +87,7 @@ Options:
 `)
 	b.F.PrintDefaults()
 	fmt.Fprintf(os.Stderr, `
-Supported stages (run stage -h to get its help)
+Supported stages (run <stage> -h to get its help)
 `)
 
 	// iterate over cmds
@@ -246,6 +247,22 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 	// export flags to koanf, collect remaining args
 	s.K.Load(posflag.Provider(f, ".", s.K), nil)
 	rem := f.Args()
+
+	// parse the stage input filter?
+	if v := s.K.String("if"); len(v) > 0 {
+		s.flt_in, err = filter.NewFilter(v)
+		if err != nil {
+			return rem, s.Errorf("could not parse --if: %w", err)
+		}
+	}
+
+	// parse the stage output filter?
+	if v := s.K.String("of"); len(v) > 0 {
+		s.flt_out, err = filter.NewFilter(v)
+		if err != nil {
+			return rem, s.Errorf("could not parse --of: %w", err)
+		}
+	}
 
 	// compare original args vs remaining -> consumed flags
 	consumed := max(0, len(args)-len(rem))

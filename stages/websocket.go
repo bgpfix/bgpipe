@@ -40,12 +40,14 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 	s := &Websocket{StageBase: parent}
 
 	o := &s.Options
-	o.Descr = "filter messages over websocket"
+	o.Descr = "process messages over websocket"
 	o.IsProducer = true
+	o.FilterIn = true
+	o.FilterOut = true
 	o.Bidir = true
 
 	f := o.Flags
-	f.Bool("listen", false, "listen on given URL instead of dialing it")
+	f.Bool("listen", false, "listen on the URL instead of connecting to it")
 	f.String("auth", "", "use HTTP basic auth ($ENV_VARIABLE or file path with user:pass)")
 	f.String("cert", "", "SSL certificate path")
 	f.String("key", "", "SSL private key path")
@@ -320,7 +322,7 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 	// tag incoming messages with the remote
 	remote := conn.RemoteAddr().String()
 	cb := func(m *msg.Msg) bool {
-		tags := pipe.MsgTags(m)
+		tags := pipe.UseContext(m).UseTags()
 		tags["websocket/remote"] = remote
 		return true
 	}

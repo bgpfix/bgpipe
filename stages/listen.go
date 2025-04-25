@@ -32,8 +32,9 @@ func NewListen(parent *core.StageBase) core.Stage {
 	}
 	o.Args = []string{"addr"}
 
-	o.Descr = "wait for a BGP client to connect over TCP"
+	o.Descr = "let a BGP client connect over TCP"
 	o.IsProducer = true
+	o.FilterOut = true
 	o.IsConsumer = true
 
 	return s
