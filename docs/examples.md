@@ -91,11 +91,11 @@ bgpipe \
 
 ## Grep for BGP messages in live sessions
 
-Proxy a connection between two BGP peers, dropping all IPv4 updates. This is useful for environments that wish to only support IPv6 on specific sessions. The `grep` stage allows for complex filtering based on various criteria such as message type, prefix, ASN, and more.
+Proxy a connection between two BGP peers, allowing only IPv6 updates from origin AS `12345`. This is useful for environments that wish to only accept IPv6 prefixes from a specific ASN. The `grep` stage allows for complex filtering based on various criteria such as message type, prefix, AS_PATH, and more.
 
 ```bash
 bgpipe \
   -- connect 1.2.3.4 \
-  -- grep -v --ipv4 \
+  -- grep 'ipv6 && as_origin = 12345' \
   -- connect 85.232.240.179
 ```
