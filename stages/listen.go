@@ -81,12 +81,24 @@ func (s *Listen) Prepare() error {
 	if err != nil {
 		return err
 	}
+	s.conn = conn
 
-	// don't listen for more
+	// don't listen for any more connections
 	l.Close()
 
+	// publish the IP
+	local, remote := conn.LocalAddr(), conn.RemoteAddr()
+	if s.IsFirst {
+		s.P.KV.Store("L_LOCAL", local.String())
+		s.P.KV.Store("L_REMOTE", remote.String())
+	} else if s.IsLast {
+		s.P.KV.Store("R_LOCAL", local.String())
+		s.P.KV.Store("R_REMOTE", remote.String())
+	} else {
+		s.Error().Msg("stage is neither first nor last")
+	}
+
 	// success
-	s.conn = conn
 	return nil
 }
 
