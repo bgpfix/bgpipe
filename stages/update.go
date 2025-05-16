@@ -3,8 +3,6 @@ package stages
 import (
 	"fmt"
 	"net/netip"
-	"strconv"
-	"strings"
 
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/msg"
@@ -14,10 +12,14 @@ import (
 type Update struct {
 	*core.StageBase
 
-	opt_nexthop4 netip.Addr
-	opt_nexthop6 netip.Addr
-	opt_add_com  attrs.Community
-	opt_drop_com bool
+	opt_nexthop4       netip.Addr
+	opt_nexthop6       netip.Addr
+	opt_add_com        attrs.Community
+	opt_drop_com       bool
+	opt_add_com_ext    attrs.Extcom
+	opt_drop_com_ext   bool
+	opt_add_com_large  attrs.LargeCom
+	opt_drop_com_large bool
 }
 
 func NewUpdate(parent *core.StageBase) core.Stage {
@@ -33,8 +35,13 @@ func NewUpdate(parent *core.StageBase) core.Stage {
 	f := o.Flags
 	f.String("set-nexthop4", "", "use given next-hop address for IPv4 prefixes")
 	f.String("set-nexthop6", "", "use given next-hop address for IPv6 prefixes")
-	f.StringSlice("add-com", nil, "add given BGP community attribute (ASN:VALUE)")
-	f.Bool("drop-com", false, "drop all BGP community attributes")
+
+	f.String("add-com", "", "add given BGP community value")
+	f.String("add-com-ext", "", "add given extended BGP community value")
+	f.String("add-com-large", "", "add given large BGP community value")
+	f.Bool("drop-com", false, "drop the BGP community attribute")
+	f.Bool("drop-com-ext", false, "drop the extended BGP community attribute")
+	f.Bool("drop-com-large", false, "drop the large BGP community attribute")
 
 	return s
 }
@@ -43,42 +50,58 @@ func (s *Update) Attach() error {
 	k := s.K
 
 	// parse --set-nexthop4
-	nh4 := k.String("set-nexthop4")
-	if nh4 != "" {
-		a, err := netip.ParseAddr(nh4)
+	if val := k.String("set-nexthop4"); val != "" {
+		a, err := netip.ParseAddr(val)
 		if err != nil || !a.Is4() {
-			return fmt.Errorf("--nexthop4 %s: invalid IPv4 address", nh4)
+			return fmt.Errorf("--nexthop4 %s: invalid IPv4 address", val)
 		}
 		s.opt_nexthop4 = a
 	}
 
 	// parse --set-nexthop6
-	nh6 := k.String("set-nexthop6")
-	if nh6 != "" {
-		a, err := netip.ParseAddr(nh6)
+	if val := k.String("set-nexthop6"); val != "" {
+		a, err := netip.ParseAddr(val)
 		if err != nil || !a.Is6() {
-			return fmt.Errorf("--nexthop6 %s: invalid IPv6 address", nh6)
+			return fmt.Errorf("--nexthop6 %s: invalid IPv6 address", val)
 		}
 		s.opt_nexthop6 = a
 	}
 
 	// parse --add-com
-	for _, com := range k.Strings("add-com") {
-		com1, com2, ok := strings.Cut(com, ":")
-		if !ok {
-			return fmt.Errorf("--add-com %s: invalid format, need ASN:VALUE", com)
+	if val := k.String("add-com"); val != "" {
+		if val[0] != '[' {
+			val = fmt.Sprintf("[ %v ]", val)
 		}
-		asn, err := strconv.ParseUint(com1, 10, 16)
+		err := s.opt_add_com.FromJSON([]byte(val))
 		if err != nil {
-			return fmt.Errorf("--add-com %s: invalid ASN", com)
+			return fmt.Errorf("--add-com %s: %w", val, err)
 		}
-		val, err := strconv.ParseUint(com2, 10, 16)
-		if err != nil {
-			return fmt.Errorf("--add-com %s: invalid VALUE", com)
-		}
-		s.opt_add_com.Add(uint16(asn), uint16(val))
 	}
 	s.opt_drop_com = k.Bool("drop-com")
+
+	// parse --add-com-ext
+	if val := k.String("add-com-ext"); val != "" {
+		if val[0] != '[' {
+			val = fmt.Sprintf("[ %v ]", val)
+		}
+		err := s.opt_add_com_ext.FromJSON([]byte(val))
+		if err != nil {
+			return fmt.Errorf("--add-com-ext %s: %w", val, err)
+		}
+	}
+	s.opt_drop_com_ext = k.Bool("drop-com-ext")
+
+	// parse --add-com-large
+	if val := k.String("add-com-large"); val != "" {
+		if val[0] != '[' {
+			val = fmt.Sprintf("[ %v ]", val)
+		}
+		err := s.opt_add_com_large.FromJSON([]byte(val))
+		if err != nil {
+			return fmt.Errorf("--add-com-large %s: %w", val, err)
+		}
+	}
+	s.opt_drop_com_large = k.Bool("drop-com-large")
 
 	// register our callback
 	s.P.OnMsg(s.modify, s.Dir, msg.UPDATE)
@@ -114,10 +137,30 @@ func (s *Update) modify(m *msg.Msg) (accept_message bool) {
 	if s.opt_drop_com {
 		u.Attrs.Drop(attrs.ATTR_COMMUNITY)
 		modified = true
-	} else if todo := s.opt_add_com; len(todo.ASN) > 0 {
+	} else if todo := s.opt_add_com; todo.Len() > 0 {
 		com := u.Attrs.Use(attrs.ATTR_COMMUNITY).(*attrs.Community)
-		for i := range todo.ASN {
+		for i := range todo.Len() {
 			com.Add(todo.ASN[i], todo.Value[i])
+		}
+		modified = true
+	}
+	if s.opt_drop_com_ext {
+		u.Attrs.Drop(attrs.ATTR_EXT_COMMUNITY)
+		modified = true
+	} else if todo := s.opt_add_com_ext; todo.Len() > 0 {
+		com := u.Attrs.Use(attrs.ATTR_EXT_COMMUNITY).(*attrs.Extcom)
+		for i := range todo.Len() {
+			com.Add(todo.Type[i], todo.Value[i])
+		}
+		modified = true
+	}
+	if s.opt_drop_com_large {
+		u.Attrs.Drop(attrs.ATTR_LARGE_COMMUNITY)
+		modified = true
+	} else if todo := s.opt_add_com_large; todo.Len() > 0 {
+		com := u.Attrs.Use(attrs.ATTR_LARGE_COMMUNITY).(*attrs.LargeCom)
+		for i := range todo.Len() {
+			com.Add(todo.ASN[i], todo.Value1[i], todo.Value2[i])
 		}
 		modified = true
 	}
