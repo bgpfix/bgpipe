@@ -192,11 +192,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 
 	// drops p from u if violates the rules
 	dropReach := func(p nlri.NLRI) (drop bool) {
-		defer func() {
-			if drop {
-				u.Msg.Modified()
-			}
-		}()
+		defer func() { u.Msg.Edit(drop) }()
 
 		// too long or short?
 		if s.isShort(p) {
@@ -307,7 +303,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	dropUnreach := func(p nlri.NLRI) (drop bool) {
 		// too long or short?
 		if s.isShort(p) || s.isLong(p) {
-			u.Msg.Modified()
+			u.Msg.Edit() // TODO: sure? why not check drop? FIXME
 			return true
 		}
 

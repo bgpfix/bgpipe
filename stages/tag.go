@@ -60,18 +60,16 @@ func (s *Tag) Attach() (err error) {
 }
 
 func (s *Tag) onmsg(m *msg.Msg) bool {
-	modified := false
-
 	// get message context
 	mx := pipe.GetContext(m) // NB: can be nil!
 
 	// drop tags
 	if len(s.opt_drop) > 0 && mx.HasTags() {
 		if s.opt_drop[0] == "*" {
-			mx.DropTags()
+			m.Edit(mx.DropTags())
 		} else {
 			for _, tag := range s.opt_drop {
-				modified = modified || mx.DropTag(tag)
+				m.Edit(mx.DropTag(tag))
 			}
 		}
 	}
@@ -84,11 +82,7 @@ func (s *Tag) onmsg(m *msg.Msg) bool {
 		for key, val := range s.opt_add {
 			mx.SetTag(key, val)
 		}
-		modified = true
-	}
-
-	if modified {
-		m.Modified()
+		m.Edit()
 	}
 
 	return true

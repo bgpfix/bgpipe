@@ -5,13 +5,44 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/netip"
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 )
 
-func tcp_handle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.Duration) error {
+func conn_publish(s *core.StageBase, conn net.Conn) {
+	var todo map[string]string
+	if s.IsFirst {
+		todo = map[string]string{
+			"L_LOCAL":  conn.LocalAddr().String(),
+			"L_REMOTE": conn.RemoteAddr().String(),
+		}
+	} else if s.IsLast {
+		todo = map[string]string{
+			"R_LOCAL":  conn.LocalAddr().String(),
+			"R_REMOTE": conn.RemoteAddr().String(),
+		}
+	} else {
+		s.Error().Msg("conn_publish: not first or last stage")
+		return
+	}
+
+	kv := s.P.KV
+	for name, addrport := range todo {
+		addr, err := netip.ParseAddrPort(addrport)
+		if err != nil {
+			s.Err(err).Msgf("conn_publish %s: could not parse %s", name, addrport)
+			continue
+		}
+		kv.Store(name, addr)
+		kv.Store(name+"_ADDR", addr.Addr())
+		kv.Store(name+"_PORT", addr.Port())
+	}
+}
+
+func conn_handle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.Duration) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 

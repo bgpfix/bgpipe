@@ -17,8 +17,8 @@ type Update struct {
 	opt_nexthop4     netip.Addr
 	opt_nexthop6     netip.Addr
 	opt_nexthop_self int // 0 = disabled, 1 = prepare, 2 = run
-	l_local          netip.Addr
-	r_local          netip.Addr
+	l_addr           netip.Addr
+	r_addr           netip.Addr
 
 	run_com            bool
 	opt_add_com        attrs.Community
@@ -40,9 +40,9 @@ func NewUpdate(parent *core.StageBase) core.Stage {
 	o.Bidir = true
 
 	f := o.Flags
-	f.String("set-nexthop4", "", "use given next-hop address for IPv4 prefixes")
-	f.String("set-nexthop6", "", "use given next-hop address for IPv6 prefixes")
-	f.Bool("set-nexthop-self", false, "set next-hop address to our IP address (when possible)")
+	f.String("nexthop4", "", "use given next-hop address for IPv4 prefixes")
+	f.String("nexthop6", "", "use given next-hop address for IPv6 prefixes")
+	f.Bool("nexthop-self", false, "set next-hop address to our IP address (when possible)")
 
 	f.String("add-com", "", "add given BGP community value")
 	f.String("add-com-ext", "", "add given extended BGP community value")
@@ -58,13 +58,13 @@ func (s *Update) Attach() error {
 	k := s.K
 
 	// next-hop to my IP address?
-	if k.Bool("set-nexthop-self") {
+	if k.Bool("nexthop-self") {
 		s.opt_nexthop_self = 1
 		s.run_nexthop = true
 	}
 
-	// parse --set-nexthop4
-	if val := k.String("set-nexthop4"); val != "" {
+	// parse --nexthop4
+	if val := k.String("nexthop4"); val != "" {
 		a, err := netip.ParseAddr(val)
 		if err != nil || !a.Is4() {
 			return fmt.Errorf("--nexthop4 %s: invalid IPv4 address", val)
@@ -73,8 +73,8 @@ func (s *Update) Attach() error {
 		s.run_nexthop = true
 	}
 
-	// parse --set-nexthop6
-	if val := k.String("set-nexthop6"); val != "" {
+	// parse --nexthop6
+	if val := k.String("nexthop6"); val != "" {
 		a, err := netip.ParseAddr(val)
 		if err != nil || !a.Is6() {
 			return fmt.Errorf("--nexthop6 %s: invalid IPv6 address", val)
@@ -131,64 +131,61 @@ func (s *Update) Attach() error {
 
 func (s *Update) modify(m *msg.Msg) (keep_message bool) {
 	u := &m.Update
-	modified := false
 
 	// modify next-hop?
 	if s.run_nexthop {
-		modified = modified || s.modifyNexthop(u)
+		m.Edit(s.modifyNexthop(u))
 	}
 
 	// modify communities?
 	if s.run_com {
-		modified = modified || s.modifyCom(u)
-	}
-
-	// have we actually modified the message?
-	if modified {
-		m.Modified()
+		m.Edit(s.modifyCom(u))
 	}
 
 	return true
 }
 
 func (s *Update) modifyNexthop(u *msg.Update) (modified bool) {
+	// start with the values of the --nexthop4 and --nexthop6 options (can be invalid)
 	nexthop4, nexthop6 := s.opt_nexthop4, s.opt_nexthop6
 
-	// need to initialize opt_nexthop_self?
+	// need to initialize nexthop-self first?
+	// NB: we do this here (not earlier) because we need to wait for
+	// the connection to be established before we can get the addresses
 	if s.opt_nexthop_self == 1 {
-		if v, ok := s.P.KV.Load("L_LOCAL"); ok {
-			str, _ := v.(string)
-			if ap, err := netip.ParseAddrPort(str); err == nil {
-				s.l_local = ap.Addr()
-			}
+		kv := s.P.KV
+		if v, ok := kv.Load("L_LOCAL_ADDR"); ok {
+			s.l_addr, _ = v.(netip.Addr)
 		}
-		if v, ok := s.P.KV.Load("R_LOCAL"); ok {
-			str, _ := v.(string)
-			if ap, err := netip.ParseAddrPort(str); err == nil {
-				s.r_local = ap.Addr()
-			}
+		if v, ok := kv.Load("R_LOCAL_ADDR"); ok {
+			s.r_addr, _ = v.(netip.Addr)
 		}
-		s.opt_nexthop_self = 2
-	}
-
-	// attempt next-hop self?
-	if s.opt_nexthop_self == 2 {
-		var nexthop netip.Addr
-		if u.Msg.Dir == dir.DIR_L {
-			nexthop = s.l_local
+		if s.l_addr.IsValid() || s.r_addr.IsValid() {
+			s.opt_nexthop_self = 2 // enable the section below
 		} else {
-			nexthop = s.r_local
-		}
-
-		// should override --set-nexthop4?
-		if !nexthop4.IsValid() && nexthop.Is4() {
-			nexthop4 = nexthop
-		} else if !nexthop6.IsValid() && nexthop.Is6() {
-			nexthop6 = nexthop
+			s.opt_nexthop_self = 0 // permanently disable
 		}
 	}
 
-	// update next-hops
+	// attempt nexthop-self?
+	if s.opt_nexthop_self == 2 {
+		var selfip netip.Addr
+		if u.Msg.Dir == dir.DIR_L {
+			selfip = s.l_addr
+		} else {
+			selfip = s.r_addr
+		}
+
+		// should override --nexthop4 or --nexthop6?
+		if !nexthop4.IsValid() && selfip.Is4() {
+			nexthop4 = selfip
+		}
+		if !nexthop6.IsValid() && selfip.Is6() {
+			nexthop6 = selfip
+		}
+	}
+
+	// finally, update next-hops
 	mp := u.ReachMP().Prefixes()
 
 	if nexthop4.IsValid() {
