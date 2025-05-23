@@ -229,6 +229,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	// require authorization?
 	if auth := headers.Get("Authorization"); len(auth) > 0 {
 		if r.Header.Get("Authorization") != auth {
+			s.Warn().Msgf("%s: not authorized", r.RemoteAddr)
 			w.Header().Set("WWW-Authenticate", `Basic realm="bgpipe"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -247,6 +248,8 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.Warn().Err(err).Msgf("%s: could not upgrade", r.RemoteAddr)
 		return
+	} else {
+		s.Info().Msgf("%s: connected", r.RemoteAddr)
 	}
 
 	// publish conn for broadcasts + signal to connWriter
@@ -319,7 +322,7 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 		close_safe(done)
 	}()
 
-	// tag incoming messages with the remote
+	// tag incoming messages with the remote addr
 	remote := conn.RemoteAddr().String()
 	cb := func(m *msg.Msg) bool {
 		tags := pipe.UseContext(m).UseTags()

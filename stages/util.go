@@ -30,15 +30,16 @@ func conn_publish(s *core.StageBase, conn net.Conn) {
 	}
 
 	kv := s.P.KV
-	for name, addrport := range todo {
-		addr, err := netip.ParseAddrPort(addrport)
+	for name, val := range todo {
+		addrport, err := netip.ParseAddrPort(val)
 		if err != nil {
-			s.Err(err).Msgf("conn_publish %s: could not parse %s", name, addrport)
+			s.Err(err).Msgf("conn_publish %s: could not parse %s", name, val)
 			continue
 		}
-		kv.Store(name, addr)
-		kv.Store(name+"_ADDR", addr.Addr())
-		kv.Store(name+"_PORT", addr.Port())
+		s.Info().Msgf("connection %s = %s", name, addrport.String())
+		kv.Store(name, addrport)
+		kv.Store(name+"_ADDR", addrport.Addr())
+		kv.Store(name+"_PORT", addrport.Port())
 	}
 }
 

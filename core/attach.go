@@ -144,7 +144,7 @@ func (s *StageBase) attach() error {
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
 	s.IsBidir = s.IsLeft && s.IsRight
-	if !s.IsLeft && !s.IsRight { // apply a default
+	if !s.IsLeft && !s.IsRight { // no explicit dir = apply a default
 		s.IsRight = true
 
 		// exceptions
