@@ -1,15 +1,15 @@
 module github.com/bgpfix/bgpipe
 
-go 1.23.0
+go 1.24
 
-toolchain go1.24.1
+toolchain go1.24.3
 
 require (
 	github.com/bgpfix/bgpfix v0.0.0-00010101000000-000000000000
 	github.com/gorilla/websocket v1.5.3
 	github.com/knadh/koanf/providers/posflag v1.0.0
 	github.com/knadh/koanf/v2 v2.2.0
-	github.com/puzpuzpuz/xsync/v3 v3.5.1
+	github.com/puzpuzpuz/xsync/v4 v4.1.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.6
 	github.com/valyala/bytebufferpool v1.0.0

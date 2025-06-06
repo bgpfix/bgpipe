@@ -20,7 +20,7 @@ import (
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpipe/core"
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type Limit struct {
@@ -41,9 +41,9 @@ type Limit struct {
 	limit_origin  int64 // max prefix count for single origin
 	limit_block   int64 // max prefix count for IP block
 
-	session *xsync.MapOf[nlri.NLRI, *limitPrefix] // session db
-	origin  *xsync.MapOf[uint32, *limitCounter]   // per-origin db
-	block   *xsync.MapOf[uint64, *limitCounter]   // per-block db
+	session *xsync.Map[nlri.NLRI, *limitPrefix] // session db
+	origin  *xsync.Map[uint32, *limitCounter]   // per-origin db
+	block   *xsync.Map[uint64, *limitCounter]   // per-block db
 }
 
 func NewLimit(parent *core.StageBase) core.Stage {
@@ -79,9 +79,9 @@ func NewLimit(parent *core.StageBase) core.Stage {
 	so.FilterIn = true
 
 	s.afs = make(map[afi.AS]bool)
-	s.session = xsync.NewMapOf[nlri.NLRI, *limitPrefix]()
-	s.origin = xsync.NewMapOf[uint32, *limitCounter]()
-	s.block = xsync.NewMapOf[uint64, *limitCounter]()
+	s.session = xsync.NewMap[nlri.NLRI, *limitPrefix]()
+	s.origin = xsync.NewMap[uint32, *limitCounter]()
+	s.block = xsync.NewMap[uint64, *limitCounter]()
 
 	return s
 }
@@ -378,10 +378,10 @@ type limitPrefix struct {
 	origins  []uint32
 }
 
-func newLimitPrefix() *limitPrefix {
+func newLimitPrefix() (*limitPrefix, bool) {
 	return &limitPrefix{
 		origins: make([]uint32, 0, 1),
-	}
+	}, false
 }
 
 type limitCounter struct {
@@ -389,6 +389,6 @@ type limitCounter struct {
 	counter int64
 }
 
-func newLimitCounter() *limitCounter {
-	return &limitCounter{}
+func newLimitCounter() (*limitCounter, bool) {
+	return &limitCounter{}, false
 }
