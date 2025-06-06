@@ -24,9 +24,9 @@ type Write struct {
 	opt_timefmt  string
 	opt_compress string
 
-	fh      *os.File
-	wr      io.WriteCloser
-	timeout time.Time
+	fh *os.File       // current file handle
+	wr io.WriteCloser // current writer, can be gzip.Writer
+	n  int64          // number of bytes written to the current file
 }
 
 func NewWrite(parent *core.StageBase) core.Stage {
@@ -42,7 +42,7 @@ func NewWrite(parent *core.StageBase) core.Stage {
 	f := s.Options.Flags
 	f.Bool("append", false, "append to file if already exists")
 	f.Bool("create", false, "file must not already exist")
-	f.Bool("compress", true, "compress based on file extension (.gz only)")
+	f.Bool("compress", true, "compress based on the file extension (.gz only)")
 	f.Duration("every", 0, "start new file every time interval")
 	f.String("time-format", "20060102.1504", "time format to replace $TIME in paths")
 	return s
@@ -73,8 +73,11 @@ func (s *Write) Attach() error {
 
 	if strings.Contains(s.fpath, `$TIME`) {
 		s.opt_timefmt = k.String("time-format")
+		if time.Now().UTC().Format(s.opt_timefmt) == "" {
+			return fmt.Errorf("--time-format '%s': invalid time format", s.opt_timefmt)
+		}
 	} else if s.opt_every != 0 {
-		return fmt.Errorf("--every requires the file path to specify $TIME")
+		return fmt.Errorf("--every requires the file path to include $TIME")
 	}
 
 	if k.Bool("compress") {
@@ -90,41 +93,27 @@ func (s *Write) Attach() error {
 }
 
 func (s *Write) Prepare() error {
-	return s.reopenFile(time.Now())
+	return s.openFile(time.Now())
 }
 
-// reopenFile opens the target file; it can be called repeatedly to update
+// openFile opens the target file; it can be called repeatedly to update
 // the target file path, and re-open the current target file when needed
-func (s *Write) reopenFile(now time.Time) error {
-	// have some file already opened?
-	if s.fh != nil {
-		// still good?
-		if s.timeout.IsZero() || now.Before(s.timeout) {
-			return nil
-		}
+func (s *Write) openFile(now time.Time) error {
+	// write to a temporary file
+	fpath := s.fpath + ".tmp"
 
-		// close the current file in background
-		go func(wr io.WriteCloser, fh *os.File) {
-			s.Debug().Msgf("closing %s", fh.Name())
-			wr.Close()
-			fh.Close()
-		}(s.wr, s.fh)
-	}
-
-	// replace $TIME in target
-	target := s.fpath
+	// replace $TIME in fpath
 	if s.opt_timefmt != "" {
-		t := now
+		t := now.UTC()
 		if s.opt_every > 0 {
 			t = t.Truncate(s.opt_every)
-			s.timeout = t.Add(s.opt_every)
 		}
-		target = strings.Replace(target, `$TIME`, t.UTC().Format(s.opt_timefmt), 1)
+		fpath = strings.Replace(fpath, `$TIME`, t.Format(s.opt_timefmt), 1)
 	}
 
 	// try to open the new target
-	s.Info().Msgf("opening %s", target)
-	fh, err := os.OpenFile(target, s.flags, 0666)
+	s.Debug().Msgf("%s: opening", fpath)
+	fh, err := os.OpenFile(fpath, s.flags, 0644)
 	if err != nil {
 		return err
 	}
@@ -140,33 +129,68 @@ func (s *Write) reopenFile(now time.Time) error {
 	return nil
 }
 
-func (s *Write) Run() (err error) {
-	defer func() {
-		s.Debug().Msgf("closing %s", s.fh.Name())
-		s.wr.Close()
-		s.fh.Close()
-	}()
+func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
+	fpath := s.fh.Name()
+	target, found := strings.CutSuffix(fpath, ".tmp") // remove the .tmp suffix
+
+	if n == 0 {
+		s.Debug().Msgf("%s: removing empty file", fpath)
+		os.Remove(fpath)
+	} else {
+		s.Debug().Msgf("%s: writing %d bytes", target, n)
+	}
+
+	wr.Close()
+	fh.Close()
+
+	if n != 0 && found {
+		os.Rename(fpath, target) // publish the file
+	}
+}
+
+func (s *Write) Run() error {
+	defer func() { s.closeFile(s.wr, s.fh, s.n) }()
 
 	eio := s.eio
-	last := time.Now()
-	for bb := range eio.Output {
-		// update the target file first?
-		if s.opt_every != 0 && time.Since(last) > time.Second {
-			last = time.Now()
-			err = s.reopenFile(last)
+
+	var reload <-chan time.Time
+	first_run := true
+	if s.opt_every != 0 {
+		t := time.Now().Truncate(s.opt_every).Add(s.opt_every)
+		reload = time.After(time.Until(t))
+	}
+
+	for {
+		select {
+		case bb, ok := <-eio.Output:
+			if !ok {
+				return nil // output channel closed
+			}
+
+			// write to current file
+			n, err := bb.WriteTo(s.wr)
+			s.n += n
 			if err != nil {
-				break
+				return err
+			}
+			eio.Put(bb)
+
+		case now := <-reload:
+			// change to periodic ticks
+			if first_run {
+				first_run = false
+				reload = time.Tick(s.opt_every)
+			}
+
+			// close the current file
+			go s.closeFile(s.wr, s.fh, s.n)
+
+			// open a new file
+			if err := s.openFile(now); err != nil {
+				return err
 			}
 		}
-
-		// write to file
-		_, err = bb.WriteTo(s.wr)
-		if err != nil {
-			break
-		}
-		eio.Put(bb)
 	}
-	return err
 }
 
 func (s *Write) Stop() error {
