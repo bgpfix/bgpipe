@@ -111,6 +111,11 @@ func (s *Write) openFile(now time.Time) error {
 		fpath = strings.Replace(fpath, `$TIME`, t.Format(s.opt_timefmt), 1)
 	}
 
+	// reset state
+	s.fh = nil
+	s.wr = nil
+	s.n = 0
+
 	// try to open the new target
 	s.Debug().Msgf("%s: opening", fpath)
 	fh, err := os.OpenFile(fpath, s.flags, 0644)
@@ -130,7 +135,7 @@ func (s *Write) openFile(now time.Time) error {
 }
 
 func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
-	fpath := s.fh.Name()
+	fpath := fh.Name()
 	target, found := strings.CutSuffix(fpath, ".tmp") // remove the .tmp suffix
 
 	if n == 0 {
