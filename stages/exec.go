@@ -33,10 +33,12 @@ func NewExec(parent *core.StageBase) core.Stage {
 	)
 
 	o.Usage = "exec COMMAND | exec -A COMMAND [COMMAND-ARGUMENTS...] --"
-	o.Descr = "filter messages through a background process"
-	o.IsProducer = true
-	o.Bidir = true
 	o.Args = []string{"cmd"}
+	o.Descr = "handle messages in a background process"
+	o.IsProducer = true
+	o.FilterIn = true
+	o.FilterOut = true
+	o.Bidir = true
 
 	f := o.Flags
 	f.Bool("keep-stdin", false, "keep running if stdin is closed")
@@ -74,11 +76,6 @@ func (s *Exec) Attach() error {
 	// cleanup procedure
 	// s.cmd_exec.Cancel = func() error { close_safe(s.eio.Output); return nil }
 	s.cmd_exec.WaitDelay = time.Second
-
-	// FIXME: move to extio
-	if k.Bool("write") {
-		s.Options.IsProducer = false
-	}
 
 	return s.eio.Attach()
 }

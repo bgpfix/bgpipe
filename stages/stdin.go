@@ -19,6 +19,7 @@ func NewStdin(parent *core.StageBase) core.Stage {
 	o.Descr = "read messages from stdin"
 	o.IsStdin = true
 	o.IsProducer = true
+	o.FilterOut = true
 	o.Bidir = true
 
 	s.eio = extio.NewExtio(parent, extio.MODE_READ)

@@ -10,6 +10,7 @@ For example, bgpipe can be used to run:
  * BGP listener on one side, connecting with a TCP-MD5 password on the other side
  * BGP speaker that streams an MRT file after the session is established
  * fast MRT to JSON converter (and back)
+ * fast BGP packet filter
  * IP prefix limits enforcer
  * router control plane firewall (drop, modify, and synthesize BGP messages)
  
@@ -24,7 +25,7 @@ See [bgpipe releases](https://github.com/bgpfix/bgpipe/releases/) on GitHub, or 
 ```
 # install golang, eg. https://go.dev/dl/
 $ go version
-go version go1.23.2 linux/amd64
+go version go1.24.4 linux/amd64
 
 # install bgpipe
 $ go install github.com/bgpfix/bgpipe@latest
@@ -47,18 +48,21 @@ Options:
   -2, --short-asn        use 2-byte ASN numbers
       --caps string      use given BGP capabilities (JSON format)
 
-Supported stages (run stage -h to get its help)
+Supported stages (run <stage> -h to get its help)
   connect                connect to a BGP endpoint over TCP
-  exec                   filter messages through a background process
-  grep                   drop messages that do not match
+  drop                   drop messages that match a filter
+  exec                   handle messages in a background process
+  grep                   drop messages that DO NOT match a filter
   limit                  limit prefix lengths and counts
-  listen                 wait for a BGP client to connect over TCP
-  pipe                   filter messages through a named pipe
-  read                   read messages from file
+  listen                 let a BGP client connect over TCP
+  pipe                   process messages through a named pipe
+  read                   read messages from file or URL
   speaker                run a simple BGP speaker
   stdin                  read messages from stdin
   stdout                 print messages to stdout
-  websocket              filter messages over websocket
+  tag                    add or drop message tags
+  update                 modify UPDATE messages
+  websocket              process messages over websocket
   write                  write messages to file
 
 # see docs for "connect" stage
@@ -78,7 +82,8 @@ Common Options:
   -A, --args               consume all CLI arguments till --
   -W, --wait strings       wait for given event before starting
   -S, --stop strings       stop after given event is handled
-  -I, --inject string      where to inject new messages (default "next")
+  -N, --new string         which stage to send new messages to (default "next")
+  -O, --of string          stage output filter (drop non-matching output)
 ```
 
 ## Examples
@@ -90,8 +95,11 @@ $ bgpipe -o speaker 1.2.3.4
 # JSON to BGP and back
 $ cat input.json | bgpipe -io speaker 1.2.3.4 | tee output.json
 
-# dump MRT updates to JSON
-$ bgpipe read --mrt updates.20230301.0000.bz2 -- write output.json
+# dump MRT updates to JSON, with optional filter
+$ bgpipe read --mrt updates.20250601.0400.bz2 -- write output.json
+$ bgpipe \
+  -- read --mrt http://archive.routeviews.org/route-views.eqix/bgpdata/2025.06/UPDATES/updates.20250601.0400.bz2 \
+  -- stdout --if 'prefix ~ 190.106.232.0'
 
 # proxy a connection, print the conversation to stdout by default
 # 1st stage: listen on TCP *:179 for new connection
@@ -137,4 +145,4 @@ $ bgpipe \
 
 ## Author
 
-Pawel Foremski [@pforemski](https://twitter.com/pforemski) 2023-2024
+Pawel Foremski [@pforemski](https://twitter.com/pforemski) 2023-2025

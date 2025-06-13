@@ -40,12 +40,14 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 	s := &Websocket{StageBase: parent}
 
 	o := &s.Options
-	o.Descr = "filter messages over websocket"
+	o.Descr = "process messages over websocket"
 	o.IsProducer = true
+	o.FilterIn = true
+	o.FilterOut = true
 	o.Bidir = true
 
 	f := o.Flags
-	f.Bool("listen", false, "listen on given URL instead of dialing it")
+	f.Bool("listen", false, "listen on the URL instead of connecting to it")
 	f.String("auth", "", "use HTTP basic auth ($ENV_VARIABLE or file path with user:pass)")
 	f.String("cert", "", "SSL certificate path")
 	f.String("key", "", "SSL private key path")
@@ -227,6 +229,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	// require authorization?
 	if auth := headers.Get("Authorization"); len(auth) > 0 {
 		if r.Header.Get("Authorization") != auth {
+			s.Warn().Msgf("%s: not authorized", r.RemoteAddr)
 			w.Header().Set("WWW-Authenticate", `Basic realm="bgpipe"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -245,6 +248,8 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.Warn().Err(err).Msgf("%s: could not upgrade", r.RemoteAddr)
 		return
+	} else {
+		s.Info().Msgf("%s: connected", r.RemoteAddr)
 	}
 
 	// publish conn for broadcasts + signal to connWriter
@@ -317,10 +322,10 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 		close_safe(done)
 	}()
 
-	// tag incoming messages with the remote
+	// tag incoming messages with the remote addr
 	remote := conn.RemoteAddr().String()
 	cb := func(m *msg.Msg) bool {
-		tags := pipe.MsgTags(m)
+		tags := pipe.UseContext(m).UseTags()
 		tags["websocket/remote"] = remote
 		return true
 	}

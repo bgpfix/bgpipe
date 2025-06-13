@@ -139,7 +139,7 @@ func (eio *Extio) Attach() error {
 		return fmt.Errorf("--raw and --mrt: must not use both at the same time")
 	}
 
-	// not write-only? read input to bgpipe
+	// not write-only? produce input to bgpipe
 	if !eio.opt_write {
 		if eio.IsBidir {
 			eio.InputL = p.AddInput(dir.DIR_L)
@@ -161,11 +161,19 @@ func (eio *Extio) Attach() error {
 
 		eio.mrt = mrt.NewReader(p, eio.InputD)
 		eio.mrt.NoTags = eio.opt_notags
+	} else {
+		eio.Options.IsProducer = false
 	}
 
-	// not read-only? write bgpipe output
+	// not read-only? capture bgpipe output
 	if !eio.opt_read {
-		eio.Callback = p.OnMsg(eio.SendMsg, eio.Dir, eio.opt_type...)
+		cbdir := eio.Dir
+		if eio.IsFirst {
+			cbdir = dir.DIR_L
+		} else if eio.IsLast {
+			cbdir = dir.DIR_R
+		}
+		eio.Callback = p.OnMsg(eio.SendMsg, cbdir, eio.opt_type...)
 	}
 
 	return nil
@@ -365,7 +373,7 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 		m.Time = time.Now().UTC()
 	}
 	if eio.opt_notags {
-		pipe.MsgContext(m).DropTags()
+		pipe.UseContext(m).DropTags()
 	}
 
 	// take it
@@ -380,7 +388,7 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 	}
 
 	// filter the message?
-	mx := pipe.MsgContext(m)
+	mx := pipe.UseContext(m)
 	if !eio.opt_copy {
 		// TODO: if borrow not set already, add the flag and keep m for later re-use (if enabled)
 		//       NB: in such a case, we won't be able to re-use m easily?

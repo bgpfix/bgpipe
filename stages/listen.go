@@ -32,8 +32,9 @@ func NewListen(parent *core.StageBase) core.Stage {
 	}
 	o.Args = []string{"addr"}
 
-	o.Descr = "wait for a BGP client to connect over TCP"
+	o.Descr = "let a BGP client connect over TCP"
 	o.IsProducer = true
+	o.FilterOut = true
 	o.IsConsumer = true
 
 	return s
@@ -80,15 +81,18 @@ func (s *Listen) Prepare() error {
 	if err != nil {
 		return err
 	}
+	s.conn = conn
 
-	// don't listen for more
+	// don't listen for any more connections
 	l.Close()
 
+	// publish connection details
+	conn_publish(s.StageBase, conn)
+
 	// success
-	s.conn = conn
 	return nil
 }
 
 func (s *Listen) Run() error {
-	return tcp_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
+	return conn_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
 }

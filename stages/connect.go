@@ -28,6 +28,7 @@ func NewConnect(parent *core.StageBase) core.Stage {
 
 	o.Descr = "connect to a BGP endpoint over TCP"
 	o.IsProducer = true
+	o.FilterOut = true
 	o.IsConsumer = true
 
 	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
@@ -80,12 +81,14 @@ func (s *Connect) Prepare() error {
 	if err != nil {
 		return err
 	}
-
-	// success
 	s.conn = conn
+
+	// publish connection details
+	conn_publish(s.StageBase, conn)
+
 	return nil
 }
 
 func (s *Connect) Run() error {
-	return tcp_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
+	return conn_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
 }

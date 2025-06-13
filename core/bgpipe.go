@@ -326,7 +326,7 @@ func (b *Bgpipe) StageDump(d dir.Dir, w io.Writer) (total int) {
 
 		pr(StyleNone, "  [%d] ", s.Index)
 		pr(StyleBold, "%s", s.Name)
-		pr(StyleGreen, " -%s", s.Dir)
+		// pr(StyleGreen, " -%s", s.Dir)
 		if len(s.Flags) > 0 {
 			pr(StyleGreen, " %s", strings.Join(s.Flags, " "))
 		}

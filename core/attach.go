@@ -79,7 +79,7 @@ func (b *Bgpipe) AttachStages() error {
 		s := b.NewStage("stdin")
 		s.K.Set("left", true)
 		s.K.Set("right", true)
-		s.K.Set("inject", "first")
+		s.K.Set("new", "first")
 		if k.Bool("stdin-wait") {
 			s.K.Set("wait", []string{"ESTABLISHED"})
 		}
@@ -144,7 +144,7 @@ func (s *StageBase) attach() error {
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
 	s.IsBidir = s.IsLeft && s.IsRight
-	if !s.IsLeft && !s.IsRight { // apply a default
+	if !s.IsLeft && !s.IsRight { // no explicit dir = apply a default
 		s.IsRight = true
 
 		// exceptions
@@ -196,10 +196,22 @@ func (s *StageBase) attach() error {
 		}
 	}
 
+	// verify IsProcessor and IsProducer
+	if s.Options.FilterIn && len(s.callbacks) == 0 {
+		return ErrNoCallbacks
+	}
+	if s.Options.IsProducer && len(s.inputs) == 0 {
+		return ErrNoInputs
+	}
+	if s.Options.FilterOut && len(s.inputs) == 0 {
+		return ErrNoInputs
+	}
+
 	// fix callbacks
 	for _, cb := range s.callbacks {
 		cb.Id = s.Index
 		cb.Enabled = &s.running
+		cb.Filter = s.flt_in
 	}
 
 	// fix handlers
@@ -209,21 +221,21 @@ func (s *StageBase) attach() error {
 	}
 
 	// where to inject new messages?
-	var frev, ffwd pipe.FilterMode // input filter mode
-	var fid int                    // input filter callback id
-	switch v := k.String("inject"); v {
+	var frev, ffwd pipe.CbFilterMode // input filter mode
+	var fid int                      // input filter callback id
+	switch v := k.String("new"); v {
 	case "next", "":
-		frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
+		frev, ffwd = pipe.CBFILTER_GE, pipe.CBFILTER_LE
 		fid = s.Index
 	case "here":
-		frev, ffwd = pipe.FILTER_GT, pipe.FILTER_LT
+		frev, ffwd = pipe.CBFILTER_GT, pipe.CBFILTER_LT
 		fid = s.Index
 	case "first":
-		frev, ffwd = pipe.FILTER_NONE, pipe.FILTER_NONE
+		frev, ffwd = pipe.CBFILTER_NONE, pipe.CBFILTER_NONE
 	case "last":
-		frev, ffwd = pipe.FILTER_ALL, pipe.FILTER_ALL
+		frev, ffwd = pipe.CBFILTER_ALL, pipe.CBFILTER_ALL
 	default:
-		frev, ffwd = pipe.FILTER_GE, pipe.FILTER_LE
+		frev, ffwd = pipe.CBFILTER_GE, pipe.CBFILTER_LE
 		if id, err := strconv.Atoi(v); err == nil {
 			fid = id
 		} else if len(v) > 0 && v[0] == '@' {
@@ -243,14 +255,15 @@ func (s *StageBase) attach() error {
 	// fix inputs
 	for _, li := range s.inputs {
 		li.Id = s.Index
-		li.FilterValue = fid
+		li.CbFilterValue = fid
+		li.Filter = s.flt_out
 
 		if li.Dir == dir.DIR_L {
 			li.Reverse = true // CLI gives L stages in reverse
-			li.CallbackFilter = frev
+			li.CbFilter = frev
 		} else {
 			li.Reverse = false
-			li.CallbackFilter = ffwd
+			li.CbFilter = ffwd
 		}
 	}
 
@@ -298,7 +311,7 @@ func (s *StageBase) attach() error {
 		}
 		for _, in := range s.inputs {
 			s.Trace().Msgf("  input %s dir=%s reverse=%v filt=%d filt_id=%d",
-				in.Name, in.Dir, in.Reverse, in.CallbackFilter, in.FilterValue)
+				in.Name, in.Dir, in.Reverse, in.CbFilter, in.CbFilterValue)
 		}
 	}
 

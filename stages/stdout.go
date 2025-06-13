@@ -19,6 +19,7 @@ func NewStdout(parent *core.StageBase) core.Stage {
 	o := &s.Options
 	o.Descr = "print messages to stdout"
 	o.IsStdout = true
+	o.FilterIn = true
 	o.Bidir = true
 
 	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY)

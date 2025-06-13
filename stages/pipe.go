@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
@@ -23,8 +23,10 @@ func NewPipe(parent *core.StageBase) core.Stage {
 
 	o := &s.Options
 	o.IsProducer = true
+	o.FilterIn = true
+	o.FilterOut = true
 	o.Bidir = true
-	o.Descr = "filter messages through a named pipe"
+	o.Descr = "process messages through a named pipe"
 	o.Args = []string{"path"}
 
 	s.eio = extio.NewExtio(parent, 0)
@@ -39,7 +41,7 @@ func (s *Pipe) Attach() error {
 	if len(s.fpath) == 0 {
 		return errors.New("path must be set")
 	}
-	s.fpath = filepath.Clean(s.fpath)
+	s.fpath = path.Clean(s.fpath)
 	s.flag = os.O_RDWR
 
 	return s.eio.Attach()

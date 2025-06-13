@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
@@ -49,11 +50,13 @@ type StageOptions struct {
 
 	// these can be modified before Attach(), and even inside (with care)
 
-	IsProducer bool // produces messages? (writes to Line input)
-	IsConsumer bool // consumes messages? (reads from Line output)
+	IsProducer bool // produces messages? (= writes Line.Input?)
+	IsConsumer bool // consumes messages? (= reads Line.Out?)
 	IsStdin    bool // reads from stdin?
 	IsStdout   bool // writes to stdout?
 	Bidir      bool // allow -LR (bidir mode)?
+	FilterIn   bool // allow stage input filtering? (must have callbacks)
+	FilterOut  bool // allow stage output filtering? (must have inputs)
 }
 
 // StageBase represents a bgpipe stage base
@@ -80,7 +83,10 @@ type StageBase struct {
 	Args    []string     // consumed args
 	Options StageOptions // stage options
 
-	// properties set during before Attach()
+	flt_in  *filter.Filter // message filter for callbacks
+	flt_out *filter.Filter // message filter for inputs
+
+	// properties set during Attach()
 
 	IsFirst bool    // is the first stage in pipe? (the L peer)
 	IsLast  bool    // is the last stage in pipe? (the R peer)
@@ -155,7 +161,13 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
 	if so.IsProducer {
-		f.StringP("inject", "I", "next", "where to inject new messages")
+		f.StringP("new", "N", "next", "which stage to send new messages to")
+	}
+	if so.FilterOut {
+		f.StringP("of", "O", "", "stage output filter (drop non-matching output)")
+	}
+	if so.FilterIn {
+		f.StringP("if", "I", "", "stage input filter (skip non-matching input)")
 	}
 
 	return s
