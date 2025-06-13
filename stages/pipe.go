@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
@@ -41,7 +41,7 @@ func (s *Pipe) Attach() error {
 	if len(s.fpath) == 0 {
 		return errors.New("path must be set")
 	}
-	s.fpath = filepath.Clean(s.fpath)
+	s.fpath = path.Clean(s.fpath)
 	s.flag = os.O_RDWR
 
 	return s.eio.Attach()
