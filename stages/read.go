@@ -10,6 +10,7 @@ import (
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
+	"github.com/klauspost/compress/zstd"
 )
 
 type Read struct {
@@ -18,6 +19,7 @@ type Read struct {
 	fpath string
 	fh    *os.File
 	rd    io.Reader
+	close func() // function to close rd, if needed
 }
 
 func NewRead(parent *core.StageBase) core.Stage {
@@ -31,7 +33,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 	o.Args = []string{"path"}
 
 	f := o.Flags
-	f.Bool("uncompress", true, "uncompress based on file extension (.gz/.bz2)")
+	f.Bool("uncompress", true, "uncompress based on file extension (.gz/.bz2/.zst)")
 
 	s.eio = extio.NewExtio(parent, extio.MODE_READ)
 	return s
@@ -64,10 +66,19 @@ func (s *Read) Prepare() error {
 		case ".bz2":
 			s.rd = bzip2.NewReader(fh)
 		case ".gz":
-			s.rd, err = gzip.NewReader(fh)
+			r, err := gzip.NewReader(fh)
 			if err != nil {
 				return err
 			}
+			s.rd = r
+			s.close = func() { r.Close() }
+		case ".zst", ".zstd":
+			r, err := zstd.NewReader(fh)
+			if err != nil {
+				return err
+			}
+			s.rd = r
+			s.close = r.Close
 		}
 	}
 
@@ -81,5 +92,8 @@ func (s *Read) Run() error {
 func (s *Read) Stop() error {
 	s.eio.InputClose()
 	s.fh.Close()
+	if s.close != nil {
+		s.close()
+	}
 	return nil
 }
