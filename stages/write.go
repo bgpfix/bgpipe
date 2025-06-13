@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
+	"github.com/klauspost/compress/zstd"
 )
 
 type Write struct {
@@ -28,6 +31,10 @@ type Write struct {
 	wr io.WriteCloser // current writer, can be gzip.Writer
 	n  int64          // number of bytes written to the current file
 }
+
+var (
+	reTimeFmt = regexp.MustCompile(`\$\{([^}]+)\}`)
+)
 
 func NewWrite(parent *core.StageBase) core.Stage {
 	s := &Write{StageBase: parent}
@@ -71,13 +78,11 @@ func (s *Write) Attach() error {
 		return fmt.Errorf("--every must be at least 60s")
 	}
 
-	if strings.Contains(s.fpath, `$TIME`) {
-		s.opt_timefmt = k.String("time-format")
-		if time.Now().UTC().Format(s.opt_timefmt) == "" {
-			return fmt.Errorf("--time-format '%s': invalid time format", s.opt_timefmt)
-		}
-	} else if s.opt_every != 0 {
-		return fmt.Errorf("--every requires the file path to include $TIME")
+	s.opt_timefmt = k.String("time-format")
+	if pt := s.pathTime(s.fpath, time.Now()); pt == "" {
+		return fmt.Errorf("file path %s: could not resolve time placeholders", s.fpath)
+	} else if pt == s.fpath && s.opt_every != 0 {
+		return fmt.Errorf("file path %s: $TIME or ${format} must be used with --every", s.fpath)
 	}
 
 	if k.Bool("compress") {
@@ -86,35 +91,77 @@ func (s *Write) Attach() error {
 			return fmt.Errorf("--compress does not support bzip2")
 		case ".gz":
 			s.opt_compress = ".gz"
+		case ".zstd", ".zst":
+			s.opt_compress = ".zstd"
 		}
 	}
 
 	return s.eio.Attach()
 }
 
-func (s *Write) Prepare() error {
-	return s.openFile(time.Now())
+// pathTime replaces all time format placeholders with formatted time t.
+// Returns empty string on any error.
+func (s *Write) pathTime(path string, t time.Time) string {
+	// replace $TIME?
+	if strings.Contains(s.fpath, `$TIME`) {
+		if s.opt_timefmt == "" {
+			return ""
+		} else if str := t.Format(s.opt_timefmt); str != "" {
+			path = strings.ReplaceAll(path, `$TIME`, str)
+		} else {
+			return ""
+		}
+	}
+
+	// replace ${format} placeholders
+	err := false
+	path = reTimeFmt.ReplaceAllStringFunc(path, func(m string) string {
+		if str := t.Format(m[2 : len(m)-1]); str != "" {
+			return str
+		} else {
+			err = true // error in time format
+			return m   // leave the placeholder
+		}
+	})
+
+	// if there was any error in time format, return empty string
+	if err {
+		return ""
+	} else {
+		return path
+	}
 }
 
-// openFile opens the target file; it can be called repeatedly to update
-// the target file path, and re-open the current target file when needed
-func (s *Write) openFile(now time.Time) error {
-	// write to a temporary file
-	fpath := s.fpath + ".tmp"
+func (s *Write) Prepare() error {
+	return s.openFile()
+}
 
-	// replace $TIME in fpath
-	if s.opt_timefmt != "" {
-		t := now.UTC()
+// openFile opens the target file if needed
+func (s *Write) openFile() error {
+	// already open?
+	if s.fh != nil {
+		return nil
+	} else { // reset state
+		s.fh = nil
+		s.wr = nil
+		s.n = 0
+	}
+
+	// get target file path
+	fpath := s.fpath + ".tmp"
+	if strings.Contains(s.fpath, "$") {
+		t := time.Now().UTC()
 		if s.opt_every > 0 {
 			t = t.Truncate(s.opt_every)
 		}
-		fpath = strings.Replace(fpath, `$TIME`, t.Format(s.opt_timefmt), 1)
+		fpath = s.pathTime(s.fpath, t) + ".tmp"
 	}
 
-	// reset state
-	s.fh = nil
-	s.wr = nil
-	s.n = 0
+	// create parent directories if they don't exist
+	fdir := path.Dir(fpath)
+	if err := os.MkdirAll(fdir, 0755); err != nil {
+		return fmt.Errorf("failed to create directories for %s: %w", fpath, err)
+	}
 
 	// try to open the new target
 	s.Debug().Msgf("%s: opening", fpath)
@@ -125,16 +172,27 @@ func (s *Write) openFile(now time.Time) error {
 	s.fh = fh
 
 	// transparent compress?
-	s.wr = fh
 	switch s.opt_compress {
 	case ".gz":
 		s.wr = gzip.NewWriter(fh)
+	case ".zstd":
+		w, err := zstd.NewWriter(fh)
+		if err != nil {
+			return fmt.Errorf("failed to create zstd writer: %w", err)
+		}
+		s.wr = w
+	default:
+		s.wr = fh // no compression
 	}
 
 	return nil
 }
 
 func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
+	if wr == nil || fh == nil {
+		return // nothing to close
+	}
+
 	fpath := fh.Name()
 	target, found := strings.CutSuffix(fpath, ".tmp") // remove the .tmp suffix
 
@@ -172,7 +230,12 @@ func (s *Write) Run() error {
 				return nil // output channel closed
 			}
 
-			// write to current file
+			// open the target file if needed
+			if err := s.openFile(); err != nil {
+				return err
+			}
+
+			// write to file
 			n, err := bb.WriteTo(s.wr)
 			s.n += n
 			if err != nil {
@@ -180,19 +243,17 @@ func (s *Write) Run() error {
 			}
 			eio.Put(bb)
 
-		case now := <-reload:
-			// change to periodic ticks
-			if first_run {
-				first_run = false
-				reload = time.Tick(s.opt_every)
-			}
-
+		case <-reload:
 			// close the current file
 			go s.closeFile(s.wr, s.fh, s.n)
 
-			// open a new file
-			if err := s.openFile(now); err != nil {
-				return err
+			// signal that we need to open a new file
+			s.fh = nil
+
+			// change to periodic ticks from here on?
+			if first_run {
+				first_run = false
+				reload = time.Tick(s.opt_every)
 			}
 		}
 	}
