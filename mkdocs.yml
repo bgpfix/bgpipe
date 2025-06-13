@@ -37,6 +37,9 @@ extra:
 extra_css:
   - css/extra.css
 
+-extra_files:
+  - CNAME
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
