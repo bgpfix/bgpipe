@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.24.3
 
 require (
-	github.com/bgpfix/bgpfix v0.5.1-0.20250613121857-cb84b76d2fc7
+	github.com/bgpfix/bgpfix v0.5.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/klauspost/compress v1.18.0
 	github.com/knadh/koanf/providers/posflag v1.0.1
