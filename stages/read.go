@@ -4,9 +4,12 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
-	"path/filepath"
+	"path"
+	"strings"
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
@@ -17,9 +20,9 @@ type Read struct {
 	*core.StageBase
 	eio   *extio.Extio
 	fpath string
-	fh    *os.File
+	fh    io.ReadCloser // can be *os.File or http.Response.Body
 	rd    io.Reader
-	close func() // function to close rd, if needed
+	close func() // function to close decompressor, if needed
 }
 
 func NewRead(parent *core.StageBase) core.Stage {
@@ -29,7 +32,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 	o.IsProducer = true
 	o.FilterOut = true
 	o.Bidir = true
-	o.Descr = "read messages from file"
+	o.Descr = "read messages from file or URL"
 	o.Args = []string{"path"}
 
 	f := o.Flags
@@ -46,35 +49,52 @@ func (s *Read) Attach() error {
 	if len(s.fpath) == 0 {
 		return errors.New("path must be set")
 	}
-	s.fpath = filepath.Clean(s.fpath)
 
 	return s.eio.Attach()
 }
 
 func (s *Read) Prepare() error {
 	s.Info().Msgf("opening %s", s.fpath)
-	fh, err := os.Open(s.fpath)
-	if err != nil {
-		return err
-	}
-	s.fh = fh // closed in .Stop()
 
-	// transparent uncompress?
-	s.rd = fh
+	fp := s.fpath
+	if strings.HasPrefix(s.fpath, "http://") || strings.HasPrefix(s.fpath, "https://") {
+		resp, err := http.Get(s.fpath)
+		if err != nil {
+			return err
+		} else if resp.StatusCode != 200 {
+			resp.Body.Close()
+			return fmt.Errorf("%s: %s", s.fpath, resp.Status)
+		}
+		s.fh = resp.Body
+		fp = resp.Request.URL.Path
+	} else {
+		fh, err := os.Open(s.fpath)
+		if err != nil {
+			return err
+		}
+		s.fh = fh
+	}
+
+	// need to uncompress on the fly?
+	s.rd = s.fh
 	if s.K.Bool("uncompress") {
-		switch filepath.Ext(s.fpath) {
+		ext := path.Ext(fp)
+		switch ext {
 		case ".bz2":
-			s.rd = bzip2.NewReader(fh)
+			s.rd = bzip2.NewReader(s.fh)
+			// bzip2.NewReader does not need Close
 		case ".gz":
-			r, err := gzip.NewReader(fh)
+			r, err := gzip.NewReader(s.fh)
 			if err != nil {
+				s.fh.Close()
 				return err
 			}
 			s.rd = r
 			s.close = func() { r.Close() }
 		case ".zst", ".zstd":
-			r, err := zstd.NewReader(fh)
+			r, err := zstd.NewReader(s.fh)
 			if err != nil {
+				s.fh.Close()
 				return err
 			}
 			s.rd = r
@@ -91,9 +111,11 @@ func (s *Read) Run() error {
 
 func (s *Read) Stop() error {
 	s.eio.InputClose()
-	s.fh.Close()
 	if s.close != nil {
 		s.close()
+	}
+	if s.fh != nil {
+		s.fh.Close()
 	}
 	return nil
 }
