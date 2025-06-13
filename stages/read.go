@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -18,8 +19,13 @@ import (
 
 type Read struct {
 	*core.StageBase
-	eio   *extio.Extio
-	fpath string
+	eio *extio.Extio
+
+	fpath string   // path argument
+	url   *url.URL // if reading from URL
+
+	opt_decompress string
+
 	fh    io.ReadCloser // can be *os.File or http.Response.Body
 	rd    io.Reader
 	close func() // function to close decompressor, if needed
@@ -36,7 +42,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 	o.Args = []string{"path"}
 
 	f := o.Flags
-	f.Bool("uncompress", true, "uncompress based on file extension (.gz/.bz2/.zst)")
+	f.String("decompress", "auto", "decompress the output (bzip2/gz/zstd/none, default is to detect by file extension)")
 
 	s.eio = extio.NewExtio(parent, extio.MODE_READ)
 	return s
@@ -50,24 +56,59 @@ func (s *Read) Attach() error {
 		return errors.New("path must be set")
 	}
 
+	// looks like a URL?
+	if strings.Contains(s.fpath, "://") {
+		v, err := url.Parse(s.fpath)
+		if err != nil {
+			return fmt.Errorf("invalid URL '%s': %w", s.fpath, err)
+		} else if v.Scheme != "http" && v.Scheme != "https" {
+			return fmt.Errorf("invalid URL scheme '%s', must be http or https", v.Scheme)
+		}
+		s.url = v
+		s.fpath = v.Path
+	} else {
+		s.fpath = path.Clean(s.fpath)
+	}
+
+	// need to decompress?
+	switch strings.ToLower(k.String("decompress")) {
+	case "none", "", "false":
+		break // no decompression
+	case "gz", "gzip":
+		s.opt_decompress = ".gz"
+	case "zstd", "zst", "zstandard":
+		s.opt_decompress = ".zstd"
+	case "bzip2", "bzip", "bz2", "bz":
+		s.opt_decompress = ".bz2"
+	case "auto":
+		switch path.Ext(s.fpath) {
+		case ".bz2":
+			s.opt_decompress = ".bz2"
+		case ".gz":
+			s.opt_decompress = ".gz"
+		case ".zstd", ".zst":
+			s.opt_decompress = ".zstd"
+		}
+	default:
+		return fmt.Errorf("--decompress '%s': invalid value", k.String("decompress"))
+	}
+
 	return s.eio.Attach()
 }
 
 func (s *Read) Prepare() error {
-	s.Info().Msgf("opening %s", s.fpath)
-
-	fp := s.fpath
-	if strings.HasPrefix(s.fpath, "http://") || strings.HasPrefix(s.fpath, "https://") {
-		resp, err := http.Get(s.fpath)
+	if s.url != nil {
+		s.Info().Msgf("streaming %s", s.url.String())
+		resp, err := http.Get(s.url.String())
 		if err != nil {
 			return err
 		} else if resp.StatusCode != 200 {
 			resp.Body.Close()
-			return fmt.Errorf("%s: %s", s.fpath, resp.Status)
+			return fmt.Errorf("%s: %s", s.url.String(), resp.Status)
 		}
 		s.fh = resp.Body
-		fp = resp.Request.URL.Path
 	} else {
+		s.Info().Msgf("opening file %s", s.fpath)
 		fh, err := os.Open(s.fpath)
 		if err != nil {
 			return err
@@ -76,30 +117,27 @@ func (s *Read) Prepare() error {
 	}
 
 	// need to uncompress on the fly?
-	s.rd = s.fh
-	if s.K.Bool("uncompress") {
-		ext := path.Ext(fp)
-		switch ext {
-		case ".bz2":
-			s.rd = bzip2.NewReader(s.fh)
-			// bzip2.NewReader does not need Close
-		case ".gz":
-			r, err := gzip.NewReader(s.fh)
-			if err != nil {
-				s.fh.Close()
-				return err
-			}
-			s.rd = r
-			s.close = func() { r.Close() }
-		case ".zst", ".zstd":
-			r, err := zstd.NewReader(s.fh)
-			if err != nil {
-				s.fh.Close()
-				return err
-			}
-			s.rd = r
-			s.close = r.Close
+	switch s.opt_decompress {
+	case ".bz2":
+		s.rd = bzip2.NewReader(s.fh) // NB: no close
+	case ".gz":
+		r, err := gzip.NewReader(s.fh)
+		if err != nil {
+			s.fh.Close()
+			return err
 		}
+		s.rd = r
+		s.close = func() { r.Close() }
+	case ".zstd":
+		r, err := zstd.NewReader(s.fh)
+		if err != nil {
+			s.fh.Close()
+			return err
+		}
+		s.rd = r
+		s.close = r.Close
+	default:
+		s.rd = s.fh // no decompression, just use the file handle
 	}
 
 	return nil

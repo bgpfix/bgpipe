@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -19,7 +18,8 @@ import (
 
 type Write struct {
 	*core.StageBase
-	eio   *extio.Extio
+	eio *extio.Extio
+
 	fpath string
 	flags int
 
@@ -49,7 +49,7 @@ func NewWrite(parent *core.StageBase) core.Stage {
 	f := s.Options.Flags
 	f.Bool("append", false, "append to file if already exists")
 	f.Bool("create", false, "file must not already exist")
-	f.Bool("compress", true, "compress based on the file extension (.gz only)")
+	f.String("compress", "auto", "compress the output (gz/zstd/none, default is to detect by file extension)")
 	f.Duration("every", 0, "start new file every time interval")
 	f.String("time-format", "20060102.1504", "time format to replace $TIME in paths")
 	return s
@@ -62,7 +62,7 @@ func (s *Write) Attach() error {
 	if len(s.fpath) == 0 {
 		return errors.New("path must be set")
 	}
-	s.fpath = filepath.Clean(s.fpath)
+	s.fpath = path.Clean(s.fpath)
 	s.flags = os.O_CREATE | os.O_WRONLY
 
 	if k.Bool("append") {
@@ -85,15 +85,24 @@ func (s *Write) Attach() error {
 		return fmt.Errorf("file path %s: $TIME or ${format} must be used with --every", s.fpath)
 	}
 
-	if k.Bool("compress") {
-		switch filepath.Ext(s.fpath) {
+	switch strings.ToLower(k.String("compress")) {
+	case "none", "", "false":
+		break // no compression
+	case "gz", "gzip":
+		s.opt_compress = ".gz"
+	case "zstd", "zst", "zstandard":
+		s.opt_compress = ".zstd"
+	case "auto":
+		switch path.Ext(s.fpath) {
 		case ".bz2":
-			return fmt.Errorf("--compress does not support bzip2")
+			return fmt.Errorf("--compress 'auto': does not support bzip2")
 		case ".gz":
 			s.opt_compress = ".gz"
 		case ".zstd", ".zst":
 			s.opt_compress = ".zstd"
 		}
+	default:
+		return fmt.Errorf("--compress '%s': invalid value", k.String("compress"))
 	}
 
 	return s.eio.Attach()
