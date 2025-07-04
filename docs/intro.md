@@ -1,8 +1,6 @@
-## What is bgpipe?
+`bgpipe` is a unique open-source tool that combines BGP monitoring with active message manipulation capabilities. While traditional BGP tools are often limited to passive observation, `bgpipe` operates as a transparent proxy between BGP speakers, allowing real-time inspection and modification of BGP messages.
 
-bgpipe is a unique open-source tool that combines BGP monitoring with active message manipulation capabilities. While traditional BGP tools like BMP or MRT are limited to passive observation, bgpipe operates as a transparent proxy between BGP speakers, allowing real-time inspection and modification of BGP messages.
-
-At its core, bgpipe processes BGP sessions through a series of stages, where each stage performs specific actions such as message filtering, format conversion, or security enhancement. For example, you can:
+`bgpipe` processes BGP messages through a series of stages, where each stage performs specific actions such as message filtering, format conversion, or security enhancement. For example, you can:
 
 - Convert BGP messages to JSON and back for easy processing
 - Add TCP-MD5 authentication to existing BGP sessions
@@ -11,13 +9,7 @@ At its core, bgpipe processes BGP sessions through a series of stages, where eac
 - Archive BGP sessions to MRT files or remote WebSocket servers
 - Process messages through external programs like Python scripts
 
-bgpipe operates as a "man-in-the-middle" proxy, but with the explicit purpose of improving BGP session security and manageability. It's particularly useful for scenarios requiring BGP message manipulation, session monitoring, or enhanced security controls.
-
-For practical examples of how to use bgpipe, see the [examples section](examples.md).
-
-## RIPE 88 talk
-
-For a video introduction, you can watch the [RIPE88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/).
+See the [quickstart guide](quickstart.md) for a practical introduction to bgpipe. You can also watch the below [RIPE88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/).
 
 <video preload="metadata" style="width: 100%;" controls poster="https://ripe88.ripe.net/wp-content/themes/fluida-plus/images/webcast.jpg">
 <source type="video/mp4" src="https://ripe88.ripe.net/archive/video/pawel-foremski_bgp-pipe-open-source-bgp-reverse-proxy_side_20240523-140239.mp4">

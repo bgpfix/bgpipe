@@ -14,10 +14,10 @@ Started in 2023, bgpipe [has its roots](https://dl.acm.org/doi/10.1145/3634737.3
     Understand the basics<br>
     [:octicons-arrow-right-24: Introduction](intro.md)
 
--   :simple-quicklook:{ .lg } __See examples__
+-   :material-rocket-launch:{ .lg } __Quick Start__
 
-    Get BGP pipeline ideas<br>
-    [:octicons-arrow-right-24: Examples](examples.md)
+    Get started in minutes<br>
+    [:octicons-arrow-right-24: Quick Start](quickstart.md)
 
 -   :simple-github:{ .lg } __Downloads__
 

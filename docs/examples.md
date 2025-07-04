@@ -1,17 +1,11 @@
-# bgpipe examples
-
-The **bgpipe** command-line tool processes and filters BGP messages through a series of stages. Each stage performs a specific action, such as connecting to a BGP speaker, reading MRT files, or filtering BGP messages.
-
-Stages are specified in sequence, usually separated by `--`, and each stage can have its own set of options provided using flags. Global options that affect the entire bgpipe process are specified before the first stage.
-
-Below are practical examples to help you get started with **bgpipe**.
+Below are practical examples to help you get started with  `bgpipe`  after you went through the [quickstart guide](quickstart.md). These examples demonstrate how to use  `bgpipe`  for various BGP-related tasks, such as connecting to BGP speakers, reading MRT files, filtering messages, and more.
 
 ## Connect to a BGP speaker
 
-Connect to a BGP speaker at IP address `1.2.3.4`. The command responds to the OPEN message from `1.2.3.4` (using the same ASN) and dumps the session in JSON format to stdout (the `-o` switch). It's useful for debugging and monitoring BGP sessions, allowing you to see the raw BGP messages.
+Connect to a BGP speaker and respond to OPEN message using the same ASN. Note that if an IP address is used as a stage, it is a shorthand for `connect <ip>`. The command dumps the session in JSON format to stdout, since the `-o` option is enabled. It's useful for debugging and monitoring BGP sessions, allowing you to see the raw BGP messages.
 
 ```bash
-bgpipe -o speaker 1.2.3.4
+bgpipe -o speaker -- 1.2.3.4
 ```
 
 ## JSON to BGP and back
@@ -20,13 +14,13 @@ Convert a JSON input file to BGP messages, send them to a BGP speaker, and captu
 
 ```bash
 cat input.json \
-  | bgpipe -io speaker 1.2.3.4 \
+  | bgpipe -io speaker -- 1.2.3.4 \
   | tee output.json
 ```
 
 ## Convert MRT files to JSON
 
-Read MRT updates from a compressed file and convert the updates to JSON format. This is particularly useful for analyzing historical BGP data stored in MRT files, which are often used for archiving BGP updates (e.g., see [RouteViews.org](https://www.routeviews.org/)).
+Read MRT updates from a compressed file and convert the updates to JSON format. This is particularly useful for analyzing historical BGP data stored in MRT files, which are often used for archiving BGP updates.
 
 ```bash
 bgpipe \
