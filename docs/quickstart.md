@@ -135,6 +135,37 @@ $ bgpipe -o \
 ...
 ```
 
+### Connecting to a BGP speaker
+
+Now that you know how to read MRT files, let's connect to a BGP speaker and process messages in real-time. You can use the `connect` stage to establish the TCP connection, and the `speaker` stage to open and maintain a BGP session.
+
+We will use this opportunity to connect to one of [the BGP projects run by Łukasz Bromirski](https://lukasz.bromirski.net/projects/). The following command connects to the [BGP Blackholing with Flowspec endpoint](https://lukasz.bromirski.net/bgp-fs-blackholing/) and prints the conversation to stdout, which demonstrates that `bgpipe` supports [Flowspec](https://datatracker.ietf.org/doc/html/rfc8955):
+
+```json
+$ bgpipe -o \
+    -- speaker --active --asn 65055 \
+    -- connect 85.232.240.180
+2025-07-11 10:47:20 INF dialing 85.232.240.180:179 stage="[2] connect"
+2025-07-11 10:47:20 INF connection R_LOCAL = 192.168.200.202:59438 stage="[2] connect"
+2025-07-11 10:47:20 INF connection R_REMOTE = 85.232.240.180:179 stage="[2] connect"
+2025-07-11 10:47:20 INF connected 192.168.200.202:59438 -> 85.232.240.180:179 stage="[2] connect"
+["R",1,"2025-07-11T08:47:20.650",-1,"OPEN",{"bgp":4,"asn":65055,"id":"0.0.0.1","hold":90,"caps":{"MP":["IPV4/UNICAST","IPV4/FLOWSPEC","IPV6/UNICAST","IPV6/FLOWSPEC"],"ROUTE_REFRESH":true,"EXTENDED_MESSAGE":true,"AS4":65055}},{}]
+["L",1,"2025-07-11T08:47:22.659",56,"OPEN",{"bgp":4,"asn":65055,"id":"85.232.240.180","hold":7200,"caps":{"MP":["IPV4/FLOWSPEC"],"ROUTE_REFRESH":true,"EXTENDED_NEXTHOP":["IPV4/UNICAST/IPV6","IPV4/MULTICAST/IPV6","IPV4/MPLS_VPN/IPV6"],"AS4":65055,"PRE_ROUTE_REFRESH":true}},{}]
+["L",2,"2025-07-11T08:47:22.659",0,"KEEPALIVE",null,{}]
+["R",2,"2025-07-11T08:47:22.659",0,"KEEPALIVE",null,{}]
+2025-07-11 10:47:22 INF negotiated session capabilities caps="{\"MP\":[\"IPV4/FLOWSPEC\"],\"ROUTE_REFRESH\":true,\"AS4\":65055}"
+2025-07-11 10:47:22 INF event bgpfix/pipe.ESTABLISHED evseq=15 vals=[1752223642]
+...
+```
+
+### Proxying BGP sessions
+
+Finally, let's see how to use `bgpipe` to proxy BGP sessions. You can use the `listen` stage to accept incoming connections and the `connect` stage to forward BGP messages to another router. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.
+
+For example, let's use [Vultr's BGP feature](https://docs.vultr.com/configuring-bgp-on-vultr), where you already have a local BIRD instance running on your VM, but you'd like to see all UPDATEs that match a specific ASN. We will reconfigure the BIRD instance to connect to `bgpipe` instead of the upstream router, and then use `bgpipe` to selectively print the messages.
+
+
+
 ## Conclusion
 
 For more practical pipelines and advanced use cases, check out the [examples](examples.md) page. It contains real-world bgpipe command lines for BGP monitoring, proxying, filtering, and more.
