@@ -374,10 +374,9 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Reading MRT files">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#connecting-to-a-bgp-speaker" class="md-nav__link">
     <span class="md-ellipsis">
       Connecting to a BGP speaker
@@ -385,18 +384,13 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#proxying-bgp-sessions" class="md-nav__link">
     <span class="md-ellipsis">
       Proxying BGP sessions
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -488,10 +482,9 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Reading MRT files">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#connecting-to-a-bgp-speaker" class="md-nav__link">
     <span class="md-ellipsis">
       Connecting to a BGP speaker
@@ -499,18 +492,13 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#proxying-bgp-sessions" class="md-nav__link">
     <span class="md-ellipsis">
       Proxying BGP sessions
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -653,7 +641,7 @@
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="mi">--</span><span class="w"> </span><span class="err">grep</span><span class="w"> </span><span class="err">&#39;pre</span><span class="kc">f</span><span class="err">ix</span><span class="w"> </span><span class="err">~</span><span class="w"> </span><span class="mf">8.0.0.0</span><span class="err">/</span><span class="mi">8</span><span class="err">&#39;</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="err">...</span>
 </span></code></pre></div>
-<h3 id="connecting-to-a-bgp-speaker">Connecting to a BGP speaker</h3>
+<h2 id="connecting-to-a-bgp-speaker">Connecting to a BGP speaker</h2>
 <p>Now that you know how to read MRT files, let's connect to a BGP speaker and process messages in real-time. You can use the <code>connect</code> stage to establish the TCP connection, and the <code>speaker</code> stage to open and maintain a BGP session.</p>
 <p>We will use this opportunity to connect to one of <a href="https://lukasz.bromirski.net/projects/">the BGP projects run by Łukasz Bromirski</a>. The following command connects to the <a href="https://lukasz.bromirski.net/bgp-fs-blackholing/">BGP Blackholing with Flowspec endpoint</a> and prints the conversation to stdout, which demonstrates that <code>bgpipe</code> supports <a href="https://datatracker.ietf.org/doc/html/rfc8955">Flowspec</a>:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="err">$</span><span class="w"> </span><span class="err">bgpipe</span><span class="w"> </span><span class="mi">-</span><span class="err">o</span><span class="w"> </span><span class="err">\</span>
@@ -671,7 +659,7 @@
 </span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="mi">2025-07-11</span><span class="w"> </span><span class="mi">10</span><span class="p">:</span><span class="mi">47</span><span class="p">:</span><span class="mi">22</span><span class="w"> </span><span class="err">INF</span><span class="w"> </span><span class="err">eve</span><span class="kc">nt</span><span class="w"> </span><span class="err">bgp</span><span class="kc">f</span><span class="err">ix/pipe.ESTABLISHED</span><span class="w"> </span><span class="err">evseq=</span><span class="mi">15</span><span class="w"> </span><span class="err">vals=</span><span class="p">[</span><span class="mi">1752223642</span><span class="p">]</span>
 </span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="err">...</span>
 </span></code></pre></div>
-<h3 id="proxying-bgp-sessions">Proxying BGP sessions</h3>
+<h2 id="proxying-bgp-sessions">Proxying BGP sessions</h2>
 <p>Finally, let's see how to use <code>bgpipe</code> to proxy BGP sessions. You can use the <code>listen</code> stage to accept incoming connections and the <code>connect</code> stage to forward BGP messages to another router. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.</p>
 <p>For example, let's use the <a href="https://docs.vultr.com/configuring-bgp-on-vultr">Vultr's BGP feature</a>, where you already have a local BIRD instance running on a VM, with the following configuration:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>log syslog all;
