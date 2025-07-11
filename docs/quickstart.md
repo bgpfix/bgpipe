@@ -135,7 +135,7 @@ $ bgpipe -o \
 ...
 ```
 
-### Connecting to a BGP speaker
+## Connecting to a BGP speaker
 
 Now that you know how to read MRT files, let's connect to a BGP speaker and process messages in real-time. You can use the `connect` stage to establish the TCP connection, and the `speaker` stage to open and maintain a BGP session.
 
@@ -158,7 +158,7 @@ $ bgpipe -o \
 ...
 ```
 
-### Proxying BGP sessions
+## Proxying BGP sessions
 
 Finally, let's see how to use `bgpipe` to proxy BGP sessions. You can use the `listen` stage to accept incoming connections and the `connect` stage to forward BGP messages to another router. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.
 
