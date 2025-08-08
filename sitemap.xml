@@ -2,18 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://bgpipe.org/</loc>
-         <lastmod>2025-07-11</lastmod>
+         <lastmod>2025-08-08</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/examples/</loc>
-         <lastmod>2025-07-11</lastmod>
+         <lastmod>2025-08-08</lastmod>
+    </url>
+    <url>
+         <loc>https://bgpipe.org/filters/</loc>
+         <lastmod>2025-08-08</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/intro/</loc>
-         <lastmod>2025-07-11</lastmod>
+         <lastmod>2025-08-08</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/quickstart/</loc>
-         <lastmod>2025-07-11</lastmod>
+         <lastmod>2025-08-08</lastmod>
     </url>
 </urlset>

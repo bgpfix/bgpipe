@@ -8,11 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://bgpipe.org/examples/">
+        <link rel="canonical" href="https://bgpipe.org/filters/">
       
       
-        <link rel="prev" href="../filters/">
+        <link rel="prev" href="../quickstart/">
       
+      
+        <link rel="next" href="../examples/">
       
       
       <link rel="icon" href="../img/favicon.png">
@@ -20,7 +22,7 @@
     
     
       
-        <title>Examples - bgpipe: a BGP firewall</title>
+        <title>Message Filters - bgpipe: a BGP firewall</title>
       
     
     
@@ -74,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#connect-to-a-bgp-speaker" class="md-skip">
+        <a href="#overview" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Examples
+              Message Filters
             
           </span>
         </div>
@@ -321,28 +323,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../filters/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Message Filters
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -358,7 +338,7 @@
   
   
   <span class="md-ellipsis">
-    Examples
+    Message Filters
     
   </span>
   
@@ -371,7 +351,7 @@
   
   
   <span class="md-ellipsis">
-    Examples
+    Message Filters
     
   </span>
   
@@ -392,83 +372,98 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#connect-to-a-bgp-speaker" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Connect to a BGP speaker
+      Overview
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#json-to-bgp-and-back" class="md-nav__link">
+  <a href="#filter-syntax" class="md-nav__link">
     <span class="md-ellipsis">
-      JSON to BGP and back
+      Filter Syntax
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#convert-mrt-files-to-json" class="md-nav__link">
+  <a href="#attributes" class="md-nav__link">
     <span class="md-ellipsis">
-      Convert MRT files to JSON
+      Attributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#message-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      Message type
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#adding-tcp-md5" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#address-family" class="md-nav__link">
     <span class="md-ellipsis">
-      Adding TCP-MD5
+      Address family
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#stream-mrt-files-to-bgp-routers" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#nlri-prefixes" class="md-nav__link">
     <span class="md-ellipsis">
-      Stream MRT files to BGP routers
+      NLRI / prefixes
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#bgp-sed-in-the-middle-proxy" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#next-hop" class="md-nav__link">
     <span class="md-ellipsis">
-      BGP sed-in-the-middle proxy
+      Next-hop
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#applying-prefix-limits" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#as-path" class="md-nav__link">
     <span class="md-ellipsis">
-      Applying prefix limits
+      AS path
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#archive-bgp-sessions-over-encrypted-websockets" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#communities" class="md-nav__link">
     <span class="md-ellipsis">
-      Archive BGP sessions over encrypted WebSockets
+      Communities
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#grep-for-bgp-messages-in-live-sessions" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#tags-pipeline-context" class="md-nav__link">
     <span class="md-ellipsis">
-      Grep for BGP messages in live sessions
+      Tags (pipeline context)
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -476,6 +471,28 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -505,83 +522,98 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#connect-to-a-bgp-speaker" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Connect to a BGP speaker
+      Overview
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#json-to-bgp-and-back" class="md-nav__link">
+  <a href="#filter-syntax" class="md-nav__link">
     <span class="md-ellipsis">
-      JSON to BGP and back
+      Filter Syntax
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#convert-mrt-files-to-json" class="md-nav__link">
+  <a href="#attributes" class="md-nav__link">
     <span class="md-ellipsis">
-      Convert MRT files to JSON
+      Attributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#message-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      Message type
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#adding-tcp-md5" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#address-family" class="md-nav__link">
     <span class="md-ellipsis">
-      Adding TCP-MD5
+      Address family
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#stream-mrt-files-to-bgp-routers" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#nlri-prefixes" class="md-nav__link">
     <span class="md-ellipsis">
-      Stream MRT files to BGP routers
+      NLRI / prefixes
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#bgp-sed-in-the-middle-proxy" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#next-hop" class="md-nav__link">
     <span class="md-ellipsis">
-      BGP sed-in-the-middle proxy
+      Next-hop
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#applying-prefix-limits" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#as-path" class="md-nav__link">
     <span class="md-ellipsis">
-      Applying prefix limits
+      AS path
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#archive-bgp-sessions-over-encrypted-websockets" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#communities" class="md-nav__link">
     <span class="md-ellipsis">
-      Archive BGP sessions over encrypted WebSockets
+      Communities
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#grep-for-bgp-messages-in-live-sessions" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#tags-pipeline-context" class="md-nav__link">
     <span class="md-ellipsis">
-      Grep for BGP messages in live sessions
+      Tags (pipeline context)
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -604,66 +636,164 @@
   
 
 
-  <h1>Examples</h1>
+  <h1>Message Filters</h1>
 
-<p>Below are practical examples to help you get started with  <code>bgpipe</code>  after you went through the <a href="../quickstart/">quickstart guide</a>. These examples demonstrate how to use  <code>bgpipe</code>  for various BGP-related tasks, such as connecting to BGP speakers, reading MRT files, filtering messages, and more.</p>
-<h2 id="connect-to-a-bgp-speaker">Connect to a BGP speaker</h2>
-<p>Connect to a BGP speaker and respond to OPEN message using the same ASN. Note that if an IP address is used as a stage, it is a shorthand for <code>connect &lt;ip&gt;</code>. The command dumps the session in JSON format to stdout, since the <code>-o</code> option is enabled. It's useful for debugging and monitoring BGP sessions, allowing you to see the raw BGP messages.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>speaker<span class="w"> </span>--<span class="w"> </span><span class="m">1</span>.2.3.4
+<h2 id="overview">Overview</h2>
+<p>This page explains how to write BGP message filters, used eg. in the <code>grep</code> and <code>drop</code> stages in <code>bgpipe</code>.
+Filters let you keep (<code>grep</code>) or remove (<code>drop</code>) BGP messages based on message type,
+NLRI/prefixes, next-hop, AS path, communities, tags, and more.</p>
+<p>Summary:</p>
+<ul>
+<li>Use <code>grep &lt;FILTER&gt;</code> to keep only the messages that match FILTER</li>
+<li>Use <code>drop &lt;FILTER&gt;</code> to remove the messages that match FILTER</li>
+<li>Use <code>&lt;stage&gt; --if &lt;CONDITION&gt;</code> to skip a stage completely if the message does not match CONDITION first (<code>--if</code> here corresponds to stage <strong>i</strong>nput <strong>f</strong>ilter)</li>
+<li>Combine multiple expressions with <code>&amp;&amp;</code> (AND) and <code>||</code> (OR)</li>
+<li>Use <code>(...)</code> to group and <code>!</code> to negate expressions</li>
+</ul>
+<p>Examples:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># keep only IPv6 updates from AS65000</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>updates.mrt.gz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;ipv6 &amp;&amp; as_origin == 65000&#39;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># drop non-IPv6 updates from AS_PATHs that end with ASN matching 204[0-9]+</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>updates.mrt.gz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--<span class="w"> </span>drop<span class="w"> </span><span class="s1">&#39;!ipv6 &amp;&amp; as_path ~ ,204[0-9]+$&#39;</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># only for UPDATEs originated by AS15169, drop if no prefixes match 8.0.0.0/8</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>updates.mrt.gz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;as_origin == 15169&#39;</span><span class="w"> </span><span class="s1">&#39;prefix ~ 8.0.0.0/8&#39;</span>
 </span></code></pre></div>
-<h2 id="json-to-bgp-and-back">JSON to BGP and back</h2>
-<p>Convert a JSON input file to BGP messages, send them to a BGP speaker, and capture the output back in JSON format. This example is useful for testing BGP message processing in remote speakers.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cat<span class="w"> </span>input.json<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>bgpipe<span class="w"> </span>-io<span class="w"> </span>speaker<span class="w"> </span>--<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>output.json
+<h2 id="filter-syntax">Filter Syntax</h2>
+<p>A filter is made of one or more expressions:</p>
+<ul>
+<li>Expression - one of:<ul>
+<li><code>attribute</code> or <code>attribute[index]</code></li>
+<li><code>attribute operator value</code> or <code>attribute[index] operator value</code></li>
+</ul>
+</li>
+<li>Chain expressions with <code>&amp;&amp;</code> (AND) and <code>||</code> (OR)</li>
+<li>Group with <code>( ... )</code></li>
+<li>Negate with <code>!</code></li>
+</ul>
+<p>Where:</p>
+<ul>
+<li><code>attribute</code>: which message attribute you want to test, eg. <code>prefix</code>, <code>aspath</code>, etc.</li>
+<li><code>[index]</code>: an optional selector within that attribute (e.g., <code>aspath[1]</code>, <code>tag[env]</code>)</li>
+<li><code>operator</code>: value comparison operator (see below)</li>
+<li><code>value</code>: value to compare against (strings can be double-quoted with <code>"..."</code>)</li>
+</ul>
+<p>Supported operators:</p>
+<ul>
+<li><code>==</code> or <code>=</code>: equality</li>
+<li><code>!=</code>: inequality (implemented as negated equality)</li>
+<li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>: numeric comparisons (where applicable)</li>
+<li><code>~</code>: match (attribute-specific, e.g., prefix overlap, membership)</li>
+<li><code>!~</code>: negative match (negated membership)</li>
+</ul>
+<p>Values:</p>
+<ul>
+<li>Unquoted tokens, or quoted strings <code>"..."</code> (supports <code>\\</code> escaping)</li>
+<li>Numbers are parsed as integers or floats (0x... supported for ints)</li>
+</ul>
+<p>Important: Most attributes apply to UPDATE messages only. If your filter
+uses UPDATE-only attributes (e.g., prefix/aspath/communities) and the message
+is not an UPDATE (e.g., OPEN/KEEPALIVE), that expression evaluates to false.
+Use <code>type</code> conditions if you want to match non-UPDATE messages.</p>
+<h2 id="attributes">Attributes</h2>
+<p>Below are the attributes you can use. Some keywords are
+shortcuts that expand to comparisons on <code>type</code> or <code>af</code>.</p>
+<h3 id="message-type">Message type</h3>
+<ul>
+<li><code>type</code>: explicit type comparison</li>
+<li>Shortcuts: <code>update</code>, <code>open</code>, <code>keepalive</code></li>
+</ul>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>update                     # same as: type == UPDATE
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>open || keepalive          # match session control messages
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>!update || type == OPEN    # only OPEN, not UPDATE
 </span></code></pre></div>
-<h2 id="convert-mrt-files-to-json">Convert MRT files to JSON</h2>
-<p>Read MRT updates from a compressed file and convert the updates to JSON format. This is particularly useful for analyzing historical BGP data stored in MRT files, which are often used for archiving BGP updates.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>updates.20230301.0000.bz2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>output.json
+<h3 id="address-family">Address family</h3>
+<ul>
+<li><code>af</code>: address family (AFI/SAFI)</li>
+<li>Shortcuts: <code>ipv4</code> (<code>af == IPV4/UNICAST</code>), <code>ipv6</code> (<code>af == IPV6/UNICAST</code>)</li>
+</ul>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ipv4 &amp;&amp; update
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ipv6 &amp;&amp; prefix ~ 2001:db8::/32
 </span></code></pre></div>
-<h2 id="adding-tcp-md5">Adding TCP-MD5</h2>
-<p>Set up a proxy that listens on TCP port 179, waits for a connection, and then proxies it to <code>1.2.3.4</code> with a <a href="https://www.theregister.com/2020/12/16/solarwinds_github_password/">popular</a> TCP-MD5 password. The conversation is printed to stdout. This setup is useful for "securing" BGP sessions, ensuring that only authorized peers can establish a TCP connection. It supports multi-hop scenarios.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span>--md5<span class="w"> </span>solarwinds123<span class="w"> </span><span class="m">1</span>.2.3.4
+<h3 id="nlri-prefixes">NLRI / prefixes</h3>
+<ul>
+<li><code>reach</code>: prefixes in MP_REACH or classic IPv4 reachability</li>
+<li><code>unreach</code>: prefixes in MP_UNREACH or classic IPv4 withdrawals</li>
+<li><code>prefix</code>: union of <code>reach</code> and <code>unreach</code></li>
+</ul>
+<p>Operators:</p>
+<ul>
+<li><code>==</code> exact match, e.g. <code>prefix == 203.0.113.0/24</code></li>
+<li><code>~</code> overlap (subnet) test, e.g. <code>prefix ~ 203.0.113.0/24</code></li>
+</ul>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>prefix ~ 8.0.0.0/8            # any prefix overlapping 8/8
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>reach == 203.0.113.0/24       # exact announcement of 203.0.113.0/24
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>unreach ~ 2001:db8::/32       # any withdrawal inside 2001:db8::/32
 </span></code></pre></div>
-<h2 id="stream-mrt-files-to-bgp-routers">Stream MRT files to BGP routers</h2>
-<p>Listen for new connections on TCP port 179. Configure an active BGP speaker for <code>AS65055</code> that streams a given MRT file when the BGP session is established. This example demonstrates how to replay historical BGP data in a live BGP session, which can be useful for testing and analysis.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--<span class="w"> </span>speaker<span class="w"> </span>--active<span class="w"> </span>--asn<span class="w"> </span><span class="m">65055</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--mrt<span class="w"> </span>--wait<span class="w"> </span>ESTABLISHED<span class="w"> </span>updates.20230301.0000.bz2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179
+<h3 id="next-hop">Next-hop</h3>
+<ul>
+<li><code>nexthop</code> or <code>nh</code>: match next-hop IP</li>
+</ul>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>nh == 192.0.2.1
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>nexthop ~ 2001:db8::/64
 </span></code></pre></div>
-<h2 id="bgp-sed-in-the-middle-proxy">BGP sed-in-the-middle proxy</h2>
-<p>Create a BGP proxy that connects <code>1.2.3.4</code> with <a href="https://lukasz.bromirski.net/post/bgp-w-labie-3/">85.232.240.179</a>, but rewrites ASNs in their OPEN messages using <a href="https://en.wikipedia.org/wiki/Sed">sed</a>. This is useful for quickly testing and modifying BGP sessions on the fly, allowing you to simulate different network scenarios.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>sed<span class="w"> </span>-ure<span class="w"> </span><span class="s1">&#39;/&quot;OPEN&quot;/{ s/65055/65001/g; s/57355/65055/g }&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
+<h3 id="as-path">AS path</h3>
+<ul>
+<li><code>aspath</code> matches full AS_PATH</li>
+<li><code>aspath[index]</code> matches particular index</li>
+<li>Shortcuts:<ul>
+<li><code>as_origin</code> is origin AS (rightmost, index -1)</li>
+<li><code>as_upstream</code> is upstream of origin (index -2)</li>
+<li><code>as_peer</code> is neighbor/peer AS (leftmost, index 0)</li>
+</ul>
+</li>
+</ul>
+<p>Indexing rules:</p>
+<ul>
+<li>Numeric indexes pick a specific position: <code>aspath[0]</code> is the leftmost AS (peer).</li>
+<li>Negative indexes count from the right: <code>aspath[-1]</code> is the origin; <code>aspath[-2]</code> upstream of origin.</li>
+<li>If you omit the index on the shortcuts, they assume the position above (e.g., <code>as_origin</code> implies <code>[-1]</code>).</li>
+</ul>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>as_origin == 64496
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>as_peer != 64512
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>aspath[1] == 3356
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>aspath[-2] == 3356
 </span></code></pre></div>
-<h2 id="applying-prefix-limits">Applying prefix limits</h2>
-<p>Filter BGP updates based on prefix lengths and enforce maximum prefix session limits for both IPv4 and IPv6 connections. This helps in managing and securing BGP sessions by limiting the number of prefixes, which can prevent <a href="https://kirin-attack.github.io/">resource exhaustion</a>.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span>--kill<span class="w"> </span>limit/session<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--<span class="w"> </span>limit<span class="w"> </span>-LR<span class="w"> </span>--ipv4<span class="w"> </span>--min-length<span class="w">  </span><span class="m">8</span><span class="w"> </span>--max-length<span class="w"> </span><span class="m">24</span><span class="w"> </span>--session<span class="w"> </span><span class="m">1000000</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--<span class="w"> </span>limit<span class="w"> </span>-LR<span class="w"> </span>--ipv6<span class="w"> </span>--min-length<span class="w"> </span><span class="m">16</span><span class="w"> </span>--max-length<span class="w"> </span><span class="m">48</span><span class="w"> </span>--session<span class="w"> </span><span class="m">250000</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
+<h3 id="communities">Communities</h3>
+<ul>
+<li><code>community</code> or <code>com</code>: standard communities</li>
+<li><code>com_ext</code>, <code>ext_community</code>, <code>ext_com</code>: extended communities</li>
+<li><code>com_large</code>, <code>large_community</code>, <code>large_com</code>: large communities</li>
+</ul>
+<p>Operators and values:</p>
+<ul>
+<li>Use <code>==</code> for exact string match</li>
+<li>Use <code>~</code> to match against a regular expression</li>
+<li>Community formats are strings like <code>"65000:1"</code> or <code>"1234:5678:90"</code></li>
+</ul>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>community ~ &quot;3356:&quot;
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>com_large ~ &quot;1234:5678:9&quot;
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ext_community ~ &quot;rt:65000:1&quot;   # if present in the data
 </span></code></pre></div>
-<h2 id="archive-bgp-sessions-over-encrypted-websockets">Archive BGP sessions over encrypted WebSockets</h2>
-<p>Stream the BGP session log in JSON format to a remote WebSocket server for real-time monitoring and archiving. This is useful for integrating BGP session data with external monitoring systems, providing a live feed of BGP activity.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--write<span class="w"> </span>wss://bgpfix.com/archive?user<span class="o">=</span>demo<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
-</span></code></pre></div>
-<h2 id="grep-for-bgp-messages-in-live-sessions">Grep for BGP messages in live sessions</h2>
-<p>Proxy a connection between two BGP peers, allowing only IPv6 updates from origin AS <code>12345</code>. This is useful for environments that wish to only accept IPv6 prefixes from a specific ASN. The <code>grep</code> stage allows for <a href="../filters/">complex filtering</a> based on various criteria such as message type, prefix, AS_PATH, and more.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;ipv6 &amp;&amp; as_origin = 12345&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
+<h3 id="tags-pipeline-context">Tags (pipeline context)</h3>
+<p>Tags are key/value pairs attached to messages by the <code>tag</code> stage.
+You can match them with the <code>tag[...]</code> attribute.</p>
+<p>Indexing rules for tags:
+- The index is a string key, e.g., <code>tag[env]</code>, <code>tags[region]</code>.
+- <code>==</code> compares the exact tag value; <code>~</code> can be used for pattern-like matches depending on the handler.</p>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>tag[env] == prod
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>tags[region] ~ &quot;^eu-&quot;
 </span></code></pre></div>
 
 
