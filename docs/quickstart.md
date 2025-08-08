@@ -137,7 +137,7 @@ $ bgpipe -o \
 ...
 ```
 
-### Connecting to a BGP speaker
+## Connecting to a BGP speaker
 
 Now that you know how to read MRT files, let's connect to a BGP speaker and process messages in real-time. You can use the `connect` stage to establish the TCP connection, and the `speaker` stage to open and maintain a BGP session.
 
@@ -160,18 +160,72 @@ $ bgpipe -o \
 ...
 ```
 
-### Proxying BGP sessions
+## Proxying BGP sessions
 
 Finally, let's see how to use `bgpipe` to proxy BGP sessions. You can use the `listen` stage to accept incoming connections and the `connect` stage to forward BGP messages to another router. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.
 
-For example, let's use [Vultr's BGP feature](https://docs.vultr.com/configuring-bgp-on-vultr), where you already have a local BIRD instance running on your VM, but you'd like to see all UPDATEs that match a specific ASN. We will reconfigure the BIRD instance to connect to `bgpipe` instead of the upstream router, and then use `bgpipe` to selectively print the messages.
+For example, let's use the [Vultr's BGP feature](https://docs.vultr.com/configuring-bgp-on-vultr), where you already have a local BIRD instance running on a VM, with the following configuration:
 
+```
+log syslog all;
+router id 1.2.3.4;
 
+protocol bgp vultr
+{
+  local as 123;
+  source address 1.2.3.4;
+  ipv4 {
+    import none;
+    export none;
+  };
+  graceful restart on;
+  multihop 2;
+  neighbor 169.254.169.254 as 64515;
+  password "solarwinds123";
+}
+```
+
+Let's say you'd like to see all UPDATEs that match a specific ASN `15169`. First, let's run a `bgpipe` proxy that listens on port `1790` and connects to the upstream router with TCP-MD5 when its client connects.
+
+```json
+$ bgpipe \
+  -- connect --wait listen --md5 "solarwinds123" 169.254.169.254 \
+  -- stdout -LR --if "as_path = 15169" \
+  -- listen localhost:1790
+2025-07-11 09:16:47 INF listening on 127.0.0.1:1790 stage="[3] listen"
+```
+
+Now let's reconfigure the BIRD instance to connect to `bgpipe` instead of the upstream router. Change the `neighbor` line in the BIRD configuration to point to `localhost:1790`:
+
+```
+// ...
+protocol bgp vultr
+{
+  // ...
+  neighbor 127.0.0.1 port 1790 as 64515;
+  // password ""; // no password needed
+}
+```
+
+Finally, restart your BIRD instance and you should see `bgpipe` reporting new connections, followed by JSON representations of BGP messages matching your filter:
+
+```json
+2025-07-11 11:23:45 INF connection R_LOCAL = 127.0.0.1:1790 stage="[3] listen"
+2025-07-11 11:23:45 INF connection R_REMOTE = 1.2.3.4:36297 stage="[3] listen"
+2025-07-11 11:23:45 INF connected 127.0.0.1:1790 -> 1.2.3.4:36297 stage="[3] listen"
+2025-07-11 11:23:45 INF dialing 169.254.169.254:179 stage="[1] connect"
+2025-07-11 11:23:45 INF connection L_LOCAL = 1.2.3.4:33514 stage="[1] connect"
+2025-07-11 11:23:45 INF connection L_REMOTE = 169.254.169.254:179 stage="[1] connect"
+2025-07-11 11:23:45 INF connected 1.2.3.4:33514 -> 169.254.169.254:179 stage="[1] connect"
+2025-07-11 11:23:46 INF negotiated session capabilities caps="{\"MP\":[\"IPV4/UNICAST\"],\"ROUTE_REFRESH\":true,\"GRACEFUL_RESTART\":true,\"AS4\":64515,\"ENHANCED_ROUTE_REFRESH\":true,\"LLGR\":true}"
+2025-07-11 11:23:46 INF event bgpfix/pipe.ESTABLISHED evseq=15 vals=[1752233026]
+2025-07-11 11:23:49 INF event bgpfix/pipe.EOR evdir=L evseq=18
+["R",243,"2025-07-11T11:23:50.860",1459,"UPDATE",{"reach":[...],"attrs":{"ORIGIN":{"flags":"T","value":"EGP"},"ASPATH":{"flags":"TX","value":[64515,65534,20473,15169,396982]},"NEXTHOP":{"flags":"T","value":"169.254.169.254"},"COMMUNITY":{"flags":"OT","value":["20473:300","20473:15169","64515:44"]},"LARGE_COMMUNITY":{"flags":"OT","value":["20473:300:15169"]}}},{}]
+...
+```
 
 ## Conclusion
 
 For more practical pipelines and advanced use cases, check out the [examples](examples.md) page. It contains real-world bgpipe command lines for BGP monitoring, proxying, filtering, and more.
 
 Happy bgpiping!
-
-
