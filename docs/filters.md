@@ -165,7 +165,7 @@ Examples:
 ```text
 community ~ "3356:"
 com_large ~ "1234:5678:9"
-ext_community ~ "rt:65000:1"   # if present in the data
+ext_community ~ "rt:65000:1"
 ```
 
 ### Tags (pipeline context)
@@ -174,8 +174,10 @@ Tags are key/value pairs attached to messages by the `tag` stage.
 You can match them with the `tag[...]` attribute.
 
 Indexing rules for tags:
-- The index is a string key, e.g., `tag[env]`, `tags[region]`.
-- `==` compares the exact tag value; `~` can be used for pattern-like matches depending on the handler.
+
+ * the index is a string key, e.g., `tag[env]`, `tags[region]`
+ * `==` compares the exact tag value
+ * `~` can be used for pattern-like matches
 
 Examples:
 
