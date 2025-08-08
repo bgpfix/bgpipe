@@ -783,14 +783,17 @@ shortcuts that expand to comparisons on <code>type</code> or <code>af</code>.</p
 <p>Examples:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>community ~ &quot;3356:&quot;
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>com_large ~ &quot;1234:5678:9&quot;
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ext_community ~ &quot;rt:65000:1&quot;   # if present in the data
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ext_community ~ &quot;rt:65000:1&quot;
 </span></code></pre></div>
 <h3 id="tags-pipeline-context">Tags (pipeline context)</h3>
 <p>Tags are key/value pairs attached to messages by the <code>tag</code> stage.
 You can match them with the <code>tag[...]</code> attribute.</p>
-<p>Indexing rules for tags:
-- The index is a string key, e.g., <code>tag[env]</code>, <code>tags[region]</code>.
-- <code>==</code> compares the exact tag value; <code>~</code> can be used for pattern-like matches depending on the handler.</p>
+<p>Indexing rules for tags:</p>
+<ul>
+<li>the index is a string key, e.g., <code>tag[env]</code>, <code>tags[region]</code></li>
+<li><code>==</code> compares the exact tag value</li>
+<li><code>~</code> can be used for pattern-like matches</li>
+</ul>
 <p>Examples:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>tag[env] == prod
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>tags[region] ~ &quot;^eu-&quot;
