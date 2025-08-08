@@ -88,6 +88,8 @@ As you can see, the `connect` stage has its own set of options, such as `--timeo
 
 By default, all stages operate in the *right* (`-R`) direction, meaning that they process BGP messages flowing from left to right. The direction controls which messages to capture for processing in a stage, and where to send new messages. However, if the last stage connects to a BGP endpoint, by default it will operate in the *left* (`-L`) direction, meaning it will send new messages to the left of the pipeline. Usually, the left-most and/or right-most stage is the one that connects to a BGP endpoint, while the other stages process messages in between. If you want bidirectional processing, use the `-L` and `-R` options together, ie. `-LR`.
 
+For writing BGP message filters used by the `grep` and `drop` stages, see the dedicated [filter reference](filters.md) with attributes, operators, and examples.
+
 ## Reading MRT files
 
 Let's demonstrate basic message processing by reading MRT files. MRT files are a standard format for storing BGP messages, and `bgpipe` can read them from a file or a URL. You can even stream MRT files directly from the [RIPE NCC RIS](https://ris.ripe.net/docs/mrt/) or [RouteViews](https://archive.routeviews.org/) archives.
@@ -105,7 +107,7 @@ $ bgpipe \
 // ...
 ```
 
-In the above, the `read` stage streams the latest BGP updates from the `rrc01` RIPE RIS collector, uncompresses the data on the fly, and sends back to the pipeline for further processing. Next, the `grep` stage captures these messages, applies a BGP message filter (IP prefix must overlap with the `8.0.0.0/8` IPv4 prefix), and sends accepted messages to the next stage (non-matching traffic is dropped). Finally, the `stdout` stage converts the messages to JSON format and prints them to stdout.
+In the above, the `read` stage streams the latest BGP updates from the `rrc01` RIPE RIS collector, uncompresses the data on the fly, and sends back to the pipeline for further processing. Next, the `grep` stage captures these messages, applies a BGP message filter (IP prefix must overlap with the `8.0.0.0/8` IPv4 prefix), and sends accepted messages to the next stage (non-matching traffic is dropped). Finally, the `stdout` stage converts the messages to JSON format and prints them to stdout. See [filters](filters.md) for more filter examples and details.
 
 `bgpipe` provides the `--explain` (short `-n`) debugging option that prints the pipeline as configured, but without actually running anything. For example:
 

@@ -40,7 +40,7 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	}
 
 	f := o.Flags
-	f.BoolVar(&s.opt_keep, "keep", false, "always keep the message (run the filter but do not drop)")
+	f.BoolVar(&s.opt_keep, "keep", false, "keep the message: run the filter but do not drop")
 	f.StringVar(&s.opt_event_match, "event-match", "", "emit event on match success")
 	f.StringVar(&s.opt_event_fail, "event-fail", "", "emit event on match fail")
 	f.BoolVar(&s.opt_kill_match, "kill-match", false, "kill the process on match success")
