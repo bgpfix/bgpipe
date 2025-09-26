@@ -7,8 +7,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/exa"
 	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -229,14 +229,20 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (parse_err error)
 
 			// convenience
 			if parse_err == nil && m.Type == msg.INVALID {
-				m.Use(msg.KEEPALIVE)
-				m.Marshal(caps.Caps{}) // empty Data
+				m.Switch(msg.KEEPALIVE)
+				// m.Marshal(caps.Caps{}) // empty Data TODO: needed?
 			}
 		case buf[0] == '{': // an UPDATE
-			m.Use(msg.UPDATE)
-			parse_err = m.Update.FromJSON(buf)
+			parse_err = m.Switch(msg.UPDATE).Update.FromJSON(buf)
+		case exa.IsExaBytes(buf): // exabgp
+			x, err := exa.NewExaLine(string(buf))
+			if err != nil {
+				parse_err = err
+				break
+			}
+			parse_err = x.ToMsg(m)
+
 		default:
-			// TODO: add exabgp?
 			parse_err = ErrFormat
 		}
 	}
