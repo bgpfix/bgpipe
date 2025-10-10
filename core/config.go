@@ -64,7 +64,7 @@ func (b *Bgpipe) Configure() error {
 func (b *Bgpipe) addFlags() {
 	f := b.F
 	f.SortFlags = false
-	f.Usage = b.usage
+	f.Usage = b.printUsage
 	f.SetInterspersed(false)
 	f.BoolP("version", "v", false, "print detailed version info and quit")
 	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
@@ -80,7 +80,7 @@ func (b *Bgpipe) addFlags() {
 	f.String("caps", "", "use given BGP capabilities (JSON format)")
 }
 
-func (b *Bgpipe) usage() {
+func (b *Bgpipe) printUsage() {
 	fmt.Fprintf(os.Stderr, `Usage: bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGUMENTS] [--] STAGE2...
 
 Options:
@@ -109,8 +109,15 @@ Supported stages (run <stage> -h to get its help)
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
-// Usage prints usage screen to stderr
-func (s *StageBase) usage() {
+func (b *Bgpipe) printVersion() {
+	fmt.Fprintf(os.Stderr, "bgpipe version %s\n", b.Version)
+	if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
+		fmt.Fprintf(os.Stderr, "bgpipe build info:\n%s", bi)
+	}
+}
+
+// Usage prints printUsage screen to stderr
+func (s *StageBase) printUsage() {
 	var (
 		o = &s.Options
 		f = o.Flags
@@ -160,10 +167,8 @@ func (b *Bgpipe) parseArgs(args []string) error {
 
 	// print version and quit?
 	if b.K.Bool("version") {
-		if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
-			fmt.Fprintf(os.Stderr, "bgpipe build info:\n%s", bi)
-		}
-		os.Exit(1)
+		b.printVersion()
+		os.Exit(0)
 	}
 
 	// parse stages and their args
@@ -185,6 +190,12 @@ func (b *Bgpipe) parseArgs(args []string) error {
 		// is args[0] a special value, or generic stage command name?
 		cmd := args[0]
 		switch {
+		case cmd == "help":
+			b.printUsage()
+			os.Exit(0)
+		case cmd == "version":
+			b.printVersion()
+			os.Exit(0)
 		case IsAddr(cmd):
 			cmd = "connect"
 		case IsBind(cmd):
@@ -236,7 +247,7 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 
 	// override f.Usage?
 	if f.Usage == nil {
-		f.Usage = s.usage
+		f.Usage = s.printUsage
 	}
 
 	// parse stage flags

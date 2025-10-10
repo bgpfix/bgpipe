@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrStageCmd     = errors.New("invalid stage command")
 	ErrStageDiff    = errors.New("already defined but different")
+	ErrPipeFinished = errors.New("pipe stopped")
 	ErrStageStopped = errors.New("stage stopped")
 	ErrFirstOrLast  = errors.New("must be either the first or the last stage")
 	ErrInject       = errors.New("invalid value for the --new option")

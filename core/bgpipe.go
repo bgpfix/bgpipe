@@ -23,6 +23,7 @@ import (
 // Bgpipe represents a BGP pipeline consisting of several stages, built on top of bgpfix.Pipe
 type Bgpipe struct {
 	zerolog.Logger
+	Version string
 
 	Ctx    context.Context
 	Cancel context.CancelCauseFunc
@@ -42,8 +43,8 @@ type Bgpipe struct {
 
 // NewBgpipe creates a new bgpipe instance using given
 // repositories of stage commands
-func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
-	b := new(Bgpipe)
+func NewBgpipe(version string, repo ...map[string]NewStage) *Bgpipe {
+	b := &Bgpipe{Version: version}
 	b.Ctx, b.Cancel = context.WithCancelCause(context.Background())
 
 	// default logger
@@ -103,13 +104,17 @@ func (b *Bgpipe) Run() error {
 	b.Pipe.Start() // will call b.Start
 	b.Pipe.Wait()  // until error or all processing is done
 
-	// TODO: wait until all pipe output is read
+	// wait for all stages to finish
+	b.Cancel(ErrPipeFinished)
+	for _, s := range b.Stages {
+		s.runStop(nil) // may block 1s
+	}
 
 	// any errors on the global context?
 	err := context.Cause(b.Ctx)
 	switch {
-	case err == nil:
-		break // full success
+	case err == nil || err == ErrPipeFinished: // OK
+		return nil // full success
 	case errors.Is(err, ErrStageStopped):
 		b.Info().Msg(err.Error())
 	default:

@@ -7,8 +7,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/exa"
 	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -28,6 +28,7 @@ type Extio struct {
 	opt_type   []msg.Type // --type
 	opt_raw    bool       // --raw
 	opt_mrt    bool       // --mrt
+	opt_exa    bool       // --exa
 	opt_read   bool       // --read
 	opt_write  bool       // --write
 	opt_copy   bool       // --copy
@@ -69,8 +70,9 @@ func NewExtio(parent *core.StageBase, mode Mode) *Extio {
 	// add CLI options iff needed
 	f := eio.Options.Flags
 	if f.Lookup("raw") == nil {
-		f.Bool("raw", false, "speak raw BGP instead of JSON")
-		f.Bool("mrt", false, "speak MRT-BGP4MP instead of JSON")
+		f.Bool("raw", false, "speak raw BGP")
+		f.Bool("mrt", false, "speak MRT-BGP4MP")
+		f.Bool("exa", false, "speak ExaBGP line format")
 		f.StringSlice("type", []string{}, "skip if message is not of specified type(s)")
 
 		if mode&(MODE_READ|MODE_WRITE) == 0 {
@@ -99,8 +101,6 @@ func (eio *Extio) Attach() error {
 	k := eio.K
 
 	// options
-	eio.opt_raw = k.Bool("raw")
-	eio.opt_mrt = k.Bool("mrt")
 	eio.opt_read = k.Bool("read")
 	eio.opt_write = k.Bool("write")
 	eio.opt_copy = k.Bool("copy")
@@ -108,6 +108,16 @@ func (eio *Extio) Attach() error {
 	eio.opt_notime = k.Bool("no-time")
 	eio.opt_notags = k.Bool("no-tags")
 	eio.opt_pardon = k.Bool("pardon")
+
+	// allow only one of --raw, --mrt, --exa
+	switch {
+	case k.Bool("raw"):
+		eio.opt_raw = true
+	case k.Bool("mrt"):
+		eio.opt_mrt = true
+	case k.Bool("exa"):
+		eio.opt_exa = true
+	}
 
 	// overrides
 	if eio.mode&MODE_READ != 0 {
@@ -134,9 +144,6 @@ func (eio *Extio) Attach() error {
 		} else {
 			eio.opt_copy = true // read/write-only doesn't make sense without --copy
 		}
-	}
-	if eio.opt_raw && eio.opt_mrt {
-		return fmt.Errorf("--raw and --mrt: must not use both at the same time")
 	}
 
 	// not write-only? produce input to bgpipe
@@ -229,14 +236,20 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (parse_err error)
 
 			// convenience
 			if parse_err == nil && m.Type == msg.INVALID {
-				m.Use(msg.KEEPALIVE)
-				m.Marshal(caps.Caps{}) // empty Data
+				m.Switch(msg.KEEPALIVE)
+				// m.Marshal(caps.Caps{}) // empty Data TODO: needed?
 			}
 		case buf[0] == '{': // an UPDATE
-			m.Use(msg.UPDATE)
-			parse_err = m.Update.FromJSON(buf)
+			parse_err = m.Switch(msg.UPDATE).Update.FromJSON(buf)
+		case eio.opt_exa && exa.IsExaBytes(buf): // exabgp
+			x, err := exa.NewExaLine(string(buf))
+			if err != nil {
+				parse_err = fmt.Errorf("exa: %w", err)
+				break
+			}
+			parse_err = x.ToMsg(m)
+
 		default:
-			// TODO: add exabgp?
 			parse_err = ErrFormat
 		}
 	}
@@ -421,8 +434,14 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 		}
 
 		_, err = mr.WriteTo(bb)
+	case eio.opt_exa:
+		x := exa.NewExa()
+		for range x.IterMsg(m) {
+			bb.WriteString(x.String() + "\n") // NB: no error possible
+		}
+
 	default:
-		_, err = bb.Write(m.GetJSON())
+		bb.Write(m.GetJSON()) // NB: no error possible
 	}
 	if err != nil {
 		eio.Warn().Err(err).Msg("extio write error")
