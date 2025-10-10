@@ -93,3 +93,18 @@ bgpipe \
   -- grep 'ipv6 && as_origin = 12345' \
   -- connect 85.232.240.179
 ```
+
+## ExaBGP compatibility
+
+Use the `--exa` flag to read and write [ExaBGP](https://github.com/Exa-Networks/exabgp) line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.
+
+```bash
+# Process BGP messages with an ExaBGP-compatible script
+bgpipe \
+  -- connect 1.2.3.4 \
+  -- exec --exa -LR --args /path/to/script.py \
+  -- connect 5.6.7.8
+
+# Convert JSON to ExaBGP format
+cat session.json | bgpipe stdin -- stdout --exa
+```

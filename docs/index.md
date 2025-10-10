@@ -39,6 +39,7 @@ Started in 2023, bgpipe [has its roots](https://dl.acm.org/doi/10.1145/3634737.3
 - Can filter and archive BGP sessions through an external process, eg. a Python script.
 - Supports remote processing over encrypted WebSockets (HTTPS), eg. in the cloud.
 - Reads and writes MRT files (BGP4MP), optionally compressed.
+- Compatible with ExaBGP's line-based text format for easy integration.
 - Can add and drop TCP-MD5 on multi-hop BGP sessions, independently on each side.
 - Has built-in BGP message filters and session limiters.
 - Supports [popular BGP RFCs](https://github.com/bgpfix/bgpfix/#bgp-features), including Flowspec.
