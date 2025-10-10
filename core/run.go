@@ -77,7 +77,7 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 
 // runStop requests to stop Stage.Run; ev may be nil
 func (s *StageBase) runStop(ev *pipe.Event) bool {
-	if s.stopped.Swap(true) {
+	if s == nil || s.stopped.Swap(true) {
 		return false // already stopped, or not started yet
 	} else {
 		s.Debug().Stringer("ev", ev).Msg("stopping")

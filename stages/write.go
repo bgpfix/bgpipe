@@ -2,6 +2,7 @@ package stages
 
 import (
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -264,6 +265,9 @@ func (s *Write) Run() error {
 				first_run = false
 				reload = time.Tick(s.opt_every)
 			}
+
+		case <-s.Ctx.Done():
+			return context.Cause(s.Ctx)
 		}
 	}
 }
