@@ -2,8 +2,8 @@ nav:
   - Home: index.md
   - Introduction: intro.md
   - Quick Start: quickstart.md
-  - Message Filters: filters.md
   - Examples: examples.md
+  - Message Filters: filters.md
 
 site_name: "bgpipe: a BGP firewall"
 site_url: 'https://bgpipe.org/'
