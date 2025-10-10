@@ -23,6 +23,7 @@ import (
 // Bgpipe represents a BGP pipeline consisting of several stages, built on top of bgpfix.Pipe
 type Bgpipe struct {
 	zerolog.Logger
+	Version string
 
 	Ctx    context.Context
 	Cancel context.CancelCauseFunc
@@ -42,8 +43,8 @@ type Bgpipe struct {
 
 // NewBgpipe creates a new bgpipe instance using given
 // repositories of stage commands
-func NewBgpipe(repo ...map[string]NewStage) *Bgpipe {
-	b := new(Bgpipe)
+func NewBgpipe(version string, repo ...map[string]NewStage) *Bgpipe {
+	b := &Bgpipe{Version: version}
 	b.Ctx, b.Cancel = context.WithCancelCause(context.Background())
 
 	// default logger

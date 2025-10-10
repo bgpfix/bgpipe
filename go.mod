@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	github.com/bgpfix/bgpfix v0.5.1
+	github.com/bgpfix/bgpfix v0.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/klauspost/compress v1.18.0
 	github.com/knadh/koanf/providers/posflag v1.0.1
@@ -14,7 +14,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.10
 	github.com/valyala/bytebufferpool v1.0.0
-	golang.org/x/sys v0.36.0
+	golang.org/x/sys v0.37.0
 )
 
 require (
@@ -28,4 +28,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-replace github.com/bgpfix/bgpfix => ../bgpfix
+// replace github.com/bgpfix/bgpfix => ../bgpfix

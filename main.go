@@ -7,8 +7,12 @@ import (
 	"github.com/bgpfix/bgpipe/stages"
 )
 
+// should be set at build time using -ldflags "-X main.BuildVersion=..."
+var BuildVersion = "dev"
+
 func main() {
 	bp := bgpipe.NewBgpipe(
+		BuildVersion,
 		stages.Repo, // standard stage commands
 	)
 
