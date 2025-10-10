@@ -1,2 +1,5 @@
 /bgpipe
 /bin
+/site
+.python-version
+uv.lock
