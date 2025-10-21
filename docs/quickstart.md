@@ -2,15 +2,7 @@
 
 To get started with `bgpipe`, you need to install it on your system, ie. where you want it to proxy or terminate BGP sessions. `bgpipe` is a single binary that can be run on any machine with a compatible operating system (preferably Linux). It does not require any additional libraries or dependencies, making it easy to deploy - just copy the binary to your target machine.
 
-You can download pre-built binaries from the [GitHub Releases page](https://github.com/bgpfix/bgpipe/releases/latest):
-
-```bash
-wget https://github.com/bgpfix/bgpipe/releases/latest/download/bgpipe-linux-amd64
-chmod +x bgpipe-linux-amd64
-sudo mv -f bgpipe-linux-amd64 /usr/local/bin/bgpipe   # note (1)
-```
-
-1. Make sure that the target directory is in your `$PATH`, or simply rename the binary to `bgpipe` and keep executing it from the current directory.
+You can download pre-built binaries from the [GitHub Releases page](https://github.com/bgpfix/bgpipe/releases/latest).
 
 Alternatively, you can compile from source. You need to have [Go installed](https://go.dev/doc/install) first. Then, you can run:
 
