@@ -1,4 +1,4 @@
-module github.com/bgpfix/bgpipe
+module github.com/mwichtlh/bgpipe
 
 go 1.24.0
 
