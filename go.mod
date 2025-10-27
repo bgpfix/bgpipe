@@ -1,4 +1,4 @@
-module github.com/bgpfix/bgpipe
+module github.com/mwichtlh/bgpipe
 
 go 1.24.0
 
@@ -6,6 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/bgpfix/bgpfix v0.6.1
+	github.com/bgpfix/bgpipe v0.11.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/klauspost/compress v1.18.0
 	github.com/knadh/koanf/providers/posflag v1.0.1
@@ -29,5 +30,3 @@ require (
 
 // for dev: use the latest code in ../bgpfix
 // replace github.com/bgpfix/bgpfix => ../bgpfix
-replace github.com/mwichtlh/bgpipe => github.com/bgpfix/bgpipe v0.0.0-20251027142819-b2e9dc32a380
-
