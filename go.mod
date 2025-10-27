@@ -29,4 +29,5 @@ require (
 
 // for dev: use the latest code in ../bgpfix
 // replace github.com/bgpfix/bgpfix => ../bgpfix
-replace github.com/mwichtlh/bgpipe => github.com/bgpfix/bgpipe latest
+replace github.com/mwichtlh/bgpipe => github.com/bgpfix/bgpipe v0.0.0-20251027142819-b2e9dc32a380
+
