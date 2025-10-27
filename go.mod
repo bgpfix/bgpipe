@@ -1,4 +1,4 @@
-module github.com/mwichtlh/bgpipe
+module github.com/bgpfix/bgpipe
 
 go 1.24.0
 
@@ -29,3 +29,4 @@ require (
 
 // for dev: use the latest code in ../bgpfix
 // replace github.com/bgpfix/bgpfix => ../bgpfix
+replace github.com/mwichtlh/bgpipe => github.com/bgpfix/bgpipe latest
