@@ -200,9 +200,8 @@ func (b *Bgpipe) parseArgs(args []string) error {
 			cmd = "connect"
 		case IsBind(cmd):
 			cmd = "listen"
-		case IsFile(cmd):
-			cmd = "read" // TODO: stat -> mrt / json / exec / etc.
-			args = slices.Insert(args, 0, "--mrt")
+		case IsPath(cmd, b):
+			cmd = "read"
 		default:
 			args = args[1:]
 		}

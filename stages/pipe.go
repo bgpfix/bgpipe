@@ -29,7 +29,7 @@ func NewPipe(parent *core.StageBase) core.Stage {
 	o.Descr = "process messages through a named pipe"
 	o.Args = []string{"path"}
 
-	s.eio = extio.NewExtio(parent, 0)
+	s.eio = extio.NewExtio(parent, 0, false)
 
 	return s
 }

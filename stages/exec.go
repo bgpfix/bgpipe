@@ -44,7 +44,7 @@ func NewExec(parent *core.StageBase) core.Stage {
 	f.Bool("keep-stdin", false, "keep running if stdin is closed")
 	f.Bool("keep-stdout", false, "keep running if stdout is closed")
 
-	s.eio = extio.NewExtio(parent, 0)
+	s.eio = extio.NewExtio(parent, 0, false)
 	return s
 }
 

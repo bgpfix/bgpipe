@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/netip"
+	"os"
 	"strconv"
 	"strings"
 
@@ -53,13 +54,21 @@ func IsBind(v string) bool {
 	return true
 }
 
-func IsFile(v string) bool {
-	switch v[0] {
-	case '.', '/':
+// IsPath returns true if v is a filesystem path or a URL.
+func IsPath(v string, b *Bgpipe) bool {
+	// check if looks like a URL
+	if strings.Contains(v, "://") {
 		return true
-	default:
+	}
+
+	// early reject if a valid stage name
+	if b != nil && b.repo[v] != nil {
 		return false
 	}
+
+	// stat() the path
+	fi, err := os.Stat(v)
+	return err == nil && !fi.IsDir()
 }
 
 // ParseEvents parses events in src and returns the result, or nil.

@@ -22,7 +22,7 @@ func NewStdout(parent *core.StageBase) core.Stage {
 	o.FilterIn = true
 	o.Bidir = true
 
-	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY)
+	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY, false)
 	return s
 }
 

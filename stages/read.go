@@ -1,6 +1,7 @@
 package stages
 
 import (
+	"bufio"
 	"compress/bzip2"
 	"compress/gzip"
 	"errors"
@@ -42,9 +43,9 @@ func NewRead(parent *core.StageBase) core.Stage {
 	o.Args = []string{"path"}
 
 	f := o.Flags
-	f.String("decompress", "auto", "decompress the output (bzip2/gz/zstd/none, default is to detect by file extension)")
+	f.String("decompress", "auto", "decompress the output (bzip2/gz/zstd/none/auto)")
 
-	s.eio = extio.NewExtio(parent, extio.MODE_READ)
+	s.eio = extio.NewExtio(parent, extio.MODE_READ, true)
 	return s
 }
 
@@ -138,6 +139,21 @@ func (s *Read) Prepare() error {
 		s.close = r.Close
 	default:
 		s.rd = s.fh // no decompression, just use the file handle
+	}
+
+	// need to detect data format?
+	if s.eio.DetectNeeded() {
+		// try from path, then from sample iff needed
+		if !s.eio.DetectPath(s.fpath) {
+			br := bufio.NewReader(s.rd)
+			sample, err := br.Peek(32)
+			if err != nil && err != io.EOF {
+				return fmt.Errorf("could not peek data for data format detection: %w", err)
+			} else if !s.eio.DetectSample(sample) {
+				return fmt.Errorf("could not detect data format")
+			}
+			s.rd = br // NB: use buffered data
+		}
 	}
 
 	return nil

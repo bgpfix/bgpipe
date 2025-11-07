@@ -46,11 +46,11 @@ func NewWrite(parent *core.StageBase) core.Stage {
 	o.FilterIn = true
 	o.Args = []string{"path"}
 
-	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY)
+	s.eio = extio.NewExtio(parent, extio.MODE_WRITE|extio.MODE_COPY, true)
 	f := s.Options.Flags
 	f.Bool("append", false, "append to file if already exists")
 	f.Bool("create", false, "file must not already exist")
-	f.String("compress", "auto", "compress the output (gz/zstd/none, default is to detect by file extension)")
+	f.String("compress", "auto", "compress the output (gz/zstd/none/auto)")
 	f.Duration("every", 0, "start new file every time interval")
 	f.String("time-format", "20060102.1504", "time format to replace $TIME in paths")
 	return s
@@ -104,6 +104,13 @@ func (s *Write) Attach() error {
 		}
 	default:
 		return fmt.Errorf("--compress '%s': invalid value", k.String("compress"))
+	}
+
+	// need to detect data format?
+	if s.eio.DetectNeeded() {
+		if !s.eio.DetectPath(s.fpath) {
+			return fmt.Errorf("could not detect target data format")
+		}
 	}
 
 	return s.eio.Attach()

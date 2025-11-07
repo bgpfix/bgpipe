@@ -56,7 +56,7 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
 	o.Args = []string{"url"}
 
-	s.eio = extio.NewExtio(parent, 0)
+	s.eio = extio.NewExtio(parent, 0, false)
 	return s
 }
 

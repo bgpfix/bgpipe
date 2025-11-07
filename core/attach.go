@@ -52,6 +52,11 @@ func (b *Bgpipe) AttachStages() error {
 		}
 	}
 
+	// only 1 stage without I/O? add stdout automatically
+	if count_stage == 1 && stdin_stage == nil && stdout_stage == nil {
+		k.Set("stdout", true)
+	}
+
 	// add stdout?
 	if k.Bool("stdout") || k.Bool("stdout-wait") {
 		if stdout_stage != nil {
@@ -59,12 +64,13 @@ func (b *Bgpipe) AttachStages() error {
 		}
 
 		s := b.NewStage("stdout")
-		s.K.Set("left", true)
-		s.K.Set("right", true)
+		args := []string{"--left", "--right"}
 		if k.Bool("stdout-wait") {
-			s.K.Set("wait", []string{"EOR"})
+			args = append(args, "--wait=EOR")
 		}
-		if err := s.attach(); err != nil {
+		if _, err := s.parseArgs(args); err != nil {
+			return fmt.Errorf("--stdout: %w", err)
+		} else if err := s.attach(); err != nil {
 			return fmt.Errorf("--stdout: %w", err)
 		}
 		stdout_stage = s
@@ -77,21 +83,16 @@ func (b *Bgpipe) AttachStages() error {
 		}
 
 		s := b.NewStage("stdin")
-		s.K.Set("left", true)
-		s.K.Set("right", true)
-		s.K.Set("new", "first")
+		args := []string{"--left", "--right", "--new=first"}
 		if k.Bool("stdin-wait") {
-			s.K.Set("wait", []string{"ESTABLISHED"})
+			args = append(args, "--wait=ESTABLISHED")
 		}
-		if err := s.attach(); err != nil {
+		if _, err := s.parseArgs(args); err != nil {
+			return fmt.Errorf("--stdin: %w", err)
+		} else if err := s.attach(); err != nil {
 			return fmt.Errorf("--stdin: %w", err)
 		}
 		stdin_stage = s
-	}
-
-	// only 1 stage without I/O?
-	if count_stage == 1 && stdin_stage == nil && stdout_stage == nil {
-		return fmt.Errorf("single stage without I/O makes little sense, sorry")
 	}
 
 	// force 2-byte ASNs?
