@@ -2,15 +2,7 @@
 
 To get started with `bgpipe`, you need to install it on your system, ie. where you want it to proxy or terminate BGP sessions. `bgpipe` is a single binary that can be run on any machine with a compatible operating system (preferably Linux). It does not require any additional libraries or dependencies, making it easy to deploy - just copy the binary to your target machine.
 
-You can download pre-built binaries from the [GitHub Releases page](https://github.com/bgpfix/bgpipe/releases/latest):
-
-```bash
-wget https://github.com/bgpfix/bgpipe/releases/latest/download/bgpipe-linux-amd64
-chmod +x bgpipe-linux-amd64
-sudo mv -f bgpipe-linux-amd64 /usr/local/bin/bgpipe   # note (1)
-```
-
-1. Make sure that the target directory is in your `$PATH`, or simply rename the binary to `bgpipe` and keep executing it from the current directory.
+You can download pre-built binaries from the [GitHub Releases page](https://github.com/bgpfix/bgpipe/releases/latest).
 
 Alternatively, you can compile from source. You need to have [Go installed](https://go.dev/doc/install) first. Then, you can run:
 
@@ -98,7 +90,7 @@ Below is an example of reading a compressed MRT file from the RIPE NCC RIS archi
 
 ```json
 $ bgpipe \
-    -- read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz \
+    -- read https://data.ris.ripe.net/rrc01/latest-update.gz \
     -- grep 'prefix ~ 8.0.0.0/8' \
     -- stdout
 2025-07-04 13:17:47 INF streaming https://data.ris.ripe.net/rrc01/latest-update.gz stage="[1] read"
@@ -113,11 +105,11 @@ In the above, the `read` stage streams the latest BGP updates from the `rrc01` R
 
 ```json
 $ bgpipe -n \
-    -- read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz \
+    -- read https://data.ris.ripe.net/rrc01/latest-update.gz \
     -- grep 'prefix ~ 8.0.0.0/8' \
     -- stdout
 --> MESSAGES FLOWING RIGHT -->
-  [1] read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz
+  [1] read https://data.ris.ripe.net/rrc01/latest-update.gz
       writes messages to pipeline inputs=1
   [2] grep prefix ~ 8.0.0.0/8
       reads messages from pipeline callbacks=1 types=[ALL]
@@ -132,7 +124,7 @@ Last but not least, instead of putting the `stdout` stage explicitly in the pipe
 
 ```json
 $ bgpipe -o \
-    -- read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz \
+    -- read https://data.ris.ripe.net/rrc01/latest-update.gz \
     -- grep 'prefix ~ 8.0.0.0/8'
 ...
 ```

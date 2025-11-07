@@ -5,9 +5,9 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	github.com/bgpfix/bgpfix v0.6.1
+	github.com/bgpfix/bgpfix v0.7.1
 	github.com/gorilla/websocket v1.5.3
-	github.com/klauspost/compress v1.18.0
+	github.com/klauspost/compress v1.18.1
 	github.com/knadh/koanf/providers/posflag v1.0.1
 	github.com/knadh/koanf/v2 v2.3.0
 	github.com/puzpuzpuz/xsync/v4 v4.2.0

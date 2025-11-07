@@ -1,10 +1,13 @@
 package extio
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
+	"path/filepath"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/bgpfix/bgpfix/dir"
@@ -24,11 +27,13 @@ var bbpool bytebufferpool.Pool
 type Extio struct {
 	*core.StageBase
 
-	mode       Mode
+	mode     Mode // extio mode of operation
+	Detected bool // auto-detected the data format?
+
 	opt_type   []msg.Type // --type
-	opt_raw    bool       // --raw
-	opt_mrt    bool       // --mrt
-	opt_exa    bool       // --exa
+	opt_raw    bool       // --format=raw
+	opt_mrt    bool       // --format=mrt
+	opt_exa    bool       // --format=exa
 	opt_read   bool       // --read
 	opt_write  bool       // --write
 	opt_copy   bool       // --copy
@@ -52,14 +57,14 @@ type Extio struct {
 type Mode = int
 
 const (
-	MODE_DEFAULT      = 0
+	MODE_DEFAULT      = 0    // accept both input and output to/from bgpipe
 	MODE_READ    Mode = 0x01 // no output from bgpipe
 	MODE_WRITE   Mode = 0x02 // no input to bgpipe
-	MODE_COPY    Mode = 0x10 // copy from pipe, don't drop
+	MODE_COPY    Mode = 0x10 // copy from pipe (mirror), don't consume the message
 )
 
 // NewExtio creates a new object for given stage.
-func NewExtio(parent *core.StageBase, mode Mode) *Extio {
+func NewExtio(parent *core.StageBase, mode Mode, autodetect bool) *Extio {
 	eio := &Extio{
 		StageBase: parent,
 		Output:    make(chan *bytebufferpool.ByteBuffer, 100),
@@ -69,11 +74,13 @@ func NewExtio(parent *core.StageBase, mode Mode) *Extio {
 
 	// add CLI options iff needed
 	f := eio.Options.Flags
-	if f.Lookup("raw") == nil {
-		f.Bool("raw", false, "speak raw BGP")
-		f.Bool("mrt", false, "speak MRT-BGP4MP")
-		f.Bool("exa", false, "speak ExaBGP line format")
-		f.StringSlice("type", []string{}, "skip if message is not of specified type(s)")
+	if f.Lookup("format") == nil {
+		if autodetect {
+			f.String("format", "auto", "data format (json/raw/mrt/exa/auto)")
+		} else {
+			f.String("format", "json", "data format (json/raw/mrt/exa)")
+		}
+		f.StringSlice("type", []string{}, "skip messages not of specified type(s)")
 
 		if mode&(MODE_READ|MODE_WRITE) == 0 {
 			f.Bool("read", false, "read-only mode (no output from bgpipe)")
@@ -95,6 +102,103 @@ func NewExtio(parent *core.StageBase, mode Mode) *Extio {
 	return eio
 }
 
+// DetectNeeded returns true iff data format detection is (still) needed
+func (eio *Extio) DetectNeeded() bool {
+	return !eio.Detected && eio.K.String("format") == "auto"
+}
+
+// DetectPath tries to detect data format from given path.
+// Returns true if format was successfully detected.
+func (eio *Extio) DetectPath(path string) (success bool) {
+	defer func() {
+		if success {
+			eio.Detected = true
+		}
+	}()
+
+	fname := strings.ToLower(filepath.Base(path))
+
+	// looks like RouteViews / RIPE RIS MRT dumps?
+	if strings.HasPrefix(fname, "updates.2") || fname == "latest-update.gz" {
+		eio.opt_mrt = true
+		return true
+	}
+
+	// drop compression suffixes
+	switch ext := filepath.Ext(fname); ext {
+	case ".gz", ".zstd", ".zst", ".bz2":
+		fname = strings.TrimSuffix(fname, ext)
+	}
+
+	// detect by extension
+	switch filepath.Ext(fname) {
+	case ".mrt":
+		eio.opt_mrt = true
+		return true
+	case ".exa":
+		eio.opt_exa = true
+		return true
+	case ".json", ".jsonl", ".txt":
+		// default JSON
+		return true
+	case ".raw", ".bin", ".bgp":
+		eio.opt_raw = true
+		return true
+	}
+
+	return false
+}
+
+// DetectSample tries to detect data format by peeking at the buffered reader.
+// Returns true if format was successfully detected.
+func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
+	buf, err := br.Peek(1)
+	if err != nil {
+		return false
+	}
+	defer func() {
+		if success {
+			eio.Detected = true
+		}
+	}()
+
+	// looks like JSON?
+	if buf[0] == '[' || buf[0] == '{' {
+		// default JSON
+		return true
+	}
+
+	// looks like exabgp?
+	buf, err = br.Peek(8)
+	if err != nil {
+		return false
+	} else if exa.IsExaBytes(buf) {
+		eio.opt_exa = true
+		return true
+	}
+
+	// looks like raw BGP?
+	buf, err = br.Peek(16)
+	if err != nil {
+		return false
+	} else if bytes.HasPrefix(buf, msg.BgpMarker) {
+		eio.opt_raw = true
+		return true
+	}
+
+	// wild shot: looks like MRT BGP4MP_MESSAGE?
+	// peek max. size for MRT ET + BGP4MP AS4 IPv6 + BGP marker
+	buf, err = br.Peek(mrt.HEADLEN + 4 + 3*4 + 16*2 + msg.MARKLEN)
+	if err != nil {
+		return false
+	} else if bytes.Contains(buf, msg.BgpMarker) {
+		eio.opt_mrt = true
+		return true
+	}
+
+	return false
+}
+
 // Attach must be called from the parent stage attach
 func (eio *Extio) Attach() error {
 	p := eio.P
@@ -109,14 +213,20 @@ func (eio *Extio) Attach() error {
 	eio.opt_notags = k.Bool("no-tags")
 	eio.opt_pardon = k.Bool("pardon")
 
-	// allow only one of --raw, --mrt, --exa
-	switch {
-	case k.Bool("raw"):
+	// data format
+	switch strings.ToLower(k.String("format")) {
+	case "json":
+		// default
+	case "raw":
 		eio.opt_raw = true
-	case k.Bool("mrt"):
+	case "mrt":
 		eio.opt_mrt = true
-	case k.Bool("exa"):
+	case "exa":
 		eio.opt_exa = true
+	case "auto":
+		// handled elsewhere
+	default:
+		return fmt.Errorf("invalid --format '%s'", k.String("format"))
 	}
 
 	// overrides
@@ -175,10 +285,10 @@ func (eio *Extio) Attach() error {
 	// not read-only? capture bgpipe output
 	if !eio.opt_read {
 		cbdir := eio.Dir
-		if eio.IsFirst {
-			cbdir = dir.DIR_L
-		} else if eio.IsLast {
+		if eio.IsLast {
 			cbdir = dir.DIR_R
+		} else if eio.IsFirst {
+			cbdir = dir.DIR_L
 		}
 		eio.Callback = p.OnMsg(eio.SendMsg, cbdir, eio.opt_type...)
 	}
@@ -419,7 +529,7 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 		}
 		_, err = m.WriteTo(bb)
 	case eio.opt_mrt:
-		mr := mrt.NewMrt().Use(mrt.BGP4MP_ET)
+		mr := mrt.NewMrt().Switch(mrt.BGP4MP_ET)
 
 		// marshal into BGP4MP
 		err = mr.Bgp4.FromMsg(m)
