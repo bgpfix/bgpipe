@@ -16,6 +16,7 @@ type Connect struct {
 	in *pipe.Input
 
 	target string
+	bind   string
 	conn   net.Conn
 }
 
@@ -34,6 +35,7 @@ func NewConnect(parent *core.StageBase) core.Stage {
 	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
 	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
 	f.String("md5", "", "TCP MD5 password")
+	f.String("bind", "", "local address to bind to (IP or IP:port)")
 	o.Args = []string{"addr"}
 
 	return s
@@ -47,13 +49,24 @@ func (s *Connect) Attach() error {
 	}
 
 	// target needs a port number?
-	_, _, err := net.SplitHostPort(s.target)
-	if err != nil {
-		// a literal IP address?
+	if _, _, err := net.SplitHostPort(s.target); err != nil {
 		if a, err := netip.ParseAddr(s.target); err == nil {
 			s.target = netip.AddrPortFrom(a, 179).String()
 		} else {
 			s.target += ":179" // no idea, best-effort try
+		}
+	}
+
+	// use bind address if defined
+	s.bind = s.K.String("bind")
+	if len(s.bind) > 0 {
+		// bind needs a port number?
+		if _, _, err := net.SplitHostPort(s.bind); err != nil {
+			if a, err := netip.ParseAddr(s.bind); err == nil {
+				s.bind = netip.AddrPortFrom(a, 0).String()
+			} else {
+				s.bind += ":0" // no idea, best-effort try
+			}
 		}
 	}
 
@@ -74,6 +87,15 @@ func (s *Connect) Prepare() error {
 	// dialer
 	var dialer net.Dialer
 	dialer.Control = tcp_md5(s.K.String("md5"))
+
+	// bind local address?
+	if len(s.bind) > 0 {
+		laddr, err := net.ResolveTCPAddr("tcp", s.bind)
+		if err != nil {
+			return err
+		}
+		dialer.LocalAddr = laddr
+	}
 
 	// dial
 	s.Info().Msgf("dialing %s", s.target)
