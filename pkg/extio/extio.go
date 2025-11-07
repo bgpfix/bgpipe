@@ -182,6 +182,7 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 	if err != nil {
 		return false
 	} else if bytes.HasPrefix(buf, msg.BgpMarker) {
+		eio.opt_raw = true
 		return true
 	}
 
