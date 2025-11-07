@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
     
     
       
@@ -1071,7 +1071,7 @@
 This page documents the format, which is implemented by the <a href="https://github.com/bgpfix/bgpfix">bgpfix library</a>. For example, the JSON translation feature can be useful for external processors - e.g. Python scripts via the <code>exec</code> or <code>websocket</code> stages - or for BGP message inspection or archiving.</p>
 <h2 id="overview">Overview</h2>
 <p>Each BGP message is represented as a JSON array with the following structure:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">[</span><span class="err">dir</span><span class="p">,</span><span class="w"> </span><span class="err">seq</span><span class="p">,</span><span class="w"> </span><span class="kc">t</span><span class="err">ime</span><span class="p">,</span><span class="w"> </span><span class="err">le</span><span class="kc">n</span><span class="p">,</span><span class="w"> </span><span class="kc">t</span><span class="err">ype</span><span class="p">,</span><span class="w"> </span><span class="err">da</span><span class="kc">ta</span><span class="p">,</span><span class="w"> </span><span class="err">me</span><span class="kc">ta</span><span class="p">]</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">[</span><span class="err">dir</span><span class="p">,</span><span class="w"> </span><span class="err">seq</span><span class="p">,</span><span class="w"> </span><span class="kc">t</span><span class="err">ime</span><span class="p">,</span><span class="w"> </span><span class="kc">t</span><span class="err">ype</span><span class="p">,</span><span class="w"> </span><span class="err">da</span><span class="kc">ta</span><span class="p">,</span><span class="w"> </span><span class="err">me</span><span class="kc">ta</span><span class="p">]</span>
 </span></code></pre></div>
 <p>Where:</p>
 <table>
@@ -1104,24 +1104,18 @@ This page documents the format, which is implemented by the <a href="https://git
 </tr>
 <tr>
 <td><code>[3]</code></td>
-<td><code>len</code></td>
-<td>int</td>
-<td>length of the BGP message</td>
-</tr>
-<tr>
-<td><code>[4]</code></td>
 <td><code>type</code></td>
 <td>string/int</td>
 <td>type: <code>OPEN</code>, <code>UPDATE</code>, <code>KEEPALIVE</code>, etc.</td>
 </tr>
 <tr>
-<td><code>[5]</code></td>
+<td><code>[4]</code></td>
 <td><code>data</code></td>
 <td>object/string</td>
 <td>type-specific object or raw hex string (optional)</td>
 </tr>
 <tr>
-<td><code>[6]</code></td>
+<td><code>[5]</code></td>
 <td><code>meta</code></td>
 <td>object</td>
 <td>bgpipe metadata (optional)</td>
@@ -1129,7 +1123,7 @@ This page documents the format, which is implemented by the <a href="https://git
 </tbody>
 </table>
 <p>Example KEEPALIVE Message</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2025-07-11T08:47:22.659&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;KEEPALIVE&quot;</span><span class="p">]</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2025-07-11T08:47:22.659&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;KEEPALIVE&quot;</span><span class="p">]</span>
 </span></code></pre></div>
 <h2 id="open-messages">OPEN Messages</h2>
 <p>For OPEN messages, the <code>data</code> field contains a JSON object with the BGP session parameters and capabilities:</p>
