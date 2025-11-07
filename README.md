@@ -1,36 +1,37 @@
-# bgpipe: BGP reverse proxy and firewall
+# bgpipe: a BGP reverse proxy
 
 An open-source BGP reverse proxy, firewall, and traffic processor based on [the BGPFix library](https://github.com/bgpfix/bgpfix).
 
-**📖 Full documentation at [bgpipe.org](https://bgpipe.org)**
+**📖 Full documentation at [bgpipe.org](https://bgpipe.org/)**
 
 ## What is bgpipe?
 
 bgpipe works as a **pipeline of data processing stages** that slice and dice streams of BGP messages. It can be used as a powerful BGP firewall that transparently secures, enhances, and audits existing BGP speakers.
 
 **Use cases:**
-- BGP man-in-the-middle proxy with full conversation logging
-- BGP to JSON bridge for filtering and monitoring
-- Secure BGP transport over websocket + TLS
+- BGP man-in-the-middle proxy with full conversation logging and manipulation
+- Bidirectional BGP to JSON translation for filtering and monitoring (supports Flowspec)
+- Secure BGP transport over websockets + TLS
 - MRT file processing and conversion (to/from JSON)
 - Fast BGP packet filtering with custom rules
 - Prefix length and count limits enforcement
 - Router control plane firewall (drop, modify, and synthesize BGP messages)
+- Replace [ExaBGP](https://github.com/Exa-Networks/exabgp) for faster performance and lower resource usage
 
 The vision is to bolster open source innovation in the closed world of big BGP router vendors. See the [RIPE 88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/) for background.
 
 ## Quick Example
 
 ```bash
-# Proxy a BGP session and log all traffic to JSON
-bgpipe -o \
+# Reverse proxy: expose internal BGP router, log all traffic to JSON
+bgpipe --stdout \
   -- listen :179 \
   -- connect --wait listen 192.0.2.1
 
-# Convert MRT file to JSON with filtering
+# Stream MRT file, filter by matching IP prefix, and store as JSON file
 bgpipe \
-  -- read --mrt updates.20250601.0400.bz2 \
-  -- grep 'prefix ~ 8.8.8.8' \
+  -- read https://data.ris.ripe.net/rrc01/2025.11/updates.20251107.2300.gz \
+  -- grep 'prefix ~ 198.41.0.4' \
   -- write output.json
 ```
 
