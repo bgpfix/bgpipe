@@ -132,7 +132,7 @@ func (s *StageBase) attach() error {
 		k  = s.K
 	)
 
-	// first / last?
+	// first / last? (or both if only 1 stage)
 	if s.Index == 1 {
 		s.IsFirst = true
 	}
@@ -156,13 +156,6 @@ func (s *StageBase) attach() error {
 
 		// symmetry
 		s.IsLeft = !s.IsRight
-
-		// the only stage?
-		if b.StageCount() == 1 {
-			s.IsLeft = true
-			s.IsRight = true
-			s.IsBidir = true
-		}
 	}
 
 	// set s.Dir
