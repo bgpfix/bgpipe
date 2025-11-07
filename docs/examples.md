@@ -24,7 +24,7 @@ Read MRT updates from a compressed file and convert the updates to JSON format. 
 
 ```bash
 bgpipe \
-  -- read --mrt updates.20230301.0000.bz2 \
+  -- read updates.20230301.0000.bz2 \
   -- write output.json
 ```
 
@@ -45,7 +45,7 @@ Listen for new connections on TCP port 179. Configure an active BGP speaker for 
 ```bash
 bgpipe \
   -- speaker --active --asn 65055 \
-  -- read --mrt --wait ESTABLISHED updates.20230301.0000.bz2 \
+  -- read --wait ESTABLISHED updates.20230301.0000.bz2 \
   -- listen :179
 ```
 
@@ -96,15 +96,15 @@ bgpipe \
 
 ## ExaBGP compatibility
 
-Use the `--exa` flag to read and write [ExaBGP](https://github.com/Exa-Networks/exabgp) line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.
+Use the `--format=exa` flag to read and write [ExaBGP](https://github.com/Exa-Networks/exabgp) line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.
 
 ```bash
 # Process BGP messages with an ExaBGP-compatible script
 bgpipe \
   -- connect 1.2.3.4 \
-  -- exec --exa -LR --args /path/to/script.py \
+  -- exec --format=exa -LR --args /path/to/script.py \
   -- connect 5.6.7.8
 
 # Convert JSON to ExaBGP format
-cat session.json | bgpipe stdin -- stdout --exa
+cat session.json | bgpipe stdin -- stdout --format=exa
 ```

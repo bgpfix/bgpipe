@@ -90,7 +90,7 @@ Below is an example of reading a compressed MRT file from the RIPE NCC RIS archi
 
 ```json
 $ bgpipe \
-    -- read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz \
+    -- read https://data.ris.ripe.net/rrc01/latest-update.gz \
     -- grep 'prefix ~ 8.0.0.0/8' \
     -- stdout
 2025-07-04 13:17:47 INF streaming https://data.ris.ripe.net/rrc01/latest-update.gz stage="[1] read"
@@ -105,11 +105,11 @@ In the above, the `read` stage streams the latest BGP updates from the `rrc01` R
 
 ```json
 $ bgpipe -n \
-    -- read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz \
+    -- read https://data.ris.ripe.net/rrc01/latest-update.gz \
     -- grep 'prefix ~ 8.0.0.0/8' \
     -- stdout
 --> MESSAGES FLOWING RIGHT -->
-  [1] read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz
+  [1] read https://data.ris.ripe.net/rrc01/latest-update.gz
       writes messages to pipeline inputs=1
   [2] grep prefix ~ 8.0.0.0/8
       reads messages from pipeline callbacks=1 types=[ALL]
@@ -124,7 +124,7 @@ Last but not least, instead of putting the `stdout` stage explicitly in the pipe
 
 ```json
 $ bgpipe -o \
-    -- read --mrt https://data.ris.ripe.net/rrc01/latest-update.gz \
+    -- read https://data.ris.ripe.net/rrc01/latest-update.gz \
     -- grep 'prefix ~ 8.0.0.0/8'
 ...
 ```
