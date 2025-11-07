@@ -146,10 +146,7 @@ func (s *Read) Prepare() error {
 		// try from path, then from sample iff needed
 		if !s.eio.DetectPath(s.fpath) {
 			br := bufio.NewReader(s.rd)
-			sample, err := br.Peek(32)
-			if err != nil && err != io.EOF {
-				return fmt.Errorf("could not peek data for data format detection: %w", err)
-			} else if !s.eio.DetectSample(sample) {
+			if !s.eio.DetectSample(br) {
 				return fmt.Errorf("could not detect data format")
 			}
 			s.rd = br // NB: use buffered data

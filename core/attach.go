@@ -73,7 +73,6 @@ func (b *Bgpipe) AttachStages() error {
 		} else if err := s.attach(); err != nil {
 			return fmt.Errorf("--stdout: %w", err)
 		}
-		stdout_stage = s
 	}
 
 	// add stdin?
@@ -92,7 +91,6 @@ func (b *Bgpipe) AttachStages() error {
 		} else if err := s.attach(); err != nil {
 			return fmt.Errorf("--stdin: %w", err)
 		}
-		stdin_stage = s
 	}
 
 	// force 2-byte ASNs?
@@ -137,7 +135,8 @@ func (s *StageBase) attach() error {
 	// first / last?
 	if s.Index == 1 {
 		s.IsFirst = true
-	} else if s.Index == b.StageCount() {
+	}
+	if s.Index == b.StageCount() {
 		s.IsLast = true
 	}
 
@@ -157,6 +156,13 @@ func (s *StageBase) attach() error {
 
 		// symmetry
 		s.IsLeft = !s.IsRight
+
+		// the only stage?
+		if b.StageCount() == 1 {
+			s.IsLeft = true
+			s.IsRight = true
+			s.IsBidir = true
+		}
 	}
 
 	// set s.Dir

@@ -1,6 +1,7 @@
 package extio
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -148,10 +149,11 @@ func (eio *Extio) DetectPath(path string) (success bool) {
 	return false
 }
 
-// DetectSample tries to detect data format from sample buffer (>=32 bytes).
+// DetectSample tries to detect data format by peeking at the buffered reader.
 // Returns true if format was successfully detected.
-func (eio *Extio) DetectSample(buf []byte) (success bool) {
-	if len(buf) < 32 {
+func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
+	buf, err := br.Peek(1)
+	if err != nil {
 		return false
 	}
 	defer func() {
@@ -167,19 +169,33 @@ func (eio *Extio) DetectSample(buf []byte) (success bool) {
 	}
 
 	// looks like exabgp?
-	if exa.IsExaBytes(buf) {
+	buf, err = br.Peek(8)
+	if err != nil {
+		return false
+	} else if exa.IsExaBytes(buf) {
 		eio.opt_exa = true
 		return true
 	}
 
 	// looks like raw BGP?
-	if bytes.HasPrefix(buf, msg.BgpMarker) {
+	buf, err = br.Peek(16)
+	if err != nil {
+		return false
+	} else if bytes.HasPrefix(buf, msg.BgpMarker) {
 		return true
 	}
 
-	// XXX: assume it's MRT
-	eio.opt_mrt = true
-	return true
+	// wild shot: looks like MRT BGP4MP_MESSAGE?
+	// peek max. size for MRT ET + BGP4MP AS4 IPv6 + BGP marker
+	buf, err = br.Peek(mrt.HEADLEN + 4 + 3*4 + 16*2 + msg.MARKLEN)
+	if err != nil {
+		return false
+	} else if bytes.Contains(buf, msg.BgpMarker) {
+		eio.opt_mrt = true
+		return true
+	}
+
+	return false
 }
 
 // Attach must be called from the parent stage attach
@@ -268,10 +284,10 @@ func (eio *Extio) Attach() error {
 	// not read-only? capture bgpipe output
 	if !eio.opt_read {
 		cbdir := eio.Dir
-		if eio.IsFirst {
-			cbdir = dir.DIR_L
-		} else if eio.IsLast {
+		if eio.IsLast {
 			cbdir = dir.DIR_R
+		} else if eio.IsFirst {
+			cbdir = dir.DIR_L
 		}
 		eio.Callback = p.OnMsg(eio.SendMsg, cbdir, eio.opt_type...)
 	}
