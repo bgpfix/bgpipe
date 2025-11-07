@@ -1,4 +1,4 @@
-# bgpipe: a BGP firewall
+# bgpipe: a BGP reverse proxy
 
 **bgpipe** is an open-source tool for processing and filtering messages exchanged by [the Border Gateway Protocol (BGP)](https://en.wikipedia.org/wiki/Border_Gateway_Protocol). BGP is [the routing protocol that makes the Internet work](https://learn.nsrc.org/bgp/bgp_intro), and as such it is considered to be [critical to the global economic prosperity and security](https://bidenwhitehouse.archives.gov/wp-content/uploads/2024/09/Roadmap-to-Enhancing-Internet-Routing-Security.pdf).
 
@@ -35,7 +35,7 @@ Started in 2023, bgpipe [has its roots](https://dl.acm.org/doi/10.1145/3634737.3
 ## Features
 
 - Works as a transparent man-in-the-middle proxy.
-- Has full, bi-directional BGP to JSON translation.
+- Has full, bi-directional BGP to JSON translation (with Flowspec).
 - Can filter and archive BGP sessions through an external process, eg. a Python script.
 - Supports remote processing over encrypted WebSockets (HTTPS), eg. in the cloud.
 - Reads and writes MRT files (BGP4MP), optionally compressed.
