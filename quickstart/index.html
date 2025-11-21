@@ -832,7 +832,7 @@
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="err">...</span>
 </span></code></pre></div>
 <h2 id="filtering-with-python-scripts">Filtering with Python scripts</h2>
-<p>The <code>exec</code> stage lets you process BGP messages with external scripts. <code>bgpipe</code> sends JSON arrays (see <a href="../json-format/">json-format.md</a>) to the script's stdin and reads modified/filtered messages from stdout. This makes it easy to implement custom BGP logic in any language.</p>
+<p>The <code>exec</code> stage lets you process BGP messages with external scripts. <code>bgpipe</code> sends JSON arrays (see <a href="../json-format/">JSON format docs</a>) to the script's stdin and reads modified/filtered messages from stdout. This makes it easy to implement custom BGP logic in any language.</p>
 <p>Here's a simple Python script that only allows IPv4 prefixes shorter than <code>/16</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="ch">#!/usr/bin/env python3</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
