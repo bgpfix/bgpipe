@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -180,21 +181,24 @@ func (s *Websocket) prepareClient() error {
 	url := s.url.String()
 	for try := 0; ; try++ {
 		s.Info().Msgf("dialing %s", url)
-
 		conn, resp, err := dialer.DialContext(s.Ctx, url, s.headers)
+
+		// check the result
 		if err == nil {
 			s.Info().
 				Interface("headers", resp.Header).
 				Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 			s.clientConn = conn
-			return nil
+			return nil // success
+		} else if !s.retry || (s.retry_max > 0 && try >= s.retry_max) {
+			return err // no (more) retries
+		} else if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+			// temporary timeout, retry
+		} else if s.timeout > 0 && errors.Is(err, context.DeadlineExceeded) {
+			// context timeout, retry
 		}
 
-		if !s.retry || (s.retry_max > 0 && try >= s.retry_max) {
-			return err
-		}
-
-		sec := min(60, try*try) + rand.Intn(try)
+		sec := min(60, try*try) + rand.Intn(try+1)
 		s.Warn().Err(err).Msgf("dial failed, retrying in %d seconds", sec)
 		select {
 		case <-time.After(time.Second * time.Duration(sec)):

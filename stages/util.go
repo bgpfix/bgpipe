@@ -2,6 +2,7 @@ package stages
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -161,7 +162,7 @@ func dial_retry(s *core.StageBase, dialer *net.Dialer, network, address string) 
 	retry_max := s.K.Int("retry-max")
 	timeout := s.K.Duration("timeout")
 
-	ctx := s.Ctx
+	var ctx context.Context
 	var cancel context.CancelFunc
 
 	for try := 0; ; try++ {
@@ -183,28 +184,27 @@ func dial_retry(s *core.StageBase, dialer *net.Dialer, network, address string) 
 		// add timeout?
 		if timeout > 0 {
 			ctx, cancel = context.WithTimeout(s.Ctx, timeout)
-			defer cancel()
+		} else {
+			ctx, cancel = s.Ctx, nil
 		}
 
-		// attempt dial
+		// attempt the dial
 		conn, err := dialer.DialContext(ctx, network, address)
+		if cancel != nil {
+			cancel()
+		}
+
+		// check the result
 		if err == nil {
-			return conn, nil
+			return conn, nil // success
+		} else if !retry || (retry_max > 0 && try >= retry_max) {
+			return nil, err // no (more) retries
+		} else if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+			continue // temporary timeout, retry
+		} else if timeout > 0 && errors.Is(err, context.DeadlineExceeded) {
+			continue // context timeout, retry
+		} else {
+			return nil, err // non-retryable error
 		}
-
-		// no retry?
-		if !retry || (retry_max > 0 && try >= retry_max) {
-			return nil, err
-		}
-
-		// check if error is temporary
-		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-			continue
-		} else if err == context.DeadlineExceeded {
-			continue
-		}
-
-		// not temporary, return the dial error
-		return nil, err
 	}
 }
