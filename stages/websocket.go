@@ -196,6 +196,8 @@ func (s *Websocket) prepareClient() error {
 			// temporary timeout, retry
 		} else if s.timeout > 0 && errors.Is(err, context.DeadlineExceeded) {
 			// context timeout, retry
+		} else {
+			return err // non-temporary error
 		}
 
 		sec := min(60, try*try) + rand.Intn(try+1)
