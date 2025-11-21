@@ -218,7 +218,7 @@ Finally, restart your BIRD instance and you should see `bgpipe` reporting new co
 
 ## Filtering with Python scripts
 
-The `exec` stage lets you process BGP messages with external scripts. `bgpipe` sends JSON arrays (see [json-format.md](json-format.md)) to the script's stdin and reads modified/filtered messages from stdout. This makes it easy to implement custom BGP logic in any language.
+The `exec` stage lets you process BGP messages with external scripts. `bgpipe` sends JSON arrays (see [JSON format docs](json-format.md)) to the script's stdin and reads modified/filtered messages from stdout. This makes it easy to implement custom BGP logic in any language.
 
 Here's a simple Python script that only allows IPv4 prefixes shorter than `/16`:
 
