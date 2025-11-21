@@ -279,7 +279,6 @@ Multi-protocol unreachable NLRI (withdrawals):
   "R",
   243,
   "2025-07-11T11:23:50.860",
-  1459,
   "UPDATE",
   {
     "reach": ["8.8.8.0/24", "8.8.4.0/24"],
@@ -442,7 +441,6 @@ This example blocks TCP traffic to port 80 from a specific prefix:
   "R",
   15,
   "2025-07-11T10:50:00.000",
-  128,
   "UPDATE",
   {
     "attrs": {
