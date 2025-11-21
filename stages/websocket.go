@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -24,9 +25,11 @@ import (
 type Websocket struct {
 	*core.StageBase
 
-	timeout time.Duration // --timeout
-	tls     *tls.Config   // TLS config (may be nil)
-	headers http.Header   // HTTP headers
+	timeout   time.Duration // --timeout
+	retry     bool          // --retry
+	retry_max int           // --retry-max
+	tls       *tls.Config   // TLS config (may be nil)
+	headers   http.Header   // HTTP headers
 
 	url        url.URL              // URL address
 	srv        *http.Server         // http server (may be nil)
@@ -54,6 +57,8 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 	f.Bool("insecure", false, "do not verify the SSL certificate")
 	f.StringSlice("header", []string{}, "HTTP headers to send in client mode")
 	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
+	f.Bool("retry", false, "retry client connection on temporary errors")
+	f.Int("retry-max", 0, "maximum number of retries (0 means unlimited)")
 	o.Args = []string{"url"}
 
 	s.eio = extio.NewExtio(parent, 0, false)
@@ -63,11 +68,9 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 func (s *Websocket) Attach() error {
 	// options
 	k := s.K
-	if t := k.Duration("timeout"); t > 0 {
-		s.timeout = t
-	} else {
-		s.timeout = 10 * time.Second
-	}
+	s.timeout = k.Duration("timeout")
+	s.retry = k.Bool("retry")
+	s.retry_max = k.Int("retry-max")
 
 	// check URL
 	url, err := url.Parse(k.String("url"))
@@ -175,18 +178,30 @@ func (s *Websocket) prepareClient() error {
 
 	// dial
 	url := s.url.String()
-	s.Info().Msgf("dialing %s", url)
-	conn, resp, err := dialer.DialContext(s.Ctx, url, s.headers)
-	if err != nil {
-		return err
-	}
-	s.Info().
-		Interface("headers", resp.Header).
-		Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
+	for try := 0; ; try++ {
+		s.Info().Msgf("dialing %s", url)
 
-	// success
-	s.clientConn = conn
-	return nil
+		conn, resp, err := dialer.DialContext(s.Ctx, url, s.headers)
+		if err == nil {
+			s.Info().
+				Interface("headers", resp.Header).
+				Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
+			s.clientConn = conn
+			return nil
+		}
+
+		if !s.retry || (s.retry_max > 0 && try >= s.retry_max) {
+			return err
+		}
+
+		sec := min(60, try*try) + rand.Intn(try)
+		s.Warn().Err(err).Msgf("dial failed, retrying in %d seconds", sec)
+		select {
+		case <-time.After(time.Second * time.Duration(sec)):
+		case <-s.Ctx.Done():
+			return context.Cause(s.Ctx)
+		}
+	}
 }
 
 func (s *Websocket) prepareServer() error {

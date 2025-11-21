@@ -158,6 +158,7 @@ func send_safe[T any](ch chan T, v T) (ok bool) {
 // stage s can have the "retry" (bool) and "timeout" (duration) konfig options.
 func dial_retry(s *core.StageBase, dialer *net.Dialer, network, address string) (net.Conn, error) {
 	retry := s.K.Bool("retry")
+	retry_max := s.K.Int("retry-max")
 	timeout := s.K.Duration("timeout")
 
 	ctx := s.Ctx
@@ -192,7 +193,7 @@ func dial_retry(s *core.StageBase, dialer *net.Dialer, network, address string) 
 		}
 
 		// no retry?
-		if !retry {
+		if !retry || (retry_max > 0 && try >= retry_max) {
 			return nil, err
 		}
 

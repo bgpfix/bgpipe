@@ -31,8 +31,9 @@ func NewConnect(parent *core.StageBase) core.Stage {
 	o.FilterOut = true
 	o.IsConsumer = true
 
-	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
+	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
 	f.Bool("retry", false, "retry connection on temporary errors")
+	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
 	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
 	f.String("md5", "", "TCP MD5 password")
 	f.String("bind", "", "local address to bind to (IP or IP:port)")
