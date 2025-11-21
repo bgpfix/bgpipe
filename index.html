@@ -15,8 +15,11 @@
         <link rel="next" href="intro/">
       
       
+        
+      
+      
       <link rel="icon" href="img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
     
     
       
@@ -24,10 +27,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.84d31ad4.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.618322db.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -54,7 +57,6 @@
 
     
     
-    
   </head>
   
   
@@ -74,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#bgpipe-a-bgp-firewall" class="md-skip">
+        <a href="#bgpipe-a-bgp-reverse-proxy" class="md-skip">
           Skip to content
         </a>
       
@@ -272,9 +274,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Home
+  
+
     
   </span>
+  
   
 
           <span class="md-nav__icon md-icon"></span>
@@ -285,9 +292,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Home
+  
+
     
   </span>
+  
   
 
       </a>
@@ -310,7 +322,9 @@
         <li class="md-nav__item">
   <a href="#features" class="md-nav__link">
     <span class="md-ellipsis">
-      Features
+      
+        Features
+      
     </span>
   </a>
   
@@ -336,9 +350,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Introduction
+  
+
     
   </span>
+  
   
 
       </a>
@@ -358,9 +377,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Quick Start
+  
+
     
   </span>
+  
   
 
       </a>
@@ -380,9 +404,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Examples
+  
+
     
   </span>
+  
   
 
       </a>
@@ -402,9 +431,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     JSON Format
+  
+
     
   </span>
+  
   
 
       </a>
@@ -424,9 +458,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Message Filters
+  
+
     
   </span>
+  
   
 
       </a>
@@ -463,7 +502,9 @@
         <li class="md-nav__item">
   <a href="#features" class="md-nav__link">
     <span class="md-ellipsis">
-      Features
+      
+        Features
+      
     </span>
   </a>
   
@@ -479,6 +520,7 @@
           
           
             <div class="md-content" data-md-component="content">
+              
               <article class="md-content__inner md-typeset">
                 
                   
@@ -488,7 +530,7 @@
   
 
 
-<h1 id="bgpipe-a-bgp-firewall">bgpipe: a BGP firewall</h1>
+<h1 id="bgpipe-a-bgp-reverse-proxy">bgpipe: a BGP reverse proxy</h1>
 <p><strong>bgpipe</strong> is an open-source tool for processing and filtering messages exchanged by <a href="https://en.wikipedia.org/wiki/Border_Gateway_Protocol">the Border Gateway Protocol (BGP)</a>. BGP is <a href="https://learn.nsrc.org/bgp/bgp_intro">the routing protocol that makes the Internet work</a>, and as such it is considered to be <a href="https://bidenwhitehouse.archives.gov/wp-content/uploads/2024/09/Roadmap-to-Enhancing-Internet-Routing-Security.pdf">critical to the global economic prosperity and security</a>.</p>
 <p><strong>bgpipe</strong> operates as a proxy sitting between BGP routers, capable of auditing, fixing, and securing BGP sessions on the fly.
 It is based on the <a href="https://bgpfix.org/">BGPFix library</a>, distributed under the MIT license, and implemented in <a href="https://en.wikipedia.org/wiki/Go_(programming_language)">Go</a>, making it widely available for many platforms.</p>
@@ -520,7 +562,7 @@ It is based on the <a href="https://bgpfix.org/">BGPFix library</a>, distributed
 <h2 id="features">Features</h2>
 <ul>
 <li>Works as a transparent man-in-the-middle proxy.</li>
-<li>Has full, bi-directional BGP to JSON translation.</li>
+<li>Has full, bi-directional BGP to JSON translation (with Flowspec).</li>
 <li>Can filter and archive BGP sessions through an external process, eg. a Python script.</li>
 <li>Supports remote processing over encrypted WebSockets (HTTPS), eg. in the cloud.</li>
 <li>Reads and writes MRT files (BGP4MP), optionally compressed.</li>
@@ -572,10 +614,11 @@ It is based on the <a href="https://bgpfix.org/">BGPFix library</a>, distributed
     
     
       
-      <script id="__config" type="application/json">{"base": ".", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="assets/javascripts/bundle.e71a0d61.min.js"></script>
       
     
   </body>
