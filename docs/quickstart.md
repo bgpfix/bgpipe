@@ -1,6 +1,6 @@
 ## Installation
 
-To get started with `bgpipe`, you need to install it on your system, ie. where you want it to proxy or terminate BGP sessions. `bgpipe` is a single binary that can be run on any machine with a compatible operating system (preferably Linux). It does not require any additional libraries or dependencies, making it easy to deploy - just copy the binary to your target machine.
+To get started with `bgpipe`, you need to install it on your system, ie. where you want it to proxy or terminate BGP sessions. `bgpipe` is a single binary that can be run on any machine, preferably Linux. It does not require any additional libraries or dependencies, making it easy to deploy - just copy the binary to your target machine.
 
 You can download pre-built binaries from the [GitHub Releases page](https://github.com/bgpfix/bgpipe/releases/latest).
 
@@ -94,14 +94,14 @@ $ bgpipe \
     -- grep 'prefix ~ 8.0.0.0/8' \
     -- stdout
 2025-07-04 13:17:47 INF streaming https://data.ris.ripe.net/rrc01/latest-update.gz stage="[1] read"
-["R",6826,"2025-07-04T13:05:19.000",74,"UPDATE",{"reach":["8.20.247.0/24","8.26.56.0/24","104.37.179.0/24","199.167.65.0/24"],"attrs":{"ORIGIN":{"flags":"T","value":"IGP"},"ASPATH":{"flags":"T","value":[8218,174,20473,23393]},"NEXTHOP":{"flags":"T","value":"5.57.80.210"},"MED":{"flags":"O","value":4},"COMMUNITY":{"flags":"OT","value":["8218:102","8218:20000","8218:20110"]}}},{"PEER_AS":"8218","PEER_IP":"5.57.80.210","LOCAL_AS":"12654","LOCAL_IP":"5.57.80.4"}]
-["R",7431,"2025-07-04T13:05:21.000",77,"UPDATE",{"reach":["8.20.247.0/24","8.26.56.0/24","104.37.179.0/24","199.167.65.0/24"],"attrs":{"ORIGIN":{"flags":"T","value":"IGP"},"ASPATH":{"flags":"T","value":[8218,20473,23393]},"NEXTHOP":{"flags":"T","value":"5.57.80.210"},"MED":{"flags":"O","value":4},"COMMUNITY":{"flags":"OT","value":["8218:102","8218:20000","8218:20110"]},"OTC":{"flags":"OTP","value":"0x00001a79"}}},{"LOCAL_AS":"12654","LOCAL_IP":"5.57.80.4","PEER_AS":"8218","PEER_IP":"5.57.80.210"}]
+["R",6826,"2025-07-04T13:05:19.000","UPDATE",{"reach":["8.20.247.0/24","8.26.56.0/24","104.37.179.0/24","199.167.65.0/24"],"attrs":{"ORIGIN":{"flags":"T","value":"IGP"},"ASPATH":{"flags":"T","value":[8218,174,20473,23393]},"NEXTHOP":{"flags":"T","value":"5.57.80.210"},"MED":{"flags":"O","value":4},"COMMUNITY":{"flags":"OT","value":["8218:102","8218:20000","8218:20110"]}}},{"PEER_AS":"8218","PEER_IP":"5.57.80.210","LOCAL_AS":"12654","LOCAL_IP":"5.57.80.4"}]
+["R",7431,"2025-07-04T13:05:21.000","UPDATE",{"reach":["8.20.247.0/24","8.26.56.0/24","104.37.179.0/24","199.167.65.0/24"],"attrs":{"ORIGIN":{"flags":"T","value":"IGP"},"ASPATH":{"flags":"T","value":[8218,20473,23393]},"NEXTHOP":{"flags":"T","value":"5.57.80.210"},"MED":{"flags":"O","value":4},"COMMUNITY":{"flags":"OT","value":["8218:102","8218:20000","8218:20110"]},"OTC":{"flags":"OTP","value":"0x00001a79"}}},{"LOCAL_AS":"12654","LOCAL_IP":"5.57.80.4","PEER_AS":"8218","PEER_IP":"5.57.80.210"}]
 // ...
 ```
 
-In the above, the `read` stage streams the latest BGP updates from the `rrc01` RIPE RIS collector, uncompresses the data on the fly, and sends back to the pipeline for further processing. Next, the `grep` stage captures these messages, applies a BGP message filter (IP prefix must overlap with the `8.0.0.0/8` IPv4 prefix), and sends accepted messages to the next stage (non-matching traffic is dropped). Finally, the `stdout` stage converts the messages to JSON format and prints them to stdout. See [filters](filters.md) for more filter examples and details.
+In the above, the `read` stage streams the latest BGP updates from the `rrc01` RIPE RIS collector, uncompresses the data on the fly, and sends back to the pipeline for further processing. Next, the `grep` stage captures these messages, applies [a BGP message filter](filters.md) that an IP prefix must overlap with `8.0.0.0/8`, and sends matching messages to the next stage (non-matching traffic is dropped). Finally, the `stdout` stage converts the messages to [JSON format](json-format.md) and prints them to the standard output.
 
-`bgpipe` provides the `--explain` (short `-n`) debugging option that prints the pipeline as configured, but without actually running anything. For example:
+Note that `bgpipe` provides the `--explain` (short `-n`) debugging option that prints the pipeline as configured, but without actually running anything. For example:
 
 ```json
 $ bgpipe -n \
@@ -120,7 +120,7 @@ $ bgpipe -n \
   (none)
 ```
 
-Last but not least, instead of putting the `stdout` stage explicitly in the pipeline, you can use the `--stdout` (short `-o`) option to `bgpipe`, in order to print BGP messages to stdout automatically. It will print all messages that make it to the very end of the left-hand side *and* right-hand side of the pipeline, ie. all messages that are not dropped by any stage.
+Last but not least, instead of putting the `stdout` stage explicitly in the pipeline, you can use the `--stdout` (short `-o`) option to `bgpipe`, in order to print BGP messages to stdout automatically. It will print all messages that make it to the very end of the left-hand side *or* right-hand side of the pipeline, ie. all messages that are not dropped by any stage.
 
 ```json
 $ bgpipe -o \
@@ -143,10 +143,10 @@ $ bgpipe -o \
 2025-07-11 10:47:20 INF connection R_LOCAL = 192.168.200.202:59438 stage="[2] connect"
 2025-07-11 10:47:20 INF connection R_REMOTE = 85.232.240.180:179 stage="[2] connect"
 2025-07-11 10:47:20 INF connected 192.168.200.202:59438 -> 85.232.240.180:179 stage="[2] connect"
-["R",1,"2025-07-11T08:47:20.650",-1,"OPEN",{"bgp":4,"asn":65055,"id":"0.0.0.1","hold":90,"caps":{"MP":["IPV4/UNICAST","IPV4/FLOWSPEC","IPV6/UNICAST","IPV6/FLOWSPEC"],"ROUTE_REFRESH":true,"EXTENDED_MESSAGE":true,"AS4":65055}},{}]
-["L",1,"2025-07-11T08:47:22.659",56,"OPEN",{"bgp":4,"asn":65055,"id":"85.232.240.180","hold":7200,"caps":{"MP":["IPV4/FLOWSPEC"],"ROUTE_REFRESH":true,"EXTENDED_NEXTHOP":["IPV4/UNICAST/IPV6","IPV4/MULTICAST/IPV6","IPV4/MPLS_VPN/IPV6"],"AS4":65055,"PRE_ROUTE_REFRESH":true}},{}]
-["L",2,"2025-07-11T08:47:22.659",0,"KEEPALIVE",null,{}]
-["R",2,"2025-07-11T08:47:22.659",0,"KEEPALIVE",null,{}]
+["R",1,"2025-07-11T08:47:20.650","OPEN",{"bgp":4,"asn":65055,"id":"0.0.0.1","hold":90,"caps":{"MP":["IPV4/UNICAST","IPV4/FLOWSPEC","IPV6/UNICAST","IPV6/FLOWSPEC"],"ROUTE_REFRESH":true,"EXTENDED_MESSAGE":true,"AS4":65055}},{}]
+["L",1,"2025-07-11T08:47:22.659","OPEN",{"bgp":4,"asn":65055,"id":"85.232.240.180","hold":7200,"caps":{"MP":["IPV4/FLOWSPEC"],"ROUTE_REFRESH":true,"EXTENDED_NEXTHOP":["IPV4/UNICAST/IPV6","IPV4/MULTICAST/IPV6","IPV4/MPLS_VPN/IPV6"],"AS4":65055,"PRE_ROUTE_REFRESH":true}},{}]
+["L",2,"2025-07-11T08:47:22.659","KEEPALIVE",null,{}]
+["R",2,"2025-07-11T08:47:22.659","KEEPALIVE",null,{}]
 2025-07-11 10:47:22 INF negotiated session capabilities caps="{\"MP\":[\"IPV4/FLOWSPEC\"],\"ROUTE_REFRESH\":true,\"AS4\":65055}"
 2025-07-11 10:47:22 INF event bgpfix/pipe.ESTABLISHED evseq=15 vals=[1752223642]
 ...
@@ -154,11 +154,11 @@ $ bgpipe -o \
 
 ## Proxying BGP sessions
 
-Finally, let's see how to use `bgpipe` to proxy BGP sessions. You can use the `listen` stage to accept incoming connections and the `connect` stage to forward BGP messages to another router. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.
+Let's now see how to use `bgpipe` to proxy BGP sessions. You can use the `listen` stage to accept incoming connections on one side, and the `connect` stage to forward BGP messages to another router on another side. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.
 
-For example, let's use the [Vultr's BGP feature](https://docs.vultr.com/configuring-bgp-on-vultr), where you already have a local BIRD instance running on a VM, with the following configuration:
+For example, let's use the [Vultr's BGP feature](https://docs.vultr.com/configuring-bgp-on-vultr), where you already have a local BIRD instance, with the following configuration:
 
-```
+```sh
 log syslog all;
 router id 1.2.3.4;
 
@@ -189,7 +189,7 @@ $ bgpipe \
 
 Now let's reconfigure the BIRD instance to connect to `bgpipe` instead of the upstream router. Change the `neighbor` line in the BIRD configuration to point to `localhost:1790`:
 
-```
+```sh
 // ...
 protocol bgp vultr
 {
@@ -212,9 +212,42 @@ Finally, restart your BIRD instance and you should see `bgpipe` reporting new co
 2025-07-11 11:23:46 INF negotiated session capabilities caps="{\"MP\":[\"IPV4/UNICAST\"],\"ROUTE_REFRESH\":true,\"GRACEFUL_RESTART\":true,\"AS4\":64515,\"ENHANCED_ROUTE_REFRESH\":true,\"LLGR\":true}"
 2025-07-11 11:23:46 INF event bgpfix/pipe.ESTABLISHED evseq=15 vals=[1752233026]
 2025-07-11 11:23:49 INF event bgpfix/pipe.EOR evdir=L evseq=18
-["R",243,"2025-07-11T11:23:50.860",1459,"UPDATE",{"reach":[...],"attrs":{"ORIGIN":{"flags":"T","value":"EGP"},"ASPATH":{"flags":"TX","value":[64515,65534,20473,15169,396982]},"NEXTHOP":{"flags":"T","value":"169.254.169.254"},"COMMUNITY":{"flags":"OT","value":["20473:300","20473:15169","64515:44"]},"LARGE_COMMUNITY":{"flags":"OT","value":["20473:300:15169"]}}},{}]
+["R",243,"2025-07-11T11:23:50.860","UPDATE",{"reach":[...],"attrs":{"ORIGIN":{"flags":"T","value":"EGP"},"ASPATH":{"flags":"TX","value":[64515,65534,20473,15169,396982]},"NEXTHOP":{"flags":"T","value":"169.254.169.254"},"COMMUNITY":{"flags":"OT","value":["20473:300","20473:15169","64515:44"]},"LARGE_COMMUNITY":{"flags":"OT","value":["20473:300:15169"]}}},{}]
 ...
 ```
+
+## Filtering with Python scripts
+
+The `exec` stage lets you process BGP messages with external scripts. `bgpipe` sends JSON arrays (see [JSON format docs](json-format.md)) to the script's stdin and reads modified/filtered messages from stdout. This makes it easy to implement custom BGP logic in any language.
+
+Here's a simple Python script that only allows IPv4 prefixes shorter than `/16`:
+
+```python
+#!/usr/bin/env python3
+
+import sys
+import json
+
+for line in sys.stdin:
+    msg = json.loads(line)
+    if msg[3] == "UPDATE":
+        if "reach" in msg[4]: 
+            msg[4]["reach"] = [p for p in msg[4]["reach"] if int(p.split("/")[1]) < 16]
+            if len(msg[4]["reach"]) > 0 :
+                print(json.dumps(msg), flush=True)
+```
+
+Use it in a pipeline, stop after printing the first 10 messages:
+
+```sh
+chmod +x ./drop-long-prefixes.py
+bgpipe -o \
+  -- read https://data.ris.ripe.net/rrc01/latest-update.gz \
+  -- exec ./drop-long-prefixes.py \
+| head
+```
+
+The script receives each message as a JSON array `[dir, seq, time, type, data, meta]`, processes it, and forwards it downstream. You can modify messages, drop them (by not printing), or generate new ones. For bidirectional processing, remember to use the `-LR` flags on the `exec` stage.
 
 ## Conclusion
 

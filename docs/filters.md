@@ -16,15 +16,15 @@ Examples:
 
 ```bash
 # keep only IPv6 updates from AS65000
-bgpipe -o read --mrt updates.mrt.gz \
+bgpipe -o read updates.mrt.gz \
   -- grep 'ipv6 && as_origin == 65000'
 
 # drop non-IPv6 updates from AS_PATHs that end with ASN matching 204[0-9]+
-bgpipe -o read --mrt updates.mrt.gz \
+bgpipe -o read updates.mrt.gz \
   -- drop '!ipv6 && as_path ~ ,204[0-9]+$'
 
 # only for UPDATEs originated by AS15169, drop if no prefixes match 8.0.0.0/8
-bgpipe -o read --mrt updates.mrt.gz \
+bgpipe -o read updates.mrt.gz \
   -- grep --if 'as_origin == 15169' 'prefix ~ 8.0.0.0/8'
 ```
 

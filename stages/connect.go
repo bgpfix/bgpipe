@@ -1,7 +1,6 @@
 package stages
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/netip"
@@ -32,7 +31,9 @@ func NewConnect(parent *core.StageBase) core.Stage {
 	o.FilterOut = true
 	o.IsConsumer = true
 
-	f.Duration("timeout", time.Minute, "connect timeout (0 means none)")
+	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
+	f.Bool("retry", false, "retry connection on temporary errors")
+	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
 	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
 	f.String("md5", "", "TCP MD5 password")
 	f.String("bind", "", "local address to bind to (IP or IP:port)")
@@ -75,15 +76,6 @@ func (s *Connect) Attach() error {
 }
 
 func (s *Connect) Prepare() error {
-	ctx := s.Ctx
-
-	// add timeout?
-	if t := s.K.Duration("timeout"); t > 0 {
-		v, fn := context.WithTimeout(ctx, t)
-		defer fn()
-		ctx = v
-	}
-
 	// dialer
 	var dialer net.Dialer
 	dialer.Control = tcp_md5(s.K.String("md5"))
@@ -97,9 +89,8 @@ func (s *Connect) Prepare() error {
 		dialer.LocalAddr = laddr
 	}
 
-	// dial
-	s.Info().Msgf("dialing %s", s.target)
-	conn, err := dialer.DialContext(ctx, "tcp", s.target)
+	// dial with optional retry
+	conn, err := dial_retry(s.StageBase, &dialer, "tcp", s.target)
 	if err != nil {
 		return err
 	}
