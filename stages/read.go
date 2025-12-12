@@ -2,7 +2,6 @@ package stages
 
 import (
 	"bufio"
-	"compress/bzip2"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
+	"github.com/dsnet/compress/bzip2"
 	"github.com/klauspost/compress/zstd"
 )
 
@@ -120,7 +120,13 @@ func (s *Read) Prepare() error {
 	// need to uncompress on the fly?
 	switch s.opt_decompress {
 	case ".bz2":
-		s.rd = bzip2.NewReader(s.fh) // NB: no close
+		r, err := bzip2.NewReader(s.fh, nil)
+		if err != nil {
+			s.fh.Close()
+			return err
+		}
+		s.rd = r
+		s.close = func() { r.Close() }
 	case ".gz":
 		r, err := gzip.NewReader(s.fh)
 		if err != nil {
