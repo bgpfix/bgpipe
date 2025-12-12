@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"slices"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/bgpfix/bgpfix/dir"
@@ -100,6 +102,9 @@ func (b *Bgpipe) Run() error {
 	// attach our b.Start
 	b.Pipe.Options.OnStart(b.onStart)
 
+	// handle signals
+	go b.handleSignals()
+
 	// start the pipeline and block
 	b.Pipe.Start() // will call b.Start
 	b.Pipe.Wait()  // until error or all processing is done
@@ -122,6 +127,26 @@ func (b *Bgpipe) Run() error {
 	}
 
 	return err
+}
+
+// handleSignals listens for OS signals
+func (b *Bgpipe) handleSignals() {
+	// setup signal channel
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGPIPE)
+	defer signal.Stop(ch)
+
+	// wait for signals
+	for {
+		select {
+		case <-b.Ctx.Done():
+			return
+		case sig := <-ch:
+			b.Warn().Stringer("signal", sig).Msg("signal received, stopping...")
+			b.Pipe.Stop()
+			return
+		}
+	}
 }
 
 // onStart is called after the bgpfix pipe starts
