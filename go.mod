@@ -6,15 +6,16 @@ toolchain go1.24.3
 
 require (
 	github.com/bgpfix/bgpfix v0.7.1
+	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/gorilla/websocket v1.5.3
-	github.com/klauspost/compress v1.18.1
+	github.com/klauspost/compress v1.18.2
 	github.com/knadh/koanf/providers/posflag v1.0.1
 	github.com/knadh/koanf/v2 v2.3.0
 	github.com/puzpuzpuz/xsync/v4 v4.2.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.10
 	github.com/valyala/bytebufferpool v1.0.0
-	golang.org/x/sys v0.38.0
+	golang.org/x/sys v0.39.0
 )
 
 require (
@@ -28,4 +29,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-// replace github.com/bgpfix/bgpfix => ../bgpfix
+replace github.com/bgpfix/bgpfix => ../bgpfix

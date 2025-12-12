@@ -14,6 +14,7 @@ import (
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
+	"github.com/dsnet/compress/bzip2"
 	"github.com/klauspost/compress/zstd"
 )
 
@@ -50,7 +51,7 @@ func NewWrite(parent *core.StageBase) core.Stage {
 	f := s.Options.Flags
 	f.Bool("append", false, "append to file if already exists")
 	f.Bool("create", false, "file must not already exist")
-	f.String("compress", "auto", "compress the output (gz/zstd/none/auto)")
+	f.String("compress", "auto", "compress the output (bzip2/gz/zstd/none/auto)")
 	f.Duration("every", 0, "start new file every time interval")
 	f.String("time-format", "20060102.1504", "time format to replace $TIME in paths")
 	return s
@@ -89,6 +90,8 @@ func (s *Write) Attach() error {
 	switch strings.ToLower(k.String("compress")) {
 	case "none", "", "false":
 		break // no compression
+	case "bzip2", "bzip", "bz2", "bz":
+		s.opt_compress = ".bz2"
 	case "gz", "gzip":
 		s.opt_compress = ".gz"
 	case "zstd", "zst", "zstandard":
@@ -96,7 +99,7 @@ func (s *Write) Attach() error {
 	case "auto":
 		switch path.Ext(s.fpath) {
 		case ".bz2":
-			return fmt.Errorf("--compress 'auto': does not support bzip2")
+			s.opt_compress = ".bz2"
 		case ".gz":
 			s.opt_compress = ".gz"
 		case ".zstd", ".zst":
@@ -190,6 +193,12 @@ func (s *Write) openFile() error {
 
 	// transparent compress?
 	switch s.opt_compress {
+	case ".bz2":
+		w, err := bzip2.NewWriter(fh, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create bzip2 writer: %w", err)
+		}
+		s.wr = w
 	case ".gz":
 		s.wr = gzip.NewWriter(fh)
 	case ".zstd":
