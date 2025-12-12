@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	github.com/bgpfix/bgpfix v0.7.1
+	github.com/bgpfix/bgpfix v0.8.0
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/gorilla/websocket v1.5.3
 	github.com/klauspost/compress v1.18.2
@@ -29,4 +29,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-replace github.com/bgpfix/bgpfix => ../bgpfix
+// replace github.com/bgpfix/bgpfix => ../bgpfix
