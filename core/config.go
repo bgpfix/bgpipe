@@ -76,7 +76,8 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("stdout", "o", false, "write JSON to stdout")
 	f.BoolP("stdin-wait", "I", false, "like --stdin but wait for EVENT_ESTABLISHED")
 	f.BoolP("stdout-wait", "O", false, "like --stdout but wait for EVENT_EOR")
-	f.BoolP("short-asn", "2", false, "use 2-byte ASN numbers")
+	f.BoolP("short-asn", "2", false, "force 2-byte AS numbers")
+	f.BoolP("guess-asn", "G", false, "guess AS number byte size")
 	f.String("caps", "", "use given BGP capabilities (JSON format)")
 }
 
