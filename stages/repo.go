@@ -11,6 +11,7 @@ var Repo = map[string]core.NewStage{
 	"listen":    NewListen,
 	"pipe":      NewPipe,
 	"read":      NewRead,
+	"ris-live":  NewRisLive,
 	"speaker":   NewSpeaker,
 	"stdin":     NewStdin,
 	"stdout":    NewStdout,

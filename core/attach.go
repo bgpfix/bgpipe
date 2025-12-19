@@ -99,6 +99,9 @@ func (b *Bgpipe) AttachStages() error {
 	} else {
 		p.Caps.Use(caps.CAP_AS4) // use CAP_AS4 by default
 	}
+	if k.Bool("guess-asn") {
+		p.Caps.Use(caps.CAP_AS_GUESS) // use pseudo-capability to guess ASN size
+	}
 
 	// log events?
 	if evs := ParseEvents(k.Strings("events"), "START", "STOP", "READY", "PREPARE"); len(evs) > 0 {
