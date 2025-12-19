@@ -173,7 +173,7 @@ func (s *RisLive) stream(resp *http.Response) error {
 
 			// parse and process message
 			if err := s.process(line); err != nil {
-				s.Warn().Err(err).Msg("invalid message")
+				s.Warn().Err(err).Msgf("invalid message: %s", line)
 			}
 		}
 		timer.Reset(s.timeout_read)
@@ -198,7 +198,7 @@ var risPaths = [][]string{
 func (s *RisLive) process(buf []byte) error {
 	// sanity check
 	if l := len(buf); l < 10 || buf[0] != '{' || buf[l-1] != '}' {
-		return fmt.Errorf("invalid JSON line")
+		return fmt.Errorf("invalid JSON")
 	}
 
 	// parse JSON
