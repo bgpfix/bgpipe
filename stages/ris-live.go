@@ -18,6 +18,7 @@ import (
 	"github.com/buger/jsonparser"
 )
 
+// RisLive reads BGP updates from RIPE RIS Live streaming endpoint
 type RisLive struct {
 	*core.StageBase
 	in *pipe.Input
@@ -28,7 +29,7 @@ type RisLive struct {
 	timeout_read time.Duration
 	retry        bool
 	retry_max    int
-	updates      bool
+	delay_err    time.Duration
 
 	raw []byte // reusable buffer for hex decoding
 }
@@ -46,12 +47,12 @@ func NewRisLive(parent *core.StageBase) core.Stage {
 
 	f.String("url", "https://ris-live.ripe.net/v1/stream/?format=json&client=bgpipe",
 		"RIS Live streaming endpoint URL")
-	f.String("subscribe", "", "X-RIS-Subscribe header, see https://ris-live.ripe.net/manual/#ris_subscribe")
+	f.String("sub", "", "X-RIS-Subscribe header, see https://ris-live.ripe.net/manual/#ris_subscribe")
 	f.Duration("timeout", 10*time.Second, "connect timeout (0 means none)")
 	f.Duration("read-timeout", 10*time.Second, "stream read timeout (max time between messages)")
 	f.Bool("retry", true, "retry connection on errors")
-	f.Bool("updates", true, "skip non-UPDATE messages")
 	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
+	f.Duration("delay-err", time.Minute, "treat too old messages as connection errors (0 to disable)")
 
 	return s
 }
@@ -59,12 +60,20 @@ func NewRisLive(parent *core.StageBase) core.Stage {
 func (s *RisLive) Attach() error {
 	k := s.K
 	s.url = k.String("url")
-	s.subscribe = k.String("subscribe")
+	s.subscribe = k.String("sub")
 	s.timeout = k.Duration("timeout")
 	s.timeout_read = k.Duration("read-timeout")
 	s.retry = k.Bool("retry")
 	s.retry_max = k.Int("retry-max")
-	s.updates = k.Bool("updates")
+	s.delay_err = k.Duration("delay-err")
+
+	// ensure --subscribe includes includeRaw=true
+	if len(s.subscribe) > 0 {
+		val, err := jsonparser.GetBoolean(json.B(s.subscribe), "includeRaw")
+		if err != nil || !val {
+			return fmt.Errorf("invalid --subscribe: must be JSON object with includeRaw=true")
+		}
+	}
 
 	s.in = s.P.AddInput(s.Dir)
 	return nil
@@ -157,28 +166,47 @@ func (s *RisLive) stream(resp *http.Response) error {
 	defer resp.Body.Close()
 
 	// read timeout
-	timer := time.AfterFunc(s.timeout_read, func() {
+	rt := time.AfterFunc(s.timeout_read, func() {
 		s.Error().Msg("read timeout")
 		resp.Body.Close()
 	})
-	defer timer.Stop()
+	defer rt.Stop()
+
+	// prepare scanner, use 1MiB buffer
+	scanner := bufio.NewScanner(resp.Body)
+	scanner.Buffer(nil, 1024*1024)
 
 	// read lines
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
+	var last_ts int64
+	for (rt.Reset(s.timeout_read) || true) && scanner.Scan() {
+		// skip empty lines
 		line := bytes.TrimSpace(scanner.Bytes())
-		if len(line) > 0 {
-			// stop the timer to avoid closing while processing
-			timer.Stop()
+		if len(line) == 0 {
+			continue
+		}
 
-			// parse and process message
-			if err := s.process(line); err != nil {
-				s.Warn().Err(err).Msgf("invalid message: %s", line)
+		// stop the timer to avoid closing while processing
+		rt.Stop()
+
+		// parse and process message
+		ts, err := s.process(line)
+		if s.Ctx.Err() != nil || err == pipe.ErrInClosed {
+			return nil // stopping
+		} else if err != nil {
+			s.Warn().Err(err).Msgf("input error: %s", line)
+			continue
+		} else if ts.IsZero() {
+			continue // skipped
+		}
+
+		// need to check the timestamp?
+		if s.delay_err > 0 && ts.Unix() > last_ts {
+			last_ts = ts.Unix()
+			if delay := time.Since(ts); delay > s.delay_err {
+				return fmt.Errorf("message delay too high: %s", delay)
 			}
 		}
-		timer.Reset(s.timeout_read)
 	}
-
 	return scanner.Err()
 }
 
@@ -194,23 +222,23 @@ var risPaths = [][]string{
 	{"data", "raw"},
 }
 
-// TODO: make sure to inspect content and check for sanity - break the connection if not recent timestamp, etc.
-func (s *RisLive) process(buf []byte) error {
+// process parses buf and writes the resulting BGP message to the pipe,
+// returning the message timestamp.
+func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 	// sanity check
 	if l := len(buf); l < 10 || buf[0] != '{' || buf[l-1] != '}' {
-		return fmt.Errorf("invalid JSON")
+		return ts, fmt.Errorf("invalid JSON")
 	}
 
 	// parse JSON
 	var (
-		ris_type  string
-		msg_type  string
-		timestamp time.Time
-		peer_ip   string
-		peer_asn  string
-		id        string
-		host      string
-		raw_hex   []byte
+		ris_type string
+		msg_type string
+		peer_ip  string
+		peer_asn string
+		id       string
+		host     string
+		raw_hex  []byte
 	)
 	if err := json.ObjectPaths(buf, func(pid int, val []byte, typ json.Type) error {
 		switch pid {
@@ -222,7 +250,7 @@ func (s *RisLive) process(buf []byte) error {
 				return fmt.Errorf("invalid timestamp: %w", err)
 			}
 			sec, nsec := math.Modf(v)
-			timestamp = time.Unix(int64(sec), int64(nsec*1e9)).UTC()
+			ts = time.Unix(int64(sec), int64(nsec*1e9)).UTC()
 		case 2: // data.peer
 			peer_ip = string(val)
 		case 3: // data.peer_asn
@@ -238,27 +266,25 @@ func (s *RisLive) process(buf []byte) error {
 		}
 		return nil
 	}, risPaths...); err != nil {
-		return err
+		return ts, err
 	}
 
 	// sanity checks
 	switch {
 	case ris_type != "ris_message":
-		return nil // NB: silently skip
+		return ts, nil // NB: silently skip
 	case msg_type == "STATE":
-		return nil // NB: silently skip
-	case s.updates && msg_type != "UPDATE":
-		return nil // NB: silently skip
-	case timestamp.IsZero():
-		return fmt.Errorf("missing timestamp")
+		return ts, nil // NB: silently skip
+	case ts.IsZero():
+		return ts, fmt.Errorf("missing timestamp")
 	case len(peer_ip) == 0:
-		return fmt.Errorf("missing peer")
+		return ts, fmt.Errorf("missing peer")
 	case len(peer_asn) == 0:
-		return fmt.Errorf("missing peer_asn")
+		return ts, fmt.Errorf("missing peer_asn")
 	case len(host) == 0:
-		return fmt.Errorf("missing host")
+		return ts, fmt.Errorf("missing host")
 	case len(raw_hex) == 0:
-		return fmt.Errorf("missing raw hex data")
+		return ts, fmt.Errorf("missing raw hex data")
 	}
 
 	// decode hex to bytes
@@ -268,7 +294,7 @@ func (s *RisLive) process(buf []byte) error {
 		s.raw = s.raw[:rl]
 	}
 	if n, err := hex.Decode(s.raw, raw_hex); err != nil {
-		return fmt.Errorf("invalid raw hex: %w", err)
+		return ts, fmt.Errorf("invalid raw hex: %w", err)
 	} else {
 		s.raw = s.raw[:n]
 	}
@@ -279,14 +305,14 @@ func (s *RisLive) process(buf []byte) error {
 	switch n, err := msg.FromBytes(s.raw); {
 	case err != nil:
 		P.PutMsg(msg)
-		return fmt.Errorf("BGP parse error: %w", err)
+		return ts, fmt.Errorf("BGP parse error: %w", err)
 	case n != len(s.raw):
 		P.PutMsg(msg)
-		return fmt.Errorf("dangling bytes after BGP message: %d/%d", n, len(s.raw))
+		return ts, fmt.Errorf("dangling bytes after BGP message: %d/%d", n, len(s.raw))
 	}
 
 	// add metadata
-	msg.Time = timestamp
+	msg.Time = ts
 	tags := pipe.UseContext(msg).UseTags()
 	tags["PEER_IP"] = peer_ip
 	tags["PEER_AS"] = peer_asn
@@ -295,7 +321,7 @@ func (s *RisLive) process(buf []byte) error {
 
 	// write to pipe
 	msg.CopyData()
-	return s.in.WriteMsg(msg)
+	return ts, s.in.WriteMsg(msg)
 }
 
 func (s *RisLive) Stop() error {
