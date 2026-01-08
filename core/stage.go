@@ -169,6 +169,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	if so.FilterIn {
 		f.StringP("if", "I", "", "stage input filter (skip non-matching input)")
 	}
+	f.Float64("limit-rate", 0, "message processing rate limit")
+	f.Bool("limit-sample", false, "drop messages over the rate limit instead of delaying")
 
 	return s
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/rs/zerolog"
+	"golang.org/x/time/rate"
 )
 
 // AttachStages attaches all stages to pipe
@@ -210,14 +211,24 @@ func (s *StageBase) attach() error {
 		return ErrNoInputs
 	}
 
+	// callback rate limit?
+	rr := k.Float64("limit-rate")
+	rs := k.Bool("limit-sample")
+	var rl *rate.Limiter
+	if rr > 0 {
+		rl = rate.NewLimiter(rate.Limit(rr), int(math.Ceil(rr)))
+	}
+
 	// fix callbacks
 	for _, cb := range s.callbacks {
 		cb.Id = s.Index
 		cb.Enabled = &s.running
 		cb.Filter = s.flt_in
+		cb.LimitRate = rl
+		cb.LimitSkip = rs
 	}
 
-	// fix handlers
+	// fix event handlers
 	for _, h := range s.handlers {
 		h.Id = s.Index
 		h.Enabled = &s.running
@@ -255,11 +266,18 @@ func (s *StageBase) attach() error {
 		}
 	}
 
+	// input rate limit? NB: separate from the callback rate limit
+	if rr > 0 {
+		rl = rate.NewLimiter(rate.Limit(rr), int(math.Ceil(rr)))
+	}
+
 	// fix inputs
 	for _, li := range s.inputs {
 		li.Id = s.Index
 		li.CbFilterValue = fid
 		li.Filter = s.flt_out
+		li.LimitRate = rl
+		li.LimitSkip = rs
 
 		if li.Dir == dir.DIR_L {
 			li.Reverse = true // CLI gives L stages in reverse
