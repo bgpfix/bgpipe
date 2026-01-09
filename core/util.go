@@ -77,7 +77,7 @@ func ParseEvents(src []string, stage_defaults ...string) []string {
 	var dst []string
 	for _, event := range src {
 		// special catch-all value?
-		if event == "all" || event == "*" {
+		if strings.ToLower(event) == "all" || event == "*" {
 			dst = append(dst[:0], "*")
 			continue
 		}
