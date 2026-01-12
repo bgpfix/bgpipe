@@ -1,7 +1,8 @@
-package stages
+package util
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -14,7 +15,7 @@ import (
 	"github.com/bgpfix/bgpipe/core"
 )
 
-func conn_publish(s *core.StageBase, conn net.Conn) {
+func ConnPublish(s *core.StageBase, conn net.Conn) {
 	var todo map[string]string
 	if s.IsFirst {
 		todo = map[string]string{
@@ -27,7 +28,7 @@ func conn_publish(s *core.StageBase, conn net.Conn) {
 			"R_REMOTE": conn.RemoteAddr().String(),
 		}
 	} else {
-		s.Error().Msg("conn_publish: not first or last stage")
+		s.Error().Msg("ConnPublish: not first or last stage")
 		return
 	}
 
@@ -35,7 +36,7 @@ func conn_publish(s *core.StageBase, conn net.Conn) {
 	for name, val := range todo {
 		addrport, err := netip.ParseAddrPort(val)
 		if err != nil {
-			s.Err(err).Msgf("conn_publish %s: could not parse %s", name, val)
+			s.Err(err).Msgf("ConnPublish %s: could not parse %s", name, val)
 			continue
 		}
 		s.Info().Msgf("connection %s = %s", name, addrport.String())
@@ -45,7 +46,7 @@ func conn_publish(s *core.StageBase, conn net.Conn) {
 	}
 }
 
-func conn_handle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.Duration) error {
+func ConnHandle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.Duration) error {
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
@@ -123,44 +124,18 @@ func conn_handle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.
 	return err
 }
 
-// close_safe closes channel ch if ch != nil.
-// It recovers from panic if the channel is already closed.
-// It returns ok=true if the channel was closed successfully.
-func close_safe[T any](ch chan T) (ok bool) {
-	if ch == nil {
-		return
-	}
-	defer func() {
-		if !ok {
-			recover()
-		}
-	}()
-	close(ch)
-	return true
-}
+// DialRetry is a dialer.DialContext wrapper that adds connection timeout and retry with exponential backoff and jitter.
+// stage s can have konfig options: "retry" (bool), "retry-max" (int), "timeout" (duration), and "insecure" (bool).
+func DialRetry(s *core.StageBase, dialer *net.Dialer, network, address string, do_tls bool) (net.Conn, error) {
+	k := s.K
+	retry := k.Bool("retry")
+	retry_max := k.Int("retry-max")
+	timeout := k.Duration("timeout")
+	insecure := k.Bool("insecure")
 
-// send_safe sends value v to channel ch, if ch != nil.
-// It recovers from panic if the channel is closed.
-// It returns ok=true if the value was sent successfully.
-func send_safe[T any](ch chan T, v T) (ok bool) {
-	if ch == nil {
-		return
+	if dialer == nil {
+		dialer = &net.Dialer{}
 	}
-	defer func() {
-		if !ok {
-			recover()
-		}
-	}()
-	ch <- v
-	return true
-}
-
-// dial_retry is a dialer.DialContext wrapper that adds connection timeout and retry with exponential backoff and jitter.
-// stage s can have the "retry" (bool) and "timeout" (duration) konfig options.
-func dial_retry(s *core.StageBase, dialer *net.Dialer, network, address string) (net.Conn, error) {
-	retry := s.K.Bool("retry")
-	retry_max := s.K.Int("retry-max")
-	timeout := s.K.Duration("timeout")
 
 	var ctx context.Context
 	var cancel context.CancelFunc
@@ -189,7 +164,19 @@ func dial_retry(s *core.StageBase, dialer *net.Dialer, network, address string) 
 		}
 
 		// attempt the dial
-		conn, err := dialer.DialContext(ctx, network, address)
+		var conn net.Conn
+		var err error
+		if do_tls {
+			tls_dialer := &tls.Dialer{
+				NetDialer: dialer,
+				Config: &tls.Config{
+					InsecureSkipVerify: insecure,
+				},
+			}
+			conn, err = tls_dialer.DialContext(ctx, network, address)
+		} else {
+			conn, err = dialer.DialContext(ctx, network, address)
+		}
 		if cancel != nil {
 			cancel()
 		}

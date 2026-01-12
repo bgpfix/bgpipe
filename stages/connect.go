@@ -8,6 +8,7 @@ import (
 
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/pkg/util"
 )
 
 type Connect struct {
@@ -37,6 +38,8 @@ func NewConnect(parent *core.StageBase) core.Stage {
 	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
 	f.String("md5", "", "TCP MD5 password")
 	f.String("bind", "", "local address to bind to (IP or IP:port)")
+	f.Bool("tls", false, "connect over TLS")
+	f.Bool("insecure", false, "do not verify TLS certificate")
 	o.Args = []string{"addr"}
 
 	return s
@@ -78,7 +81,7 @@ func (s *Connect) Attach() error {
 func (s *Connect) Prepare() error {
 	// dialer
 	var dialer net.Dialer
-	dialer.Control = tcp_md5(s.K.String("md5"))
+	dialer.Control = util.TcpMd5(s.K.String("md5"))
 
 	// bind local address?
 	if len(s.bind) > 0 {
@@ -90,18 +93,18 @@ func (s *Connect) Prepare() error {
 	}
 
 	// dial with optional retry
-	conn, err := dial_retry(s.StageBase, &dialer, "tcp", s.target)
+	conn, err := util.DialRetry(s.StageBase, &dialer, "tcp", s.target, s.K.Bool("tls"))
 	if err != nil {
 		return err
 	}
 	s.conn = conn
 
 	// publish connection details
-	conn_publish(s.StageBase, conn)
+	util.ConnPublish(s.StageBase, conn)
 
 	return nil
 }
 
 func (s *Connect) Run() error {
-	return conn_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
+	return util.ConnHandle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/pkg/util"
 	"github.com/valyala/bytebufferpool"
 )
 
@@ -559,7 +560,7 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 	}
 
 	// try writing, don't panic on channel closed [1]
-	if !send_safe(eio.Output, bb) {
+	if !util.Send(eio.Output, bb) {
 		mx.Callback.Drop()
 		return true
 	}
@@ -591,7 +592,7 @@ func (eio *Extio) Put(bb *bytebufferpool.ByteBuffer) {
 func (eio *Extio) OutputClose() error {
 	eio.opt_read = true
 	eio.Callback.Drop()
-	close_safe(eio.Output)
+	util.Close(eio.Output)
 	return nil
 }
 

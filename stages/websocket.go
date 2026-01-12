@@ -20,6 +20,7 @@ import (
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
+	"github.com/bgpfix/bgpipe/pkg/util"
 	"github.com/gorilla/websocket"
 )
 
@@ -274,7 +275,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// publish conn for broadcasts + signal to connWriter
-	if !send_safe(s.serverConn, conn) || !send_safe(s.eio.Output, nil) {
+	if !util.Send(s.serverConn, conn) || !util.Send(s.eio.Output, nil) {
 		s.Warn().Msgf("%s: could not register new connection", r.RemoteAddr)
 		return
 	}
@@ -291,7 +292,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Websocket) Stop() error {
-	close_safe(s.eio.Output)
+	util.Close(s.eio.Output)
 	if s.clientConn != nil {
 		s.clientConn.Close()
 	}
@@ -340,7 +341,7 @@ func (s *Websocket) Run() (err error) {
 func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 	defer func() {
 		conn.Close()
-		close_safe(done)
+		util.Close(done)
 	}()
 
 	// tag incoming messages with the remote addr
@@ -355,7 +356,7 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 	for {
 		mt, buf, err := conn.ReadMessage()
 		if err != nil {
-			send_safe(done, err)
+			util.Send(done, err)
 			return err
 		}
 
@@ -371,7 +372,7 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 
 		err = s.eio.ReadSingle(buf, cb)
 		if err != nil {
-			send_safe(done, err)
+			util.Send(done, err)
 			return err
 		}
 	}
@@ -379,9 +380,9 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 
 func (s *Websocket) connWriter(done chan error) {
 	defer func() {
-		close_safe(s.serverConn)
-		close_safe(s.eio.Output)
-		close_safe(done)
+		util.Close(s.serverConn)
+		util.Close(s.eio.Output)
+		util.Close(done)
 	}()
 
 	// a map of connections, the value is true iff the connection is critical
@@ -411,7 +412,7 @@ func (s *Websocket) connWriter(done chan error) {
 			err := conn.WriteMessage(websocket.BinaryMessage, buf)
 			if err != nil {
 				if critical {
-					send_safe(done, err)
+					util.Send(done, err)
 					return
 				} else {
 					s.Warn().Err(err).Msgf("%s: write error", conn.RemoteAddr())

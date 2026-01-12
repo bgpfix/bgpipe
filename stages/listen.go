@@ -8,6 +8,7 @@ import (
 
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
+	"github.com/bgpfix/bgpipe/pkg/util"
 )
 
 type Listen struct {
@@ -60,7 +61,7 @@ func (s *Listen) Attach() error {
 func (s *Listen) Prepare() error {
 	// listen
 	var lc net.ListenConfig
-	lc.Control = tcp_md5(s.K.String("md5"))
+	lc.Control = util.TcpMd5(s.K.String("md5"))
 	l, err := lc.Listen(s.Ctx, "tcp", s.bind)
 	if err != nil {
 		return err
@@ -87,12 +88,12 @@ func (s *Listen) Prepare() error {
 	l.Close()
 
 	// publish connection details
-	conn_publish(s.StageBase, conn)
+	util.ConnPublish(s.StageBase, conn)
 
 	// success
 	return nil
 }
 
 func (s *Listen) Run() error {
-	return conn_handle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
+	return util.ConnHandle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
 }
