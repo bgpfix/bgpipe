@@ -135,7 +135,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 
 	// create new stage
 	s := &StageBase{}
-	s.Ctx, s.Cancel = context.WithCancelCause(b.Ctx)
+	s.Ctx, s.Cancel = context.WithCancelCause(b.Pipe.Ctx)
 	s.B = b
 	s.P = b.Pipe
 	s.K = koanf.New(".")
