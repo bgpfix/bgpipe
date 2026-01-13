@@ -94,7 +94,7 @@ func NewRpki(parent *core.StageBase) core.Stage {
 	f.Duration("rtr-retry", 10*time.Minute, "RTR retry interval")
 	f.Bool("rtr-tls", false, "use TLS for RTR connection")
 	f.Bool("insecure", false, "do not validate TLS certificates")
-	f.String("file", "", "use a ROA file path instead (JSON/CSV, auto-reloaded)")
+	f.String("file", "", "use a ROA file instead of RTR (JSON/CSV, auto-reloaded)")
 	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|drop|tag|remove")
 	f.Bool("strict", false, "treat NOT_FOUND same as INVALID")
 
@@ -135,10 +135,10 @@ func (s *Rpki) Attach() error {
 
 func (s *Rpki) Prepare() error {
 	switch {
-	case s.rtr != "":
-		go s.rtrRun()
 	case s.file != "":
 		go s.fileRun()
+	case s.rtr != "":
+		go s.rtrRun()
 	default:
 		panic("no RPKI source configured")
 	}
