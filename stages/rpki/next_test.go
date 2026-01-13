@@ -10,7 +10,7 @@ func TestNextAddBasic(t *testing.T) {
 
 	// Test IPv4 addition
 	p4 := netip.MustParsePrefix("192.0.2.0/24")
-	s.nextAdd(p4, 24, 65001)
+	s.nextRoa(true, p4, 24, 65001)
 
 	if len(s.next4) != 1 {
 		t.Fatalf("expected 1 IPv4 ROA, got %d", len(s.next4))
@@ -24,7 +24,7 @@ func TestNextAddBasic(t *testing.T) {
 
 	// Test IPv6 addition
 	p6 := netip.MustParsePrefix("2001:db8::/32")
-	s.nextAdd(p6, 48, 65002)
+	s.nextRoa(true, p6, 48, 65002)
 
 	if len(s.next6) != 1 {
 		t.Fatalf("expected 1 IPv6 ROA, got %d", len(s.next6))
@@ -40,8 +40,8 @@ func TestNextAddDuplicates(t *testing.T) {
 	p := netip.MustParsePrefix("192.0.2.0/24")
 
 	// Add same VRP twice
-	s.nextAdd(p, 24, 65001)
-	s.nextAdd(p, 24, 65001)
+	s.nextRoa(true, p, 24, 65001)
+	s.nextRoa(true, p, 24, 65001)
 
 	if len(s.next4[p]) != 1 {
 		t.Errorf("expected 1 entry (duplicate ignored), got %d", len(s.next4[p]))
@@ -54,9 +54,9 @@ func TestNextAddMultipleOrigins(t *testing.T) {
 	p := netip.MustParsePrefix("192.0.2.0/24")
 
 	// Same prefix, different ASNs (MOAS scenario)
-	s.nextAdd(p, 24, 65001)
-	s.nextAdd(p, 24, 65002)
-	s.nextAdd(p, 25, 65001) // Same prefix, different maxLen
+	s.nextRoa(true, p, 24, 65001)
+	s.nextRoa(true, p, 24, 65002)
+	s.nextRoa(true, p, 25, 65001) // Same prefix, different maxLen
 
 	if len(s.next4[p]) != 3 {
 		t.Errorf("expected 3 entries, got %d", len(s.next4[p]))
@@ -69,9 +69,9 @@ func TestNextDel(t *testing.T) {
 	p := netip.MustParsePrefix("192.0.2.0/24")
 
 	// Add then delete
-	s.nextAdd(p, 24, 65001)
-	s.nextAdd(p, 24, 65002)
-	s.nextDel(p, 24, 65001)
+	s.nextRoa(true, p, 24, 65001)
+	s.nextRoa(true, p, 24, 65002)
+	s.nextRoa(false, p, 24, 65001)
 
 	entries := s.next4[p]
 	if len(entries) != 1 {
@@ -86,10 +86,10 @@ func TestNextDelNonExistent(t *testing.T) {
 	s := newTestRpkiSimple()
 
 	p := netip.MustParsePrefix("192.0.2.0/24")
-	s.nextAdd(p, 24, 65001)
+	s.nextRoa(true, p, 24, 65001)
 
 	// Delete non-existent entry (should be no-op)
-	s.nextDel(p, 24, 65999)
+	s.nextRoa(false, p, 24, 65999)
 
 	if len(s.next4[p]) != 1 {
 		t.Errorf("expected 1 entry (delete ignored), got %d", len(s.next4[p]))
@@ -101,8 +101,8 @@ func TestNextApply(t *testing.T) {
 	s.roaReady = make(chan bool)
 
 	// Add some ROAs
-	s.nextAdd(netip.MustParsePrefix("192.0.2.0/24"), 24, 65001)
-	s.nextAdd(netip.MustParsePrefix("2001:db8::/32"), 48, 65002)
+	s.nextRoa(true, netip.MustParsePrefix("192.0.2.0/24"), 24, 65001)
+	s.nextRoa(true, netip.MustParsePrefix("2001:db8::/32"), 48, 65002)
 
 	// Apply (publishes next -> current)
 	s.nextApply()
@@ -130,7 +130,7 @@ func TestPrefixMasking(t *testing.T) {
 
 	// Add unmasked prefix (should be masked automatically)
 	p := netip.MustParsePrefix("192.0.2.123/24")
-	s.nextAdd(p, 24, 65001)
+	s.nextRoa(true, p, 24, 65001)
 
 	// Should be stored as masked prefix
 	masked := netip.MustParsePrefix("192.0.2.0/24")

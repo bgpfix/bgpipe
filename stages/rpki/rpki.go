@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/netip"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -50,7 +51,6 @@ type Rpki struct {
 	invalid int
 	strict  bool
 	rtr     string
-	tls     bool
 	file    string
 
 	// current ROA cache
@@ -65,8 +65,12 @@ type Rpki struct {
 	fileHash [32]byte
 
 	// RTR client state
-	rtrConn    atomic.Pointer[net.Conn] // current RTR connection
-	rtrSession *rtrlib.ClientSession    // RTR session
+	rtr_mu     sync.Mutex
+	rtr_conn   net.Conn              // RTR connection
+	rtr_client *rtrlib.ClientSession // RTR client
+	rtr_sessid uint16                // last session ID from server
+	rtr_serial uint32                // last serial number from server
+	rtr_valid  bool                  // true if we have a valid serial to use
 }
 
 func NewRpki(parent *core.StageBase) core.Stage {
@@ -85,13 +89,12 @@ func NewRpki(parent *core.StageBase) core.Stage {
 	o.Bidir = true
 
 	f := o.Flags
-	f.String("rtr", "", "RTR server address (host:port)")
-	f.Bool("tls", false, "use TLS for RTR connection")
-	f.Bool("insecure", false, "do not validate TLS certificates")
+	f.String("rtr", "rtr.rpki.cloudflare.com:8282", "RTR server address (host:port)")
 	f.Duration("rtr-refresh", time.Hour, "RTR refresh interval")
-	f.Duration("rtr-retry", 5*time.Minute, "RTR retry interval")
-	f.Duration("rtr-expire", 2*time.Hour, "RTR expire interval")
-	f.String("file", "", "ROA file path (JSON/CSV), auto-reloaded on changes")
+	f.Duration("rtr-retry", 10*time.Minute, "RTR retry interval")
+	f.Bool("rtr-tls", false, "use TLS for RTR connection")
+	f.Bool("insecure", false, "do not validate TLS certificates")
+	f.String("file", "", "use a ROA file path instead (JSON/CSV, auto-reloaded)")
 	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|drop|tag|remove")
 	f.Bool("strict", false, "treat NOT_FOUND same as INVALID")
 
@@ -117,7 +120,6 @@ func (s *Rpki) Attach() error {
 
 	s.strict = k.Bool("strict")
 	s.rtr = k.String("rtr")
-	s.tls = k.Bool("tls")
 	s.file = k.String("file")
 
 	// need at least one source
@@ -151,8 +153,11 @@ func (s *Rpki) Prepare() error {
 }
 
 func (s *Rpki) Stop() error {
-	if connp := s.rtrConn.Load(); connp != nil && *connp != nil {
-		(*connp).Close()
+	s.rtr_mu.Lock()
+	if s.rtr_conn != nil {
+		s.Debug().Msg("closing RTR connection")
+		s.rtr_conn.Close()
 	}
+	s.rtr_mu.Unlock()
 	return nil
 }

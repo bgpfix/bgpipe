@@ -37,7 +37,7 @@ func (s *Rpki) nextApply() {
 	}
 }
 
-func (s *Rpki) nextAdd(prefix netip.Prefix, maxLen uint8, asn uint32) {
+func (s *Rpki) nextRoa(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) {
 	next := s.next4
 
 	// is IPv6?
@@ -50,27 +50,13 @@ func (s *Rpki) nextAdd(prefix netip.Prefix, maxLen uint8, asn uint32) {
 	entry := ROAEntry{MaxLen: maxLen, ASN: asn}
 	i := slices.Index(next[p], entry)
 
-	// novel?
-	if i < 0 {
-		next[p] = append(next[p], entry)
-	}
-}
-
-func (s *Rpki) nextDel(prefix netip.Prefix, maxLen uint8, asn uint32) {
-	next := s.next4
-
-	// is IPv6?
-	p := prefix.Masked()
-	if p.Addr().Is6() {
-		next = s.next6
-	}
-
-	// entry already exists?
-	entry := ROAEntry{MaxLen: maxLen, ASN: asn}
-	i := slices.Index(next[p], entry)
-
-	// found?
-	if i >= 0 {
-		next[p] = slices.Delete(next[p], i, i+1)
+	if add { // add iff really novel
+		if i < 0 {
+			next[p] = append(next[p], entry)
+		}
+	} else { // drop if really exists
+		if i >= 0 {
+			next[p] = slices.Delete(next[p], i, i+1)
+		}
 	}
 }

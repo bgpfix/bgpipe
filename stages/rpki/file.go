@@ -132,7 +132,7 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 			continue
 		}
 
-		s.nextAdd(prefix, uint8(roa.MaxLength), asn)
+		s.nextRoa(true, prefix, uint8(roa.MaxLength), asn)
 	}
 
 	return nil
@@ -179,7 +179,7 @@ func (s *Rpki) fileParseCSV(data []byte) error {
 			continue
 		}
 
-		s.nextAdd(prefix, uint8(maxLen), uint32(asn))
+		s.nextRoa(true, prefix, uint8(maxLen), uint32(asn))
 	}
 
 	return nil
