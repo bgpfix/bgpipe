@@ -203,7 +203,7 @@ func (s *StageBase) Errorf(format string, a ...any) error {
 
 // Event sends an event, prefixing et with stage name + slash
 func (s *StageBase) Event(et string, args ...any) *pipe.Event {
-	return s.B.Pipe.Event(s.Name+"/"+et, append(args, s)...)
+	return s.P.Event(s.Name+"/"+et, append(args, s)...)
 }
 
 // Running returns true if the stage is in Run(), false otherwise.
