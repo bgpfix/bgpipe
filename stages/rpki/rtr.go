@@ -15,7 +15,7 @@ func (s *Rpki) rtrRun() {
 		Log:             &util.Stdlog{Logger: s.Logger},
 	}
 
-	// start the refresh goroutine once (it will use s.rtrSession)
+	// start the refresh goroutine
 	go s.rtrRefresh(k.Duration("rtr-refresh"))
 
 	for s.Ctx.Err() == nil {
@@ -82,7 +82,9 @@ func (s *Rpki) rtrRefresh(interval time.Duration) {
 			s.rtr_mu.Lock()
 			rs := s.rtr_client
 			if rs != nil && s.rtr_valid {
-				s.Debug().Uint16("session", s.rtr_sessid).Uint32("serial", s.rtr_serial).Msg("RTR periodic refresh")
+				s.Debug().
+					Uint16("session", s.rtr_sessid).
+					Uint32("serial", s.rtr_serial).Msg("RTR periodic refresh")
 				rs.SendSerialQuery(s.rtr_sessid, s.rtr_serial)
 			}
 			s.rtr_mu.Unlock()

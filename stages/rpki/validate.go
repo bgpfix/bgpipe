@@ -12,7 +12,7 @@ import (
 
 // validatePrefix performs RPKI validation for a single prefix
 func (s *Rpki) validatePrefix(roa4, roa6 ROA, p netip.Prefix, origin uint32) int {
-	// get ROA cache
+	// pick ROA cache
 	var roas ROA
 	var minLen int
 	if p.Addr().Is4() {
@@ -29,7 +29,7 @@ func (s *Rpki) validatePrefix(roa4, roa6 ROA, p netip.Prefix, origin uint32) int
 		return rpki_not_found
 	}
 
-	// check covering prefixes from most-specific to least-specificfou
+	// find covering prefixes from most- to least-specific
 	var found bool
 	addr, bits := p.Addr(), uint8(p.Bits())
 	for try := p.Bits(); try >= minLen; try-- {
@@ -53,8 +53,7 @@ func (s *Rpki) validatePrefix(roa4, roa6 ROA, p netip.Prefix, origin uint32) int
 }
 
 // validate is the callback for UPDATE messages
-func (s *Rpki) validate(m *msg.Msg) (keep bool) {
-	keep = true
+func (s *Rpki) validate(m *msg.Msg) bool {
 	u := &m.Update
 	tags := pipe.UseTags(m)
 
@@ -62,60 +61,91 @@ func (s *Rpki) validate(m *msg.Msg) (keep bool) {
 	origin := u.AsPath().Origin()
 
 	// check_delete checks a prefix and decides whether to delete it
-	var invalid []nlri.NLRI
+	var valid, invalid, not_found []nlri.NLRI
 	roa4, roa6 := *s.roa4.Load(), *s.roa6.Load()
+	invalid_delete := s.invalid == rpki_withdraw || s.invalid == rpki_filter
 	check_delete := func(p nlri.NLRI) bool {
-		if !keep {
-			return false // already decided to drop m
-		} else if s.validatePrefix(roa4, roa6, p.Prefix, origin) != rpki_invalid {
-			return false // not bad enough, let's keep it
+		switch s.validatePrefix(roa4, roa6, p.Prefix, origin) {
+		case rpki_valid:
+			valid = append(valid, p)
+			if s.tag {
+				tags["rpki/"+p.String()] = "VALID"
+			}
+			return false // keep prefix
+
+		case rpki_not_found:
+			not_found = append(not_found, p)
+			if s.tag {
+				tags["rpki/"+p.String()] = "NOT_FOUND"
+			}
+			return false // keep prefix
+
+		case rpki_invalid:
+			invalid = append(invalid, p)
+			if s.tag {
+				tags["rpki/"+p.String()] = "INVALID"
+			}
+			return invalid_delete // drop prefix iff requested
 		}
-
-		// drop the whole message?
-		if s.invalid == rpki_drop {
-			keep = false
-			return false
-		}
-
-		// mark as invalid
-		invalid = append(invalid, p)
-
-		// add RPKI tags
-		tags["rpki/status"] = "INVALID"
-		tags["rpki/"+p.String()] = "INVALID"
-
-		return s.invalid != rpki_tag // delete if not just tagging
+		panic("unreachable")
 	}
 
 	// check IPv4 reachable prefixes
 	u.Reach = slices.DeleteFunc(u.Reach, check_delete)
-	if !keep {
-		return false
-	}
 
 	// check MP reachable prefixes
 	mpp := u.ReachMP().Prefixes()
 	if mpp != nil && mpp.Len() > 0 {
 		mpp.Prefixes = slices.DeleteFunc(mpp.Prefixes, check_delete)
-		if !keep {
-			return false
-		}
 	}
 
-	// check the result
-	if len(invalid) > 0 {
-		// need to write invalid prefixes to unreach?
+	// act based on validation results
+	switch {
+	case len(invalid) > 0:
+		modified := false
+
+		// any invalid prefix makes the whole message invalid
+		if s.tag {
+			tags["rpki/status"] = "INVALID"
+			modified = true
+		}
+
+		// rewrite invalid prefixes to unreach?
 		if s.invalid == rpki_withdraw {
 			u.AddUnreach(invalid...)
+			modified = true
 		}
 
-		// clean up MP unreach if now empty
-		if mpp != nil && mpp.Len() == 0 {
-			u.Attrs.Drop(attrs.ATTR_MP_REACH)
+		// drop attributes if no reachable prefixes left?
+		if invalid_delete && len(valid)+len(not_found) == 0 {
+			u.Attrs.Filter(attrs.ATTR_MP_UNREACH)
+			modified = true
 		}
 
-		// mark message as edited
-		m.Edit()
+		// mark message as edited?
+		m.Edit(modified)
+
+		// send an event?
+		if s.event != "" {
+			s.Event(s.event, m)
+		}
+
+		// drop the message?
+		if s.invalid == rpki_drop {
+			return false
+		}
+
+	case len(valid) > 0:
+		if s.tag {
+			tags["rpki/status"] = "VALID"
+			m.Edit()
+		}
+
+	case len(not_found) > 0:
+		if s.tag {
+			tags["rpki/status"] = "NOT_FOUND"
+			m.Edit()
+		}
 	}
 
 	return true

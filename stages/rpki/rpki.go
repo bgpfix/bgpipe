@@ -30,8 +30,8 @@ const (
 const (
 	rpki_withdraw = iota // Move invalid prefixes to withdrawn (RFC 7606)
 	rpki_drop            // Drop entire UPDATE if any prefix invalid
-	rpki_remove          // Remove invalid prefixes from the reachable prefixes
-	rpki_tag             // Tag message but pass through unchanged
+	rpki_filter          // Remove invalid prefixes from the reachable prefixes
+	rpki_ignore          // Keep invalid prefixes unchanged
 )
 
 // ROAEntry represents a single VRP (Validated ROA Payload)
@@ -48,10 +48,12 @@ type Rpki struct {
 	*core.StageBase
 
 	// config
-	invalid int
-	strict  bool
 	rtr     string
 	file    string
+	invalid int
+	strict  bool
+	tag     bool
+	event   string
 
 	// current ROA cache
 	roaReady chan bool           // if closed, ROA cache is ready for use
@@ -95,8 +97,11 @@ func NewRpki(parent *core.StageBase) core.Stage {
 	f.Bool("rtr-tls", false, "use TLS for RTR connection")
 	f.Bool("insecure", false, "do not validate TLS certificates")
 	f.String("file", "", "use a ROA file instead of RTR (JSON/CSV, auto-reloaded)")
-	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|drop|tag|remove")
+	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|filter|drop|ignore")
 	f.Bool("strict", false, "treat NOT_FOUND same as INVALID")
+	f.Bool("tag", true, "add RPKI validation status to message tags")
+	f.String("event", "", "emit event on RPKI INVALID messages")
+	f.Bool("asap", false, "do not wait for ROA cache to become ready")
 
 	return s
 }
@@ -110,17 +115,19 @@ func (s *Rpki) Attach() error {
 		s.invalid = rpki_withdraw
 	case "drop":
 		s.invalid = rpki_drop
-	case "tag":
-		s.invalid = rpki_tag
-	case "remove":
-		s.invalid = rpki_remove
+	case "filter":
+		s.invalid = rpki_filter
+	case "ignore":
+		s.invalid = rpki_ignore
 	default:
-		return fmt.Errorf("--invalid must be withdraw, drop, tag, or remove")
+		return fmt.Errorf("--invalid must be withdraw, filter, drop or ignore")
 	}
 
 	s.strict = k.Bool("strict")
 	s.rtr = k.String("rtr")
 	s.file = k.String("file")
+	s.tag = k.Bool("tag")
+	s.event = k.String("event")
 
 	// need at least one source
 	if s.rtr == "" && s.file == "" {
@@ -143,19 +150,20 @@ func (s *Rpki) Prepare() error {
 		panic("no RPKI source configured")
 	}
 
-	// block until the ROA cache is ready
-	select {
-	case <-s.roaReady:
-		return nil
-	case <-s.Ctx.Done():
-		return s.Ctx.Err()
+	// block until the ROA cache is ready?
+	if !s.K.Bool("asap") {
+		select {
+		case <-s.roaReady:
+		case <-s.Ctx.Done():
+		}
 	}
+
+	return nil
 }
 
 func (s *Rpki) Stop() error {
 	s.rtr_mu.Lock()
 	if s.rtr_conn != nil {
-		s.Debug().Msg("closing RTR connection")
 		s.rtr_conn.Close()
 	}
 	s.rtr_mu.Unlock()
