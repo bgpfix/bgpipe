@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/bgpfix/bgpipe/pkg/util"
 )
 
 // fileRun does initial load and polls the file for changes
@@ -19,8 +17,6 @@ func (s *Rpki) fileRun() {
 	err := s.fileLoad()
 	if err != nil {
 		s.Fatal().Err(err).Msg("could not load the ROA file")
-	} else {
-		util.Close(s.roaReady)
 	}
 
 	// keep polling
@@ -126,12 +122,6 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 			continue
 		}
 
-		// check MaxLength
-		if roa.MaxLength < prefix.Bits() || roa.MaxLength > 128 {
-			s.Warn().Str("prefix", roa.Prefix).Int("maxLength", roa.MaxLength).Msg("invalid MaxLength, skipping")
-			continue
-		}
-
 		s.nextRoa(true, prefix, uint8(roa.MaxLength), asn)
 	}
 
@@ -160,14 +150,14 @@ func (s *Rpki) fileParseCSV(data []byte) error {
 
 		prefix, err := netip.ParsePrefix(strings.TrimSpace(parts[0]))
 		if err != nil {
-			s.Warn().Int("line", i+1).Str("prefix", parts[0]).Msg("invalid prefix, skipping")
+			s.Warn().Int("line", i+1).Err(err).Str("prefix", parts[0]).Msg("invalid prefix, skipping")
 			continue
 		}
 		prefix = prefix.Masked()
 
 		maxLen, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-		if err != nil || maxLen < prefix.Bits() || maxLen > 128 {
-			s.Warn().Int("line", i+1).Msg("invalid maxLength, skipping")
+		if err != nil {
+			s.Warn().Int("line", i+1).Err(err).Msg("invalid maxLength, skipping")
 			continue
 		}
 
@@ -175,7 +165,7 @@ func (s *Rpki) fileParseCSV(data []byte) error {
 		asnStr = strings.TrimPrefix(asnStr, "as")
 		asn, err := strconv.ParseUint(asnStr, 10, 32)
 		if err != nil {
-			s.Warn().Int("line", i+1).Msg("invalid ASN, skipping")
+			s.Warn().Err(err).Int("line", i+1).Msg("invalid ASN, skipping")
 			continue
 		}
 

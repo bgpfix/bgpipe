@@ -155,16 +155,14 @@ func (s *Rpki) HandlePDU(rc *rtrlib.ClientSession, pdu rtrlib.PDU) {
 
 // ClientConnected implements rtrlib.RTRClientSessionEventHandler
 func (s *Rpki) ClientConnected(rc *rtrlib.ClientSession) {
-	s.Info().Str("addr", s.rtr).Msg("RTR connected")
 	s.rtr_mu.Lock()
 	defer s.rtr_mu.Unlock()
 
-	// on reconnect, try serial query first to get incremental update
-	if s.rtr_valid {
-		s.Info().Uint16("session", s.rtr_sessid).Uint32("serial", s.rtr_serial).Msg("RTR requesting incremental update")
+	if s.rtr_valid { // on reconnect, try serial query first to get incremental update
+		s.Info().Uint16("session", s.rtr_sessid).Uint32("serial", s.rtr_serial).Msg("RTR connected, requesting incremental update")
 		rc.SendSerialQuery(s.rtr_sessid, s.rtr_serial)
 	} else {
-		s.Info().Msg("RTR requesting full cache")
+		s.Info().Msg("RTR connected, requesting full cache")
 		s.nextFlush()
 		rc.SendResetQuery()
 	}

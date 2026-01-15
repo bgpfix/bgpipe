@@ -61,10 +61,10 @@ func (s *Rpki) validate(m *msg.Msg) bool {
 	origin := u.AsPath().Origin()
 
 	// check_delete checks a prefix and decides whether to delete it
-	var valid, invalid, not_found []nlri.NLRI
+	var valid, invalid, not_found []nlri.Prefix
 	roa4, roa6 := *s.roa4.Load(), *s.roa6.Load()
 	invalid_delete := s.invalid == rpki_withdraw || s.invalid == rpki_filter
-	check_delete := func(p nlri.NLRI) bool {
+	check_delete := func(p nlri.Prefix) bool {
 		switch s.validatePrefix(roa4, roa6, p.Prefix, origin) {
 		case rpki_valid:
 			valid = append(valid, p)

@@ -19,7 +19,7 @@ func (s *Rpki) nextApply() {
 	s.roa6.Store(&roa6)
 
 	// signal the ROA is ready
-	s.Info().Int("v4", len(roa4)).Int("v6", len(roa6)).Msg("ROA cache updated")
+	s.Debug().Int("v4", len(roa4)).Int("v6", len(roa6)).Msg("ROA cache updated")
 	util.Close(s.roaReady)
 
 	// make next copies of current maps
@@ -39,6 +39,12 @@ func (s *Rpki) nextApply() {
 
 func (s *Rpki) nextRoa(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) {
 	next := s.next4
+
+	// check maxLen
+	if ml := int(maxLen); ml < prefix.Bits() || ml > 128 {
+		s.Warn().Str("prefix", prefix.String()).Int("maxLength", ml).Msg("invalid MaxLength, skipping")
+		return
+	}
 
 	// is IPv6?
 	p := prefix.Masked()
