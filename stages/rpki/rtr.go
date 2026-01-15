@@ -46,12 +46,12 @@ func (s *Rpki) rtrRun() {
 		s.rtr_conn = nil
 		s.rtr_mu.Unlock()
 
-		// report, retry
+		// report, retry (with backoff to prevent rapid reconnect loops)
 		if sleep := time.Until(retry); sleep > 0 {
-			s.Err(err).Str("addr", s.rtr).Msgf("RTR connection done, retrying in %s...", sleep)
+			s.Warn().Err(err).Str("addr", s.rtr).Msgf("RTR connection failed, retrying in %s", sleep.Round(time.Second))
 			time.Sleep(sleep)
 		} else {
-			s.Err(err).Str("addr", s.rtr).Msg("RTR connection done, retrying now")
+			s.Warn().Err(err).Str("addr", s.rtr).Msg("RTR connection failed, reconnecting")
 		}
 	}
 }
@@ -150,6 +150,12 @@ func (s *Rpki) HandlePDU(rc *rtrlib.ClientSession, pdu rtrlib.PDU) {
 
 	case *rtrlib.PDUErrorReport:
 		s.Warn().Uint16("code", p.ErrorCode).Str("text", p.ErrorMsg).Msg("RTR error")
+		s.rtr_mu.Lock()
+		defer s.rtr_mu.Unlock()
+
+		s.rtr_valid = false
+		s.nextFlush()
+		rc.SendResetQuery()
 	}
 }
 
