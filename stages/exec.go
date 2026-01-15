@@ -74,7 +74,7 @@ func (s *Exec) Attach() error {
 	}
 
 	// cleanup procedure
-	// s.cmd_exec.Cancel = func() error { close_safe(s.eio.Output); return nil }
+	// s.cmd_exec.Cancel = func() error { util.Close(s.eio.Output); return nil }
 	s.cmd_exec.WaitDelay = time.Second
 
 	return s.eio.Attach()

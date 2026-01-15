@@ -25,7 +25,7 @@ type Read struct {
 	fpath string   // path argument
 	url   *url.URL // if reading from URL
 
-	opt_decompress string
+	decompress string
 
 	fh    io.ReadCloser // can be *os.File or http.Response.Body
 	rd    io.Reader
@@ -76,19 +76,19 @@ func (s *Read) Attach() error {
 	case "none", "", "false":
 		break // no decompression
 	case "gz", "gzip":
-		s.opt_decompress = ".gz"
+		s.decompress = ".gz"
 	case "zstd", "zst", "zstandard":
-		s.opt_decompress = ".zstd"
+		s.decompress = ".zstd"
 	case "bzip2", "bzip", "bz2", "bz":
-		s.opt_decompress = ".bz2"
+		s.decompress = ".bz2"
 	case "auto":
 		switch path.Ext(s.fpath) {
 		case ".bz2":
-			s.opt_decompress = ".bz2"
+			s.decompress = ".bz2"
 		case ".gz":
-			s.opt_decompress = ".gz"
+			s.decompress = ".gz"
 		case ".zstd", ".zst":
-			s.opt_decompress = ".zstd"
+			s.decompress = ".zstd"
 		}
 	default:
 		return fmt.Errorf("--decompress '%s': invalid value", k.String("decompress"))
@@ -118,7 +118,7 @@ func (s *Read) Prepare() error {
 	}
 
 	// need to uncompress on the fly?
-	switch s.opt_decompress {
+	switch s.decompress {
 	case ".bz2":
 		r, err := bzip2.NewReader(s.fh, nil)
 		if err != nil {

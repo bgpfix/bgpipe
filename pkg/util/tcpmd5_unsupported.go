@@ -1,13 +1,13 @@
 //go:build !linux
 
-package stages
+package util
 
 import (
 	"fmt"
 	"syscall"
 )
 
-func tcp_md5(md5pass string) func(net, addr string, c syscall.RawConn) error {
+func TcpMd5(md5pass string) func(net, addr string, c syscall.RawConn) error {
 	if len(md5pass) == 0 {
 		return nil
 	}

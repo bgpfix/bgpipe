@@ -241,7 +241,7 @@ func (b *Bgpipe) parseArgs(args []string) error {
 
 // parseArgs parses CLI flags and arguments and exports to s.K.
 // May return unused args.
-func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
+func (s *StageBase) parseArgs(args []string) ([]string, error) {
 	o := &s.Options
 	f := o.Flags
 
@@ -252,7 +252,7 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 
 	// parse stage flags
 	if err := f.Parse(args); err != nil {
-		return args, s.Errorf("%w", err)
+		return nil, s.Errorf("%w", err)
 	}
 
 	// export flags to koanf, collect remaining args
@@ -261,17 +261,19 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 
 	// parse the stage input filter?
 	if v := s.K.String("if"); len(v) > 0 {
-		s.flt_in, err = filter.NewFilter(v)
-		if err != nil {
-			return rem, s.Errorf("could not parse --if: %w", err)
+		if f, err := filter.NewFilter(v); err != nil {
+			return nil, s.Errorf("could not parse --if: %w", err)
+		} else {
+			s.FilterIn = append(s.FilterIn, f)
 		}
 	}
 
 	// parse the stage output filter?
 	if v := s.K.String("of"); len(v) > 0 {
-		s.flt_out, err = filter.NewFilter(v)
-		if err != nil {
-			return rem, s.Errorf("could not parse --of: %w", err)
+		if f, err := filter.NewFilter(v); err != nil {
+			return nil, s.Errorf("could not parse --of: %w", err)
+		} else {
+			s.FilterOut = append(s.FilterOut, f)
 		}
 	}
 
@@ -282,7 +284,7 @@ func (s *StageBase) parseArgs(args []string) (unused []string, err error) {
 	// rewrite required arguments?
 	for _, name := range o.Args {
 		if len(rem) == 0 {
-			return rem, s.Errorf("needs an argument: %s", name)
+			return nil, s.Errorf("needs an argument: %s", name)
 		}
 		s.K.Set(name, rem[0])
 		s.Args = append(s.Args, rem[0])

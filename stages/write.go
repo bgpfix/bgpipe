@@ -25,9 +25,9 @@ type Write struct {
 	fpath string
 	flags int
 
-	opt_every    time.Duration
-	opt_timefmt  string
-	opt_compress string
+	every    time.Duration
+	timefmt  string
+	compress string
 
 	fh *os.File       // current file handle
 	wr io.WriteCloser // current writer, can be gzip.Writer
@@ -75,15 +75,15 @@ func (s *Write) Attach() error {
 		s.flags |= os.O_TRUNC
 	}
 
-	s.opt_every = k.Duration("every")
-	if s.opt_every != 0 && s.opt_every < time.Minute {
+	s.every = k.Duration("every")
+	if s.every != 0 && s.every < time.Minute {
 		return fmt.Errorf("--every must be at least 60s")
 	}
 
-	s.opt_timefmt = k.String("time-format")
+	s.timefmt = k.String("time-format")
 	if pt := s.pathTime(s.fpath, time.Now()); pt == "" {
 		return fmt.Errorf("file path %s: could not resolve time placeholders", s.fpath)
-	} else if pt == s.fpath && s.opt_every != 0 {
+	} else if pt == s.fpath && s.every != 0 {
 		return fmt.Errorf("file path %s: $TIME or ${format} must be used with --every", s.fpath)
 	}
 
@@ -91,25 +91,25 @@ func (s *Write) Attach() error {
 	case "none", "", "false":
 		break // no compression
 	case "bzip2", "bzip", "bz2", "bz":
-		s.opt_compress = ".bz2"
+		s.compress = ".bz2"
 	case "gz", "gzip":
-		s.opt_compress = ".gz"
+		s.compress = ".gz"
 	case "zstd", "zst", "zstandard":
-		s.opt_compress = ".zstd"
+		s.compress = ".zstd"
 	case "auto":
 		switch path.Ext(s.fpath) {
 		case ".bz2":
-			s.opt_compress = ".bz2"
+			s.compress = ".bz2"
 		case ".gz":
-			s.opt_compress = ".gz"
+			s.compress = ".gz"
 		case ".zstd", ".zst":
-			s.opt_compress = ".zstd"
+			s.compress = ".zstd"
 		}
 	default:
 		return fmt.Errorf("--compress '%s': invalid value", k.String("compress"))
 	}
 
-	// need to detect data format?
+	// need to detect the data format?
 	if s.eio.DetectNeeded() {
 		if !s.eio.DetectPath(s.fpath) {
 			return fmt.Errorf("could not detect target data format")
@@ -124,9 +124,9 @@ func (s *Write) Attach() error {
 func (s *Write) pathTime(path string, t time.Time) string {
 	// replace $TIME?
 	if strings.Contains(s.fpath, `$TIME`) {
-		if s.opt_timefmt == "" {
+		if s.timefmt == "" {
 			return ""
-		} else if str := t.Format(s.opt_timefmt); str != "" {
+		} else if str := t.Format(s.timefmt); str != "" {
 			path = strings.ReplaceAll(path, `$TIME`, str)
 		} else {
 			return ""
@@ -171,8 +171,8 @@ func (s *Write) openFile() error {
 	fpath := s.fpath + ".tmp"
 	if strings.Contains(s.fpath, "$") {
 		t := time.Now().UTC()
-		if s.opt_every > 0 {
-			t = t.Truncate(s.opt_every)
+		if s.every > 0 {
+			t = t.Truncate(s.every)
 		}
 		fpath = s.pathTime(s.fpath, t) + ".tmp"
 	}
@@ -192,7 +192,7 @@ func (s *Write) openFile() error {
 	s.fh = fh
 
 	// transparent compress?
-	switch s.opt_compress {
+	switch s.compress {
 	case ".bz2":
 		w, err := bzip2.NewWriter(fh, nil)
 		if err != nil {
@@ -229,11 +229,20 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
 		s.Debug().Msgf("%s: writing %d bytes", target, n)
 	}
 
-	wr.Close()
-	fh.Close()
+	if err := wr.Close(); err != nil {
+		s.Warn().Err(err).Msgf("%s: writer close error", fh.Name())
+	}
+	if wr != fh {
+		if err := fh.Close(); err != nil {
+			s.Warn().Err(err).Msgf("%s: file close error", fh.Name())
+		}
+	}
 
 	if n != 0 && found {
-		os.Rename(fpath, target) // publish the file
+		// publish the file by renaming to the target name
+		if err := os.Rename(fpath, target); err != nil {
+			s.Warn().Err(err).Msgf("%s: rename error", fh.Name())
+		}
 	}
 }
 
@@ -244,8 +253,8 @@ func (s *Write) Run() error {
 
 	var reload <-chan time.Time
 	first_run := true
-	if s.opt_every != 0 {
-		t := time.Now().Truncate(s.opt_every).Add(s.opt_every)
+	if s.every != 0 {
+		t := time.Now().Truncate(s.every).Add(s.every)
 		reload = time.After(time.Until(t))
 	}
 
@@ -279,7 +288,7 @@ func (s *Write) Run() error {
 			// change to periodic ticks from here on?
 			if first_run {
 				first_run = false
-				reload = time.Tick(s.opt_every)
+				reload = time.Tick(s.every)
 			}
 
 		case <-s.Ctx.Done():

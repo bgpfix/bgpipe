@@ -15,11 +15,11 @@ type Grep struct {
 	filter *filter.Filter
 	eval   *filter.Eval
 
-	opt_keep        bool
-	opt_event_match string
-	opt_event_fail  string
-	opt_kill_match  bool
-	opt_kill_fail   bool
+	keep        bool
+	event_match string
+	event_fail  string
+	kill_match  bool
+	kill_fail   bool
 }
 
 func NewGrep(parent *core.StageBase) core.Stage {
@@ -40,17 +40,24 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	}
 
 	f := o.Flags
-	f.BoolVar(&s.opt_keep, "keep", false, "keep the message: run the filter but do not drop")
-	f.StringVar(&s.opt_event_match, "event-match", "", "emit event on match success")
-	f.StringVar(&s.opt_event_fail, "event-fail", "", "emit event on match fail")
-	f.BoolVar(&s.opt_kill_match, "kill-match", false, "kill the process on match success")
-	f.BoolVar(&s.opt_kill_fail, "kill-fail", false, "kill the process on match fail")
+	f.Bool("keep", false, "keep the message: run the filter but do not drop")
+	f.String("event-match", "", "emit event on match success")
+	f.String("event-fail", "", "emit event on match fail")
+	f.Bool("kill-match", false, "kill the process on match success")
+	f.Bool("kill-fail", false, "kill the process on match fail")
 
 	return s
 }
 
 func (s *Grep) Attach() (err error) {
 	k := s.K
+
+	// fetch flag values
+	s.keep = k.Bool("keep")
+	s.event_match = k.String("event-match")
+	s.event_fail = k.String("event-fail")
+	s.kill_match = k.Bool("kill-match")
+	s.kill_fail = k.Bool("kill-fail")
 
 	// check filter
 	s.filter, err = filter.NewFilter(k.String("filter"))
@@ -59,7 +66,7 @@ func (s *Grep) Attach() (err error) {
 	}
 
 	// --keep makes sense?
-	if s.opt_keep && s.opt_event_match == "" && s.opt_event_fail == "" {
+	if s.keep && s.event_match == "" && s.event_fail == "" {
 		return fmt.Errorf("--keep requires at least one --event-* option")
 	}
 
@@ -78,21 +85,21 @@ func (s *Grep) check(m *msg.Msg) bool {
 
 	// emit events / kill the session?
 	if res {
-		if s.opt_kill_match {
+		if s.kill_match {
 			s.Fatal().Stringer("msg", m).Msg("filter match, killing process")
-		} else if s.opt_event_match != "" {
-			s.Event(s.opt_event_match, m)
+		} else if s.event_match != "" {
+			s.Event(s.event_match, m)
 		}
 	} else { // !res
-		if s.opt_kill_fail {
+		if s.kill_fail {
 			s.Fatal().Stringer("msg", m).Msg("filter fail, killing process")
-		} else if s.opt_event_fail != "" {
-			s.Event(s.opt_event_fail, m)
+		} else if s.event_fail != "" {
+			s.Event(s.event_fail, m)
 		}
 	}
 
 	// keep the message?
-	if s.opt_keep {
+	if s.keep {
 		return true
 	} else if s.invert {
 		return !res

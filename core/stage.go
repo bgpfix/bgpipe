@@ -83,8 +83,8 @@ type StageBase struct {
 	Args    []string     // consumed args
 	Options StageOptions // stage options
 
-	flt_in  *filter.Filter // message filter for callbacks
-	flt_out *filter.Filter // message filter for inputs
+	FilterIn  []*filter.Filter // message filter for pipe callbacks (input to stage)
+	FilterOut []*filter.Filter // message filter for pipe inputs (output from stage)
 
 	// properties set during Attach()
 
@@ -135,7 +135,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 
 	// create new stage
 	s := &StageBase{}
-	s.Ctx, s.Cancel = context.WithCancelCause(b.Ctx)
+	s.Ctx, s.Cancel = context.WithCancelCause(b.Pipe.Ctx)
 	s.B = b
 	s.P = b.Pipe
 	s.K = koanf.New(".")
@@ -169,6 +169,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	if so.FilterIn {
 		f.StringP("if", "I", "", "stage input filter (skip non-matching input)")
 	}
+	f.Float64("rate-limit", 0, "delay messages if over the rate limit")
+	f.Float64("rate-sample", 0, "sample messages if over the rate limit")
 
 	return s
 }
@@ -201,7 +203,7 @@ func (s *StageBase) Errorf(format string, a ...any) error {
 
 // Event sends an event, prefixing et with stage name + slash
 func (s *StageBase) Event(et string, args ...any) *pipe.Event {
-	return s.B.Pipe.Event(s.Name+"/"+et, append(args, s)...)
+	return s.P.Event(s.Name+"/"+et, append(args, s)...)
 }
 
 // Running returns true if the stage is in Run(), false otherwise.

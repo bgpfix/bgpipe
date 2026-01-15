@@ -9,6 +9,7 @@ import (
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/rs/zerolog"
+	"golang.org/x/time/rate"
 )
 
 // AttachStages attaches all stages to pipe
@@ -210,14 +211,35 @@ func (s *StageBase) attach() error {
 		return ErrNoInputs
 	}
 
+	// callback rate limit?
+	var (
+		limit_rate float64
+		limit_skip bool
+		rl         *rate.Limiter
+	)
+	if rr, rs := k.Float64("rate-limit"), k.Float64("rate-sample"); rr > 0 && rs > 0 {
+		return fmt.Errorf("--rate-limit and --rate-sample are mutually exclusive")
+	} else if rr > 0 {
+		limit_rate = rr
+		limit_skip = false
+	} else if rs > 0 {
+		limit_rate = rs
+		limit_skip = true
+	}
+
 	// fix callbacks
+	if limit_rate > 0 {
+		rl = rate.NewLimiter(rate.Limit(limit_rate), int(math.Ceil(limit_rate)))
+	}
 	for _, cb := range s.callbacks {
 		cb.Id = s.Index
 		cb.Enabled = &s.running
-		cb.Filter = s.flt_in
+		cb.Filter = s.FilterIn
+		cb.LimitRate = rl
+		cb.LimitSkip = limit_skip
 	}
 
-	// fix handlers
+	// fix event handlers
 	for _, h := range s.handlers {
 		h.Id = s.Index
 		h.Enabled = &s.running
@@ -256,10 +278,15 @@ func (s *StageBase) attach() error {
 	}
 
 	// fix inputs
+	if limit_rate > 0 {
+		rl = rate.NewLimiter(rate.Limit(limit_rate), int(math.Ceil(limit_rate))) // NB: new instance
+	}
 	for _, li := range s.inputs {
 		li.Id = s.Index
 		li.CbFilterValue = fid
-		li.Filter = s.flt_out
+		li.Filter = s.FilterOut
+		li.LimitRate = rl
+		li.LimitSkip = limit_skip
 
 		if li.Dir == dir.DIR_L {
 			li.Reverse = true // CLI gives L stages in reverse
