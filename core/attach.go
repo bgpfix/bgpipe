@@ -223,7 +223,7 @@ func (s *StageBase) attach() error {
 	for _, cb := range s.callbacks {
 		cb.Id = s.Index
 		cb.Enabled = &s.running
-		cb.Filter = s.flt_in
+		cb.Filter = s.FilterIn
 		cb.LimitRate = rl
 		cb.LimitSkip = rs
 	}
@@ -275,7 +275,7 @@ func (s *StageBase) attach() error {
 	for _, li := range s.inputs {
 		li.Id = s.Index
 		li.CbFilterValue = fid
-		li.Filter = s.flt_out
+		li.Filter = s.FilterOut
 		li.LimitRate = rl
 		li.LimitSkip = rs
 

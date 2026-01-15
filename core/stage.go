@@ -83,8 +83,8 @@ type StageBase struct {
 	Args    []string     // consumed args
 	Options StageOptions // stage options
 
-	flt_in  *filter.Filter // message filter for callbacks
-	flt_out *filter.Filter // message filter for inputs
+	FilterIn  []*filter.Filter // message filter for pipe callbacks (input to stage)
+	FilterOut []*filter.Filter // message filter for pipe inputs (output from stage)
 
 	// properties set during Attach()
 

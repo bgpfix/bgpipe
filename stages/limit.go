@@ -41,9 +41,9 @@ type Limit struct {
 	limit_origin  int64 // max prefix count for single origin
 	limit_block   int64 // max prefix count for IP block
 
-	session *xsync.Map[nlri.NLRI, *limitPrefix] // session db
-	origin  *xsync.Map[uint32, *limitCounter]   // per-origin db
-	block   *xsync.Map[uint64, *limitCounter]   // per-block db
+	session *xsync.Map[nlri.Prefix, *limitPrefix] // session db
+	origin  *xsync.Map[uint32, *limitCounter]     // per-origin db
+	block   *xsync.Map[uint64, *limitCounter]     // per-block db
 }
 
 func NewLimit(parent *core.StageBase) core.Stage {
@@ -79,7 +79,7 @@ func NewLimit(parent *core.StageBase) core.Stage {
 	so.FilterIn = true
 
 	s.afs = make(map[afi.AS]bool)
-	s.session = xsync.NewMap[nlri.NLRI, *limitPrefix]()
+	s.session = xsync.NewMap[nlri.Prefix, *limitPrefix]()
 	s.origin = xsync.NewMap[uint32, *limitCounter]()
 	s.block = xsync.NewMap[uint64, *limitCounter]()
 
@@ -162,16 +162,16 @@ func (s *Limit) onMsg(m *msg.Msg) bool {
 	return true
 }
 
-func (s *Limit) isShort(p nlri.NLRI) bool {
+func (s *Limit) isShort(p nlri.Prefix) bool {
 	return s.minlen > 0 && p.Bits() < s.minlen
 }
 
-func (s *Limit) isLong(p nlri.NLRI) bool {
+func (s *Limit) isLong(p nlri.Prefix) bool {
 	return s.maxlen > 0 && p.Bits() > s.maxlen
 }
 
 // translates IP prefix to IP block, assuming prefix length <=/64
-func (s *Limit) p2b(p nlri.NLRI) uint64 {
+func (s *Limit) p2b(p nlri.Prefix) uint64 {
 	b := p.Addr().AsSlice()
 	switch len(b) {
 	case 4:
@@ -191,7 +191,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 	origin := u.AsPath().Origin()
 
 	// drops p from u if violates the rules
-	dropReach := func(p nlri.NLRI) (drop bool) {
+	dropReach := func(p nlri.Prefix) (drop bool) {
 		defer func() { u.Msg.Edit(drop) }()
 
 		// too long or short?
@@ -300,7 +300,7 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 
 func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	// drops p from u if violates the rules
-	dropUnreach := func(p nlri.NLRI) (drop bool) {
+	dropUnreach := func(p nlri.Prefix) (drop bool) {
 		// too long or short?
 		if s.isShort(p) || s.isLong(p) {
 			u.Msg.Edit() // TODO: sure? why not check drop? FIXME
