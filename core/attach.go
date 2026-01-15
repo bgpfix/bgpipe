@@ -212,20 +212,31 @@ func (s *StageBase) attach() error {
 	}
 
 	// callback rate limit?
-	rr := k.Float64("limit-rate")
-	rs := k.Bool("limit-sample")
-	var rl *rate.Limiter
-	if rr > 0 {
-		rl = rate.NewLimiter(rate.Limit(rr), int(math.Ceil(rr)))
+	var (
+		limit_rate float64
+		limit_skip bool
+		rl         *rate.Limiter
+	)
+	if rr, rs := k.Float64("rate-limit"), k.Float64("rate-sample"); rr > 0 && rs > 0 {
+		return fmt.Errorf("--rate-limit and --rate-sample are mutually exclusive")
+	} else if rr > 0 {
+		limit_rate = rr
+		limit_skip = false
+	} else if rs > 0 {
+		limit_rate = rs
+		limit_skip = true
 	}
 
 	// fix callbacks
+	if limit_rate > 0 {
+		rl = rate.NewLimiter(rate.Limit(limit_rate), int(math.Ceil(limit_rate)))
+	}
 	for _, cb := range s.callbacks {
 		cb.Id = s.Index
 		cb.Enabled = &s.running
 		cb.Filter = s.FilterIn
 		cb.LimitRate = rl
-		cb.LimitSkip = rs
+		cb.LimitSkip = limit_skip
 	}
 
 	// fix event handlers
@@ -266,18 +277,16 @@ func (s *StageBase) attach() error {
 		}
 	}
 
-	// input rate limit? NB: separate from the callback rate limit
-	if rr > 0 {
-		rl = rate.NewLimiter(rate.Limit(rr), int(math.Ceil(rr)))
-	}
-
 	// fix inputs
+	if limit_rate > 0 {
+		rl = rate.NewLimiter(rate.Limit(limit_rate), int(math.Ceil(limit_rate))) // NB: new instance
+	}
 	for _, li := range s.inputs {
 		li.Id = s.Index
 		li.CbFilterValue = fid
 		li.Filter = s.FilterOut
 		li.LimitRate = rl
-		li.LimitSkip = rs
+		li.LimitSkip = limit_skip
 
 		if li.Dir == dir.DIR_L {
 			li.Reverse = true // CLI gives L stages in reverse
