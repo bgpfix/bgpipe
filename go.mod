@@ -6,7 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/bgp/stayrtr v0.6.3
-	github.com/bgpfix/bgpfix v0.9.0
+	github.com/bgpfix/bgpfix v0.10.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/gorilla/websocket v1.5.3
@@ -33,4 +33,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-replace github.com/bgpfix/bgpfix => ../bgpfix
+// replace github.com/bgpfix/bgpfix => ../bgpfix
