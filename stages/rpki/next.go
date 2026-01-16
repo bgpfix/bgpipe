@@ -19,7 +19,7 @@ func (s *Rpki) nextApply() {
 	s.roa6.Store(&roa6)
 
 	// signal the ROA is ready
-	s.Debug().Int("v4", len(roa4)).Int("v6", len(roa6)).Msg("ROA cache updated")
+	s.Info().Int("v4", len(roa4)).Int("v6", len(roa6)).Msg("ROA cache updated")
 	util.Close(s.roaReady)
 
 	// make next copies of current maps

@@ -26,17 +26,18 @@ func NewListen(parent *core.StageBase) core.Stage {
 		f = o.Flags
 	)
 
-	f.Duration("timeout", 0, "connect timeout (0 means none)")
-	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
-	if runtime.GOOS == "linux" {
-		f.String("md5", "", "TCP MD5 password")
-	}
-	o.Args = []string{"addr"}
-
 	o.Descr = "let a BGP client connect over TCP"
 	o.IsProducer = true
 	o.FilterOut = true
 	o.IsConsumer = true
+
+	o.Args = []string{"addr"}
+	if runtime.GOOS == "linux" {
+		f.String("md5", "", "TCP MD5 password")
+	}
+	f.Duration("timeout", 0, "TCP connect timeout (0 means off)")
+	f.Duration("closed-timeout", time.Second, "TCP half-closed timeout (0 means off)")
+	f.Duration("keepalive", 15*time.Second, "TCP keepalive period (-1 means off)")
 
 	return s
 }
@@ -46,11 +47,7 @@ func (s *Listen) Attach() error {
 	s.bind = s.K.String("addr")
 	if len(s.bind) == 0 {
 		s.bind = ":179" // a default
-	}
-
-	// bind needs a port number?
-	_, _, err := net.SplitHostPort(s.bind)
-	if err != nil {
+	} else if _, _, err := net.SplitHostPort(s.bind); err != nil {
 		s.bind += ":179" // best-effort try
 	}
 
@@ -59,16 +56,25 @@ func (s *Listen) Attach() error {
 }
 
 func (s *Listen) Prepare() error {
-	// listen
+	k := s.K
+
+	// listen config
 	var lc net.ListenConfig
-	lc.Control = util.TcpMd5(s.K.String("md5"))
+	if v := k.String("md5"); v != "" {
+		lc.Control = util.TcpMd5(v)
+	}
+	if v := k.Duration("keepalive"); v != 0 {
+		lc.KeepAlive = v
+	}
+
+	// start listening
 	l, err := lc.Listen(s.Ctx, "tcp", s.bind)
 	if err != nil {
 		return err
 	}
 
 	// add a listen timeout?
-	if t := s.K.Duration("timeout"); t > 0 {
+	if t := k.Duration("timeout"); t > 0 {
 		if tl, _ := l.(*net.TCPListener); tl != nil {
 			tl.SetDeadline(time.Now().Add(t))
 		} else {
@@ -95,5 +101,5 @@ func (s *Listen) Prepare() error {
 }
 
 func (s *Listen) Run() error {
-	return util.ConnHandle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
+	return util.ConnBGP(s.StageBase, s.conn, s.in)
 }

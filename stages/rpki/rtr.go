@@ -10,6 +10,7 @@ import (
 // rtrRun runs the RTR client with reconnection logic
 func (s *Rpki) rtrRun() {
 	k := s.K
+
 	config := rtrlib.ClientConfiguration{
 		ProtocolVersion: rtrlib.PROTOCOL_VERSION_1,
 		Log:             &util.Stdlog{Logger: s.Logger},
@@ -24,7 +25,7 @@ func (s *Rpki) rtrRun() {
 		retry := time.Now().Add(k.Duration("rtr-retry"))
 
 		// connect
-		conn, err := util.DialRetry(s.StageBase, nil, "tcp", s.rtr, k.Bool("rtr-tls"))
+		conn, err := util.DialRetry(s.StageBase, nil, "tcp", s.rtr)
 		if err != nil {
 			s.Fatal().Err(err).Msg("could not connect to RTR server")
 		}
@@ -34,9 +35,11 @@ func (s *Rpki) rtrRun() {
 		s.rtr_mu.Lock()
 		s.rtr_conn = conn
 		s.rtr_client = rc
+		s.rtr_sessid = 0
+		s.rtr_valid = false
 		s.rtr_mu.Unlock()
 
-		// run RTR session (blocking until disconnected)
+		// run RTR session (blocks until disconnected)
 		err = rc.StartWithConn(conn)
 
 		// clear the state
@@ -44,26 +47,35 @@ func (s *Rpki) rtrRun() {
 		s.rtr_conn.Close()
 		s.rtr_client = nil
 		s.rtr_conn = nil
+		s.rtr_sessid = 0
+		s.rtr_valid = false
 		s.rtr_mu.Unlock()
 
 		// report, retry
-		if sleep := time.Until(retry); sleep > 0 {
-			s.Err(err).Str("addr", s.rtr).Msgf("RTR connection done, retrying in %s...", sleep)
-			time.Sleep(sleep)
+		if sleep := time.Until(retry); sleep > time.Second {
+			s.Warn().Err(err).Str("addr", s.rtr).Msgf("RTR connection failed, retrying in %s", sleep.Round(time.Second))
+			select {
+			case <-time.After(sleep):
+			case <-s.Ctx.Done():
+			}
 		} else {
-			s.Err(err).Str("addr", s.rtr).Msg("RTR connection done, retrying now")
+			s.Warn().Err(err).Str("addr", s.rtr).Msg("RTR connection failed, retrying now")
 		}
 	}
 }
 
 // rtrSessionCheck checks if the session ID has changed
-func (s *Rpki) rtrSessionCheck(rc *rtrlib.ClientSession, vs uint16) bool {
-	if s.rtr_valid && s.rtr_sessid == vs {
+func (s *Rpki) rtrSessionCheck(rc *rtrlib.ClientSession, id uint16) bool {
+	if s.rtr_valid && s.rtr_sessid == id {
 		return true
 	}
 
-	s.Info().Uint16("old", s.rtr_sessid).Uint16("new", vs).Msg("RTR session changed")
-	s.rtr_sessid = vs
+	if s.rtr_sessid != 0 {
+		s.Info().Uint16("old", s.rtr_sessid).Uint16("new", id).Msg("RTR session changed")
+	} else {
+		s.Info().Uint16("id", id).Msg("RTR new session")
+	}
+	s.rtr_sessid = id
 	s.rtr_valid = false
 	s.nextFlush()
 	rc.SendResetQuery()
@@ -81,13 +93,17 @@ func (s *Rpki) rtrRefresh(interval time.Duration) {
 		case <-ticker.C:
 			s.rtr_mu.Lock()
 			rs := s.rtr_client
-			if rs != nil && s.rtr_valid {
-				s.Debug().
-					Uint16("session", s.rtr_sessid).
-					Uint32("serial", s.rtr_serial).Msg("RTR periodic refresh")
-				rs.SendSerialQuery(s.rtr_sessid, s.rtr_serial)
-			}
+			valid := s.rtr_valid
+			sessid := s.rtr_sessid
+			serial := s.rtr_serial
 			s.rtr_mu.Unlock()
+
+			if rs != nil && valid {
+				s.Debug().
+					Uint16("session", sessid).
+					Uint32("serial", serial).Msg("RTR periodic refresh")
+				rs.SendSerialQuery(sessid, serial)
+			}
 		case <-s.Ctx.Done():
 			return
 		}
@@ -150,25 +166,23 @@ func (s *Rpki) HandlePDU(rc *rtrlib.ClientSession, pdu rtrlib.PDU) {
 
 	case *rtrlib.PDUErrorReport:
 		s.Warn().Uint16("code", p.ErrorCode).Str("text", p.ErrorMsg).Msg("RTR error")
-	}
-}
+		s.rtr_mu.Lock()
+		defer s.rtr_mu.Unlock()
 
-// ClientConnected implements rtrlib.RTRClientSessionEventHandler
-func (s *Rpki) ClientConnected(rc *rtrlib.ClientSession) {
-	s.rtr_mu.Lock()
-	defer s.rtr_mu.Unlock()
-
-	if s.rtr_valid { // on reconnect, try serial query first to get incremental update
-		s.Info().Uint16("session", s.rtr_sessid).Uint32("serial", s.rtr_serial).Msg("RTR connected, requesting incremental update")
-		rc.SendSerialQuery(s.rtr_sessid, s.rtr_serial)
-	} else {
-		s.Info().Msg("RTR connected, requesting full cache")
+		s.rtr_valid = false
 		s.nextFlush()
 		rc.SendResetQuery()
 	}
 }
 
+// ClientConnected implements rtrlib.RTRClientSessionEventHandler
+func (s *Rpki) ClientConnected(rc *rtrlib.ClientSession) {
+	s.Debug().Msg("RTR connected, requesting full cache")
+	s.nextFlush()
+	rc.SendResetQuery()
+}
+
 // ClientDisconnected implements rtrlib.RTRClientSessionEventHandler
 func (s *Rpki) ClientDisconnected(rc *rtrlib.ClientSession) {
-	s.Warn().Str("addr", s.rtr).Msg("RTR disconnected")
+	s.Debug().Msg("RTR disconnected")
 }

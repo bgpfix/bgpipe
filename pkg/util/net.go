@@ -46,7 +46,10 @@ func ConnPublish(s *core.StageBase, conn net.Conn) {
 	}
 }
 
-func ConnHandle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.Duration) error {
+// ConnBGP handles an opened BGP connection conn for stage s
+func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
+	closed_timeout := s.K.Duration("closed-timeout")
+
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
@@ -56,7 +59,7 @@ func ConnHandle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.D
 		return fmt.Errorf("could not get TCPConn")
 	}
 
-	// discard data after conn.Close()
+	// discard data after conn.Close()?
 	if err := tcp.SetLinger(0); err != nil {
 		s.Info().Err(err).Msg("SetLinger failed")
 	}
@@ -76,8 +79,8 @@ func ConnHandle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.D
 		tcp.CloseRead()
 		rch <- retval{n, err}
 
-		if timeout > 0 {
-			time.Sleep(timeout)
+		if closed_timeout > 0 {
+			time.Sleep(closed_timeout)
 			s.Cancel(io.EOF)
 		}
 	}()
@@ -90,8 +93,8 @@ func ConnHandle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.D
 		tcp.CloseWrite()
 		wch <- retval{n, err}
 
-		if timeout > 0 {
-			time.Sleep(timeout)
+		if closed_timeout > 0 {
+			time.Sleep(closed_timeout)
 			s.Cancel(io.EOF)
 		}
 	}()
@@ -124,27 +127,63 @@ func ConnHandle(s *core.StageBase, conn net.Conn, in *pipe.Input, timeout time.D
 	return err
 }
 
-// DialRetry is a dialer.DialContext wrapper that adds connection timeout and retry with exponential backoff and jitter.
-// stage s can have konfig options: "retry" (bool), "retry-max" (int), "timeout" (duration), and "insecure" (bool).
-func DialRetry(s *core.StageBase, dialer *net.Dialer, network, address string, do_tls bool) (net.Conn, error) {
+// DialRetry is a dialer.DialContext wrapper that adds connection timeout and retry with
+// exponential backoff and jitter. Stage s can have many konfig options to tune the dialing.
+func DialRetry(s *core.StageBase, dialer *net.Dialer, network, address string) (net.Conn, error) {
 	k := s.K
+	timeout := k.Duration("timeout")
 	retry := k.Bool("retry")
 	retry_max := k.Int("retry-max")
-	timeout := k.Duration("timeout")
+	do_tls := k.Bool("tls")
 	insecure := k.Bool("insecure")
 
-	if dialer == nil {
-		dialer = &net.Dialer{}
+	// make a copy of the dialer (in case we need to modify it)
+	var dial net.Dialer
+	if dialer != nil {
+		dial = *dialer
 	}
 
+	// tune keepalive?
+	if v := k.Duration("keepalive"); v != 0 {
+		dial.KeepAlive = v
+	}
+
+	// bind to given local address?
+	if v := k.String("bind"); v != "" {
+		// bind needs a port number?
+		if _, _, err := net.SplitHostPort(v); err != nil {
+			if a, err := netip.ParseAddr(v); err == nil {
+				v = netip.AddrPortFrom(a, 0).String()
+			} else {
+				v += ":0" // no idea, best-effort try
+			}
+		}
+
+		// resolve and set local address
+		la, err := net.ResolveTCPAddr(network, v)
+		if err != nil {
+			return nil, fmt.Errorf("could not resolve local address %s: %w", v, err)
+		}
+		dial.LocalAddr = la
+	}
+
+	// disable IPv6?
+	if k.Bool("no-ipv6") {
+		dial.FallbackDelay = -1
+	}
+
+	// dial timeout
 	var ctx context.Context
 	var cancel context.CancelFunc
+	if timeout == 0 {
+		timeout = 15 * time.Second // default timeout
+	}
 
 	for try := 0; ; try++ {
 		// need to wait before retrying?
 		if try > 0 {
 			sec := min(60, try*try) + rand.Intn(try)
-			s.Info().Msgf("dialing %s %s (retry %d in %ds)", network, address, try, sec)
+			s.Info().Msgf("dialing %s %s (retry %d/%d in %ds)", network, address, try, retry_max, sec)
 
 			select {
 			case <-time.After(time.Second * time.Duration(sec)):
@@ -168,14 +207,14 @@ func DialRetry(s *core.StageBase, dialer *net.Dialer, network, address string, d
 		var err error
 		if do_tls {
 			tls_dialer := &tls.Dialer{
-				NetDialer: dialer,
+				NetDialer: &dial,
 				Config: &tls.Config{
 					InsecureSkipVerify: insecure,
 				},
 			}
 			conn, err = tls_dialer.DialContext(ctx, network, address)
 		} else {
-			conn, err = dialer.DialContext(ctx, network, address)
+			conn, err = dial.DialContext(ctx, network, address)
 		}
 		if cancel != nil {
 			cancel()
@@ -187,8 +226,10 @@ func DialRetry(s *core.StageBase, dialer *net.Dialer, network, address string, d
 		} else if !retry || (retry_max > 0 && try >= retry_max) {
 			return nil, err // no (more) retries
 		} else if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+			s.Warn().Err(err).Msg("dial timeout, retrying")
 			continue // temporary timeout, retry
 		} else if timeout > 0 && errors.Is(err, context.DeadlineExceeded) {
+			s.Warn().Err(err).Msg("dial timeout, retrying")
 			continue // context timeout, retry
 		} else {
 			return nil, err // non-retryable error

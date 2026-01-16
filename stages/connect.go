@@ -16,7 +16,6 @@ type Connect struct {
 	in *pipe.Input
 
 	target string
-	bind   string
 	conn   net.Conn
 }
 
@@ -32,15 +31,17 @@ func NewConnect(parent *core.StageBase) core.Stage {
 	o.FilterOut = true
 	o.IsConsumer = true
 
-	f.Duration("timeout", time.Second*10, "connect timeout (0 means none)")
+	o.Args = []string{"addr"}
+	f.String("bind", "", "local address to bind to (IP or IP:port)")
+	f.String("md5", "", "TCP MD5 password")
+	f.Duration("timeout", 15*time.Second, "TCP connect timeout (0 means off)")
+	f.Duration("closed-timeout", time.Second, "TCP half-closed timeout (0 means off)")
+	f.Duration("keepalive", 15*time.Second, "TCP keepalive period (-1 means off)")
 	f.Bool("retry", false, "retry connection on temporary errors")
 	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
-	f.Duration("closed", time.Second, "half-closed timeout (0 means none)")
-	f.String("md5", "", "TCP MD5 password")
-	f.String("bind", "", "local address to bind to (IP or IP:port)")
 	f.Bool("tls", false, "connect over TLS")
-	f.Bool("insecure", false, "do not verify TLS certificate")
-	o.Args = []string{"addr"}
+	f.Bool("insecure", false, "do not validate TLS certificates")
+	f.Bool("no-ipv6", false, "avoid IPv6 if possible")
 
 	return s
 }
@@ -61,39 +62,19 @@ func (s *Connect) Attach() error {
 		}
 	}
 
-	// use bind address if defined
-	s.bind = s.K.String("bind")
-	if len(s.bind) > 0 {
-		// bind needs a port number?
-		if _, _, err := net.SplitHostPort(s.bind); err != nil {
-			if a, err := netip.ParseAddr(s.bind); err == nil {
-				s.bind = netip.AddrPortFrom(a, 0).String()
-			} else {
-				s.bind += ":0" // no idea, best-effort try
-			}
-		}
-	}
-
 	s.in = s.P.AddInput(s.Dir)
 	return nil
 }
 
 func (s *Connect) Prepare() error {
+	k := s.K
+
 	// dialer
 	var dialer net.Dialer
-	dialer.Control = util.TcpMd5(s.K.String("md5"))
-
-	// bind local address?
-	if len(s.bind) > 0 {
-		laddr, err := net.ResolveTCPAddr("tcp", s.bind)
-		if err != nil {
-			return err
-		}
-		dialer.LocalAddr = laddr
-	}
+	dialer.Control = util.TcpMd5(k.String("md5"))
 
 	// dial with optional retry
-	conn, err := util.DialRetry(s.StageBase, &dialer, "tcp", s.target, s.K.Bool("tls"))
+	conn, err := util.DialRetry(s.StageBase, &dialer, "tcp", s.target)
 	if err != nil {
 		return err
 	}
@@ -106,5 +87,5 @@ func (s *Connect) Prepare() error {
 }
 
 func (s *Connect) Run() error {
-	return util.ConnHandle(s.StageBase, s.conn, s.in, s.K.Duration("closed"))
+	return util.ConnBGP(s.StageBase, s.conn, s.in)
 }
