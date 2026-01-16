@@ -586,7 +586,7 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 
 	// try writing, don't panic on channel closed [1]
 	if !util.Send(eio.Output, bb) {
-		mx.Callback.Disable()
+		mx.Callback.Drop()
 		return true
 	}
 
@@ -615,7 +615,7 @@ func (eio *Extio) Put(bb *bytebufferpool.ByteBuffer) {
 
 // OutputClose closes eio.Output, stopping the flow from bgpipe to the process
 func (eio *Extio) OutputClose() error {
-	eio.Callback.Disable()
+	eio.Callback.Drop()
 	util.Close(eio.Output)
 	return nil
 }
