@@ -170,7 +170,6 @@ func DialRetry(s *core.StageBase, dialer *net.Dialer, network, address string) (
 	// disable IPv6?
 	if k.Bool("no-ipv6") {
 		dial.FallbackDelay = -1
-		dial.DualStack = false
 	}
 
 	// dial timeout
