@@ -1,10 +1,10 @@
 #!/bin/bash
 
-[[ "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a-z]*$ ]] || { echo "Usage: release.sh VERSION (eg. v0.11.0)" >&1; exit 1; }
+[[ "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a-z]*$ ]] || { echo "Usage: release.sh VERSION (eg. v0.11.0)" >&2; exit 1; }
 
 VERSION="$1"
 MYDIR="$(cd "$(dirname "$0")" && pwd)"
-DEST="$(realpath $MYDIR/../bin/$VERSION)"
+DEST="$MYDIR/../bin/$VERSION"
 
 ###############################################
 
@@ -24,8 +24,8 @@ function build()
 ###############################################
 
 echo "Building in $DEST"
-rm -fr $DEST
-mkdir -p $DEST
+[ -d "$DEST" ] && rm -fr "$DEST"
+mkdir -p "$DEST" || { echo "Error: Failed to create directory $DEST" >&2; exit 1; }
 
 build darwin-arm64
 build darwin-amd64
