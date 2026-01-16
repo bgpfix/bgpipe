@@ -41,7 +41,7 @@ func (s *Rpki) fileLoad() error {
 	if err != nil {
 		return err
 	}
-	if !fi.ModTime().After(s.fileMod) {
+	if !fi.ModTime().After(s.file_mod) {
 		return nil
 	}
 
@@ -51,7 +51,7 @@ func (s *Rpki) fileLoad() error {
 		return err
 	}
 	hash := sha256.Sum256(data)
-	if hash == s.fileHash {
+	if hash == s.file_hash {
 		return nil
 	}
 
@@ -63,8 +63,8 @@ func (s *Rpki) fileLoad() error {
 
 	// apply
 	s.nextApply()
-	s.fileMod = fi.ModTime()
-	s.fileHash = hash
+	s.file_mod = fi.ModTime()
+	s.file_hash = hash
 
 	return nil
 }

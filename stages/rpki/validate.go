@@ -3,6 +3,7 @@ package rpki
 import (
 	"net/netip"
 	"slices"
+	"strings"
 
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/msg"
@@ -52,18 +53,20 @@ func (s *Rpki) validatePrefix(roa4, roa6 ROA, p netip.Prefix, origin uint32) int
 	}
 }
 
-// validate is the callback for UPDATE messages
-func (s *Rpki) validate(m *msg.Msg) bool {
+// validateMsg is the callback for UPDATE messages
+func (s *Rpki) validateMsg(m *msg.Msg) bool {
 	u := &m.Update
 	tags := pipe.UseTags(m)
+
+	// get current ROA caches
+	roa4, roa6 := *s.roa4.Load(), *s.roa6.Load()
 
 	// get origin AS from AS_PATH
 	origin := u.AsPath().Origin()
 
 	// check_delete checks a prefix and decides whether to delete it
 	var valid, invalid, not_found []nlri.Prefix
-	roa4, roa6 := *s.roa4.Load(), *s.roa6.Load()
-	invalid_delete := s.invalid == rpki_withdraw || s.invalid == rpki_filter
+	invalid_delete := s.invalid == rpki_withdraw || s.invalid == rpki_filter || s.invalid == rpki_split
 	check_delete := func(p nlri.Prefix) bool {
 		switch s.validatePrefix(roa4, roa6, p.Prefix, origin) {
 		case rpki_valid:
@@ -82,9 +85,6 @@ func (s *Rpki) validate(m *msg.Msg) bool {
 
 		case rpki_invalid:
 			invalid = append(invalid, p)
-			if s.tag {
-				tags["rpki/"+p.String()] = "INVALID"
-			}
 			return invalid_delete // drop prefix iff requested
 		}
 		panic("unreachable")
@@ -100,50 +100,73 @@ func (s *Rpki) validate(m *msg.Msg) bool {
 	}
 
 	// act based on validation results
-	switch {
-	case len(invalid) > 0:
-		modified := false
+	if len(invalid) > 0 {
+		// message (will be) modified?
+		if s.tag || s.invalid != rpki_ignore {
+			m.Edit()
+		}
 
-		// any invalid prefix makes the whole message invalid
+		// split into separate message?
+		do_split := s.invalid == rpki_split && len(valid)+len(not_found) > 0
+		m2 := m // otherwise just edit the original
+		t2 := tags
+		if do_split {
+			m2 = s.P.GetMsg().Switch(msg.UPDATE)
+			m2.Time = m.Time
+
+			t2 = pipe.UseTags(m2)
+			for k, v := range tags {
+				if !strings.HasPrefix(k, "rpki/") {
+					t2[k] = v
+				}
+			}
+		}
+
+		// add RPKI tags?
 		if s.tag {
-			tags["rpki/status"] = "INVALID"
-			modified = true
+			t2["rpki/status"] = "INVALID"
+			for _, p := range invalid {
+				t2["rpki/"+p.String()] = "INVALID"
+			}
 		}
 
 		// rewrite invalid prefixes to unreach?
-		if s.invalid == rpki_withdraw {
-			u.AddUnreach(invalid...)
-			modified = true
+		if s.invalid == rpki_split || s.invalid == rpki_withdraw {
+			m2.Update.AddUnreach(invalid...)
 		}
 
 		// drop attributes if no reachable prefixes left?
 		if invalid_delete && len(valid)+len(not_found) == 0 {
-			u.Attrs.Filter(attrs.ATTR_MP_UNREACH)
-			modified = true
+			m2.Update.Attrs.Filter(attrs.ATTR_MP_UNREACH)
 		}
-
-		// mark message as edited?
-		m.Edit(modified)
 
 		// send an event?
 		if s.event != "" {
-			s.Event(s.event, m)
+			s.Event(s.event, m2)
 		}
 
 		// drop the message?
 		if s.invalid == rpki_drop {
 			return false
+		} else if s.invalid == rpki_ignore {
+			return true
+		} else if do_split {
+			s.in_split.WriteMsg(m2)
+			// NB: original message will continue below
+		} else {
+			return u.HasReach() || u.HasUnreach()
 		}
+	}
 
-	case len(valid) > 0:
-		if s.tag {
-			tags["rpki/status"] = "VALID"
-			m.Edit()
-		}
-
-	case len(not_found) > 0:
-		if s.tag {
+	// if we're here, m does not contain invalid prefixes
+	if s.tag {
+		switch {
+		case len(not_found) > 0:
 			tags["rpki/status"] = "NOT_FOUND"
+			m.Edit()
+
+		case len(valid) > 0:
+			tags["rpki/status"] = "VALID"
 			m.Edit()
 		}
 	}
