@@ -37,6 +37,7 @@ func (s *Rpki) rtrRun() {
 		s.rtr_client = rc
 		s.rtr_sessid = 0
 		s.rtr_valid = false
+		s.nextFlush()
 		s.rtr_mu.Unlock()
 
 		// run RTR session (blocks until disconnected)
@@ -70,11 +71,12 @@ func (s *Rpki) rtrSessionCheck(rc *rtrlib.ClientSession, id uint16) bool {
 		return true
 	}
 
-	if s.rtr_sessid != 0 {
-		s.Info().Uint16("old", s.rtr_sessid).Uint16("new", id).Msg("RTR session changed")
-	} else {
+	if !s.rtr_valid && s.rtr_sessid == 0 {
 		s.Info().Uint16("id", id).Msg("RTR new session")
+		return true
 	}
+
+	s.Info().Uint16("old", s.rtr_sessid).Uint16("new", id).Msg("RTR session changed")
 	s.rtr_sessid = id
 	s.rtr_valid = false
 	s.nextFlush()
@@ -178,7 +180,6 @@ func (s *Rpki) HandlePDU(rc *rtrlib.ClientSession, pdu rtrlib.PDU) {
 // ClientConnected implements rtrlib.RTRClientSessionEventHandler
 func (s *Rpki) ClientConnected(rc *rtrlib.ClientSession) {
 	s.Debug().Msg("RTR connected, requesting full cache")
-	s.nextFlush()
 	rc.SendResetQuery()
 }
 
