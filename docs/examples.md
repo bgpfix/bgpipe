@@ -94,7 +94,7 @@ bgpipe \
   -- connect 85.232.240.179
 ```
 
-## Monitor BGP hijacks in real-time
+## Monitor BGP prefixes in real-time
 
 Connect to [RIPE RIS Live](https://ris-live.ripe.net/) to stream real-time BGP updates from many route collectors, and filter for a specific prefix you're monitoring. RIS Live provides a view of the global BGP routing table without needing your own BGP connections - perfect for network security monitoring, research, and troubleshooting.
 
@@ -141,6 +141,22 @@ bgpipe --events rpki/dropped \
   -- listen 1.2.3.4 \
   -- rpki -R --strict --invalid=drop --event dropped \
   -- connect 5.6.7.8
+```
+
+## Rate limiting and sampling BGP streams
+
+Protect downstream systems from [BGP update storms](https://www.cidr-report.org/as2.0/#Leak-Statistics) by rate limiting message flow, or sample high-volume feeds for statistical analysis. The `--rate-limit` flag delays messages to maintain a maximum rate (messages per second), while `--rate-sample` randomly samples messages when over the rate threshold, discarding excess messages. This is particularly useful when processing RIS Live feeds or during BGP convergence events.
+
+```bash
+# Sample RIS Live at max 100 updates/sec to avoid overwhelming storage
+bgpipe -g \
+  -- ris-live --rate-sample 100 \
+  -- write sampled-updates.json
+
+# Rate limit updates from 5.6.7.8 to 50 msg/sec (smooths bursts)
+bgpipe \
+  -- listen 1.2.3.4 \
+  -- connect --rate-limit 50 5.6.7.8
 ```
 
 ## ExaBGP compatibility
