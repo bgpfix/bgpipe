@@ -10,7 +10,7 @@ require (
 	github.com/buger/jsonparser v1.1.1
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/gorilla/websocket v1.5.3
-	github.com/klauspost/compress v1.18.2
+	github.com/klauspost/compress v1.18.3
 	github.com/knadh/koanf/providers/posflag v1.0.1
 	github.com/knadh/koanf/v2 v2.3.0
 	github.com/puzpuzpuz/xsync/v4 v4.3.0
