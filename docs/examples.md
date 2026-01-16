@@ -94,6 +94,55 @@ bgpipe \
   -- connect 85.232.240.179
 ```
 
+## Monitor BGP hijacks in real-time
+
+Connect to [RIPE RIS Live](https://ris-live.ripe.net/) to stream real-time BGP updates from many route collectors, and filter for a specific prefix you're monitoring. RIS Live provides a view of the global BGP routing table without needing your own BGP connections - perfect for network security monitoring, research, and troubleshooting.
+
+```bash
+# Monitor all announcements for your network prefix
+bgpipe -g \
+  -- ris-live \
+  -- grep 'prefix ~ 1.1.1.0/24'
+  -- stdout
+```
+
+## Stream live BGP with RPKI filtering
+
+Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against [BGP hijacking](https://en.wikipedia.org/wiki/BGP_hijacking) and route leaks. The updates will not be modified on the BGP level (`--invalid=ignore` flag), but will have additional `rpki/status` metadata tags. Invalid updates are then filtered using the `grep` stage and saved to a file for further analysis.
+
+```bash
+# Real-time BGP monitoring with RPKI validation
+bgpipe -g \
+  -- ris-live \
+  -- rpki --invalid=ignore \
+  -- grep 'tag[rpki/status] = INVALID' \
+  -- write invalid-updates.json
+```
+
+## Secure your BGP sessions with RPKI
+
+Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default, or you can use `--file` to load a local ROA cache.
+
+```bash
+# RPKI-secured BGP proxy with automatic invalid prefix withdrawal
+bgpipe \
+  -- listen 1.2.3.4 \
+  -- rpki -LR --invalid=withdraw \
+  -- connect 5.6.7.8
+```
+
+## Strict RPKI enforcement mode
+
+Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from `1.2.3.4` to `5.6.7.8` where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.
+
+```bash
+# Drop messages announcing INVALID and/or NOT_FOUND prefixes
+bgpipe --events rpki/dropped \
+  -- listen 1.2.3.4 \
+  -- rpki -R --strict --invalid=drop --event dropped \
+  -- connect 5.6.7.8
+```
+
 ## ExaBGP compatibility
 
 Use the `--format=exa` flag to read and write [ExaBGP](https://github.com/Exa-Networks/exabgp) line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.
@@ -101,7 +150,7 @@ Use the `--format=exa` flag to read and write [ExaBGP](https://github.com/Exa-Ne
 ```bash
 # Process BGP messages with an ExaBGP-compatible script
 bgpipe \
-  -- connect 1.2.3.4 \
+  -- listen 1.2.3.4 \
   -- exec --format=exa -LR --args /path/to/script.py \
   -- connect 5.6.7.8
 
