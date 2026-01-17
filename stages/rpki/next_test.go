@@ -98,7 +98,7 @@ func TestNextDelNonExistent(t *testing.T) {
 
 func TestNextApply(t *testing.T) {
 	s := newTestRpki()
-	s.roaReady = make(chan bool)
+	s.roa_done = make(chan bool)
 
 	// Add some ROAs
 	s.nextRoa(true, netip.MustParsePrefix("192.0.2.0/24"), 24, 65001)

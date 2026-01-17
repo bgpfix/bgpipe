@@ -1,9 +1,7 @@
 github.com/bgp/stayrtr v0.6.3 h1:d3MW7FV7yV9bP46aEZhggCcxK8tgooB5XEwa6dYVXM4=
 github.com/bgp/stayrtr v0.6.3/go.mod h1:gLXsFU0j2wTKYxDQqXHl9R34FpD1IH59KHwhgFdI3r8=
-github.com/bgpfix/bgpfix v0.10.0 h1:njkzqKEwPzLqRJ3/GFpRv/T6IKdBssFYjuLiUKHFjwg=
-github.com/bgpfix/bgpfix v0.10.0/go.mod h1:GiRWXBVLn4s6F2rnWUGYaL4Qspm73nXZ4wjGjFld2Os=
-github.com/bgpfix/bgpfix v0.10.1 h1:OubILBF78xKp4ZcmNkZfVnZ8UaJCdmrwQieUv9+HSqI=
-github.com/bgpfix/bgpfix v0.10.1/go.mod h1:GiRWXBVLn4s6F2rnWUGYaL4Qspm73nXZ4wjGjFld2Os=
+github.com/bgpfix/bgpfix v0.15.2 h1:5xCgOqaboWlrbZy2csZrk/w8gfZwNOA6sdq7ceT37tQ=
+github.com/bgpfix/bgpfix v0.15.2/go.mod h1:GiRWXBVLn4s6F2rnWUGYaL4Qspm73nXZ4wjGjFld2Os=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=
 github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
@@ -21,8 +19,6 @@ github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
 github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/klauspost/compress v1.4.1/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0guNDohfE1A=
-github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uqnapk=
-github.com/klauspost/compress v1.18.2/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/klauspost/compress v1.18.3 h1:9PJRvfbmTabkOX8moIpXPbMMbYN60bWImDDU7L+/6zw=
 github.com/klauspost/compress v1.18.3/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/klauspost/cpuid v1.2.0/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=

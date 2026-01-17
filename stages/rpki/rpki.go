@@ -11,6 +11,7 @@ import (
 
 	rtrlib "github.com/bgp/stayrtr/lib"
 	"github.com/bgpfix/bgpfix/msg"
+	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 )
 
@@ -31,6 +32,7 @@ const (
 	rpki_withdraw = iota // Move invalid prefixes to withdrawn (RFC 7606)
 	rpki_drop            // Drop entire UPDATE if any prefix invalid
 	rpki_filter          // Remove invalid prefixes from the reachable prefixes
+	rpki_split           // Split invalid prefixes into separate UPDATE withdrawing them
 	rpki_ignore          // Keep invalid prefixes unchanged
 )
 
@@ -46,6 +48,7 @@ type ROA = map[netip.Prefix][]ROAEntry
 // Rpki is a stage that validates BGP UPDATE messages using RPKI data
 type Rpki struct {
 	*core.StageBase
+	in_split *pipe.Input // used for --invalid=split
 
 	// config
 	rtr     string
@@ -56,15 +59,15 @@ type Rpki struct {
 	event   string
 
 	// current ROA cache
-	roaReady chan bool           // if closed, ROA cache is ready for use
-	roa4     atomic.Pointer[ROA] // IPv4
-	roa6     atomic.Pointer[ROA] // IPv6
+	roa_done chan bool           // is ROA cache ready for use?
+	roa4     atomic.Pointer[ROA] // current IPv4 ROA
+	roa6     atomic.Pointer[ROA] // current IPv6 ROA
 	next4    ROA                 // next roa4 (pending apply)
 	next6    ROA                 // next roa6 (pending apply)
 
 	// file watcher state
-	fileMod  time.Time
-	fileHash [32]byte
+	file_mod  time.Time // last modification time
+	file_hash [32]byte  // last file hash
 
 	// RTR client state
 	rtr_mu     sync.Mutex
@@ -78,7 +81,7 @@ type Rpki struct {
 func NewRpki(parent *core.StageBase) core.Stage {
 	s := &Rpki{
 		StageBase: parent,
-		roaReady:  make(chan bool),
+		roa_done:  make(chan bool),
 	}
 
 	s.roa4.Store(new(ROA))
@@ -101,7 +104,7 @@ func NewRpki(parent *core.StageBase) core.Stage {
 	f.Bool("insecure", false, "do not validate TLS certificates")
 	f.Bool("no-ipv6", false, "avoid IPv6 if possible")
 	f.String("file", "", "use a ROA file instead of RTR (JSON/CSV, auto-reloaded)")
-	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|filter|drop|ignore")
+	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|filter|drop|split|ignore")
 	f.Bool("strict", false, "treat NOT_FOUND same as INVALID")
 	f.Bool("tag", true, "add RPKI validation status to message tags")
 	f.String("event", "", "emit event on RPKI INVALID messages")
@@ -121,10 +124,12 @@ func (s *Rpki) Attach() error {
 		s.invalid = rpki_drop
 	case "filter":
 		s.invalid = rpki_filter
+	case "split":
+		s.invalid = rpki_split
 	case "ignore":
 		s.invalid = rpki_ignore
 	default:
-		return fmt.Errorf("--invalid must be withdraw, filter, drop or ignore")
+		return fmt.Errorf("--invalid must be withdraw, filter, drop, split or ignore")
 	}
 
 	s.strict = k.Bool("strict")
@@ -138,8 +143,13 @@ func (s *Rpki) Attach() error {
 		return fmt.Errorf("must specify --rtr or --file")
 	}
 
-	// Register callback for UPDATE messages
-	s.P.OnMsg(s.validate, s.Dir, msg.UPDATE)
+	// register callback for UPDATE messages
+	s.P.OnMsg(s.validateMsg, s.Dir, msg.UPDATE)
+
+	// create input for --invalid=split
+	if s.invalid == rpki_split {
+		s.in_split = s.P.AddInput(s.Dir)
+	}
 
 	return nil
 }
@@ -157,7 +167,7 @@ func (s *Rpki) Prepare() error {
 	// block until the ROA cache is ready?
 	if !s.K.Bool("asap") {
 		select {
-		case <-s.roaReady:
+		case <-s.roa_done:
 		case <-s.Ctx.Done():
 		}
 	}
