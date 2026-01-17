@@ -33,7 +33,7 @@ const (
 	rpki_drop            // Drop entire UPDATE if any prefix invalid
 	rpki_filter          // Remove invalid prefixes from the reachable prefixes
 	rpki_split           // Split invalid prefixes into separate UPDATE withdrawing them
-	rpki_ignore          // Keep invalid prefixes unchanged
+	rpki_keep            // Keep invalid prefixes unchanged
 )
 
 // ROAEntry represents a single VRP (Validated ROA Payload)
@@ -104,7 +104,7 @@ func NewRpki(parent *core.StageBase) core.Stage {
 	f.Bool("insecure", false, "do not validate TLS certificates")
 	f.Bool("no-ipv6", false, "avoid IPv6 if possible")
 	f.String("file", "", "use a ROA file instead of RTR (JSON/CSV, auto-reloaded)")
-	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|filter|drop|split|ignore")
+	f.String("invalid", "withdraw", "action for INVALID prefixes: withdraw|filter|drop|split|keep")
 	f.Bool("strict", false, "treat NOT_FOUND same as INVALID")
 	f.Bool("tag", true, "add RPKI validation status to message tags")
 	f.String("event", "", "emit event on RPKI INVALID messages")
@@ -126,10 +126,10 @@ func (s *Rpki) Attach() error {
 		s.invalid = rpki_filter
 	case "split":
 		s.invalid = rpki_split
-	case "ignore":
-		s.invalid = rpki_ignore
+	case "keep":
+		s.invalid = rpki_keep
 	default:
-		return fmt.Errorf("--invalid must be withdraw, filter, drop, split or ignore")
+		return fmt.Errorf("--invalid must be withdraw, filter, drop, split or keep")
 	}
 
 	s.strict = k.Bool("strict")

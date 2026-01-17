@@ -102,7 +102,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 	// act based on validation results
 	if len(invalid) > 0 {
 		// message (will be) modified?
-		if s.tag || s.invalid != rpki_ignore {
+		if s.tag || s.invalid != rpki_keep {
 			m.Edit()
 		}
 
@@ -148,7 +148,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 		// drop the message?
 		if s.invalid == rpki_drop {
 			return false
-		} else if s.invalid == rpki_ignore {
+		} else if s.invalid == rpki_keep {
 			return true
 		} else if do_split {
 			s.in_split.WriteMsg(m2)
