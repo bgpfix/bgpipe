@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -498,6 +498,61 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#monitor-bgp-prefixes-in-real-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor BGP prefixes in real-time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stream-live-bgp-with-rpki-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stream live BGP with RPKI filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secure-your-bgp-sessions-with-rpki" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secure your BGP sessions with RPKI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-rpki-enforcement-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict RPKI enforcement mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-limiting-and-sampling-bgp-streams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate limiting and sampling BGP streams
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exabgp-compatibility" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -694,6 +749,61 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#monitor-bgp-prefixes-in-real-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor BGP prefixes in real-time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stream-live-bgp-with-rpki-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stream live BGP with RPKI filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secure-your-bgp-sessions-with-rpki" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secure your BGP sessions with RPKI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-rpki-enforcement-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict RPKI enforcement mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-limiting-and-sampling-bgp-streams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate limiting and sampling BGP streams
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exabgp-compatibility" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -785,16 +895,61 @@
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;ipv6 &amp;&amp; as_origin = 12345&#39;</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
 </span></code></pre></div>
+<h2 id="monitor-bgp-prefixes-in-real-time">Monitor BGP prefixes in real-time</h2>
+<p>Connect to <a href="https://ris-live.ripe.net/">RIPE RIS Live</a> to stream real-time BGP updates from many route collectors, and filter for a specific prefix you're monitoring. RIS Live provides a view of the global BGP routing table without needing your own BGP connections - perfect for network security monitoring, research, and troubleshooting.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Monitor all announcements for your network prefix</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;prefix ~ 1.1.1.0/24&#39;</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span>--<span class="w"> </span>stdout
+</span></code></pre></div>
+<h2 id="stream-live-bgp-with-rpki-filtering">Stream live BGP with RPKI filtering</h2>
+<p>Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against <a href="https://en.wikipedia.org/wiki/BGP_hijacking">BGP hijacking</a> and route leaks. The updates will not be modified on the BGP level (<code>--invalid=keep</code> flag), but will be tagged with <code>rpki/status = INVALID</code>. The <code>update</code> stage is then used to add a community <code>123:456</code> to invalid updates for easy identification. Finally, the stream is saved to a file in JSON format.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Real-time BGP monitoring with RPKI validation</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rpki/status] = INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">123</span>:456<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>ris-rpki-updates.json
+</span></code></pre></div>
+<h2 id="secure-your-bgp-sessions-with-rpki">Secure your BGP sessions with RPKI</h2>
+<p>Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following <a href="https://datatracker.ietf.org/doc/html/rfc7606">RFC 7606</a>), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can use <code>--file</code> to load a local ROA cache).</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Secure 5.6.7.8 by filtering RPKI-invalid prefixes coming from 1.2.3.4</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span>--<span class="w"> </span>rpki<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
+</span></code></pre></div>
+<h2 id="strict-rpki-enforcement-mode">Strict RPKI enforcement mode</h2>
+<p>Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from <code>1.2.3.4</code> clients forwarded to <code>5.6.7.8</code> where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Drop messages announcing INVALID and/or NOT_FOUND prefixes</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rpki/dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>--<span class="w"> </span>rpki<span class="w"> </span>--strict<span class="w"> </span>--invalid<span class="o">=</span>drop<span class="w"> </span>--event<span class="w"> </span>dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
+</span></code></pre></div>
+<h2 id="rate-limiting-and-sampling-bgp-streams">Rate limiting and sampling BGP streams</h2>
+<p>Protect downstream systems from <a href="https://www.cidr-report.org/as2.0/#Leak-Statistics">BGP update storms</a> by rate limiting message flow, or sample high-volume feeds for statistical analysis. The <code>--rate-limit</code> flag delays messages to maintain a maximum rate (messages per second), while <code>--rate-sample</code> randomly samples messages when over the rate threshold, discarding excess messages. This is particularly useful when processing RIS Live feeds or during BGP convergence events.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Sample RIS Live at max 100 updates/sec to avoid overwhelming storage</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span>--rate-sample<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>sampled-updates.json
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="c1"># Rate limit updates from 5.6.7.8 to 50 msg/sec (smooths bursts)</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--rate-limit<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="m">5</span>.6.7.8
+</span></code></pre></div>
 <h2 id="exabgp-compatibility">ExaBGP compatibility</h2>
 <p>Use the <code>--format=exa</code> flag to read and write <a href="https://github.com/Exa-Networks/exabgp">ExaBGP</a> line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Process BGP messages with an ExaBGP-compatible script</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--format<span class="o">=</span>exa<span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>/path/to/script.py<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Convert JSON to ExaBGP format</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>cat<span class="w"> </span>session.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>bgpipe<span class="w"> </span>stdin<span class="w"> </span>--<span class="w"> </span>stdout<span class="w"> </span>--format<span class="o">=</span>exa
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Process BGP messages with an ExaBGP-compatible script</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--format<span class="o">=</span>exa<span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>/path/to/script.py<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># Convert JSON to ExaBGP format</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>cat<span class="w"> </span>session.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>bgpipe<span class="w"> </span>stdin<span class="w"> </span>--<span class="w"> </span>stdout<span class="w"> </span>--format<span class="o">=</span>exa
 </span></code></pre></div>
 
 
@@ -840,10 +995,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
