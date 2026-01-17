@@ -6,7 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/bgp/stayrtr v0.6.3
-	github.com/bgpfix/bgpfix v0.10.1
+	github.com/bgpfix/bgpfix v0.15.2
 	github.com/buger/jsonparser v1.1.1
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/gorilla/websocket v1.5.3
@@ -18,6 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/valyala/bytebufferpool v1.0.0
 	golang.org/x/sys v0.40.0
+	golang.org/x/time v0.14.0
 )
 
 require (
@@ -29,7 +30,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/time v0.14.0
 )
 
 // for dev: use the latest code in ../bgpfix
