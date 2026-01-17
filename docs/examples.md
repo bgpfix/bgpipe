@@ -108,38 +108,38 @@ bgpipe -g \
 
 ## Stream live BGP with RPKI filtering
 
-Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against [BGP hijacking](https://en.wikipedia.org/wiki/BGP_hijacking) and route leaks. The updates will not be modified on the BGP level (`--invalid=ignore` flag), but will have additional `rpki/status` metadata tags. Invalid updates are then filtered using the `grep` stage and saved to a file for further analysis.
+Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against [BGP hijacking](https://en.wikipedia.org/wiki/BGP_hijacking) and route leaks. The updates will not be modified on the BGP level (`--invalid=keep` flag), but will be tagged with `rpki/status = INVALID`. The `update` stage is then used to add a community `123:456` to invalid updates for easy identification. Finally, the stream is saved to a file in JSON format.
 
 ```bash
 # Real-time BGP monitoring with RPKI validation
 bgpipe -g \
   -- ris-live \
-  -- rpki --invalid=ignore \
-  -- grep 'tag[rpki/status] = INVALID' \
-  -- write invalid-updates.json
+  -- rpki --invalid=keep \
+  -- update --if 'tag[rpki/status] = INVALID' --add-com 123:456 \
+  -- write ris-rpki-updates.json
 ```
 
 ## Secure your BGP sessions with RPKI
 
-Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default, or you can use `--file` to load a local ROA cache.
+Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can use `--file` to load a local ROA cache).
 
 ```bash
-# RPKI-secured BGP proxy with automatic invalid prefix withdrawal
+# Secure 5.6.7.8 by filtering RPKI-invalid prefixes coming from 1.2.3.4
 bgpipe \
   -- listen 1.2.3.4 \
-  -- rpki -LR --invalid=withdraw \
+  -- rpki \
   -- connect 5.6.7.8
 ```
 
 ## Strict RPKI enforcement mode
 
-Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from `1.2.3.4` to `5.6.7.8` where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.
+Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from `1.2.3.4` clients forwarded to `5.6.7.8` where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.
 
 ```bash
 # Drop messages announcing INVALID and/or NOT_FOUND prefixes
 bgpipe --events rpki/dropped \
   -- listen 1.2.3.4 \
-  -- rpki -R --strict --invalid=drop --event dropped \
+  -- rpki --strict --invalid=drop --event dropped \
   -- connect 5.6.7.8
 ```
 
