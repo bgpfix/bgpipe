@@ -19,6 +19,12 @@ func (s *RvLive) runKafka() error {
 		kgo.ConsumeResetOffset(kgo.NewOffset().AtEnd()),
 		kgo.DisableAutoCommit(),
 		kgo.ConnIdleTimeout(s.timeout),
+		kgo.FetchMaxWait(5 * time.Second),       // Don't wait forever for data
+		kgo.FetchMinBytes(1),                    // Return as soon as any data is available
+		kgo.SessionTimeout(60 * time.Second),    // Longer timeout for large partition counts
+		kgo.RebalanceTimeout(120 * time.Second), // Allow time for rebalancing 1800+ partitions
+		kgo.HeartbeatInterval(10 * time.Second), // Less frequent heartbeats
+		kgo.BlockRebalanceOnPoll(),              // Don't rebalance during poll
 		// Log partition assignments
 		kgo.OnPartitionsAssigned(func(_ context.Context, _ *kgo.Client, assigned map[string][]int32) {
 			count := 0
@@ -33,6 +39,13 @@ func (s *RvLive) runKafka() error {
 				count += len(parts)
 			}
 			s.Debug().Int("topics", len(revoked)).Int("partitions", count).Msg("partitions revoked")
+		}),
+		kgo.OnPartitionsLost(func(_ context.Context, _ *kgo.Client, lost map[string][]int32) {
+			count := 0
+			for _, parts := range lost {
+				count += len(parts)
+			}
+			s.Warn().Int("topics", len(lost)).Int("partitions", count).Msg("partitions lost")
 		}),
 	}
 
