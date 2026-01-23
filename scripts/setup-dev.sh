@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Setup development environment for bgpipe
 # This script clones the bgpfix dependency with BMP support
 
@@ -21,13 +21,12 @@ fi
 if [ -d "$BGPFIX_DIR" ]; then
     echo "Updating bgpfix repository..."
     cd "$BGPFIX_DIR"
-    git fetch origin
-    git checkout dev0123
-    git pull origin dev0123
+    git fetch origin || { echo "Failed to fetch from origin"; exit 1; }
+    git checkout -B dev0123 origin/dev0123 || { echo "Failed to checkout dev0123"; exit 1; }
 else
     echo "Cloning bgpfix repository (dev0123 branch with BMP support)..."
     cd "$SRC_DIR"
-    git clone --branch dev0123 https://github.com/bgpfix/bgpfix.git
+    git clone --single-branch --branch dev0123 https://github.com/bgpfix/bgpfix.git || { echo "Failed to clone bgpfix"; exit 1; }
 fi
 
 echo "Running go mod tidy..."
