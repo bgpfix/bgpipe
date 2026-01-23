@@ -3,3 +3,4 @@
 /site
 .python-version
 uv.lock
+.src
