@@ -49,6 +49,8 @@ This tells Go to use the local copy of bgpfix instead of the published version. 
 - BMP support is currently in development (see [bgpfix PR #14](https://github.com/bgpfix/bgpfix/pull/14))
 - The published version of bgpfix doesn't yet include the BMP package
 
+**Note:** This local development setup will no longer be needed once BMP support is merged and published in the official bgpfix release.
+
 The `.src` directory is excluded from version control via `.gitignore`.
 
 ## Building and Testing

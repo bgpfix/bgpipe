@@ -21,12 +21,12 @@ fi
 if [ -d "$BGPFIX_DIR" ]; then
     echo "Updating bgpfix repository..."
     cd "$BGPFIX_DIR"
-    git fetch origin || { echo "Failed to fetch from origin"; exit 1; }
-    git checkout -B dev0123 origin/dev0123 || { echo "Failed to checkout dev0123"; exit 1; }
+    git fetch origin || { echo "Failed to fetch from origin (check network connection and repository access)"; exit 1; }
+    git checkout -B dev0123 origin/dev0123 || { echo "Failed to checkout dev0123 (branch may not exist or network issues)"; exit 1; }
 else
     echo "Cloning bgpfix repository (dev0123 branch with BMP support)..."
     cd "$SRC_DIR"
-    git clone --single-branch --branch dev0123 https://github.com/bgpfix/bgpfix.git || { echo "Failed to clone bgpfix"; exit 1; }
+    git clone --single-branch --branch dev0123 https://github.com/bgpfix/bgpfix.git || { echo "Failed to clone bgpfix (check network connection, repository access, and that dev0123 branch exists)"; exit 1; }
 fi
 
 echo "Running go mod tidy..."
