@@ -16,6 +16,8 @@ require (
 	github.com/puzpuzpuz/xsync/v4 v4.3.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.10
+	github.com/twmb/franz-go v1.18.1
+	github.com/twmb/franz-go/pkg/kadm v1.15.0
 	github.com/valyala/bytebufferpool v1.0.0
 	golang.org/x/sys v0.40.0
 	golang.org/x/time v0.14.0
@@ -28,9 +30,11 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/pierrec/lz4/v4 v4.1.22 // indirect
+	github.com/twmb/franz-go/pkg/kmsg v1.9.0 // indirect
 	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 )
 
 // for dev: use the latest code in ../bgpfix
-// replace github.com/bgpfix/bgpfix => ../bgpfix
+replace github.com/bgpfix/bgpfix => ./.src/bgpfix
