@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bgpfix/bgpfix/bmp"
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/exa"
 	"github.com/bgpfix/bgpfix/mrt"
@@ -36,6 +37,8 @@ type Extio struct {
 	opt_raw    bool              // --format=raw
 	opt_mrt    bool              // --format=mrt
 	opt_exa    bool              // --format=exa
+	opt_bmp    bool              // --format=bmp
+	opt_obmp   bool              // --format=openbmp
 	opt_copy   bool              // --copy
 	opt_noseq  bool              // --no-seq
 	opt_notime bool              // --no-time
@@ -43,6 +46,7 @@ type Extio struct {
 	opt_pardon bool              // --pardon
 
 	mrt *mrt.Reader  // MRT reader
+	bmp *bmp.Reader  // BMP reader
 	buf bytes.Buffer // for ReadBuf()
 
 	Callback   *pipe.Callback // our callback for capturing bgpipe output
@@ -77,9 +81,9 @@ func NewExtio(parent *core.StageBase, mode Mode, autodetect bool) *Extio {
 	f := eio.Options.Flags
 	if f.Lookup("format") == nil {
 		if autodetect {
-			f.String("format", "auto", "data format (json/raw/mrt/exa/auto)")
+			f.String("format", "auto", "data format (json/raw/mrt/exa/bmp/obmp/auto)")
 		} else {
-			f.String("format", "json", "data format (json/raw/mrt/exa)")
+			f.String("format", "json", "data format (json/raw/mrt/exa/bmp/obmp)")
 		}
 		f.StringSlice("type", []string{}, "skip messages NOT of specified type(s)")
 		f.StringSlice("skip", []string{}, "skip messages of specified type(s)")
@@ -140,6 +144,13 @@ func (eio *Extio) DetectPath(path string) (success bool) {
 	case ".exa":
 		eio.opt_exa = true
 		return true
+	case ".bmp":
+		eio.opt_bmp = true
+		return true
+	case ".obmp":
+		eio.opt_bmp = true
+		eio.opt_obmp = true
+		return true
 	case ".json", ".jsonl", ".txt":
 		// default JSON
 		return true
@@ -188,6 +199,25 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 		return true
 	}
 
+	// looks like OpenBMP? (starts with "OBMP")
+	buf, err = br.Peek(4)
+	if err != nil {
+		return false
+	} else if string(buf) == bmp.OPENBMP_MAGIC {
+		eio.opt_bmp = true
+		eio.opt_obmp = true
+		return true
+	}
+
+	// looks like raw BMP? (version 3, check common header pattern)
+	buf, err = br.Peek(6)
+	if err != nil {
+		return false
+	} else if buf[0] == bmp.VERSION && buf[5] <= 6 { // version 3, valid msg type
+		eio.opt_bmp = true
+		return true
+	}
+
 	// wild shot: looks like MRT BGP4MP_MESSAGE?
 	// peek max. size for MRT ET + BGP4MP AS4 IPv6 + BGP marker
 	buf, err = br.Peek(mrt.HEADLEN + 4 + 3*4 + 16*2 + msg.MARKLEN)
@@ -225,6 +255,11 @@ func (eio *Extio) Attach() error {
 		eio.opt_mrt = true
 	case "exa":
 		eio.opt_exa = true
+	case "bmp":
+		eio.opt_bmp = true
+	case "obmp":
+		eio.opt_bmp = true
+		eio.opt_obmp = true
 	case "auto":
 		// handled elsewhere
 	default:
@@ -294,6 +329,9 @@ func (eio *Extio) Attach() error {
 
 		eio.mrt = mrt.NewReader(p, eio.InputD)
 		eio.mrt.NoTags = eio.opt_notags
+		eio.bmp = bmp.NewReader(p, eio.InputD)
+		eio.bmp.NoTags = eio.opt_notags
+		eio.bmp.OpenBMP = eio.opt_obmp
 	} else {
 		eio.Options.IsProducer = false
 	}
@@ -351,6 +389,18 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 		case err == mrt.ErrSub:
 			eio.P.PutMsg(m)
 			return nil // silent skip, BGP4MP but not a message
+		case err != nil:
+			read_err = err // parse error
+		case n != len(buf):
+			read_err = ErrLength // dangling bytes after msg?
+		}
+
+	} else if eio.opt_bmp { // BMP message
+		eio.bmp.OpenBMP = eio.opt_obmp
+		switch n, err := eio.bmp.FromBytes(buf, m); {
+		case err == bmp.ErrNotRouteMonitoring:
+			eio.P.PutMsg(m)
+			return nil // silent skip, not a Route Monitoring message
 		case err != nil:
 			read_err = err // parse error
 		case n != len(buf):
@@ -450,6 +500,17 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 		case nil:
 			break // success
 		case io.ErrUnexpectedEOF:
+			return nil // wait for more
+		default:
+			read_err = err
+		}
+	} else if eio.opt_bmp { // BMP message(s)
+		eio.bmp.OpenBMP = eio.opt_obmp
+		_, err := eio.bmp.WriteFunc(buf, check)
+		switch err {
+		case nil:
+			break // success
+		case bmp.ErrShort:
 			return nil // wait for more
 		default:
 			read_err = err

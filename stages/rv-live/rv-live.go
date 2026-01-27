@@ -20,23 +20,26 @@ type RvLive struct {
 	*core.StageBase
 	in *pipe.Input
 
-	broker    string
-	topics    string
-	topicsRe  *regexp.Regexp
-	group     string
-	stateFile string
-	refresh   time.Duration
-	timeout   time.Duration
-	retry     bool
-	retryMax  int
+	broker     string
+	topics     string
+	topicsRe   *regexp.Regexp
+	group      string
+	stateFile  string
+	refresh    time.Duration
+	timeout    time.Duration
+	stale      time.Duration
+	retry      bool
+	retryMax   int
+	keepAspath bool
 
 	// state management
 	state      *rvState
 	stateMu    sync.Mutex
 	stateDirty bool
 
-	// reusable buffers
-	bmpMsg *bmp.Bmp
+	// reusable parsers
+	obmpMsg *bmp.OpenBmp
+	bmpMsg  *bmp.Bmp
 }
 
 func NewRvLive(parent *core.StageBase) core.Stage {
@@ -52,12 +55,15 @@ func NewRvLive(parent *core.StageBase) core.Stage {
 
 	f.String("broker", "stream.routeviews.org:9092", "Kafka broker address")
 	f.String("topics", `^routeviews\..+\.bmp_raw$`, "topic regex pattern")
+	f.String("router", "", "consume only from specific router (instead of topics regex)")
 	f.String("group", "", "consumer group ID (auto-generated if empty)")
 	f.String("state", "", "state file for offset persistence")
 	f.Duration("refresh", 5*time.Minute, "topic refresh interval")
 	f.Duration("timeout", 30*time.Second, "connection timeout")
+	f.Duration("stale", 3*time.Minute, "reconnect if no data for this long (0 to disable)")
 	f.Bool("retry", true, "retry connection on errors")
 	f.Int("retry-max", 0, "maximum number of retries (0 means unlimited)")
+	f.Bool("keep-aspath", false, "keep RouteViews collector ASN 6447 in AS_PATH")
 
 	return s
 }
@@ -70,8 +76,20 @@ func (s *RvLive) Attach() error {
 	s.stateFile = k.String("state")
 	s.refresh = k.Duration("refresh")
 	s.timeout = k.Duration("timeout")
+	s.stale = k.Duration("stale")
 	s.retry = k.Bool("retry")
 	s.retryMax = k.Int("retry-max")
+	s.keepAspath = k.Bool("keep-aspath")
+
+	// override topics if --router is set
+	if r := k.String("router"); r != "" {
+		if regexp.MustCompile(`\.[0-9]+$`).MatchString(r) {
+			s.topics = fmt.Sprintf(`^routeviews\.%s\.bmp_raw$`, regexp.QuoteMeta(r))
+		} else {
+			s.topics = fmt.Sprintf(`^routeviews\.%s\.[0-9]+\.bmp_raw$`, regexp.QuoteMeta(r))
+		}
+		s.Debug().Str("topic", s.topics).Msg("using router-specific topic")
+	}
 
 	// Compile topic regex
 	var err error
@@ -85,7 +103,8 @@ func (s *RvLive) Attach() error {
 		s.group = fmt.Sprintf("bgpipe-%d-%d", os.Getpid(), time.Now().UnixNano())
 	}
 
-	// Initialize BMP parser
+	// Initialize parsers
+	s.obmpMsg = bmp.NewOpenBmp()
 	s.bmpMsg = bmp.NewBmp()
 
 	// Load state file if specified

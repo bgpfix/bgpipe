@@ -12,19 +12,33 @@ import (
 func (s *RvLive) runKafka() error {
 	s.Info().Str("broker", s.broker).Str("group", s.group).Msg("connecting")
 
-	// Build client options
+	// Build client options - based on libbgpstream/rdkafka configuration
 	opts := []kgo.Opt{
 		kgo.SeedBrokers(s.broker),
 		kgo.ConsumerGroup(s.group),
 		kgo.ConsumeResetOffset(kgo.NewOffset().AtEnd()),
 		kgo.DisableAutoCommit(),
-		kgo.ConnIdleTimeout(s.timeout),
-		kgo.FetchMaxWait(5 * time.Second),       // Don't wait forever for data
-		kgo.FetchMinBytes(1),                    // Return as soon as any data is available
+
+		// Use roundrobin balancer for even partition distribution (like bgpstream)
+		// Default "range" can cause uneven distribution with many partitions/topics
+		kgo.Balancers(kgo.RoundRobinBalancer()),
+
+		// Connection settings
+		kgo.ConnIdleTimeout(5 * time.Minute),         // Keep connections alive longer
+		kgo.RequestTimeoutOverhead(90 * time.Second), // Extra time for slow broker responses
+
+		// Fetch settings - optimized for real-time streaming (like bgpstream)
+		kgo.FetchMaxWait(100 * time.Millisecond), // Don't wait long - we want real-time data
+		kgo.FetchMinBytes(1),                     // Return as soon as any data is available
+		kgo.FetchMaxPartitionBytes(128 * 1024),   // 128KB max per partition (prevents slow consumer issues)
+
+		// Consumer group settings for large partition counts
 		kgo.SessionTimeout(60 * time.Second),    // Longer timeout for large partition counts
 		kgo.RebalanceTimeout(120 * time.Second), // Allow time for rebalancing 1800+ partitions
-		kgo.HeartbeatInterval(10 * time.Second), // Less frequent heartbeats
-		kgo.BlockRebalanceOnPoll(),              // Don't rebalance during poll
+		kgo.HeartbeatInterval(10 * time.Second), // Regular heartbeats
+
+		// Retry settings
+		kgo.RetryBackoffFn(func(int) time.Duration { return 5 * time.Second }),
 		// Log partition assignments
 		kgo.OnPartitionsAssigned(func(_ context.Context, _ *kgo.Client, assigned map[string][]int32) {
 			count := 0
@@ -62,9 +76,10 @@ func (s *RvLive) runKafka() error {
 	topics, err := s.discoverTopics(client)
 	if err != nil {
 		return fmt.Errorf("failed to discover topics: %w", err)
-	}
-	if len(topics) == 0 {
+	} else if len(topics) == 0 {
 		return fmt.Errorf("no matching topics found for pattern: %s", s.topics)
+	} else {
+		s.Debug().Strs("topics", topics).Msg("discovered topics")
 	}
 
 	s.Info().Int("count", len(topics)).Msg("subscribing to topics")
@@ -106,25 +121,29 @@ func (s *RvLive) discoverTopics(client *kgo.Client) ([]string, error) {
 	defer cancel()
 
 	admin := kadm.NewClient(client)
-	meta, err := admin.Metadata(ctx)
+	endOffsets, err := admin.ListEndOffsets(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var topics []string
-	total := 0
-	for _, t := range meta.Topics {
-		if t.Err != nil {
+	for topic, partOffsets := range endOffsets {
+		if !s.topicsRe.MatchString(topic) {
 			continue
 		}
-		total++
-		if s.topicsRe.MatchString(t.Topic) {
-			s.Debug().Str("topic", t.Topic).Msg("discovered matching topic")
-			topics = append(topics, t.Topic)
+
+		// skip dead topics (all partitions have offset 0)
+		for _, po := range partOffsets {
+			if po.Err == nil && po.Offset > 0 {
+				s.Trace().Str("topic", topic).Msg("discovered matching topic")
+				topics = append(topics, topic)
+				break
+			} else {
+				s.Trace().Str("topic", topic).Msg("skipping dead topic")
+			}
 		}
 	}
 
-	s.Debug().Int("total", total).Int("matching", len(topics)).Msg("discovered topics")
 	return topics, nil
 }
 
@@ -178,17 +197,14 @@ func (s *RvLive) topicRefresher(client *kgo.Client, done <-chan struct{}) {
 }
 
 func (s *RvLive) consume(client *kgo.Client) error {
-	trace := s.Trace().Enabled()
+	lastData := time.Now()
+	lastStaleCheck := time.Now()
+	consecutiveErrors := 0
 
 	for s.Ctx.Err() == nil {
-		if trace {
-			s.Trace().Msg("polling for fetches")
-		}
 		fetches := client.PollFetches(s.Ctx)
-		if trace {
-			s.Trace().Int("records", fetches.NumRecords()).Msg("fetched records")
-		}
 
+		// Handle errors
 		if errs := fetches.Errors(); len(errs) > 0 {
 			for _, e := range errs {
 				if e.Err == context.Canceled || e.Err == context.DeadlineExceeded {
@@ -196,36 +212,37 @@ func (s *RvLive) consume(client *kgo.Client) error {
 				}
 				s.Warn().Err(e.Err).Str("topic", e.Topic).Int32("partition", e.Partition).Msg("fetch error")
 			}
-			// Continue on non-fatal errors
-			if s.Ctx.Err() != nil {
-				return nil
+			consecutiveErrors++
+			if consecutiveErrors >= 10 {
+				return fmt.Errorf("too many consecutive fetch errors (%d)", consecutiveErrors)
+			}
+			continue
+		}
+		consecutiveErrors = 0
+
+		// Check staleness periodically
+		if s.stale > 0 && fetches.NumRecords() == 0 && time.Since(lastStaleCheck) >= 30*time.Second {
+			lastStaleCheck = time.Now()
+			if staleDuration := time.Since(lastData); staleDuration >= s.stale {
+				return fmt.Errorf("connection stale: no data for %v", staleDuration.Round(time.Second))
 			}
 		}
 
+		// Process records
 		iter := fetches.RecordIter()
 		for !iter.Done() {
 			record := iter.Next()
-
-			// Trace log raw Kafka data as hex (only if trace enabled)
-			if trace {
-				s.Trace().Str("topic", record.Topic).
-					Int32("partition", record.Partition).
-					Int64("offset", record.Offset).
-					Int("len", len(record.Value)).
-					Hex("data", record.Value).
-					Msg("raw kafka record")
-			}
+			lastData = time.Now()
 
 			if err := s.processRecord(record); err != nil {
 				s.Warn().Err(err).
 					Str("topic", record.Topic).
 					Int32("partition", record.Partition).
 					Int64("offset", record.Offset).
-					Msg("failed to process record")
+					Msg("process error")
 				continue
 			}
 
-			// Update offset state
 			s.updateOffset(record.Topic, record.Partition, record.Offset+1)
 		}
 	}

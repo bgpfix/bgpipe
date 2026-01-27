@@ -52,7 +52,7 @@ func NewRisLive(parent *core.StageBase) core.Stage {
 	f.Duration("read-timeout", 10*time.Second, "stream read timeout (max time between messages)")
 	f.Bool("retry", true, "retry connection on errors")
 	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
-	f.Duration("delay-err", time.Minute, "treat too old messages as connection errors (0 to disable)")
+	f.Duration("delay-err", 3*time.Minute, "treat too old messages as connection errors (0 to disable)")
 
 	return s
 }
@@ -68,8 +68,12 @@ func (s *RisLive) Attach() error {
 	s.delay_err = k.Duration("delay-err")
 
 	// ensure --subscribe includes includeRaw=true
-	if len(s.subscribe) > 0 {
+	if sl := len(s.subscribe); sl > 0 {
 		val, err := jsonparser.GetBoolean(json.B(s.subscribe), "includeRaw")
+		if err != nil {
+			s.subscribe = s.subscribe[:sl-1] + `, "includeRaw": true }` // best-effort add includeRaw
+			val, err = jsonparser.GetBoolean(json.B(s.subscribe), "includeRaw")
+		}
 		if err != nil || !val {
 			return fmt.Errorf("invalid --subscribe: must be JSON object with includeRaw=true")
 		}
