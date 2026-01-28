@@ -164,10 +164,10 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 		f.StringP("new", "N", "next", "which stage to send new messages to")
 	}
 	if so.FilterOut {
-		f.StringP("of", "O", "", "stage output filter (drop non-matching output)")
+		f.StringArrayP("of", "O", nil, "stage output filter (drop non-matching output)")
 	}
 	if so.FilterIn {
-		f.StringP("if", "I", "", "stage input filter (skip non-matching input)")
+		f.StringArrayP("if", "I", nil, "stage input filter (skip non-matching input)")
 	}
 	f.Float64("rate-limit", 0, "delay messages if over the rate limit")
 	f.Float64("rate-sample", 0, "sample messages if over the rate limit")

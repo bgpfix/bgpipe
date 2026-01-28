@@ -3,6 +3,7 @@ package stages
 import (
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/stages/rpki"
+	rvlive "github.com/bgpfix/bgpipe/stages/rv-live"
 )
 
 var Repo = map[string]core.NewStage{
@@ -16,6 +17,7 @@ var Repo = map[string]core.NewStage{
 	"read":      NewRead,
 	"ris-live":  NewRisLive,
 	"rpki":      rpki.NewRpki,
+	"rv-live":   rvlive.NewRvLive,
 	"speaker":   NewSpeaker,
 	"stdin":     NewStdin,
 	"stdout":    NewStdout,

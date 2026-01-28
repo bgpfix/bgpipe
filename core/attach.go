@@ -233,6 +233,7 @@ func (s *StageBase) attach() error {
 	}
 	for _, cb := range s.callbacks {
 		cb.Id = s.Index
+		cb.Name = s.Name
 		cb.Enabled = &s.running
 		cb.Filter = s.FilterIn
 		cb.LimitRate = rl
@@ -242,6 +243,7 @@ func (s *StageBase) attach() error {
 	// fix event handlers
 	for _, h := range s.handlers {
 		h.Id = s.Index
+		h.Name = s.Name
 		h.Enabled = &s.running
 	}
 
@@ -283,6 +285,7 @@ func (s *StageBase) attach() error {
 	}
 	for _, li := range s.inputs {
 		li.Id = s.Index
+		li.Name = s.Name
 		li.CbFilterValue = fid
 		li.Filter = s.FilterOut
 		li.LimitRate = rl

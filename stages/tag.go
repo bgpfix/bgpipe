@@ -2,6 +2,7 @@ package stages
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -13,8 +14,9 @@ import (
 type Tag struct {
 	*core.StageBase
 
-	opt_drop []string          // tags to drop
-	opt_add  map[string]string // tags to add
+	drop []string          // tags to drop
+	add  map[string]string // tags to add
+	src  bool              // add SRC tag with source stage name
 }
 
 func NewTag(parent *core.StageBase) core.Stage {
@@ -28,6 +30,7 @@ func NewTag(parent *core.StageBase) core.Stage {
 	f := o.Flags
 	f.StringSlice("drop", nil, "drop given tags (* means all)")
 	f.StringSlice("add", nil, "add given tags (key=value)")
+	f.Bool("src", false, "add SRC tag with source stage name")
 
 	return s
 }
@@ -35,23 +38,25 @@ func NewTag(parent *core.StageBase) core.Stage {
 func (s *Tag) Attach() (err error) {
 	k := s.K
 
+	s.src = k.Bool("src")
+
 	// parse tags to drop
-	s.opt_drop = k.Strings("drop")
-	if slices.Contains(s.opt_drop, "*") {
-		s.opt_drop = []string{"*"}
+	s.drop = k.Strings("drop")
+	if slices.Contains(s.drop, "*") {
+		s.drop = []string{"*"}
 	}
 
 	// parse tags to add
 	for i, tag := range k.Strings("add") {
 		if i == 0 {
-			s.opt_add = map[string]string{}
+			s.add = map[string]string{}
 		}
 
 		key, val, found := strings.Cut(tag, "=")
 		if !found {
 			return fmt.Errorf("--add %s: invalid format, need key=value", tag)
 		}
-		s.opt_add[key] = val
+		s.add[key] = val
 	}
 
 	// register callback
@@ -60,30 +65,36 @@ func (s *Tag) Attach() (err error) {
 }
 
 func (s *Tag) onmsg(m *msg.Msg) bool {
-	// get message context
-	mx := pipe.GetContext(m) // NB: can be nil!
+	mx := pipe.GetContext(m) // can be nil
+	mod := false
 
 	// drop tags
-	if len(s.opt_drop) > 0 && mx.HasTags() {
-		if s.opt_drop[0] == "*" {
-			m.Edit(mx.DropTags())
+	if len(s.drop) > 0 && mx.HasTags() {
+		if s.drop[0] == "*" {
+			mod = mx.DropTags()
 		} else {
-			for _, tag := range s.opt_drop {
-				m.Edit(mx.DropTag(tag))
+			for _, tag := range s.drop {
+				mod = mod || mx.DropTag(tag)
 			}
 		}
 	}
 
-	// add tags
-	if len(s.opt_add) > 0 {
-		if mx == nil {
-			mx = pipe.UseContext(m) // create context if needed
+	// add SRC tag with source stage name
+	if s.src && mx != nil {
+		if mx.Input != nil && mx.Input.Name != "" {
+			mod = true
+			tags := mx.UseTags()
+			tags["SRC"] = mx.Input.Name
 		}
-		for key, val := range s.opt_add {
-			mx.SetTag(key, val)
-		}
-		m.Edit()
 	}
 
+	// add tags
+	if len(s.add) > 0 {
+		mod = true
+		tags := pipe.UseTags(m)
+		maps.Copy(tags, s.add)
+	}
+
+	m.Edit(mod)
 	return true
 }

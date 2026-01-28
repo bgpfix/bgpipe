@@ -1,0 +1,8 @@
+{
+  "roas": [
+    {"prefix": "192.0.2.0/24", "maxLength": 24, "asn": "AS65001"},
+    {"prefix": "192.0.2.0/24", "maxLength": 25, "asn": 65002},
+    {"prefix": "10.0.0.0/8", "maxLength": 24, "asn": 64512},
+    {"prefix": "2001:db8::/32", "maxLength": 48, "asn": 65003}
+  ]
+}
