@@ -25,33 +25,33 @@ func (s *RvLive) stateSaver(done <-chan struct{}) {
 		case <-s.Ctx.Done():
 			return
 		case <-ticker.C:
-			s.stateMu.Lock()
-			if s.stateDirty {
-				s.stateDirty = false
-				s.stateMu.Unlock()
+			s.state_mu.Lock()
+			if s.state_dirty {
+				s.state_dirty = false
+				s.state_mu.Unlock()
 				if err := s.saveState(); err != nil {
 					s.Warn().Err(err).Msg("failed to save state")
 				}
 			} else {
-				s.stateMu.Unlock()
+				s.state_mu.Unlock()
 			}
 		}
 	}
 }
 
 func (s *RvLive) updateOffset(topic string, partition int32, offset int64) {
-	s.stateMu.Lock()
-	defer s.stateMu.Unlock()
+	s.state_mu.Lock()
+	defer s.state_mu.Unlock()
 
 	if s.state.Offsets[topic] == nil {
 		s.state.Offsets[topic] = make(map[int32]int64)
 	}
 	s.state.Offsets[topic][partition] = offset
-	s.stateDirty = true
+	s.state_dirty = true
 }
 
 func (s *RvLive) loadState() (*rvState, error) {
-	data, err := os.ReadFile(s.stateFile)
+	data, err := os.ReadFile(s.state_file)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &rvState{Version: 1, Offsets: make(map[string]map[int32]int64)}, nil
@@ -72,17 +72,17 @@ func (s *RvLive) loadState() (*rvState, error) {
 }
 
 func (s *RvLive) saveState() error {
-	s.stateMu.Lock()
+	s.state_mu.Lock()
 	s.state.UpdatedAt = time.Now().UTC()
 	data, err := json.MarshalIndent(s.state, "", "  ")
-	s.stateMu.Unlock()
+	s.state_mu.Unlock()
 
 	if err != nil {
 		return err
 	}
 
 	// Atomic write: temp file + rename
-	dir := filepath.Dir(s.stateFile)
+	dir := filepath.Dir(s.state_file)
 	tmp, err := os.CreateTemp(dir, ".rv-state-*")
 	if err != nil {
 		return err
@@ -100,11 +100,11 @@ func (s *RvLive) saveState() error {
 		return err
 	}
 
-	if err := os.Rename(tmpName, s.stateFile); err != nil {
+	if err := os.Rename(tmpName, s.state_file); err != nil {
 		os.Remove(tmpName)
 		return err
 	}
 
-	s.Debug().Str("file", s.stateFile).Msg("state saved")
+	s.Debug().Str("file", s.state_file).Msg("state saved")
 	return nil
 }

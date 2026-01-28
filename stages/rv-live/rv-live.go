@@ -20,26 +20,28 @@ type RvLive struct {
 	*core.StageBase
 	in *pipe.Input
 
-	broker     string
-	topics     string
-	topicsRe   *regexp.Regexp
-	group      string
-	stateFile  string
-	refresh    time.Duration
-	timeout    time.Duration
-	stale      time.Duration
-	retry      bool
-	retryMax   int
-	keepAspath bool
+	broker        string
+	topics        string
+	topics_re     *regexp.Regexp
+	collector     []string
+	collector_not []string
+	group         string
+	state_file    string
+	refresh       time.Duration
+	timeout       time.Duration
+	stale         time.Duration
+	retry         bool
+	retry_max     int
+	keep_aspath   bool
 
 	// state management
-	state      *rvState
-	stateMu    sync.Mutex
-	stateDirty bool
+	state       *rvState
+	state_mu    sync.Mutex
+	state_dirty bool
 
 	// reusable parsers
-	obmpMsg *bmp.OpenBmp
-	bmpMsg  *bmp.Bmp
+	obmp_msg *bmp.OpenBmp
+	bmp_msg  *bmp.Bmp
 }
 
 func NewRvLive(parent *core.StageBase) core.Stage {
@@ -55,7 +57,8 @@ func NewRvLive(parent *core.StageBase) core.Stage {
 
 	f.String("broker", "stream.routeviews.org:9092", "Kafka broker address")
 	f.String("topics", `^routeviews\..+\.bmp_raw$`, "topic regex pattern")
-	f.String("router", "", "consume only from specific router (instead of topics regex)")
+	f.StringSlice("collector", nil, "collector name must start with this prefix (on top of topics regex)")
+	f.StringSlice("collector-not", nil, "collector name must not start with this prefix (on top of topics regex)")
 	f.String("group", "", "consumer group ID (auto-generated if empty)")
 	f.String("state", "", "state file for offset persistence")
 	f.Duration("refresh", 5*time.Minute, "topic refresh interval")
@@ -63,7 +66,7 @@ func NewRvLive(parent *core.StageBase) core.Stage {
 	f.Duration("stale", 3*time.Minute, "reconnect if no data for this long (0 to disable)")
 	f.Bool("retry", true, "retry connection on errors")
 	f.Int("retry-max", 0, "maximum number of retries (0 means unlimited)")
-	f.Bool("keep-aspath", false, "keep RouteViews collector ASN 6447 in AS_PATH")
+	f.Bool("keep-aspath", false, "keep collector AS in AS_PATH")
 
 	return s
 }
@@ -73,27 +76,25 @@ func (s *RvLive) Attach() error {
 	s.broker = k.String("broker")
 	s.topics = k.String("topics")
 	s.group = k.String("group")
-	s.stateFile = k.String("state")
+	s.state_file = k.String("state")
 	s.refresh = k.Duration("refresh")
 	s.timeout = k.Duration("timeout")
 	s.stale = k.Duration("stale")
 	s.retry = k.Bool("retry")
-	s.retryMax = k.Int("retry-max")
-	s.keepAspath = k.Bool("keep-aspath")
+	s.retry_max = k.Int("retry-max")
+	s.keep_aspath = k.Bool("keep-aspath")
 
-	// override topics if --router is set
-	if r := k.String("router"); r != "" {
-		if regexp.MustCompile(`\.[0-9]+$`).MatchString(r) {
-			s.topics = fmt.Sprintf(`^routeviews\.%s\.bmp_raw$`, regexp.QuoteMeta(r))
-		} else {
-			s.topics = fmt.Sprintf(`^routeviews\.%s\.[0-9]+\.bmp_raw$`, regexp.QuoteMeta(r))
-		}
-		s.Debug().Str("topic", s.topics).Msg("using router-specific topic")
+	// parse --collector and --collector-not
+	for _, r := range k.Strings("collector") {
+		s.collector = append(s.collector, "routeviews."+r)
+	}
+	for _, r := range k.Strings("collector-not") {
+		s.collector_not = append(s.collector_not, "routeviews."+r)
 	}
 
 	// Compile topic regex
 	var err error
-	s.topicsRe, err = regexp.Compile(s.topics)
+	s.topics_re, err = regexp.Compile(s.topics)
 	if err != nil {
 		return fmt.Errorf("invalid --topics regex: %w", err)
 	}
@@ -104,12 +105,12 @@ func (s *RvLive) Attach() error {
 	}
 
 	// Initialize parsers
-	s.obmpMsg = bmp.NewOpenBmp()
-	s.bmpMsg = bmp.NewBmp()
+	s.obmp_msg = bmp.NewOpenBmp()
+	s.bmp_msg = bmp.NewBmp()
 
 	// Load state file if specified
-	if s.stateFile != "" {
-		s.Debug().Str("file", s.stateFile).Msg("loading state file")
+	if s.state_file != "" {
+		s.Debug().Str("file", s.state_file).Msg("loading state file")
 		s.state, err = s.loadState()
 		if err != nil {
 			s.Warn().Err(err).Msg("failed to load state file, starting fresh")
@@ -134,8 +135,8 @@ func (s *RvLive) Run() error {
 		if time.Since(lastTry) > time.Hour {
 			try = 1
 		}
-		if s.retryMax > 0 && try > s.retryMax {
-			return fmt.Errorf("max retries (%d) exceeded", s.retryMax)
+		if s.retry_max > 0 && try > s.retry_max {
+			return fmt.Errorf("max retries (%d) exceeded", s.retry_max)
 		}
 		lastTry = time.Now()
 

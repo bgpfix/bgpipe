@@ -24,21 +24,15 @@ func (s *RvLive) runKafka() error {
 		kgo.Balancers(kgo.RoundRobinBalancer()),
 
 		// Connection settings
-		kgo.ConnIdleTimeout(5 * time.Minute),         // Keep connections alive longer
-		kgo.RequestTimeoutOverhead(90 * time.Second), // Extra time for slow broker responses
+		kgo.ConnIdleTimeout(5 * time.Minute), // Keep connections alive longer
 
 		// Fetch settings - optimized for real-time streaming (like bgpstream)
 		kgo.FetchMaxWait(100 * time.Millisecond), // Don't wait long - we want real-time data
-		kgo.FetchMinBytes(1),                     // Return as soon as any data is available
 		kgo.FetchMaxPartitionBytes(128 * 1024),   // 128KB max per partition (prevents slow consumer issues)
 
 		// Consumer group settings for large partition counts
-		kgo.SessionTimeout(60 * time.Second),    // Longer timeout for large partition counts
 		kgo.RebalanceTimeout(120 * time.Second), // Allow time for rebalancing 1800+ partitions
-		kgo.HeartbeatInterval(10 * time.Second), // Regular heartbeats
 
-		// Retry settings
-		kgo.RetryBackoffFn(func(int) time.Duration { return 5 * time.Second }),
 		// Log partition assignments
 		kgo.OnPartitionsAssigned(func(_ context.Context, _ *kgo.Client, assigned map[string][]int32) {
 			count := 0
@@ -86,7 +80,7 @@ func (s *RvLive) runKafka() error {
 	client.AddConsumeTopics(topics...)
 
 	// Seek to saved offsets if we have state
-	if s.stateFile != "" && len(s.state.Offsets) > 0 {
+	if s.state_file != "" && len(s.state.Offsets) > 0 {
 		if err := s.seekToSavedOffsets(client, topics); err != nil {
 			s.Warn().Err(err).Msg("failed to seek to saved offsets")
 		}
@@ -94,7 +88,7 @@ func (s *RvLive) runKafka() error {
 
 	// Start state saver goroutine
 	stateSaverDone := make(chan struct{})
-	if s.stateFile != "" {
+	if s.state_file != "" {
 		go s.stateSaver(stateSaverDone)
 	}
 
@@ -108,7 +102,7 @@ func (s *RvLive) runKafka() error {
 
 	// Cleanup
 	close(refreshDone)
-	if s.stateFile != "" {
+	if s.state_file != "" {
 		close(stateSaverDone)
 		s.saveState() // Final save
 	}
@@ -120,6 +114,15 @@ func (s *RvLive) discoverTopics(client *kgo.Client) ([]string, error) {
 	ctx, cancel := context.WithTimeout(s.Ctx, s.timeout)
 	defer cancel()
 
+	hasPrefix := func(name string, prefixes []string) bool {
+		for _, prefix := range prefixes {
+			if len(name) >= len(prefix) && name[:len(prefix)] == prefix {
+				return true
+			}
+		}
+		return false
+	}
+
 	admin := kadm.NewClient(client)
 	endOffsets, err := admin.ListEndOffsets(ctx)
 	if err != nil {
@@ -128,7 +131,17 @@ func (s *RvLive) discoverTopics(client *kgo.Client) ([]string, error) {
 
 	var topics []string
 	for topic, partOffsets := range endOffsets {
-		if !s.topicsRe.MatchString(topic) {
+		if !s.topics_re.MatchString(topic) {
+			continue
+		}
+
+		// extract collector + router from topic name
+		if len(s.collector) > 0 && !hasPrefix(topic, s.collector) {
+			s.Trace().Str("topic", topic).Str("topic", topic).Msg("skipping non-matching collector")
+			continue
+		}
+		if len(s.collector_not) > 0 && hasPrefix(topic, s.collector_not) {
+			s.Trace().Str("topic", topic).Str("topic", topic).Msg("skipping excluded collector")
 			continue
 		}
 
@@ -230,7 +243,7 @@ func (s *RvLive) consume(client *kgo.Client) error {
 
 		// Process records
 		iter := fetches.RecordIter()
-		for !iter.Done() {
+		for !iter.Done() && s.Ctx.Err() == nil {
 			record := iter.Next()
 			lastData = time.Now()
 

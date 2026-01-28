@@ -13,7 +13,7 @@ import (
 )
 
 func (s *RvLive) processRecord(record *kgo.Record) error {
-	om, bm := s.obmpMsg, s.bmpMsg
+	om, bm := s.obmp_msg, s.bmp_msg
 
 	// Parse OpenBMP header
 	om.Reset()
@@ -45,36 +45,31 @@ func (s *RvLive) processRecord(record *kgo.Record) error {
 		return fmt.Errorf("dangling bytes after BGP message: %d/%d", n, len(bm.BgpData))
 	}
 
-	// Add metadata from BMP peer header
-	m.Time = bm.Peer.Time
+	// Add metadata
+	if !bm.Peer.Time.IsZero() {
+		m.Time = bm.Peer.Time
+	} else if !om.Time.IsZero() {
+		m.Time = om.Time
+	}
 	tags := pipe.UseContext(m).UseTags()
 	tags["PEER_IP"] = bm.Peer.Address.String()
 	tags["PEER_AS"] = strconv.FormatUint(uint64(bm.Peer.AS), 10)
 
-	// Add metadata from OpenBMP header (prefer over topic name parsing)
-	if om.CollectorName != "" {
-		tags["RV_COLLECTOR"] = om.CollectorName
-	}
+	// NB: routeviews puts collector in router name field
 	if om.RouterName != "" {
-		tags["RV_ROUTER"] = om.RouterName
-	} else if om.RouterIP.IsValid() {
-		tags["RV_ROUTER"] = om.RouterIP.String()
+		tags["COLLECTOR"] = om.RouterName
+	} else if col, _ := parseTopic(record.Topic); col != "" {
+		tags["COLLECTOR"] = col
 	}
 
-	// Fallback to topic name parsing if metadata not in header
-	if tags["RV_COLLECTOR"] == "" || tags["RV_ROUTER"] == "" {
-		collector, router := parseTopic(record.Topic)
-		if tags["RV_COLLECTOR"] == "" {
-			tags["RV_COLLECTOR"] = collector
-		}
-		if tags["RV_ROUTER"] == "" {
-			tags["RV_ROUTER"] = router
-		}
+	// set ROUTER to the router IP for consistency with bmp reader
+	if om.RouterIP.IsValid() {
+		tags["ROUTER"] = om.RouterIP.String()
 	}
 
-	// Strip RouteViews collector ASN 6447 from AS_PATH unless --keep-aspath
-	if !s.keepAspath {
-		s.stripCollectorAsn(m)
+	// strip collector AS from AS_PATH?
+	if !s.keep_aspath {
+		s.fixPath(m, bm.Peer.AS)
 	}
 
 	// Write to pipe
@@ -82,10 +77,8 @@ func (s *RvLive) processRecord(record *kgo.Record) error {
 	return s.in.WriteMsg(m)
 }
 
-// stripCollectorAsn removes the RouteViews collector ASN 6447 from the first hop of AS_PATH
-func (s *RvLive) stripCollectorAsn(m *msg.Msg) {
-	const RV_ASN = 6447
-
+// fixPath removes the first (collector) ASN from AS_PATH, if peer_as is the second AS in path.
+func (s *RvLive) fixPath(m *msg.Msg, peer_as uint32) {
 	// need to parse as UPDATE first
 	if m.Type != msg.UPDATE || s.P.ParseMsg(m) != nil {
 		return
@@ -97,9 +90,9 @@ func (s *RvLive) stripCollectorAsn(m *msg.Msg) {
 		return
 	}
 
-	// check if the first hop is the collector ASN
+	// check we should remove the first hop
 	seg := &asp.Segments[0]
-	if seg.IsSet || len(seg.List) == 0 || seg.List[0] != RV_ASN {
+	if seg.IsSet || len(seg.List) < 2 || seg.List[0] == peer_as || seg.List[1] != peer_as {
 		return
 	}
 
@@ -117,7 +110,8 @@ func (s *RvLive) stripCollectorAsn(m *msg.Msg) {
 	m.Edit()
 }
 
-var reParseTopic = regexp.MustCompile(`^routeviews\.(.+)\.([0-9]+)\.bmp_raw$`)
+// best-effort parser for topic names: routeviews.<collector-name>.<router-asn>.<other>
+var reParseTopic = regexp.MustCompile(`^routeviews\.(.+)\.([0-9]+)\.`)
 
 // parseTopic extracts collector and router/peer ASN from a Kafka topic name.
 func parseTopic(topic string) (collector, router string) {

@@ -35,8 +35,8 @@ type Websocket struct {
 
 	url        url.URL              // URL address
 	srv        *http.Server         // http server (may be nil)
-	clientConn *websocket.Conn      // websocket client conn
-	serverConn chan *websocket.Conn // websocket server conns
+	client_conn *websocket.Conn      // websocket client conn
+	server_conn chan *websocket.Conn // websocket server conns
 
 	eio *extio.Extio
 }
@@ -158,7 +158,7 @@ func (s *Websocket) Attach() error {
 		s.headers.Set("Authorization", auth)
 	}
 
-	s.serverConn = make(chan *websocket.Conn, 10)
+	s.server_conn = make(chan *websocket.Conn, 10)
 	return s.eio.Attach()
 }
 
@@ -189,7 +189,7 @@ func (s *Websocket) prepareClient() error {
 			s.Info().
 				Interface("headers", resp.Header).
 				Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
-			s.clientConn = conn
+			s.client_conn = conn
 			return nil // success
 		} else if !s.retry || (s.retry_max > 0 && try >= s.retry_max) {
 			return err // no (more) retries
@@ -275,7 +275,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// publish conn for broadcasts + signal to connWriter
-	if !util.Send(s.serverConn, conn) || !util.Send(s.eio.Output, nil) {
+	if !util.Send(s.server_conn, conn) || !util.Send(s.eio.Output, nil) {
 		s.Warn().Msgf("%s: could not register new connection", r.RemoteAddr)
 		return
 	}
@@ -293,8 +293,8 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 
 func (s *Websocket) Stop() error {
 	util.Close(s.eio.Output)
-	if s.clientConn != nil {
-		s.clientConn.Close()
+	if s.client_conn != nil {
+		s.client_conn.Close()
 	}
 	if s.srv != nil {
 		s.srv.Close()
@@ -311,8 +311,8 @@ func (s *Websocket) Run() (err error) {
 
 	// client conn reader if needed
 	conn_reader_done := make(chan error, 1)
-	if s.clientConn != nil {
-		go s.connReader(s.clientConn, conn_reader_done)
+	if s.client_conn != nil {
+		go s.connReader(s.client_conn, conn_reader_done)
 	}
 
 	// wait for signals
@@ -380,25 +380,25 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 
 func (s *Websocket) connWriter(done chan error) {
 	defer func() {
-		util.Close(s.serverConn)
+		util.Close(s.server_conn)
 		util.Close(s.eio.Output)
 		util.Close(done)
 	}()
 
 	// a map of connections, the value is true iff the connection is critical
 	conns := make(map[*websocket.Conn]bool)
-	if s.clientConn != nil {
-		conns[s.clientConn] = true
+	if s.client_conn != nil {
+		conns[s.client_conn] = true
 	}
-	for len(s.serverConn) > 0 {
-		conns[<-s.serverConn] = false
+	for len(s.server_conn) > 0 {
+		conns[<-s.server_conn] = false
 	}
 
 	for bb := range s.eio.Output {
 		// signal to reload the server conns?
 		if bb == nil {
-			for len(s.serverConn) > 0 {
-				conns[<-s.serverConn] = false
+			for len(s.server_conn) > 0 {
+				conns[<-s.server_conn] = false
 			}
 			continue
 		}

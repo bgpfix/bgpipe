@@ -3,9 +3,12 @@ package extio
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
+	"net/netip"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -214,8 +217,11 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 	if err != nil {
 		return false
 	} else if buf[0] == bmp.VERSION && buf[5] <= 6 { // version 3, valid msg type
-		eio.opt_bmp = true
-		return true
+		ml := int(binary.BigEndian.Uint32(buf[1:5]))
+		if ml >= msg.HEADLEN && ml <= 64*1024 { // sane length <= 64KiB
+			eio.opt_bmp = true
+			return true
+		}
 	}
 
 	// wild shot: looks like MRT BGP4MP_MESSAGE?
@@ -635,6 +641,68 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 		x := exa.NewExa()
 		for range x.IterMsg(m) {
 			bb.WriteString(x.String() + "\n") // NB: no error possible
+		}
+
+	case eio.opt_bmp:
+		bm := bmp.NewBmp()
+		bm.MsgType = bmp.MSG_ROUTE_MONITORING
+
+		// set peer info from message context tags (matches bmp reader tags)
+		if tags := mx.GetTags(); tags != nil {
+			if ip, ok := tags["PEER_IP"]; ok {
+				if addr, err := netip.ParseAddr(ip); err == nil {
+					bm.Peer.Address = addr
+					if addr.Is6() {
+						bm.Peer.Flags |= bmp.PEER_FLAG_V6
+					}
+				}
+			}
+			if asStr, ok := tags["PEER_AS"]; ok {
+				if as, err := strconv.ParseUint(asStr, 10, 32); err == nil {
+					bm.Peer.AS = uint32(as)
+				}
+			}
+		}
+		bm.Peer.Time = m.Time
+
+		// marshal BGP message
+		err = m.Marshal(eio.P.Caps)
+		if err != nil {
+			break
+		}
+		bm.BgpData = m.Data
+
+		// marshal BMP
+		err = bm.Marshal()
+		if err != nil {
+			break
+		}
+
+		// wrap in OpenBMP if needed
+		if eio.opt_obmp {
+			om := bmp.NewOpenBmp()
+			om.ObjType = bmp.OPENBMP_OBJ_RAW
+			om.Time = m.Time
+			om.Data = bm.Bytes() // get BMP bytes
+			// copy collector/router info from tags (matches bmp reader: COLLECTOR, ROUTER)
+			if tags := mx.GetTags(); tags != nil {
+				om.CollectorName = tags["COLLECTOR"]
+				// ROUTER tag could be a name or IP string
+				if router := tags["ROUTER"]; router != "" {
+					if addr, perr := netip.ParseAddr(router); perr == nil {
+						om.RouterIP = addr
+					} else {
+						om.RouterName = router
+					}
+				}
+			}
+			err = om.Marshal()
+			if err != nil {
+				break
+			}
+			_, err = om.WriteTo(bb)
+		} else {
+			_, err = bm.WriteTo(bb)
 		}
 
 	default:

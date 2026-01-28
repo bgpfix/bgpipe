@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bgpfix/bgpfix/json"
@@ -322,6 +323,9 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 	tags["PEER_AS"] = peer_asn
 	tags["RIS_ID"] = id
 	tags["RIS_HOST"] = host
+	if col, _, _ := strings.Cut(host, "."); len(col) > 0 {
+		tags["COLLECTOR"] = col
+	}
 
 	// write to pipe
 	msg.CopyData()
