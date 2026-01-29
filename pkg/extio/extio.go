@@ -41,7 +41,7 @@ type Extio struct {
 	opt_mrt    bool              // --format=mrt
 	opt_exa    bool              // --format=exa
 	opt_bmp    bool              // --format=bmp
-	opt_obmp   bool              // --format=openbmp
+	opt_obmp   bool              // --format=obmp
 	opt_copy   bool              // --copy
 	opt_noseq  bool              // --no-seq
 	opt_notime bool              // --no-time

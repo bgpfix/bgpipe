@@ -104,7 +104,9 @@ func (s *RvLive) runKafka() error {
 	close(refreshDone)
 	if s.state_file != "" {
 		close(stateSaverDone)
-		s.saveState() // Final save
+		if err := s.saveState(); err != nil {
+			s.Warn().Err(err).Msg("failed to do final save state")
+		}
 	}
 
 	return err
@@ -137,11 +139,11 @@ func (s *RvLive) discoverTopics(client *kgo.Client) ([]string, error) {
 
 		// extract collector + router from topic name
 		if len(s.collector) > 0 && !hasPrefix(topic, s.collector) {
-			s.Trace().Str("topic", topic).Str("topic", topic).Msg("skipping non-matching collector")
+			s.Trace().Str("topic", topic).Msg("skipping non-matching collector")
 			continue
 		}
 		if len(s.collector_not) > 0 && hasPrefix(topic, s.collector_not) {
-			s.Trace().Str("topic", topic).Str("topic", topic).Msg("skipping excluded collector")
+			s.Trace().Str("topic", topic).Msg("skipping excluded collector")
 			continue
 		}
 

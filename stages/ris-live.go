@@ -25,7 +25,7 @@ type RisLive struct {
 	in *pipe.Input
 
 	url          string
-	subscribe    string
+	sub          string
 	timeout      time.Duration
 	timeout_read time.Duration
 	retry        bool
@@ -61,22 +61,22 @@ func NewRisLive(parent *core.StageBase) core.Stage {
 func (s *RisLive) Attach() error {
 	k := s.K
 	s.url = k.String("url")
-	s.subscribe = k.String("sub")
+	s.sub = k.String("sub")
 	s.timeout = k.Duration("timeout")
 	s.timeout_read = k.Duration("read-timeout")
 	s.retry = k.Bool("retry")
 	s.retry_max = k.Int("retry-max")
 	s.delay_err = k.Duration("delay-err")
 
-	// ensure --subscribe includes includeRaw=true
-	if sl := len(s.subscribe); sl > 0 {
-		val, err := jsonparser.GetBoolean(json.B(s.subscribe), "includeRaw")
-		if err != nil {
-			s.subscribe = s.subscribe[:sl-1] + `, "includeRaw": true }` // best-effort add includeRaw
-			val, err = jsonparser.GetBoolean(json.B(s.subscribe), "includeRaw")
+	// ensure --sub includes includeRaw=true
+	if sl := len(s.sub); sl > 0 {
+		val, err := jsonparser.GetBoolean(json.B(s.sub), "includeRaw")
+		if err != nil && s.sub[0] == '{' && s.sub[sl-1] == '}' {
+			s.sub = s.sub[:sl-1] + `, "includeRaw": true }` // best-effort add includeRaw
+			val, err = jsonparser.GetBoolean(json.B(s.sub), "includeRaw")
 		}
 		if err != nil || !val {
-			return fmt.Errorf("invalid --subscribe: must be JSON object with includeRaw=true")
+			return fmt.Errorf("invalid --sub: must be JSON object with includeRaw=true")
 		}
 	}
 
@@ -125,8 +125,8 @@ func (s *RisLive) Run() error {
 		if err != nil {
 			return fmt.Errorf("failed to create request: %w", err)
 		}
-		if len(s.subscribe) > 0 {
-			req.Header.Set("X-RIS-Subscribe", s.subscribe)
+		if len(s.sub) > 0 {
+			req.Header.Set("X-RIS-Subscribe", s.sub)
 		}
 
 		// make request

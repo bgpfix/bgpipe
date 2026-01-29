@@ -26,14 +26,18 @@ func (s *RvLive) stateSaver(done <-chan struct{}) {
 			return
 		case <-ticker.C:
 			s.state_mu.Lock()
-			if s.state_dirty {
+			dirty := s.state_dirty
+			s.state_mu.Unlock()
+
+			if dirty {
 				s.state_dirty = false
-				s.state_mu.Unlock()
 				if err := s.saveState(); err != nil {
 					s.Warn().Err(err).Msg("failed to save state")
+				} else {
+					s.state_mu.Lock()
+					s.state_dirty = false
+					s.state_mu.Unlock()
 				}
-			} else {
-				s.state_mu.Unlock()
 			}
 		}
 	}
