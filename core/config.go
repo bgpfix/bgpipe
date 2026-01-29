@@ -260,7 +260,7 @@ func (s *StageBase) parseArgs(args []string) ([]string, error) {
 	rem := f.Args()
 
 	// parse the stage input filter?
-	if v := s.K.String("if"); len(v) > 0 {
+	for _, v := range s.K.Strings("if") {
 		if f, err := filter.NewFilter(v); err != nil {
 			return nil, s.Errorf("could not parse --if: %w", err)
 		} else {
@@ -269,7 +269,7 @@ func (s *StageBase) parseArgs(args []string) ([]string, error) {
 	}
 
 	// parse the stage output filter?
-	if v := s.K.String("of"); len(v) > 0 {
+	for _, v := range s.K.Strings("of") {
 		if f, err := filter.NewFilter(v); err != nil {
 			return nil, s.Errorf("could not parse --of: %w", err)
 		} else {
