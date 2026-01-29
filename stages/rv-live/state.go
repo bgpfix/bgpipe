@@ -30,7 +30,6 @@ func (s *RvLive) stateSaver(done <-chan struct{}) {
 			s.state_mu.Unlock()
 
 			if dirty {
-				s.state_dirty = false
 				if err := s.saveState(); err != nil {
 					s.Warn().Err(err).Msg("failed to save state")
 				} else {

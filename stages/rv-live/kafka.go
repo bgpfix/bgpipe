@@ -153,8 +153,6 @@ func (s *RvLive) discoverTopics(client *kgo.Client) ([]string, error) {
 				s.Trace().Str("topic", topic).Msg("discovered matching topic")
 				topics = append(topics, topic)
 				break
-			} else {
-				s.Trace().Str("topic", topic).Msg("skipping dead topic")
 			}
 		}
 	}
