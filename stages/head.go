@@ -32,8 +32,8 @@ func (s *Head) Attach() error {
 	k := s.K
 
 	s.limit = k.Int64("count")
-	if s.limit < 0 {
-		return s.Errorf("count must be non-negative")
+	if s.limit <= 0 {
+		return s.Errorf("count must be positive")
 	}
 
 	// register callback

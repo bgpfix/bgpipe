@@ -156,11 +156,9 @@ func (eio *Extio) DetectPath(path string) (success bool) {
 		return true
 	case ".bmp":
 		eio.opt_bmp = true
-		eio.bmp.OpenBMP = false
 		return true
 	case ".obmp":
 		eio.opt_obmp = true
-		eio.bmp.OpenBMP = true
 		return true
 	case ".json", ".jsonl", ".txt":
 		// default JSON
@@ -217,9 +215,6 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 		return false
 	} else if string(buf) == bmp.OPENBMP_MAGIC {
 		eio.opt_obmp = true
-		if eio.bmp != nil {
-			eio.bmp.OpenBMP = true
-		}
 		return true
 	}
 
@@ -231,9 +226,6 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 		ml := int(binary.BigEndian.Uint32(buf[1:5]))
 		if ml >= msg.HEADLEN && ml <= 64*1024 { // sane length <= 64KiB
 			eio.opt_bmp = true
-			if eio.bmp != nil {
-				eio.bmp.OpenBMP = false
-			}
 			return true
 		}
 	}
@@ -427,6 +419,7 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 			om = obmpPool.Get().(*bmp.OpenBmp)
 			defer obmpPool.Put(om)
 		}
+		eio.bmp.OpenBMP = eio.opt_obmp
 
 		switch n, err := eio.bmp.FromBytes(buf, m, bm, om); {
 		case err == bmp.ErrNotRouteMonitoring:
@@ -535,6 +528,7 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 			read_err = err
 		}
 	} else if eio.opt_bmp || eio.opt_obmp { // BMP/OBMP message(s)
+		eio.bmp.OpenBMP = eio.opt_obmp
 		_, err := eio.bmp.WriteFunc(buf, check)
 		switch err {
 		case nil:
