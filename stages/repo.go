@@ -11,6 +11,7 @@ var Repo = map[string]core.NewStage{
 	"drop":      NewGrep,
 	"exec":      NewExec,
 	"grep":      NewGrep,
+	"head":      NewHead,
 	"limit":     NewLimit,
 	"listen":    NewListen,
 	"pipe":      NewPipe,
