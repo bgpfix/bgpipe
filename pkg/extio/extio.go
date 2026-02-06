@@ -6,10 +6,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"net/netip"
 	"path/filepath"
-	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -24,7 +23,13 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
-var bbpool bytebufferpool.Pool
+var (
+	bbpool   bytebufferpool.Pool
+	mrtPool  = sync.Pool{New: func() any { return mrt.NewMrt() }}
+	bmpPool  = sync.Pool{New: func() any { return bmp.NewBmp() }}
+	obmpPool = sync.Pool{New: func() any { return bmp.NewOpenBmp() }}
+	exaPool  = sync.Pool{New: func() any { return exa.NewExa() }}
+)
 
 // Extio helps in I/O with external processes eg. a background JSON filter,
 // or a remote websocket processor.
@@ -112,12 +117,14 @@ func NewExtio(parent *core.StageBase, mode Mode, autodetect bool) *Extio {
 }
 
 // DetectNeeded returns true iff data format detection is (still) needed
+// Must be called after Attach().
 func (eio *Extio) DetectNeeded() bool {
 	return !eio.Detected && eio.K.String("format") == "auto"
 }
 
 // DetectPath tries to detect data format from given path.
 // Returns true if format was successfully detected.
+// Must be called after Attach().
 func (eio *Extio) DetectPath(path string) (success bool) {
 	defer func() {
 		if success {
@@ -151,7 +158,6 @@ func (eio *Extio) DetectPath(path string) (success bool) {
 		eio.opt_bmp = true
 		return true
 	case ".obmp":
-		eio.opt_bmp = true
 		eio.opt_obmp = true
 		return true
 	case ".json", ".jsonl", ".txt":
@@ -167,6 +173,7 @@ func (eio *Extio) DetectPath(path string) (success bool) {
 
 // DetectSample tries to detect data format by peeking at the buffered reader.
 // Returns true if format was successfully detected.
+// Must be called after Attach().
 func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 	buf, err := br.Peek(1)
 	if err != nil {
@@ -207,7 +214,6 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 	if err != nil {
 		return false
 	} else if string(buf) == bmp.OPENBMP_MAGIC {
-		eio.opt_bmp = true
 		eio.opt_obmp = true
 		return true
 	}
@@ -264,7 +270,6 @@ func (eio *Extio) Attach() error {
 	case "bmp":
 		eio.opt_bmp = true
 	case "obmp":
-		eio.opt_bmp = true
 		eio.opt_obmp = true
 	case "auto":
 		// handled elsewhere
@@ -335,6 +340,7 @@ func (eio *Extio) Attach() error {
 
 		eio.mrt = mrt.NewReader(p, eio.InputD)
 		eio.mrt.NoTags = eio.opt_notags
+
 		eio.bmp = bmp.NewReader(p, eio.InputD)
 		eio.bmp.NoTags = eio.opt_notags
 		eio.bmp.OpenBMP = eio.opt_obmp
@@ -391,7 +397,10 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 		}
 
 	} else if eio.opt_mrt { // MRT message
-		switch n, err := eio.mrt.FromBytes(buf, m, nil); {
+		mr := mrtPool.Get().(*mrt.Mrt) // NB: m.CopyData() called eventually
+		defer mrtPool.Put(mr)
+
+		switch n, err := eio.mrt.FromBytes(buf, m, mr); {
 		case err == mrt.ErrSub:
 			eio.P.PutMsg(m)
 			return nil // silent skip, BGP4MP but not a message
@@ -401,9 +410,18 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 			read_err = ErrLength // dangling bytes after msg?
 		}
 
-	} else if eio.opt_bmp { // BMP message
+	} else if eio.opt_bmp || eio.opt_obmp { // BMP/OBMP message
+		bm := bmpPool.Get().(*bmp.Bmp) // NB: m.CopyData() called eventually
+		defer bmpPool.Put(bm)
+
+		var om *bmp.OpenBmp
+		if eio.opt_obmp {
+			om = obmpPool.Get().(*bmp.OpenBmp)
+			defer obmpPool.Put(om)
+		}
 		eio.bmp.OpenBMP = eio.opt_obmp
-		switch n, err := eio.bmp.FromBytes(buf, m); {
+
+		switch n, err := eio.bmp.FromBytes(buf, m, bm, om); {
 		case err == bmp.ErrNotRouteMonitoring:
 			eio.P.PutMsg(m)
 			return nil // silent skip, not a Route Monitoring message
@@ -423,10 +441,9 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 			// TODO: optimize unmarshal (lookup cache of recently marshaled msgs)
 			read_err = m.FromJSON(buf)
 
-			// convenience
+			// convenience: treat empty messages as KEEPALIVE
 			if read_err == nil && m.Type == msg.INVALID {
 				m.Switch(msg.KEEPALIVE)
-				// m.Marshal(caps.Caps{}) // empty Data TODO: needed?
 			}
 		case buf[0] == '{': // an UPDATE
 			read_err = m.Switch(msg.UPDATE).Update.FromJSON(buf)
@@ -510,7 +527,7 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 		default:
 			read_err = err
 		}
-	} else if eio.opt_bmp { // BMP message(s)
+	} else if eio.opt_bmp || eio.opt_obmp { // BMP/OBMP message(s)
 		eio.bmp.OpenBMP = eio.opt_obmp
 		_, err := eio.bmp.WriteFunc(buf, check)
 		switch err {
@@ -621,56 +638,59 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 			break
 		}
 		_, err = m.WriteTo(bb)
-	case eio.opt_mrt:
-		mr := mrt.NewMrt().Switch(mrt.BGP4MP_ET)
 
-		// marshal into BGP4MP
+	case eio.opt_mrt:
+		// marshal BGP message first
+		err = m.Marshal(eio.P.Caps)
+		if err != nil {
+			break
+		}
+
+		// get MRT from pool
+		mr := mrtPool.Get().(*mrt.Mrt)
+		defer mrtPool.Put(mr)
+		mr.Reset().Switch(mrt.BGP4MP_ET)
+
+		// marshal BGP into BGP4MP
 		err = mr.Bgp4.FromMsg(m)
 		if err != nil {
 			break
 		}
 
-		// marshal into MRT
+		// marshal BGP4MP into MRT
 		err = mr.Marshal()
 		if err != nil {
 			break
 		}
 
 		_, err = mr.WriteTo(bb)
+
 	case eio.opt_exa:
-		x := exa.NewExa()
+		x := exaPool.Get().(*exa.Exa)
+		defer exaPool.Put(x)
+		x.Reset()
+
 		for range x.IterMsg(m) {
 			bb.WriteString(x.String() + "\n") // NB: no error possible
 		}
 
-	case eio.opt_bmp:
-		bm := bmp.NewBmp()
-		bm.MsgType = bmp.MSG_ROUTE_MONITORING
-
-		// set peer info from message context tags (matches bmp reader tags)
-		if tags := mx.GetTags(); tags != nil {
-			if ip, ok := tags["PEER_IP"]; ok {
-				if addr, err := netip.ParseAddr(ip); err == nil {
-					bm.Peer.Address = addr
-					if addr.Is6() {
-						bm.Peer.Flags |= bmp.PEER_FLAG_V6
-					}
-				}
-			}
-			if asStr, ok := tags["PEER_AS"]; ok {
-				if as, err := strconv.ParseUint(asStr, 10, 32); err == nil {
-					bm.Peer.AS = uint32(as)
-				}
-			}
-		}
-		bm.Peer.Time = m.Time
-
-		// marshal BGP message
+	case eio.opt_bmp, eio.opt_obmp:
+		// marshal BGP message first
 		err = m.Marshal(eio.P.Caps)
 		if err != nil {
 			break
 		}
-		bm.BgpData = m.Data
+
+		// get BMP from pool
+		bm := bmpPool.Get().(*bmp.Bmp)
+		defer bmpPool.Put(bm)
+		bm.Reset()
+
+		// marshal BGP into BMP
+		err = bm.FromMsg(m)
+		if err != nil {
+			break
+		}
 
 		// marshal BMP
 		err = bm.Marshal()
@@ -680,22 +700,18 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 
 		// wrap in OpenBMP if needed
 		if eio.opt_obmp {
-			om := bmp.NewOpenBmp()
-			om.ObjType = bmp.OPENBMP_OBJ_RAW
-			om.Time = m.Time
-			om.Data = bm.Bytes() // get BMP bytes
-			// copy collector/router info from tags (matches bmp reader: COLLECTOR, ROUTER)
-			if tags := mx.GetTags(); tags != nil {
-				om.CollectorName = tags["COLLECTOR"]
-				// ROUTER tag could be a name or IP string
-				if router := tags["ROUTER"]; router != "" {
-					if addr, perr := netip.ParseAddr(router); perr == nil {
-						om.RouterIP = addr
-					} else {
-						om.RouterName = router
-					}
-				}
+			// get OpenBMP from pool
+			om := obmpPool.Get().(*bmp.OpenBmp)
+			defer obmpPool.Put(om)
+			om.Reset()
+
+			// populate OpenBMP from BMP (references bm.Bytes() in om.Data)
+			err = om.FromBmp(bm, m)
+			if err != nil {
+				break
 			}
+
+			// marshal OpenBMP
 			err = om.Marshal()
 			if err != nil {
 				break

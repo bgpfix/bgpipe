@@ -28,7 +28,7 @@ func (s *RvLive) processRecord(record *kgo.Record) error {
 	}
 
 	// Only process Route Monitoring messages with BGP data
-	if bm.MsgType != bmp.MSG_ROUTE_MONITORING || len(bm.BgpData) == 0 {
+	if bm.Type != bmp.MSG_ROUTE_MONITORING || len(bm.BgpData) == 0 {
 		return nil
 	}
 
@@ -45,26 +45,32 @@ func (s *RvLive) processRecord(record *kgo.Record) error {
 		return fmt.Errorf("dangling bytes after BGP message: %d/%d", n, len(bm.BgpData))
 	}
 
-	// Add metadata
+	// set time
 	if !bm.Peer.Time.IsZero() {
 		m.Time = bm.Peer.Time
 	} else if !om.Time.IsZero() {
 		m.Time = om.Time
 	}
-	tags := pipe.UseContext(m).UseTags()
-	tags["PEER_IP"] = bm.Peer.Address.String()
-	tags["PEER_AS"] = strconv.FormatUint(uint64(bm.Peer.AS), 10)
 
-	// NB: routeviews puts collector in router name field
+	// add tags
+	tags := pipe.UseContext(m).UseTags()
+	if bm.Peer.Address.IsValid() && !bm.Peer.Address.IsUnspecified() {
+		tags["PEER_IP"] = bm.Peer.Address.String()
+	}
+	if bm.Peer.AS != 0 {
+		tags["PEER_AS"] = strconv.FormatUint(uint64(bm.Peer.AS), 10)
+	}
+
+	// NB: routeviews collector is their internal BMP machine name (bmp*)
+	if om.CollectorName != "" {
+		tags["RV_COLLECTOR"] = om.CollectorName
+	}
+
+	// NB: routeviews puts BGP collector in the router name field
 	if om.RouterName != "" {
 		tags["COLLECTOR"] = om.RouterName
 	} else if col, _ := parseTopic(record.Topic); col != "" {
 		tags["COLLECTOR"] = col
-	}
-
-	// set ROUTER to the router IP for consistency with bmp reader
-	if om.RouterIP.IsValid() {
-		tags["ROUTER"] = om.RouterIP.String()
 	}
 
 	// strip collector AS from AS_PATH?
