@@ -8,25 +8,31 @@
       
       
       
+        <link rel="canonical" href="https://bgpipe.org/stages/rpki/">
       
+      
+        <link rel="prev" href="../rv-live/">
+      
+      
+        <link rel="next" href="../../examples/">
       
       
         
       
       
-      <link rel="icon" href="/img/favicon.png">
+      <link rel="icon" href="../../img/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>bgpipe: BGP reverse proxy</title>
+        <title>rpki - bgpipe: BGP reverse proxy</title>
       
     
     
-      <link rel="stylesheet" href="/assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="/assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -45,9 +51,9 @@
       
     
     
-      <link rel="stylesheet" href="/css/extra.css">
+      <link rel="stylesheet" href="../../css/extra.css">
     
-    <script>__md_scope=new URL("/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -71,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#rpki" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -87,9 +98,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/." title="bgpipe: BGP reverse proxy" class="md-header__button md-logo" aria-label="bgpipe: BGP reverse proxy" data-md-component="logo">
+    <a href="../.." title="bgpipe: BGP reverse proxy" class="md-header__button md-logo" aria-label="bgpipe: BGP reverse proxy" data-md-component="logo">
       
-  <img src="/img/logo-w.png" alt="logo">
+  <img src="../../img/logo-w.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -106,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              rpki
             
           </span>
         </div>
@@ -222,9 +233,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/." title="bgpipe: BGP reverse proxy" class="md-nav__button md-logo" aria-label="bgpipe: BGP reverse proxy" data-md-component="logo">
+    <a href="../.." title="bgpipe: BGP reverse proxy" class="md-nav__button md-logo" aria-label="bgpipe: BGP reverse proxy" data-md-component="logo">
       
-  <img src="/img/logo-w.png" alt="logo">
+  <img src="../../img/logo-w.png" alt="logo">
 
     </a>
     bgpipe: BGP reverse proxy
@@ -251,7 +262,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -278,7 +289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/intro/" class="md-nav__link">
+      <a href="../../intro/" class="md-nav__link">
         
   
   
@@ -305,7 +316,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/quickstart/" class="md-nav__link">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -329,18 +340,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -361,7 +374,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -379,7 +392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -454,7 +467,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/connect/" class="md-nav__link">
+      <a href="../connect/" class="md-nav__link">
         
   
   
@@ -482,7 +495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/listen/" class="md-nav__link">
+      <a href="../listen/" class="md-nav__link">
         
   
   
@@ -510,7 +523,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/speaker/" class="md-nav__link">
+      <a href="../speaker/" class="md-nav__link">
         
   
   
@@ -593,7 +606,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/stdin/" class="md-nav__link">
+      <a href="../stdin/" class="md-nav__link">
         
   
   
@@ -621,7 +634,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/stdout/" class="md-nav__link">
+      <a href="../stdout/" class="md-nav__link">
         
   
   
@@ -649,7 +662,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/read/" class="md-nav__link">
+      <a href="../read/" class="md-nav__link">
         
   
   
@@ -677,7 +690,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/write/" class="md-nav__link">
+      <a href="../write/" class="md-nav__link">
         
   
   
@@ -760,7 +773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/grep/" class="md-nav__link">
+      <a href="../grep/" class="md-nav__link">
         
   
   
@@ -788,7 +801,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/tag/" class="md-nav__link">
+      <a href="../tag/" class="md-nav__link">
         
   
   
@@ -816,7 +829,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/limit/" class="md-nav__link">
+      <a href="../limit/" class="md-nav__link">
         
   
   
@@ -899,7 +912,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/update/" class="md-nav__link">
+      <a href="../update/" class="md-nav__link">
         
   
   
@@ -982,7 +995,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/exec/" class="md-nav__link">
+      <a href="../exec/" class="md-nav__link">
         
   
   
@@ -1010,7 +1023,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/pipe/" class="md-nav__link">
+      <a href="../pipe/" class="md-nav__link">
         
   
   
@@ -1038,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/websocket/" class="md-nav__link">
+      <a href="../websocket/" class="md-nav__link">
         
   
   
@@ -1121,7 +1134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/ris-live/" class="md-nav__link">
+      <a href="../ris-live/" class="md-nav__link">
         
   
   
@@ -1149,7 +1162,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/stages/rv-live/" class="md-nav__link">
+      <a href="../rv-live/" class="md-nav__link">
         
   
   
@@ -1182,18 +1195,20 @@
                 
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" checked>
         
           
           <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="0">
@@ -1214,7 +1229,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1229,10 +1244,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/stages/rpki/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rpki
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1248,6 +1290,120 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#synopsis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synopsis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rtr-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RTR Connection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roa-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROA File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1275,7 +1431,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/examples/" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -1302,7 +1458,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/json-format/" class="md-nav__link">
+      <a href="../../json-format/" class="md-nav__link">
         
   
   
@@ -1329,7 +1485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/filters/" class="md-nav__link">
+      <a href="../../filters/" class="md-nav__link">
         
   
   
@@ -1366,6 +1522,110 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#synopsis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synopsis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rtr-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RTR Connection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roa-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROA File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1378,8 +1638,258 @@
               
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
 
+
+  
+  
+
+
+<h1 id="rpki">rpki<a class="headerlink" href="#rpki" title="Permanent link">&para;</a></h1>
+<p>Validate UPDATE messages using RPKI.</p>
+<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [...] -- rpki [OPTIONS]
+</span></code></pre></div>
+<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
+<p>The <strong>rpki</strong> stage validates BGP UPDATE messages against RPKI (Resource Public
+Key Infrastructure) data. It checks whether the origin AS is authorized to
+announce each prefix, based on ROA (Route Origin Authorization) records.</p>
+<p>Each prefix in an UPDATE is assigned one of three RPKI validation states:</p>
+<ul>
+<li><strong>VALID</strong> - a ROA exists and matches the origin AS and prefix length</li>
+<li><strong>INVALID</strong> - a ROA exists but the origin AS or prefix length does not match</li>
+<li><strong>NOT_FOUND</strong> - no ROA covers this prefix</li>
+</ul>
+<p>The stage obtains ROA data either from an RTR (RPKI-to-Router) server or
+from a local ROA file. By default, it connects to Cloudflare's public RTR
+server at <code>rtr.rpki.cloudflare.com:8282</code>.</p>
+<p>The <code>--invalid</code> option controls how INVALID prefixes are handled:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>withdraw</code></td>
+<td>Move invalid prefixes to the withdrawn list (<a href="https://datatracker.ietf.org/doc/html/rfc7606">RFC 7606</a>)</td>
+</tr>
+<tr>
+<td><code>filter</code></td>
+<td>Remove invalid prefixes from the reachable list</td>
+</tr>
+<tr>
+<td><code>drop</code></td>
+<td>Drop the entire UPDATE if any prefix is invalid</td>
+</tr>
+<tr>
+<td><code>split</code></td>
+<td>Split invalid prefixes into a separate UPDATE that withdraws them</td>
+</tr>
+<tr>
+<td><code>keep</code></td>
+<td>Keep invalid prefixes unchanged (tag only)</td>
+</tr>
+</tbody>
+</table>
+<p>When <code>--tag</code> is enabled (the default), the stage adds <code>rpki/status</code> to
+message tags, which can be used in downstream <a href="../../filters/">filters</a>
+(e.g., <code>tag[rpki/status] == INVALID</code>).</p>
+<p>With <code>--strict</code>, prefixes with NOT_FOUND status are treated the same as
+INVALID. This is an aggressive policy that only allows prefixes with
+explicit RPKI authorization.</p>
+<p>The stage waits for the ROA cache to be populated before processing messages
+(unless <code>--asap</code> is set), ensuring no messages are validated against an
+incomplete cache.</p>
+<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
+<h3 id="rtr-connection">RTR Connection<a class="headerlink" href="#rtr-connection" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--rtr</code></td>
+<td>string</td>
+<td><code>rtr.rpki.cloudflare.com:8282</code></td>
+<td>RTR server address (<code>host:port</code>)</td>
+</tr>
+<tr>
+<td><code>--rtr-refresh</code></td>
+<td>duration</td>
+<td><code>1h</code></td>
+<td>RTR cache refresh interval</td>
+</tr>
+<tr>
+<td><code>--rtr-retry</code></td>
+<td>duration</td>
+<td><code>10m</code></td>
+<td>RTR retry interval on errors</td>
+</tr>
+<tr>
+<td><code>--timeout</code></td>
+<td>duration</td>
+<td><code>15s</code></td>
+<td>Connect timeout; 0 disables</td>
+</tr>
+<tr>
+<td><code>--retry</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Retry connection on errors</td>
+</tr>
+<tr>
+<td><code>--retry-max</code></td>
+<td>int</td>
+<td><code>0</code></td>
+<td>Max retry attempts; 0 means unlimited</td>
+</tr>
+<tr>
+<td><code>--tls</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Connect to RTR server over TLS</td>
+</tr>
+<tr>
+<td><code>--insecure</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Skip TLS certificate validation</td>
+</tr>
+<tr>
+<td><code>--no-ipv6</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Avoid IPv6 when connecting to RTR server</td>
+</tr>
+</tbody>
+</table>
+<h3 id="roa-file">ROA File<a class="headerlink" href="#roa-file" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--file</code></td>
+<td>string</td>
+<td></td>
+<td>Use a local ROA file instead of RTR (JSON or CSV, auto-reloaded)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="validation-policy">Validation Policy<a class="headerlink" href="#validation-policy" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--invalid</code></td>
+<td>string</td>
+<td><code>withdraw</code></td>
+<td>Action for INVALID prefixes: <code>withdraw</code>, <code>filter</code>, <code>drop</code>, <code>split</code>, <code>keep</code></td>
+</tr>
+<tr>
+<td><code>--strict</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Treat NOT_FOUND same as INVALID</td>
+</tr>
+<tr>
+<td><code>--tag</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Add <code>rpki/status</code> to message tags</td>
+</tr>
+<tr>
+<td><code>--event</code></td>
+<td>string</td>
+<td></td>
+<td>Emit this event on RPKI INVALID messages</td>
+</tr>
+<tr>
+<td><code>--asap</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Start validating before ROA cache is ready</td>
+</tr>
+</tbody>
+</table>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<p>Basic RPKI filtering between two routers (default: withdraw invalid):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<p>Keep invalid prefixes but tag them for downstream processing:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rpki/status] == INVALID&#39;</span>
+</span></code></pre></div>
+<p>Strict mode: only allow RPKI-VALID prefixes:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rpki/dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--strict<span class="w"> </span>--invalid<span class="w"> </span>drop<span class="w"> </span>--event<span class="w"> </span>dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<p>Use a local ROA file instead of RTR:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--file<span class="w"> </span>/var/lib/rpki/roas.json<span class="w"> </span>--invalid<span class="w"> </span>filter<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<p>Tag with RPKI status and add a community to invalid routes:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rpki/status] == INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span></code></pre></div>
+<p>Connect to an RTR server over TLS:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--rtr<span class="w"> </span>rpki.example.com:8323<span class="w"> </span>--tls<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<p><a href="../limit/">limit</a>,
+<a href="../grep/">grep</a>,
+<a href="../update/">update</a>,
+<a href="https://datatracker.ietf.org/doc/html/rfc6811">RFC 6811 - RPKI-Based Origin Validation</a>,
+<a href="../">Stages overview</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -1411,10 +1921,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "/", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "/assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="/assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
