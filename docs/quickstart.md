@@ -54,7 +54,7 @@ Supported stages (run <stage> -h to get its help)
 
 From the above output, you can learn the basic syntax of a *pipeline*, which is a sequence of *stages*. Usually the stages are separated by `--` characters; otherwise, `bgpipe` will try to separate the stages automatically, although this can lead to ambiguities for more complex pipelines. Global `bgpipe` options are specified before the first stage, and options for each stage are specified immediately after the stage name.
 
-A *stage* is a specific processing step in the pipeline, such as connecting to a BGP endpoint, filtering messages, or executing a command. You can think of it as a building block that performs a specific task in the overall message processing flow. In order to learn more about a specific stage, you can run `bgpipe <stage> -h`, for example:
+A *stage* is a specific processing step in the pipeline, such as connecting to a BGP endpoint, filtering messages, or executing a command. You can think of it as a building block that performs a specific task in the overall message processing flow. For a catalog of stages and their options, see the [Stages overview](stages/index.md) and the per-stage docs. In order to learn more about a specific stage, you can run `bgpipe <stage> -h`, for example:
 
 ```
 $ bgpipe connect -h
@@ -88,7 +88,7 @@ For writing BGP message filters used by the `grep` and `drop` stages, see the de
 
 Let's demonstrate basic message processing by reading MRT files. MRT files are a standard format for storing BGP messages, and `bgpipe` can read them from a file or a URL. You can even stream MRT files directly from the [RIPE NCC RIS](https://ris.ripe.net/docs/mrt/) or [RouteViews](https://archive.routeviews.org/) archives.
 
-Below is an example of reading a compressed MRT file from the RIPE NCC RIS archive, filtering it for a specific prefix, and printing the results to stdout:
+Below is an example of reading a compressed MRT file from the RIPE NCC RIS archive, filtering it for a specific prefix, and printing the results to stdout (see [read](stages/read.md), [grep](stages/grep.md), and [stdout](stages/stdout.md)):
 
 ```json
 $ bgpipe \
@@ -133,7 +133,7 @@ $ bgpipe -o \
 
 ## Connecting to a BGP speaker
 
-Now that you know how to read MRT files, let's connect to a BGP speaker and process messages in real-time. You can use the `connect` stage to establish the TCP connection, and the `speaker` stage to open and maintain a BGP session.
+Now that you know how to read MRT files, let's connect to a BGP speaker and process messages in real-time. You can use the [connect](stages/connect.md) stage to establish the TCP connection, and the [speaker](stages/speaker.md) stage to open and maintain a BGP session.
 
 We will use this opportunity to connect to one of [the BGP projects run by Łukasz Bromirski](https://lukasz.bromirski.net/projects/). The following command connects to the [BGP Blackholing with Flowspec endpoint](https://lukasz.bromirski.net/bgp-fs-blackholing/) and prints the conversation to stdout, which demonstrates that `bgpipe` supports [Flowspec](https://datatracker.ietf.org/doc/html/rfc8955):
 
@@ -156,7 +156,7 @@ $ bgpipe -o \
 
 ## Proxying BGP sessions
 
-Let's now see how to use `bgpipe` to proxy BGP sessions. You can use the `listen` stage to accept incoming connections on one side, and the `connect` stage to forward BGP messages to another router on another side. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.
+Let's now see how to use `bgpipe` to proxy BGP sessions. You can use the [listen](stages/listen.md) stage to accept incoming connections on one side, and the [connect](stages/connect.md) stage to forward BGP messages to another router on another side. This allows you to create a transparent proxy that can filter, modify, or log BGP messages.
 
 For example, let's use the [Vultr's BGP feature](https://docs.vultr.com/configuring-bgp-on-vultr), where you already have a local BIRD instance, with the following configuration:
 
@@ -220,7 +220,7 @@ Finally, restart your BIRD instance and you should see `bgpipe` reporting new co
 
 ## Filtering with Python scripts
 
-The `exec` stage lets you process BGP messages with external scripts. `bgpipe` sends JSON arrays (see [JSON format docs](json-format.md)) to the script's stdin and reads modified/filtered messages from stdout. This makes it easy to implement custom BGP logic in any language.
+The [exec](stages/exec.md) stage lets you process BGP messages with external scripts. `bgpipe` sends JSON arrays (see [JSON format docs](json-format.md)) to the script's stdin and reads modified/filtered messages from stdout. This makes it easy to implement custom BGP logic in any language.
 
 Here's a simple Python script that only allows IPv4 prefixes shorter than `/16`:
 

@@ -1,6 +1,8 @@
-Below are practical examples to help you get started with  `bgpipe`  after you went through the [quickstart guide](quickstart.md). These examples demonstrate how to use  `bgpipe`  for various BGP-related tasks, such as connecting to BGP speakers, reading MRT files, filtering messages, and more.
+Below are practical examples to help you get started with  `bgpipe`  after you went through the [quickstart guide](quickstart.md). These examples demonstrate how to use  `bgpipe`  for various BGP-related tasks, such as connecting to BGP speakers, reading MRT files, filtering messages, and more. For stage details, see the [Stages overview](stages/index.md) and the per-stage docs.
 
 ## Connect to a BGP speaker
+
+Stages: [speaker](stages/speaker.md), [connect](stages/connect.md), [stdout](stages/stdout.md)
 
 Connect to a BGP speaker and respond to OPEN message using the same ASN. Note that if an IP address is used as a stage, it is a shorthand for `connect <ip>`. The command dumps the session in JSON format to stdout, since the `-o` option is enabled. It's useful for debugging and monitoring BGP sessions, allowing you to see the raw BGP messages.
 
@@ -9,6 +11,8 @@ bgpipe -o speaker -- 1.2.3.4
 ```
 
 ## JSON to BGP and back
+
+Stages: [stdin](stages/stdin.md), [speaker](stages/speaker.md), [connect](stages/connect.md), [stdout](stages/stdout.md)
 
 Convert a JSON input file to BGP messages, send them to a BGP speaker, and capture the output back in JSON format. This example is useful for testing BGP message processing in remote speakers.
 
@@ -20,6 +24,8 @@ cat input.json \
 
 ## Convert MRT files to JSON
 
+Stages: [read](stages/read.md), [write](stages/write.md)
+
 Read MRT updates from a compressed file and convert the updates to JSON format. This is particularly useful for analyzing historical BGP data stored in MRT files, which are often used for archiving BGP updates.
 
 ```bash
@@ -30,6 +36,8 @@ bgpipe \
 
 ## Adding TCP-MD5
 
+Stages: [listen](stages/listen.md), [connect](stages/connect.md), [stdout](stages/stdout.md)
+
 Set up a proxy that listens on TCP port 179, waits for a connection, and then proxies it to `1.2.3.4` with a [popular](https://www.theregister.com/2020/12/16/solarwinds_github_password/) TCP-MD5 password. The conversation is printed to stdout. This setup is useful for "securing" BGP sessions, ensuring that only authorized peers can establish a TCP connection. It supports multi-hop scenarios.
 
 ```bash
@@ -39,6 +47,8 @@ bgpipe -o \
 ```
 
 ## Stream MRT files to BGP routers
+
+Stages: [speaker](stages/speaker.md), [read](stages/read.md), [listen](stages/listen.md)
 
 Listen for new connections on TCP port 179. Configure an active BGP speaker for `AS65055` that streams a given MRT file when the BGP session is established. This example demonstrates how to replay historical BGP data in a live BGP session, which can be useful for testing and analysis.
 
@@ -51,6 +61,8 @@ bgpipe \
 
 ## BGP sed-in-the-middle proxy
 
+Stages: [connect](stages/connect.md), [exec](stages/exec.md)
+
 Create a BGP proxy that connects `1.2.3.4` with [85.232.240.179](https://lukasz.bromirski.net/post/bgp-w-labie-3/), but rewrites ASNs in their OPEN messages using [sed](https://en.wikipedia.org/wiki/Sed). This is useful for quickly testing and modifying BGP sessions on the fly, allowing you to simulate different network scenarios.
 
 ```bash
@@ -61,6 +73,8 @@ bgpipe \
 ```
 
 ## Applying prefix limits
+
+Stages: [connect](stages/connect.md), [limit](stages/limit.md)
 
 Filter BGP updates based on prefix lengths and enforce maximum prefix session limits for both IPv4 and IPv6 connections. This helps in managing and securing BGP sessions by limiting the number of prefixes, which can prevent [resource exhaustion](https://kirin-attack.github.io/).
 
@@ -74,6 +88,8 @@ bgpipe --kill limit/session \
 
 ## Archive BGP sessions over encrypted WebSockets
 
+Stages: [connect](stages/connect.md), [websocket](stages/websocket.md)
+
 Stream the BGP session log in JSON format to a remote WebSocket server for real-time monitoring and archiving. This is useful for integrating BGP session data with external monitoring systems, providing a live feed of BGP activity.
 
 ```bash
@@ -84,6 +100,8 @@ bgpipe \
 ```
 
 ## Grep for BGP messages in live sessions
+
+Stages: [connect](stages/connect.md), [grep](stages/grep.md)
 
 Proxy a connection between two BGP peers, allowing only IPv6 updates from origin AS `12345`. This is useful for environments that wish to only accept IPv6 prefixes from a specific ASN. The `grep` stage allows for [complex filtering](./filters.md) based on various criteria such as message type, prefix, AS_PATH, and more.
 
@@ -96,6 +114,8 @@ bgpipe \
 
 ## Monitor BGP prefixes in real-time
 
+Stages: [ris-live](stages/ris-live.md), [grep](stages/grep.md), [stdout](stages/stdout.md)
+
 Connect to [RIPE RIS Live](https://ris-live.ripe.net/) to stream real-time BGP updates from many route collectors, and filter for a specific prefix you're monitoring. RIS Live provides a view of the global BGP routing table without needing your own BGP connections - perfect for network security monitoring, research, and troubleshooting.
 
 ```bash
@@ -107,6 +127,8 @@ bgpipe -g \
 ```
 
 ## Stream live BGP with RPKI filtering
+
+Stages: [ris-live](stages/ris-live.md), [rpki](stages/rpki.md), [update](stages/update.md), [write](stages/write.md)
 
 Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against [BGP hijacking](https://en.wikipedia.org/wiki/BGP_hijacking) and route leaks. The updates will not be modified on the BGP level (`--invalid=keep` flag), but will be tagged with `rpki/status = INVALID`. The `update` stage is then used to add a community `123:456` to invalid updates for easy identification. Finally, the stream is saved to a file in JSON format.
 
@@ -121,6 +143,8 @@ bgpipe -g \
 
 ## Secure your BGP sessions with RPKI
 
+Stages: [listen](stages/listen.md), [rpki](stages/rpki.md), [connect](stages/connect.md)
+
 Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can use `--file` to load a local ROA cache).
 
 ```bash
@@ -133,6 +157,8 @@ bgpipe \
 
 ## Strict RPKI enforcement mode
 
+Stages: [listen](stages/listen.md), [rpki](stages/rpki.md), [connect](stages/connect.md)
+
 Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from `1.2.3.4` clients forwarded to `5.6.7.8` where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.
 
 ```bash
@@ -143,7 +169,25 @@ bgpipe --events rpki/dropped \
   -- connect 5.6.7.8
 ```
 
+## Real-time invalid-route quarantine
+
+Stages: [ris-live](stages/ris-live.md), [rpki](stages/rpki.md), [grep](stages/grep.md), [update](stages/update.md), [write](stages/write.md), [websocket](stages/websocket.md)
+
+Tag, quarantine, and mirror only RPKI-invalid announcements in real time. This keeps a clean audit trail for responders while streaming live alerts to a remote monitor.
+
+```bash
+bgpipe -g \
+  -- ris-live \
+  -- rpki --invalid keep \
+  -- grep 'tag[rpki/status] == INVALID' \
+  -- update --add-com 65000:666 \
+  -- write invalid-routes.$TIME.json \
+  -- websocket --write wss://monitor.example.com/bgp
+```
+
 ## Rate limiting and sampling BGP streams
+
+Stages: [ris-live](stages/ris-live.md), [write](stages/write.md), [listen](stages/listen.md), [connect](stages/connect.md)
 
 Protect downstream systems from [BGP update storms](https://www.cidr-report.org/as2.0/#Leak-Statistics) by rate limiting message flow, or sample high-volume feeds for statistical analysis. The `--rate-limit` flag delays messages to maintain a maximum rate (messages per second), while `--rate-sample` randomly samples messages when over the rate threshold, discarding excess messages. This is particularly useful when processing RIS Live feeds or during BGP convergence events.
 
@@ -160,6 +204,8 @@ bgpipe \
 ```
 
 ## ExaBGP compatibility
+
+Stages: [listen](stages/listen.md), [exec](stages/exec.md), [connect](stages/connect.md), [stdin](stages/stdin.md), [stdout](stages/stdout.md)
 
 Use the `--format=exa` flag to read and write [ExaBGP](https://github.com/Exa-Networks/exabgp) line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.
 
