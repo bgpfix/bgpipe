@@ -2,6 +2,32 @@ nav:
   - Home: index.md
   - Introduction: intro.md
   - Quick Start: quickstart.md
+  - Stages:
+    - Overview: stages/index.md
+    - Connection:
+      - connect: stages/connect.md
+      - listen: stages/listen.md
+      - speaker: stages/speaker.md
+    - Input / Output:
+      - stdin: stages/stdin.md
+      - stdout: stages/stdout.md
+      - read: stages/read.md
+      - write: stages/write.md
+    - Filtering:
+      - grep / drop: stages/grep.md
+      - tag: stages/tag.md
+      - limit: stages/limit.md
+    - Modification:
+      - update: stages/update.md
+    - External Processing:
+      - exec: stages/exec.md
+      - pipe: stages/pipe.md
+      - websocket: stages/websocket.md
+    - Live Streaming:
+      - ris-live: stages/ris-live.md
+      - rv-live: stages/rv-live.md
+    - Security:
+      - rpki: stages/rpki.md
   - Examples: examples.md
   - JSON Format: json-format.md
   - Message Filters: filters.md
@@ -42,6 +68,8 @@ extra_css:
   - css/extra.css
 
 markdown_extensions:
+  - admonition
+  - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -57,3 +85,5 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - attr_list
   - md_in_html
+  - toc:
+      permalink: true

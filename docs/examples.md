@@ -102,7 +102,7 @@ Connect to [RIPE RIS Live](https://ris-live.ripe.net/) to stream real-time BGP u
 # Monitor all announcements for your network prefix
 bgpipe -g \
   -- ris-live \
-  -- grep 'prefix ~ 1.1.1.0/24'
+  -- grep 'prefix ~ 1.1.1.0/24' \
   -- stdout
 ```
 

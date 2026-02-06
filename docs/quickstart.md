@@ -31,6 +31,7 @@ Options:
   -I, --stdin-wait       like --stdin but wait for EVENT_ESTABLISHED
   -O, --stdout-wait      like --stdout but wait for EVENT_EOR
   -2, --short-asn        use 2-byte ASN numbers
+  -g, --guess-asn        guess AS number byte size
       --caps string      use given BGP capabilities (JSON format)
 
 Supported stages (run <stage> -h to get its help)
@@ -62,8 +63,9 @@ Stage usage: connect [OPTIONS] ADDR
 Description: connect to a BGP endpoint over TCP
 
 Options:
-      --timeout duration   connect timeout (0 means none) (default 1m0s)
-      --closed duration    half-closed timeout (0 means none) (default 1s)
+  --timeout duration   TCP connect timeout (0 means off) (default 15s)
+  --closed-timeout duration
+           TCP half-closed timeout (0 means off) (default 1s)
       --md5 string         TCP MD5 password
 
 Common Options:
@@ -76,7 +78,7 @@ Common Options:
   -O, --of string          stage output filter (drop non-matching output)
 ```
 
-As you can see, the `connect` stage has its own set of options, such as `--timeout`, `--closed`, and `--md5`, which are specific to establishing a BGP connection. The common options, such as `-L`, `-R`, etc. are available for all stages and control how the stage operates in the pipeline context.
+As you can see, the `connect` stage has its own set of options, such as `--timeout`, `--closed-timeout`, and `--md5`, which are specific to establishing a BGP connection. The common options, such as `-L`, `-R`, etc. are available for all stages and control how the stage operates in the pipeline context.
 
 By default, all stages operate in the *right* (`-R`) direction, meaning that they process BGP messages flowing from left to right. The direction controls which messages to capture for processing in a stage, and where to send new messages. However, if the last stage connects to a BGP endpoint, by default it will operate in the *left* (`-L`) direction, meaning it will send new messages to the left of the pipeline. Usually, the left-most and/or right-most stage is the one that connects to a BGP endpoint, while the other stages process messages in between. If you want bidirectional processing, use the `-L` and `-R` options together, ie. `-LR`.
 
