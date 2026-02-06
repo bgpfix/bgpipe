@@ -68,11 +68,11 @@ func NewLimit(parent *core.StageBase) core.Stage {
 	so.Descr = "limit prefix lengths and counts"
 
 	so.Events = map[string]string{
-		"long":   "too long prefix announced",
-		"short":  "too short prefix announced",
-		"count":  "too many prefixes reachable over the session",
-		"origin": "too many prefixes for a single AS origin",
-		"block":  "too many prefixes for a single IP block",
+		"long":    "too long prefix announced",
+		"short":   "too short prefix announced",
+		"session": "too many prefixes reachable over the session",
+		"origin":  "too many prefixes for a single AS origin",
+		"block":   "too many prefixes for a single IP block",
 	}
 
 	so.Bidir = true // will aggregate both directions
