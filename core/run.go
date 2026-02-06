@@ -83,20 +83,22 @@ func (s *StageBase) runStop(ev *pipe.Event) bool {
 		s.Debug().Stringer("ev", ev).Msg("stopping")
 	}
 
-	err := ErrStageStopped
-
-	// still running?
+	// stage Run() still did not return?
 	if s.running.Load() {
 		// request to stop
-		err_stop := s.Stage.Stop()
-		if err_stop != nil {
-			err = err_stop
-		}
+		go func() {
+			err := s.Stage.Stop()
+			if err != nil {
+				s.Err(err).Msg("stage Stop() error")
+			}
+		}()
 
 		// give it 1s to exit cleanly
 		select {
 		case <-s.done:
-		case <-time.After(time.Second):
+		case <-time.After(1 * time.Second):
+			s.Warn().Msg("stop timeout, forcing cancel")
+			s.Cancel(ErrStageStopped)
 		}
 	}
 
@@ -109,9 +111,10 @@ func (s *StageBase) runStop(ev *pipe.Event) bool {
 	}
 
 	// pull the plug
-	s.Cancel(err)
+	s.Cancel(ErrStageStopped)
 	s.running.Store(false)
 	s.wgAdd(-1)
 	s.Event("STOP")
+	s.Debug().Msg("stopped")
 	return false
 }
