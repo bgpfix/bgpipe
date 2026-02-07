@@ -90,6 +90,9 @@ func (s *RisLive) Run() error {
 	// HTTP client with connect timeout
 	client := &http.Client{
 		Transport: &http.Transport{
+			DisableKeepAlives: true,      // use 1 dedicated TCP connection per 1 stream session
+			ReadBufferSize:    64 * 1024, // 64KiB read buffer
+
 			DialContext: (&net.Dialer{
 				Timeout: s.timeout,
 			}).DialContext,

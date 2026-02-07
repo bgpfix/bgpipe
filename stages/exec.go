@@ -88,8 +88,8 @@ func (s *Exec) Prepare() (err error) {
 
 // Stop stops the flow of data
 func (s *Exec) Stop() error {
-	s.eio.InputClose()
 	s.eio.OutputClose()
+	s.eio.InputClose()
 	return nil
 }
 
@@ -129,6 +129,7 @@ func (s *Exec) Run() (err error) {
 			s.Debug().Err(err).Msg("stdout reader done")
 			if err == nil {
 				if stdout_ok {
+					stdout_reader_done = nil
 					continue // it's fine
 				} else {
 					err = io.EOF // it shouldn't end
@@ -137,9 +138,13 @@ func (s *Exec) Run() (err error) {
 			return fmt.Errorf("stdout closed: %w", err)
 		case err := <-stdin_writer_done:
 			s.Debug().Err(err).Msg("stdin writer done")
-			if err != nil && stdin_ok {
-				stdin_writer_done = nil // continue, ignore stdin
-				continue
+			if err == nil {
+				if stdin_ok {
+					stdin_writer_done = nil
+					continue // it's fine
+				} else {
+					err = io.EOF
+				}
 			}
 			return fmt.Errorf("stdin closed: %w", err)
 		case err := <-stderr_reader_done:
