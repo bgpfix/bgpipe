@@ -350,7 +350,7 @@ func (eio *Extio) Attach() error {
 
 	// not read-only? capture bgpipe output to eio.Output
 	if !opt_read {
-		eio.Callback = p.OnMsg(eio.SendMsg, eio.Dir)
+		eio.Callback = p.OnMsg(eio.OnMsg, eio.Dir)
 
 		// override capture direction?
 		cb := eio.Callback
@@ -613,20 +613,16 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 	return true
 }
 
-// SendMsg queues BGP message to the process. Can be used concurrently.
-func (eio *Extio) SendMsg(m *msg.Msg) bool {
+// OnMsg queues BGP message to the process. Can be used concurrently.
+func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 	// should skip message type? (NB: --type already handled by the callback manager)
 	if eio.opt_skip != nil && eio.opt_skip[m.Type] {
 		return true
 	}
 
 	// filter the message?
-	mx := pipe.UseContext(m)
-	if !eio.opt_copy {
-		// TODO: if borrow not set already, add the flag and keep m for later re-use (if enabled)
-		//       NB: in such a case, we won't be able to re-use m easily?
-		mx.Action.Drop()
-	}
+	// NB: avoid modifying mx.Action before serialization
+	keep = eio.opt_copy
 
 	// copy to a bytes buffer
 	var err error
@@ -726,16 +722,16 @@ func (eio *Extio) SendMsg(m *msg.Msg) bool {
 	}
 	if err != nil {
 		eio.Warn().Err(err).Msg("extio write error")
-		return true
+		return keep
 	}
 
 	// try writing, don't panic on channel closed [1]
 	if !util.Send(eio.Output, bb) {
-		mx.Callback.Drop()
-		return true
+		pipe.UseContext(m).Callback.Blackhole()
+		return keep
 	}
 
-	return true
+	return keep
 }
 
 // WriteStream rewrites eio.Output to w.
@@ -760,7 +756,7 @@ func (eio *Extio) Put(bb *bytebufferpool.ByteBuffer) {
 
 // OutputClose closes eio.Output, stopping the flow from bgpipe to the process
 func (eio *Extio) OutputClose() error {
-	eio.Callback.Drop()
+	eio.Callback.Blackhole()
 	util.Close(eio.Output)
 	return nil
 }
