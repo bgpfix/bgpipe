@@ -135,7 +135,7 @@ func (s *Exec) Run() (err error) {
 					err = io.EOF // it shouldn't end
 				}
 			}
-			return fmt.Errorf("stdout closed: %v", err)
+			return fmt.Errorf("stdout closed: %w", err)
 		case err := <-stdin_writer_done:
 			s.Debug().Err(err).Msg("stdin writer done")
 			if err == nil {
@@ -146,7 +146,7 @@ func (s *Exec) Run() (err error) {
 					err = io.EOF
 				}
 			}
-			return fmt.Errorf("stdin closed: %v", err)
+			return fmt.Errorf("stdin closed: %w", err)
 		case err := <-stderr_reader_done:
 			s.Debug().Err(err).Msg("stderr reader done")
 			stderr_reader_done = nil // continue, ignore stderr
