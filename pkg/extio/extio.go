@@ -756,7 +756,9 @@ func (eio *Extio) Put(bb *bytebufferpool.ByteBuffer) {
 
 // OutputClose closes eio.Output, stopping the flow from bgpipe to the process
 func (eio *Extio) OutputClose() error {
-	eio.Callback.Blackhole()
+	if eio.Callback != nil {
+		eio.Callback.Blackhole()
+	}
 	util.Close(eio.Output)
 	return nil
 }
