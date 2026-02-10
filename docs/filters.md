@@ -1,187 +1,346 @@
-## Overview
+# Message Filters
 
-This page explains how to write BGP message filters, used eg. in the `grep` and `drop` stages in `bgpipe`.
-Filters let you keep (`grep`) or remove (`drop`) BGP messages based on message type,
-NLRI/prefixes, next-hop, AS path, communities, tags, and more.
+Filters let you select BGP messages based on type, prefixes, AS path, origin, MED, LOCAL_PREF, communities, tags, and more.
+They are used by the [`grep`](stages/grep.md) and [`drop`](stages/grep.md) stages, and by the `--if` and `--of` options on any stage.
 
-Summary:
+- `grep FILTER` — keep only matching messages
+- `drop FILTER` — remove matching messages
+- `STAGE --if FILTER` — skip stage processing for non-matching messages (input filter)
+- `STAGE --of FILTER` — drop non-matching stage output (output filter)
 
-- Use `grep <FILTER>` to keep only the messages that match FILTER
-- Use `drop <FILTER>` to remove the messages that match FILTER
-- Use `<stage> --if <CONDITION>` to skip a stage completely if the message does not match CONDITION first (`--if` here corresponds to stage **i**nput **f**ilter)
-- Combine multiple expressions with `&&` (AND) and `||` (OR)
-- Use `(...)` to group and `!` to negate expressions
-
-Examples:
+## Quick Examples
 
 ```bash
 # keep only IPv6 updates from AS65000
-bgpipe -o read updates.mrt.gz \
-  -- grep 'ipv6 && as_origin == 65000'
+bgpipe -o read updates.mrt.gz -- grep 'ipv6 && as_origin == 65000'
 
-# drop non-IPv6 updates from AS_PATHs that end with ASN matching 204[0-9]+
-bgpipe -o read updates.mrt.gz \
-  -- drop '!ipv6 && as_path ~ ,204[0-9]+$'
+# drop non-IPv6 updates where AS_PATH ends with ASN matching 204xxx
+bgpipe -o read updates.mrt.gz -- drop '!ipv6 && aspath ~ ,204[0-9]+$'
 
-# only for UPDATEs originated by AS15169, drop if no prefixes match 8.0.0.0/8
-bgpipe -o read updates.mrt.gz \
-  -- grep --if 'as_origin == 15169' 'prefix ~ 8.0.0.0/8'
+# only for UPDATEs from AS15169, keep those with prefixes overlapping 8.0.0.0/8
+bgpipe -o read updates.mrt.gz -- grep --if 'as_origin == 15169' 'prefix ~ 8.0.0.0/8'
+
+# drop routes with long AS paths or incomplete origin
+bgpipe -o read updates.mrt.gz -- drop 'aspath_len > 10 || origin == incomplete'
+
+# keep only routes with local_pref above default
+bgpipe -o read updates.mrt.gz -- grep 'local_pref > 100'
 ```
 
-## Filter Syntax
+## Syntax
 
-A filter is made of one or more expressions:
+A filter is one or more expressions chained with `&&` (AND) and `||` (OR):
 
-* Expression - one of:
-    * `attribute` or `attribute[index]`
-    * `attribute operator value` or `attribute[index] operator value`
-* Chain expressions with `&&` (AND) and `||` (OR)
-* Group with `( ... )`
-* Negate with `!`
+```
+[!] attribute[index] [operator value] [&& | ||] ...
+```
 
-Where:
+- `( ... )` — group expressions
+- `!` — negate an expression
+- `attribute` — what to test (e.g., `prefix`, `aspath`, `community`)
+- `[index]` — optional selector within the attribute
+- `operator value` — comparison; when omitted, tests for attribute existence
 
-* `attribute`: which message attribute you want to test, eg. `prefix`, `aspath`, etc.
-* `[index]`: an optional selector within that attribute (e.g., `aspath[1]`, `tag[env]`)
-* `operator`: value comparison operator (see below)
-* `value`: value to compare against (strings can be double-quoted with `"..."`)
+### Operators
 
-Supported operators:
+| Operator  | Aliases  | Meaning                                  |
+|-----------|----------|------------------------------------------|
+| `==`      | `=`      | Equal                                    |
+| `!=`      | `=!`     | Not equal                                |
+| `<`       |          | Less than (attribute-specific semantics) |
+| `<=`      |          | Less than or equal                       |
+| `>`       |          | Greater than (attribute-specific semantics) |
+| `>=`      |          | Greater than or equal                    |
+| `~`       |          | Match (attribute-specific: overlap, regex, containment) |
+| `!~`      | `~!`     | Negative match                           |
 
-- `==` or `=`: equality
-- `!=`: inequality (implemented as negated equality)
-- `<`, `<=`, `>`, `>=`: numeric comparisons (where applicable)
-- `~`: match (attribute-specific, e.g., prefix overlap, membership)
-- `!~`: negative match (negated membership)
+### Values
 
-Values:
+- Unquoted tokens: `65000`, `8.0.0.0/8`, `UPDATE`
+- Quoted strings: `"65000:100"` (supports `\\` escaping)
+- Numbers: integers, floats, hex (`0x...`)
 
-- Unquoted tokens, or quoted strings `"..."` (supports `\\` escaping)
-- Numbers are parsed as integers or floats (0x... supported for ints)
+### Important Notes
 
-Important: Most attributes apply to UPDATE messages only. If your filter
-uses UPDATE-only attributes (e.g., prefix/aspath/communities) and the message
-is not an UPDATE (e.g., OPEN/KEEPALIVE), that expression evaluates to false.
-Use `type` conditions if you want to match non-UPDATE messages.
+- Most attributes apply to **UPDATE messages only**. Non-UPDATE messages (OPEN, KEEPALIVE, etc.) evaluate to `false` for UPDATE-only attributes. Use `type` conditions for non-UPDATE matching.
+- The `~` operator uses **Go regexp syntax** (not shell globs) when matching strings.
+- `&&` binds tighter than `||`: `A && B || C` is evaluated as `(A && B) || C`. Use parentheses for explicit grouping when mixing operators.
 
 ## Attributes
 
-Below are the attributes you can use. Some keywords are
-shortcuts that expand to comparisons on `type` or `af`.
+### Message Type
 
-### Message type
+| Attribute    | Operators | Description                              |
+|-------------|-----------|------------------------------------------|
+| `type`      | `==`, `!=` | Explicit type comparison: `UPDATE`, `OPEN`, `KEEPALIVE`, `NOTIFY`, `REFRESH` |
 
-- `type`: explicit type comparison
-- Shortcuts: `update`, `open`, `keepalive`
+**Shortcuts** (no operator needed):
+
+| Shortcut    | Equivalent           |
+|-------------|----------------------|
+| `update`    | `type == UPDATE`     |
+| `open`      | `type == OPEN`       |
+| `keepalive` | `type == KEEPALIVE`  |
 
 Examples:
 
 ```text
-update                     # same as: type == UPDATE
+update                     # match UPDATE messages
 open || keepalive          # match session control messages
-!update || type == OPEN    # only OPEN, not UPDATE
+!update                    # match everything except UPDATEs
+type == NOTIFY             # match NOTIFICATION messages
 ```
 
-### Address family
+### Address Family
 
-- `af`: address family (AFI/SAFI)
-- Shortcuts: `ipv4` (`af == IPV4/UNICAST`), `ipv6` (`af == IPV6/UNICAST`)
+| Attribute | Operators | Description                              |
+|-----------|-----------|------------------------------------------|
+| `af`      | `==`      | Address family (AFI/SAFI). Only `==` is supported. |
+
+**Shortcuts:**
+
+| Shortcut | Equivalent           |
+|----------|----------------------|
+| `ipv4`   | `af == IPV4/UNICAST` |
+| `ipv6`   | `af == IPV6/UNICAST` |
+
+The `af` value can match by full AFI/SAFI (e.g., `IPV4/UNICAST`), by AFI alone (e.g., `IPV4`), or by SAFI alone (e.g., `UNICAST`).
 
 Examples:
 
 ```text
-ipv4 && update
-ipv6 && prefix ~ 2001:db8::/32
+ipv4 && update                   # IPv4 unicast updates
+ipv6                             # IPv6 unicast
+af == IPV4/FLOWSPEC              # IPv4 Flowspec
+af == IPV6                       # any IPv6 (unicast, multicast, etc.)
 ```
 
-### NLRI / prefixes
+### Prefixes (NLRI)
 
-- `reach`: prefixes in MP_REACH or classic IPv4 reachability
-- `unreach`: prefixes in MP_UNREACH or classic IPv4 withdrawals
-- `prefix`: union of `reach` and `unreach`
+| Attribute | Operators                    | Description                            |
+|-----------|------------------------------|----------------------------------------|
+| `prefix`  | `==`, `~`, `<`, `<=`, `>`, `>=` | Any prefix (reach or unreach)      |
+| `reach`   | `==`, `~`, `<`, `<=`, `>`, `>=` | Announced prefixes only            |
+| `unreach` | `==`, `~`, `<`, `<=`, `>`, `>=` | Withdrawn prefixes only            |
 
-Operators:
+Prefixes include both classic IPv4 NLRI and MP-BGP (MP_REACH/MP_UNREACH) prefixes.
 
-- `==` exact match, e.g. `prefix == 203.0.113.0/24`
-- `~` overlap (subnet) test, e.g. `prefix ~ 203.0.113.0/24`
+**Operator semantics for prefixes:**
+
+| Operator | Meaning                                                                 |
+|----------|-------------------------------------------------------------------------|
+| `==`     | Exact match: same address and prefix length                             |
+| `~`      | Overlap: message prefix and reference prefix overlap in any way         |
+| `<`      | Message prefix is **more specific** (longer) than reference, and overlaps |
+| `<=`     | Message prefix is more specific or equal, and overlaps                  |
+| `>`      | Message prefix is **less specific** (shorter) than reference, and overlaps |
+| `>=`     | Message prefix is less specific or equal, and overlaps                  |
+
+By default, a match succeeds if **any** prefix in the message matches. Use `prefix[*]` to require **all** prefixes to match.
 
 Examples:
 
 ```text
-prefix ~ 8.0.0.0/8            # any prefix overlapping 8/8
-reach == 203.0.113.0/24       # exact announcement of 203.0.113.0/24
-unreach ~ 2001:db8::/32       # any withdrawal inside 2001:db8::/32
+prefix ~ 8.0.0.0/8             # any prefix overlapping 8.0.0.0/8
+reach == 203.0.113.0/24        # exact announcement
+unreach ~ 2001:db8::/32        # any IPv6 withdrawal overlapping 2001:db8::/32
+prefix < 10.0.0.0/8            # more specific than /8 (e.g., 10.1.0.0/16)
+prefix > 10.1.0.0/16           # less specific than /16 (e.g., 10.0.0.0/8)
+prefix[*] ~ 8.0.0.0/8          # ALL prefixes in message overlap 8.0.0.0/8
 ```
 
-### Next-hop
+### Next-Hop
 
-- `nexthop` or `nh`: match next-hop IP
+| Attribute    | Operators                    | Description              |
+|-------------|------------------------------|--------------------------|
+| `nexthop`   | `==`, `~`, `<`, `<=`, `>`, `>=` | Next-hop IP address  |
+| `nh`        | *(alias for `nexthop`)*      |                          |
+
+**Operator semantics for next-hop:**
+
+| Operator | Meaning                                               |
+|----------|-------------------------------------------------------|
+| `==`     | Exact IP address match                                |
+| `~`      | Next-hop is **contained** in the given CIDR prefix    |
+| `<`, `<=`, `>`, `>=` | Numeric IP address comparison            |
 
 Examples:
 
 ```text
-nh == 192.0.2.1
-nexthop ~ 2001:db8::/64
+nh == 192.0.2.1                # exact next-hop match
+nexthop ~ 2001:db8::/64        # next-hop within this IPv6 prefix
+nexthop ~ 0.0.0.0/0            # any next-hop (always matches)
 ```
 
-### AS path
+### AS Path
 
- * `aspath` matches full AS_PATH
- * `aspath[index]` matches particular index
- * Shortcuts:
-    * `as_origin` is origin AS (rightmost, index -1)
-    * `as_upstream` is upstream of origin (index -2)
-    * `as_peer` is neighbor/peer AS (leftmost, index 0)
+| Attribute      | Operators                    | Description                     |
+|---------------|------------------------------|---------------------------------|
+| `aspath`      | `==`, `~`, `<`, `<=`, `>`, `>=` | Full AS_PATH                |
+| `aspath[N]`   | `==`, `<`, `<=`, `>`, `>=`  | Specific hop by index           |
+| `as_origin`   | `==`, `<`, `<=`, `>`, `>=`  | Origin AS (last hop, index -1)  |
+| `as_upstream`  | `==`, `<`, `<=`, `>`, `>=` | Upstream of origin (index -2)   |
+| `as_peer`     | `==`, `<`, `<=`, `>`, `>=`  | Peer AS (first hop, index 0)    |
+| `aspath_len`  | `==`, `<`, `<=`, `>`, `>=`  | AS_PATH length (hop count)      |
 
-Indexing rules:
+**Index rules:**
 
-- Numeric indexes pick a specific position: `aspath[0]` is the leftmost AS (peer).
-- Negative indexes count from the right: `aspath[-1]` is the origin; `aspath[-2]` upstream of origin.
-- If you omit the index on the shortcuts, they assume the position above (e.g., `as_origin` implies `[-1]`).
+- Positive: `aspath[0]` is the first (leftmost) AS, `aspath[1]` is second, etc.
+- Negative: `aspath[-1]` is the last (origin) AS, `aspath[-2]` is the upstream, etc.
+
+**Operator semantics:**
+
+| Operator | Without index                          | With index                       |
+|----------|----------------------------------------|----------------------------------|
+| (none)   | AS_PATH exists and is non-empty        | —                                |
+| `==` (int) | **Any hop** equals the value         | Specific hop equals the value    |
+| `==` (string) | Full path string matches exactly | —                                |
+| `~` (regex) | Regex match on JSON path text       | —                                |
+| `<`, `<=`, `>`, `>=` | **Any hop** ASN satisfies comparison | Specific hop ASN satisfies comparison |
+
+The `~` regex matches against the JSON representation of the AS path (comma-separated ASNs without brackets).
 
 Examples:
 
 ```text
-as_origin == 64496
-as_peer != 64512
-aspath[1] == 3356
-aspath[-2] == 3356
+as_origin == 15169             # originated by AS15169
+as_peer != 64512               # peer is not AS64512
+aspath[1] == 3356              # second hop is AS3356
+aspath[-2] == 3356             # upstream of origin is AS3356
+aspath ~ ",15169,"             # AS15169 appears anywhere in the path
+aspath ~ "^15169,"             # path starts with AS15169
+as_origin > 64511              # origin ASN is in the private range (> 64511)
+aspath_len > 5                 # reject long paths
+aspath_len == 0                # no AS_PATH (direct peering or incomplete)
+```
+
+### Origin
+
+| Attribute | Operators | Description                              |
+|-----------|-----------|------------------------------------------|
+| `origin`  | `==`, `!=` | BGP ORIGIN attribute                   |
+
+Values: `igp` (or `i`, `0`), `egp` (or `e`, `1`), `incomplete` (or `?`, `2`).
+
+Without an operator, tests for the attribute's existence.
+
+Examples:
+
+```text
+origin == igp                  # originated via IGP
+origin != incomplete           # not incomplete origin
+origin                         # has ORIGIN attribute set
+```
+
+### MED
+
+| Attribute       | Operators                    | Description              |
+|-----------------|------------------------------|--------------------------|
+| `med`           | `==`, `<`, `<=`, `>`, `>=`   | Multi-Exit Discriminator |
+| `metric`        | *(alias for `med`)*          |                          |
+
+Without an operator, tests for the attribute's existence.
+
+Examples:
+
+```text
+med == 0                       # MED is zero
+med > 100                      # MED above 100
+med                            # has MED attribute
+```
+
+### LOCAL_PREF
+
+| Attribute       | Operators                    | Description              |
+|-----------------|------------------------------|--------------------------|
+| `local_pref`    | `==`, `<`, `<=`, `>`, `>=`   | LOCAL_PREF value         |
+| `localpref`     | *(alias for `local_pref`)*   |                          |
+
+Without an operator, tests for the attribute's existence.
+
+Examples:
+
+```text
+local_pref == 100              # default local preference
+local_pref > 100               # preferred routes
+localpref <= 50                # low-preference routes
 ```
 
 ### Communities
 
-- `community` or `com`: standard communities
-- `com_ext`, `ext_community`, `ext_com`: extended communities
-- `com_large`, `large_community`, `large_com`: large communities
+| Attribute                         | Operators     | Description                |
+|-----------------------------------|---------------|----------------------------|
+| `community`, `com`                | `==`, `~`     | Standard communities       |
+| `ext_community`, `ext_com`, `com_ext` | `==`, `~` | Extended communities       |
+| `large_community`, `large_com`, `com_large` | `==`, `~` | Large communities    |
 
-Operators and values:
+**Operator semantics:**
 
-- Use `==` for exact string match
-- Use `~` to match against a regular expression
-- Community formats are strings like `"65000:1"` or `"1234:5678:90"`
+| Operator | Meaning                                                           |
+|----------|-------------------------------------------------------------------|
+| (none)   | Community attribute exists (has any value)                        |
+| `==`     | Message has an exact community value                              |
+| `~`      | Regex match against **JSON text** of all communities              |
 
-Examples:
-
-```text
-community ~ "3356:"
-com_large ~ "1234:5678:9"
-ext_community ~ "rt:65000:1"
-```
-
-### Tags (pipeline context)
-
-Tags are key/value pairs attached to messages by the `tag` stage.
-You can match them with the `tag[...]` attribute.
-
-Indexing rules for tags:
-
- * the index is a string key, e.g., `tag[env]`, `tags[region]`
- * `==` compares the exact tag value
- * `~` can be used for pattern-like matches
+The `~` regex matches against the JSON representation. For standard communities, this is `"ASN:VALUE"` strings. For extended communities, the JSON contains the full structure with type names like `TARGET`, `IP4_TARGET`, etc. (see [JSON Format](json-format.md#communities)).
 
 Examples:
 
 ```text
-tag[env] == prod
-tags[region] ~ "^eu-"
+community                      # has any standard community
+community == "3356:100"        # has exact community 3356:100
+community ~ "3356:"            # any community with ASN 3356
+com_large ~ "1234:5678:9"      # large community matching pattern
+ext_community ~ "TARGET"       # has any Route Target extended community
 ```
+
+### Tags
+
+| Attribute       | Operators     | Description                          |
+|-----------------|---------------|--------------------------------------|
+| `tag`, `tags`   | `==`, `~`     | Pipeline metadata tags               |
+| `tag[KEY]`      | `==`, `~`     | Specific tag by key name             |
+
+Tags are key-value pairs attached to messages by the [`tag`](stages/tag.md) stage and other stages (e.g., `ris-live` adds `PEER_AS`, `PEER_IP`; `rpki` adds `rpki/status`).
+
+Tag filters work on **all message types** (not just UPDATEs).
+
+| Operator | Without index                         | With `[KEY]`                        |
+|----------|---------------------------------------|-------------------------------------|
+| (none)   | Any tag has a non-empty value         | Tag KEY has a non-empty value       |
+| `==`     | Any tag value equals the string       | Tag KEY equals the string           |
+| `~`      | Any tag value matches the regex       | Tag KEY matches the regex           |
+
+Examples:
+
+```text
+tag[rpki/status] == INVALID    # RPKI validation failed
+tag[PEER_AS] == "8218"         # from RIS peer AS8218
+tags[region] ~ "^eu-"          # region tag starts with "eu-"
+```
+
+## Operator Compatibility
+
+Not all operators work with all attributes. This table summarizes:
+
+| Attribute       | (exists) | `==` | `!=` | `<` `<=` `>` `>=` | `~` `!~`  |
+|-----------------|----------|------|------|--------------------|-----------|
+| `type`          |          | yes  | yes  |                    |           |
+| `af`            |          | yes  |      |                    |           |
+| `prefix`        | yes      | yes  | yes  | yes (specificity)  | yes (overlap) |
+| `nexthop`       | yes      | yes  | yes  | yes (numeric IP)   | yes (containment) |
+| `aspath`        | yes      | yes  | yes  | yes (ASN value)    | yes (regex) |
+| `aspath_len`    | yes      | yes  | yes  | yes (hop count)    |           |
+| `origin`        | yes      | yes  | yes  |                    |           |
+| `med`           | yes      | yes  | yes  | yes (uint32)       |           |
+| `local_pref`    | yes      | yes  | yes  | yes (uint32)       |           |
+| `community`     | yes      | yes  | yes  |                    | yes (regex) |
+| `ext_community` | yes      | yes  | yes  |                    | yes (regex) |
+| `large_community`| yes     | yes  | yes  |                    | yes (regex) |
+| `tag`           | yes      | yes  | yes  |                    | yes (regex) |
+
+## See Also
+
+- [grep / drop](stages/grep.md) — Stages that use filters
+- [JSON Format](json-format.md) — BGP message JSON structure (community `~` matches against this)
+- [Examples](examples.md) — Practical bgpipe pipelines

@@ -10,59 +10,27 @@ bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGS] [--] STAGE2 [OPTIONS] [ARGS] ...
 
 ## Available Stages
 
-### Connection
-
 | Stage | Description |
 |-------|-------------|
 | [connect](connect.md) | Connect to a BGP endpoint over TCP |
+| [drop](grep.md) | Drop messages matching a filter; keep the rest |
+| [exec](exec.md) | Pipe messages through an external process |
+| [grep](grep.md) | Keep messages matching a filter; drop the rest |
+| [head](head.md) | Stop the pipeline after N messages |
+| [limit](limit.md) | Enforce prefix length and count limits |
 | [listen](listen.md) | Accept an incoming BGP connection over TCP |
+| [pipe](pipe.md) | Exchange messages through a named pipe (FIFO) |
+| [read](read.md) | Read messages from a file or URL |
+| [ris-live](ris-live.md) | Stream BGP updates from RIPE RIS Live |
+| [rpki](rpki.md) | Validate UPDATE messages using RPKI |
+| [rv-live](rv-live.md) | Stream BGP updates from RouteViews via Kafka |
 | [speaker](speaker.md) | Run a simple BGP speaker |
-
-### Input / Output
-
-| Stage | Description |
-|-------|-------------|
 | [stdin](stdin.md) | Read messages from standard input |
 | [stdout](stdout.md) | Write messages to standard output |
-| [read](read.md) | Read messages from a file or URL |
-| [write](write.md) | Write messages to a file |
-
-### Filtering
-
-| Stage | Description |
-|-------|-------------|
-| [grep](grep.md) | Keep messages matching a filter; drop the rest |
-| [drop](grep.md) | Drop messages matching a filter; keep the rest |
 | [tag](tag.md) | Add or remove message tags |
-| [limit](limit.md) | Enforce prefix length and count limits |
-| [head](head.md) | Stop the pipeline after N messages |
-
-### Modification
-
-| Stage | Description |
-|-------|-------------|
 | [update](update.md) | Modify UPDATE message attributes |
-
-### External Processing
-
-| Stage | Description |
-|-------|-------------|
-| [exec](exec.md) | Pipe messages through an external process |
-| [pipe](pipe.md) | Exchange messages through a named pipe (FIFO) |
 | [websocket](websocket.md) | Exchange messages over WebSocket |
-
-### Live Streaming
-
-| Stage | Description |
-|-------|-------------|
-| [ris-live](ris-live.md) | Stream BGP updates from RIPE RIS Live |
-| [rv-live](rv-live.md) | Stream BGP updates from RouteViews via Kafka |
-
-### Security
-
-| Stage | Description |
-|-------|-------------|
-| [rpki](rpki.md) | Validate UPDATE messages using RPKI |
+| [write](write.md) | Write messages to a file |
 
 ## Common Options
 

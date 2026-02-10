@@ -2,37 +2,34 @@ nav:
   - Home: index.md
   - Introduction: intro.md
   - Quick Start: quickstart.md
+  - Examples: examples.md
+  - JSON:
+    - Message format: json-format.md
+    - Flowspec: flowspec.md
+  - Filtering: filters.md
   - Stages:
     - Overview: stages/index.md
-    - Connection:
-      - connect: stages/connect.md
-      - listen: stages/listen.md
-      - speaker: stages/speaker.md
-    - Input / Output:
-      - stdin: stages/stdin.md
-      - stdout: stages/stdout.md
-      - read: stages/read.md
-      - write: stages/write.md
-    - Filtering:
-      - grep / drop: stages/grep.md
-      - tag: stages/tag.md
-      - limit: stages/limit.md
-    - Modification:
-      - update: stages/update.md
-    - External Processing:
-      - exec: stages/exec.md
-      - pipe: stages/pipe.md
-      - websocket: stages/websocket.md
-    - Live Streaming:
-      - ris-live: stages/ris-live.md
-      - rv-live: stages/rv-live.md
-    - Security:
-      - rpki: stages/rpki.md
-  - Examples: examples.md
-  - JSON Format: json-format.md
-  - Message Filters: filters.md
+    - connect: stages/connect.md
+    - drop: stages/grep.md
+    - exec: stages/exec.md
+    - grep: stages/grep.md
+    - head: stages/head.md
+    - limit: stages/limit.md
+    - listen: stages/listen.md
+    - pipe: stages/pipe.md
+    - read: stages/read.md
+    - ris-live: stages/ris-live.md
+    - rpki: stages/rpki.md
+    - rv-live: stages/rv-live.md
+    - speaker: stages/speaker.md
+    - stdin: stages/stdin.md
+    - stdout: stages/stdout.md
+    - tag: stages/tag.md
+    - update: stages/update.md
+    - websocket: stages/websocket.md
+    - write: stages/write.md
 
-site_name: "bgpipe: BGP reverse proxy"
+site_name: "bgpipe: BGP pipeline processor"
 site_url: 'https://bgpipe.org/'
 repo_url: https://github.com/bgpfix/bgpipe
 
@@ -43,7 +40,7 @@ theme:
   features:
     - header.autohide
     - content.code.copy
-    - content.code.annotate 
+    - content.code.annotate
   palette:
     - scheme: slate
       primary: purple
