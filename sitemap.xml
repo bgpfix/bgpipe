@@ -2,102 +2,106 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://bgpipe.org/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/examples/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/filters/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
+    </url>
+    <url>
+         <loc>https://bgpipe.org/flowspec/</loc>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/intro/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/json-format/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/quickstart/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/connect/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/exec/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/grep/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/head/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/limit/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/listen/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/pipe/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/read/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/ris-live/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/rpki/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/rv-live/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/speaker/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/stdin/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/stdout/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/tag/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/update/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/websocket/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
     <url>
          <loc>https://bgpipe.org/stages/write/</loc>
-         <lastmod>2026-02-06</lastmod>
+         <lastmod>2026-02-10</lastmod>
     </url>
 </urlset>

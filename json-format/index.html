@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://bgpipe.org/json-format/">
       
       
-        <link rel="prev" href="../examples/">
+        <link rel="prev" href="../stages/write/">
       
       
-        <link rel="next" href="../filters/">
+        <link rel="next" href="../flowspec/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>JSON Format - bgpipe: BGP reverse proxy</title>
+        <title>Message format - bgpipe: BGP pipeline processor</title>
       
     
     
@@ -98,7 +98,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="bgpipe: BGP reverse proxy" class="md-header__button md-logo" aria-label="bgpipe: BGP reverse proxy" data-md-component="logo">
+    <a href=".." title="bgpipe: BGP pipeline processor" class="md-header__button md-logo" aria-label="bgpipe: BGP pipeline processor" data-md-component="logo">
       
   <img src="../img/logo-w.png" alt="logo">
 
@@ -111,13 +111,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            bgpipe: BGP reverse proxy
+            bgpipe: BGP pipeline processor
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              JSON Format
+              Message format
             
           </span>
         </div>
@@ -233,12 +233,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="bgpipe: BGP reverse proxy" class="md-nav__button md-logo" aria-label="bgpipe: BGP reverse proxy" data-md-component="logo">
+    <a href=".." title="bgpipe: BGP pipeline processor" class="md-nav__button md-logo" aria-label="bgpipe: BGP pipeline processor" data-md-component="logo">
       
   <img src="../img/logo-w.png" alt="logo">
 
     </a>
-    bgpipe: BGP reverse proxy
+    bgpipe: BGP pipeline processor
   </label>
   
     <div class="md-nav__source">
@@ -342,6 +342,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -351,10 +378,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -372,8 +399,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -417,53 +444,6 @@
   
   
   
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Connection
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Connection
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
       <a href="../stages/connect/" class="md-nav__link">
         
@@ -473,6 +453,146 @@
     
   
     connect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/grep/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    drop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/exec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    exec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/grep/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    drop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/head/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    head
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/limit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    limit
   
 
     
@@ -521,6 +641,146 @@
   
   
     <li class="md-nav__item">
+      <a href="../stages/pipe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pipe
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/read/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    read
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/ris-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ris-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/rpki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rpki
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/rv-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../stages/speaker/" class="md-nav__link">
         
   
@@ -541,61 +801,6 @@
   
 
               
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Input / Output
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Input / Output
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -660,14 +865,70 @@
   
   
     <li class="md-nav__item">
-      <a href="../stages/read/" class="md-nav__link">
+      <a href="../stages/tag/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    read
+    tag
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/update/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    update
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/websocket/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    websocket
   
 
     
@@ -715,34 +976,35 @@
     </li>
   
 
-              
-            
-              
-                
-  
-  
+    
+      
+      
   
   
     
+  
+  
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
     
   
-    Filtering
+    JSON
   
 
     
@@ -753,12 +1015,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Filtering
+    JSON
   
 
           </label>
@@ -766,548 +1028,6 @@
             
               
                 
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/grep/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    grep / drop
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/tag/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    tag
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/limit/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    limit
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Modification
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Modification
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/update/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    update
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    External Processing
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    External Processing
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/exec/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    exec
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/pipe/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    pipe
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/websocket/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    websocket
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Live Streaming
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Live Streaming
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/ris-live/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ris-live
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/rv-live/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    rv-live
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Security
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_8">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Security
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../stages/rpki/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    rpki
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Examples
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
   
   
     
@@ -1329,7 +1049,7 @@
   <span class="md-ellipsis">
     
   
-    JSON Format
+    Message format
   
 
     
@@ -1347,7 +1067,7 @@
   <span class="md-ellipsis">
     
   
-    JSON Format
+    Message format
   
 
     
@@ -1373,13 +1093,41 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#message-envelope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Message Envelope
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Message Envelope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#message-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1391,6 +1139,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="OPEN Messages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-open-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete OPEN Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1407,6 +1183,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#add-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADD-PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#path-attributes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1415,42 +1202,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Path Attributes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#attribute-flags" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Attribute Flags
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
           <li class="md-nav__item">
-  <a href="#common-path-attributes" class="md-nav__link">
+  <a href="#attribute-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Common Path Attributes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Path Attributes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#origin" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ORIGIN
+        Attribute Reference
       
     </span>
   </a>
@@ -1469,65 +1227,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#nexthop" class="md-nav__link">
+  <a href="#communities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        NEXTHOP
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#med-multi-exit-discriminator" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MED (Multi-Exit Discriminator)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#localpref-local-preference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        LOCALPREF (Local Preference)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#community" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        COMMUNITY
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#large_community" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        LARGE_COMMUNITY
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ext_community-extended-communities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        EXT_COMMUNITY (Extended Communities)
+        Communities
       
     </span>
   </a>
@@ -1538,17 +1241,17 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#mp-bgp-attributes" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#mp-bgp-multi-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MP-BGP Attributes
+        MP-BGP (Multi-Protocol)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="MP-BGP Attributes">
+    <nav class="md-nav" aria-label="MP-BGP (Multi-Protocol)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1577,8 +1280,8 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#complete-update-example" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1586,122 +1289,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#flowspec-messages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Messages
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Flowspec Messages">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-in-mp_reach" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec in MP_REACH
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-rules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Rules
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Flowspec Rules">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-components" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Components
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#numeric-operators" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Numeric Operators
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bitmask-operators" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bitmask Operators
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ipv6-prefix-with-offset" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        IPv6 Prefix with Offset
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-actions-extended-communities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Actions (Extended Communities)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complete-flowspec-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Complete Flowspec Example
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1734,6 +1321,42 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flowspec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flowspec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
@@ -1749,7 +1372,7 @@
   <span class="md-ellipsis">
     
   
-    Message Filters
+    Filtering
   
 
     
@@ -1789,13 +1412,41 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#message-envelope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Message Envelope
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Message Envelope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#message-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1807,6 +1458,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="OPEN Messages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-open-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete OPEN Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1823,6 +1502,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#add-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADD-PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#path-attributes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1831,42 +1521,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Path Attributes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#attribute-flags" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Attribute Flags
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
           <li class="md-nav__item">
-  <a href="#common-path-attributes" class="md-nav__link">
+  <a href="#attribute-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Common Path Attributes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Path Attributes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#origin" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ORIGIN
+        Attribute Reference
       
     </span>
   </a>
@@ -1885,65 +1546,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#nexthop" class="md-nav__link">
+  <a href="#communities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        NEXTHOP
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#med-multi-exit-discriminator" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MED (Multi-Exit Discriminator)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#localpref-local-preference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        LOCALPREF (Local Preference)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#community" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        COMMUNITY
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#large_community" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        LARGE_COMMUNITY
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ext_community-extended-communities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        EXT_COMMUNITY (Extended Communities)
+        Communities
       
     </span>
   </a>
@@ -1954,17 +1560,17 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#mp-bgp-attributes" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#mp-bgp-multi-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MP-BGP Attributes
+        MP-BGP (Multi-Protocol)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="MP-BGP Attributes">
+    <nav class="md-nav" aria-label="MP-BGP (Multi-Protocol)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1993,8 +1599,8 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#complete-update-example" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2002,122 +1608,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#flowspec-messages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Messages
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Flowspec Messages">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-in-mp_reach" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec in MP_REACH
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-rules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Rules
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Flowspec Rules">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-components" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Components
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#numeric-operators" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Numeric Operators
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bitmask-operators" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bitmask Operators
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ipv6-prefix-with-offset" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        IPv6 Prefix with Offset
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#flowspec-actions-extended-communities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Flowspec Actions (Extended Communities)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complete-flowspec-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Complete Flowspec Example
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2164,13 +1654,12 @@
 
 
 <h1 id="json-message-format">JSON Message Format<a class="headerlink" href="#json-message-format" title="Permanent link">&para;</a></h1>
-<p>bgpipe can represent BGP messages in a structured JSON format for easy processing and filtering.
-This page documents the format, which is implemented by the <a href="https://github.com/bgpfix/bgpfix">bgpfix library</a>. For example, the JSON translation feature can be useful for external processors - e.g. Python scripts via the <code>exec</code> or <code>websocket</code> stages - or for BGP message inspection or archiving.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>Each BGP message is represented as a JSON array with the following structure:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">[</span><span class="err">dir</span><span class="p">,</span><span class="w"> </span><span class="err">seq</span><span class="p">,</span><span class="w"> </span><span class="kc">t</span><span class="err">ime</span><span class="p">,</span><span class="w"> </span><span class="kc">t</span><span class="err">ype</span><span class="p">,</span><span class="w"> </span><span class="err">da</span><span class="kc">ta</span><span class="p">,</span><span class="w"> </span><span class="err">me</span><span class="kc">ta</span><span class="p">]</span>
+<p>bgpipe can read and write BGP messages in a structured JSON format for processing, filtering, and archiving.
+This page is a reference for the format, implemented by the <a href="https://github.com/bgpfix/bgpfix">bgpfix library</a>.</p>
+<h2 id="message-envelope">Message Envelope<a class="headerlink" href="#message-envelope" title="Permanent link">&para;</a></h2>
+<p>Each BGP message is a JSON array with up to 6 elements:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">243</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2025-07-11T11:23:50.860&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;UPDATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">}]</span>
 </span></code></pre></div>
-<p>Where:</p>
 <table>
 <thead>
 <tr>
@@ -2185,54 +1674,78 @@ This page documents the format, which is implemented by the <a href="https://git
 <td><code>[0]</code></td>
 <td><code>dir</code></td>
 <td>string</td>
-<td>direction: <code>L</code> (left) or <code>R</code> (right)</td>
+<td>Direction: <code>"L"</code> (left-bound) or <code>"R"</code> (right-bound)</td>
 </tr>
 <tr>
 <td><code>[1]</code></td>
 <td><code>seq</code></td>
-<td>int</td>
-<td>sequence number (monotonic counter)</td>
+<td>integer</td>
+<td>Monotonically increasing sequence number</td>
 </tr>
 <tr>
 <td><code>[2]</code></td>
 <td><code>time</code></td>
 <td>string</td>
-<td>timestamp in <code>YYYY-MM-DDTHH:MM:SS.mmm</code> format</td>
+<td>Timestamp: <code>YYYY-MM-DDTHH:MM:SS.mmm</code></td>
 </tr>
 <tr>
 <td><code>[3]</code></td>
 <td><code>type</code></td>
-<td>string/int</td>
-<td>type: <code>OPEN</code>, <code>UPDATE</code>, <code>KEEPALIVE</code>, etc.</td>
+<td>string</td>
+<td>Message type (see table below)</td>
 </tr>
 <tr>
 <td><code>[4]</code></td>
 <td><code>data</code></td>
-<td>object/string</td>
-<td>type-specific object or raw hex string (optional)</td>
+<td>object/string/null</td>
+<td>Type-specific payload (see below)</td>
 </tr>
 <tr>
 <td><code>[5]</code></td>
 <td><code>meta</code></td>
-<td>object</td>
-<td>bgpipe metadata (optional)</td>
+<td>object/null</td>
+<td>Message tags (key-value map)</td>
 </tr>
 </tbody>
 </table>
-<p>Example KEEPALIVE Message</p>
+<h3 id="message-types">Message Types<a class="headerlink" href="#message-types" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th><code>data</code> field contains</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OPEN</code></td>
+<td>BGP session parameters and capabilities (object)</td>
+</tr>
+<tr>
+<td><code>UPDATE</code></td>
+<td>Prefixes and path attributes (object)</td>
+</tr>
+<tr>
+<td><code>KEEPALIVE</code></td>
+<td><code>null</code></td>
+</tr>
+</tbody>
+</table>
+<p>Unknown or unparsed types produce a hex string like <code>"0x1234abcd"</code>.</p>
+<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
+<p>KEEPALIVE — the simplest message:
 <div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2025-07-11T08:47:22.659&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;KEEPALIVE&quot;</span><span class="p">]</span>
-</span></code></pre></div>
+</span></code></pre></div></p>
 <h2 id="open-messages">OPEN Messages<a class="headerlink" href="#open-messages" title="Permanent link">&para;</a></h2>
-<p>For OPEN messages, the <code>data</code> field contains a JSON object with the BGP session parameters and capabilities:</p>
+<p>The <code>data</code> field contains BGP session parameters:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;bgp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65055</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.1&quot;</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;hold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;caps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// or &quot;params&quot;: &quot;0x...&quot; if no caps</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;85.232.240.180&quot;</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;hold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7200</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;caps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Where:</p>
 <table>
 <thead>
 <tr>
@@ -2244,22 +1757,22 @@ This page documents the format, which is implemented by the <a href="https://git
 <tbody>
 <tr>
 <td><code>bgp</code></td>
-<td>int</td>
-<td>BGP protocol version (always 4)</td>
+<td>integer</td>
+<td>BGP protocol version (always <code>4</code>)</td>
 </tr>
 <tr>
 <td><code>asn</code></td>
-<td>int</td>
-<td>Autonomous System Number (2-byte)</td>
+<td>integer</td>
+<td>Autonomous System Number (2-byte in OPEN, see <code>AS4</code> cap)</td>
 </tr>
 <tr>
 <td><code>id</code></td>
 <td>string</td>
-<td>BGP Router ID in dotted-decimal IPv4 format</td>
+<td>BGP Router ID in dotted-decimal notation</td>
 </tr>
 <tr>
 <td><code>hold</code></td>
-<td>int</td>
+<td>integer</td>
 <td>Hold time in seconds</td>
 </tr>
 <tr>
@@ -2270,52 +1783,123 @@ This page documents the format, which is implemented by the <a href="https://git
 <tr>
 <td><code>params</code></td>
 <td>string</td>
-<td>Raw optional parameters as hex string (only if no caps)</td>
+<td>Raw optional parameters as hex (only when no capabilities)</td>
 </tr>
 </tbody>
 </table>
-<p>The <code>caps</code> object contains BGP capabilities:</p>
+<h3 id="capabilities">Capabilities<a class="headerlink" href="#capabilities" title="Permanent link">&para;</a></h3>
+<p>The <code>caps</code> object maps capability names to their values:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;MP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;IPV4/UNICAST&quot;</span><span class="p">],</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;MP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;IPV4/UNICAST&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IPV6/UNICAST&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IPV4/FLOWSPEC&quot;</span><span class="p">],</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;ROUTE_REFRESH&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;EXTENDED_MESSAGE&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">&quot;AS4&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">64515</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">}</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">&quot;AS4&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65055</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">&quot;ADDPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;IPV4/UNICAST/SEND&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IPV6/UNICAST/BIDIR&quot;</span><span class="p">],</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">&quot;ROLE&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CUSTOMER&quot;</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">&quot;FQDN&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;router1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;domain&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;example.com&quot;</span><span class="p">},</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="nt">&quot;EXTENDED_NEXTHOP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;IPV4/UNICAST/IPV6&quot;</span><span class="p">]</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Common capabilities (see <a href="https://github.com/bgpfix/bgpfix/blob/main/caps/cap.go">bgpfix source</a>):</p>
-<ul>
-<li><strong><code>MP</code></strong>: Array of supported AFI/SAFI combinations (e.g., <code>IPV4/UNICAST</code>, <code>IPV6/FLOWSPEC</code>)</li>
-<li><strong><code>ROUTE_REFRESH</code></strong>: Boolean, supports Route Refresh (RFC 2918)</li>
-<li><strong><code>EXTENDED_MESSAGE</code></strong>: Boolean, supports messages larger than 4096 bytes (RFC 8654)</li>
-<li><strong><code>AS4</code></strong>: Number, 4-byte ASN value (RFC 6793)</li>
-</ul>
-<p>Complete example:</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Value type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MP</code></td>
+<td>array of strings</td>
+<td>Multi-protocol AFI/SAFI list (RFC 4760)</td>
+</tr>
+<tr>
+<td><code>ROUTE_REFRESH</code></td>
+<td><code>true</code></td>
+<td>Route Refresh support (RFC 2918)</td>
+</tr>
+<tr>
+<td><code>EXTENDED_MESSAGE</code></td>
+<td><code>true</code></td>
+<td>Extended message support (RFC 8654)</td>
+</tr>
+<tr>
+<td><code>AS4</code></td>
+<td>integer</td>
+<td>4-byte ASN (RFC 6793)</td>
+</tr>
+<tr>
+<td><code>ADDPATH</code></td>
+<td>array of strings</td>
+<td>ADD-PATH directions (RFC 7911): <code>AFI/SAFI/DIR</code> where DIR is <code>RECEIVE</code>, <code>SEND</code>, or <code>BIDIR</code></td>
+</tr>
+<tr>
+<td><code>ROLE</code></td>
+<td>string</td>
+<td>BGP Role (RFC 9234): <code>PROVIDER</code>, <code>RS</code>, <code>RS-CLIENT</code>, <code>CUSTOMER</code>, or <code>PEER</code></td>
+</tr>
+<tr>
+<td><code>FQDN</code></td>
+<td>object</td>
+<td>Hostname capability (draft): <code>{"host": "...", "domain": "..."}</code></td>
+</tr>
+<tr>
+<td><code>EXTENDED_NEXTHOP</code></td>
+<td>array of strings</td>
+<td>Extended next-hop (RFC 8950): <code>AFI/SAFI/NH_AFI</code></td>
+</tr>
+<tr>
+<td><code>GRACEFUL_RESTART</code></td>
+<td>(presence/value)</td>
+<td>Graceful Restart (RFC 4724)</td>
+</tr>
+<tr>
+<td><code>ENHANCED_ROUTE_REFRESH</code></td>
+<td><code>true</code></td>
+<td>Enhanced Route Refresh (RFC 7313)</td>
+</tr>
+<tr>
+<td><code>LLGR</code></td>
+<td>(presence/value)</td>
+<td>Long-Lived Graceful Restart</td>
+</tr>
+<tr>
+<td><code>PRE_ROUTE_REFRESH</code></td>
+<td><code>true</code></td>
+<td>Pre-standard Route Refresh (code 128)</td>
+</tr>
+</tbody>
+</table>
+<p>Unknown capabilities appear as <code>"CAP_N"</code> with a hex string value.</p>
+<p>AFI/SAFI strings use the format <code>AFI/SAFI</code>, e.g.: <code>IPV4/UNICAST</code>, <code>IPV6/UNICAST</code>, <code>IPV4/MULTICAST</code>, <code>IPV6/MULTICAST</code>, <code>IPV4/FLOWSPEC</code>, <code>IPV6/FLOWSPEC</code>, <code>IPV4/MPLS_VPN</code>, etc.</p>
+<h3 id="complete-open-example">Complete OPEN Example<a class="headerlink" href="#complete-open-example" title="Permanent link">&para;</a></h3>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">[</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="s2">&quot;L&quot;</span><span class="p">,</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="mi">1</span><span class="p">,</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="s2">&quot;2025-07-11T08:47:22.659&quot;</span><span class="p">,</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="s2">&quot;OPEN&quot;</span><span class="p">,</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">&quot;bgp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65055</span><span class="p">,</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;85.232.240.180&quot;</span><span class="p">,</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">&quot;hold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7200</span><span class="p">,</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="nt">&quot;caps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">      </span><span class="nt">&quot;MP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;IPV4/FLOWSPEC&quot;</span><span class="p">],</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">      </span><span class="nt">&quot;ROUTE_REFRESH&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="s2">&quot;L&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2025-07-11T08:47:22.659&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;OPEN&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="p">{</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">&quot;bgp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65055</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;85.232.240.180&quot;</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">&quot;hold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7200</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">&quot;caps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">      </span><span class="nt">&quot;MP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;IPV4/FLOWSPEC&quot;</span><span class="p">],</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">      </span><span class="nt">&quot;ROUTE_REFRESH&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">      </span><span class="nt">&quot;EXTENDED_NEXTHOP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;IPV4/UNICAST/IPV6&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IPV4/MULTICAST/IPV6&quot;</span><span class="p">],</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">      </span><span class="nt">&quot;AS4&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65055</span><span class="p">,</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">      </span><span class="nt">&quot;PRE_ROUTE_REFRESH&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 </span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="p">]</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">  </span><span class="kc">null</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="p">]</span>
 </span></code></pre></div>
 <h2 id="update-messages">UPDATE Messages<a class="headerlink" href="#update-messages" title="Permanent link">&para;</a></h2>
-<p>For UPDATE messages, element <code>data</code> field contains a JSON object with reachable/withdrawn IPv4 prefixes and the path attributes:</p>
+<p>The <code>data</code> field contains prefixes and path attributes:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;reach&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;unreach&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;reach&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;8.8.8.0/24&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;8.8.4.0/24&quot;</span><span class="p">],</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;unreach&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;192.0.2.0/24&quot;</span><span class="p">],</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Where:</p>
 <table>
 <thead>
 <tr>
@@ -2328,374 +1912,333 @@ This page documents the format, which is implemented by the <a href="https://git
 <tr>
 <td><code>reach</code></td>
 <td>array</td>
-<td>Array of reachable IPv4 unicast prefixes (announced routes)</td>
+<td>Announced IPv4 unicast prefixes (CIDR notation)</td>
 </tr>
 <tr>
 <td><code>unreach</code></td>
 <td>array</td>
-<td>Array of unreachable IPv4 unicast prefixes (withdrawn routes)</td>
+<td>Withdrawn IPv4 unicast prefixes (CIDR notation)</td>
 </tr>
 <tr>
 <td><code>attrs</code></td>
 <td>object</td>
-<td>BGP path attributes (see below)</td>
+<td>Path attributes (see below)</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Note</strong>: For MP-BGP (multi-protocol) routes (IPv6, Flowspec, etc.), prefixes are embedded within the <code>MP_REACH</code> or <code>MP_UNREACH</code> attributes.</p>
-<h3 id="path-attributes">Path Attributes<a class="headerlink" href="#path-attributes" title="Permanent link">&para;</a></h3>
-<p>The <code>attrs</code> object contains BGP path attributes. Each attribute has:</p>
-<ul>
-<li><strong>Key</strong>: Attribute name (e.g., <code>ORIGIN</code>, <code>ASPATH</code>, <code>COMMUNITY</code>)</li>
-<li><strong>Value</strong>: Object with <code>flags</code> and <code>value</code> fields</li>
-</ul>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">&quot;ORIGIN&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IGP&quot;</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
+<p>For multi-protocol routes (IPv6, Flowspec, etc.), prefixes are in the <code>MP_REACH</code> and <code>MP_UNREACH</code> attributes instead.</p>
+<h3 id="add-path">ADD-PATH<a class="headerlink" href="#add-path" title="Permanent link">&para;</a></h3>
+<p>When ADD-PATH (RFC 7911) is negotiated, each prefix carries a 32-bit Path Identifier. In JSON, the path ID is prepended to the prefix string with <code>#</code> delimiters:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">&quot;reach&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;#42#8.8.8.0/24&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;#42#8.8.4.0/24&quot;</span><span class="p">]</span>
 </span></code></pre></div>
-<h4 id="attribute-flags">Attribute Flags<a class="headerlink" href="#attribute-flags" title="Permanent link">&para;</a></h4>
-<p>Flags are a string combining these characters:</p>
-<ul>
-<li><strong><code>O</code></strong>: Optional</li>
-<li><strong><code>T</code></strong>: Transitive</li>
-<li><strong><code>P</code></strong>: Partial</li>
-<li><strong><code>X</code></strong>: Extended length</li>
-</ul>
-<p>Well-known attributes (ORIGIN, ASPATH, NEXTHOP) use <code>T</code> only. Optional attributes use combinations like <code>OT</code>.</p>
-<h3 id="common-path-attributes">Common Path Attributes<a class="headerlink" href="#common-path-attributes" title="Permanent link">&para;</a></h3>
-<h4 id="origin">ORIGIN<a class="headerlink" href="#origin" title="Permanent link">&para;</a></h4>
-<p>Origin of the route:</p>
+<p>The format is <code>#&lt;path-id&gt;#&lt;prefix&gt;</code>. Without ADD-PATH, prefixes appear as plain CIDR strings.</p>
+<h3 id="path-attributes">Path Attributes<a class="headerlink" href="#path-attributes" title="Permanent link">&para;</a></h3>
+<p>Each attribute in <code>attrs</code> is an object with <code>flags</code> and <code>value</code>:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">&quot;ORIGIN&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IGP&quot;</span><span class="w">  </span><span class="c1">// or EGP or INCOMPLETE</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IGP&quot;</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<h4 id="aspath">ASPATH<a class="headerlink" href="#aspath" title="Permanent link">&para;</a></h4>
-<p>AS path as an array. AS sequences are flat arrays, AS sets are nested arrays:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">&quot;ASPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">64515</span><span class="p">,</span><span class="w"> </span><span class="mi">20473</span><span class="p">,</span><span class="w"> </span><span class="mi">15169</span><span class="p">]</span><span class="w">  </span><span class="c1">// AS_SEQUENCE</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>With AS_SET:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">&quot;ASPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">64515</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">20473</span><span class="p">,</span><span class="w"> </span><span class="mi">15169</span><span class="p">]]</span><span class="w">  </span><span class="c1">// last is AS_SET</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">}</span>
-</span></code></pre></div>
-<h4 id="nexthop">NEXTHOP<a class="headerlink" href="#nexthop" title="Permanent link">&para;</a></h4>
-<p>IPv4 next-hop address:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">&quot;NEXTHOP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.1&quot;</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
-</span></code></pre></div>
-<h4 id="med-multi-exit-discriminator">MED (Multi-Exit Discriminator)<a class="headerlink" href="#med-multi-exit-discriminator" title="Permanent link">&para;</a></h4>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">&quot;MED&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;O&quot;</span><span class="p">,</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">}</span>
-</span></code></pre></div>
-<h4 id="localpref-local-preference">LOCALPREF (Local Preference)<a class="headerlink" href="#localpref-local-preference" title="Permanent link">&para;</a></h4>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">&quot;LOCALPREF&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">}</span>
-</span></code></pre></div>
-<h4 id="community">COMMUNITY<a class="headerlink" href="#community" title="Permanent link">&para;</a></h4>
-<p>Standard BGP communities as <code>ASN:value</code> strings:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">&quot;COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;65000:100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;65000:200&quot;</span><span class="p">]</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="p">}</span>
-</span></code></pre></div>
-<h4 id="large_community">LARGE_COMMUNITY<a class="headerlink" href="#large_community" title="Permanent link">&para;</a></h4>
-<p>Large BGP communities (RFC 8092):</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">&quot;LARGE_COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;65000:100:1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;65000:200:2&quot;</span><span class="p">]</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">}</span>
-</span></code></pre></div>
-<h4 id="ext_community-extended-communities">EXT_COMMUNITY (Extended Communities)<a class="headerlink" href="#ext_community-extended-communities" title="Permanent link">&para;</a></h4>
-<p>Extended communities with type-specific encoding:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nt">&quot;EXT_COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RT&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65000</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RT&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ip&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">}</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="p">]</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>Common types: <code>RT</code> (Route Target), <code>RO</code> (Route Origin), <code>REDIR_IP4</code> (Flowspec redirect), <code>RATE</code> (Flowspec rate-limit).</p>
-<h3 id="mp-bgp-attributes">MP-BGP Attributes<a class="headerlink" href="#mp-bgp-attributes" title="Permanent link">&para;</a></h3>
-<h4 id="mp_reach">MP_REACH<a class="headerlink" href="#mp_reach" title="Permanent link">&para;</a></h4>
-<p>Multi-protocol reachable NLRI (used for IPv6, Flowspec, etc.):</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">&quot;MP_REACH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OX&quot;</span><span class="p">,</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="nt">&quot;af&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IPV6/UNICAST&quot;</span><span class="p">,</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nt">&quot;nexthop&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2001:db8::1&quot;</span><span class="p">,</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="nt">&quot;prefixes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;2001:db8:1::/48&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2001:db8:2::/48&quot;</span><span class="p">]</span>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>For Flowspec, see the Flowspec section below.</p>
-<h4 id="mp_unreach">MP_UNREACH<a class="headerlink" href="#mp_unreach" title="Permanent link">&para;</a></h4>
-<p>Multi-protocol unreachable NLRI (withdrawals):</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">&quot;MP_UNREACH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OX&quot;</span><span class="p">,</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="nt">&quot;af&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IPV6/UNICAST&quot;</span><span class="p">,</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">    </span><span class="nt">&quot;prefixes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;2001:db8:3::/48&quot;</span><span class="p">]</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="p">}</span>
-</span></code></pre></div>
-<h3 id="complete-update-example">Complete UPDATE Example<a class="headerlink" href="#complete-update-example" title="Permanent link">&para;</a></h3>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p">[</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="s2">&quot;R&quot;</span><span class="p">,</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="mi">243</span><span class="p">,</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="s2">&quot;2025-07-11T11:23:50.860&quot;</span><span class="p">,</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span><span class="s2">&quot;UPDATE&quot;</span><span class="p">,</span>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">    </span><span class="nt">&quot;reach&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;8.8.8.0/24&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;8.8.4.0/24&quot;</span><span class="p">],</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">    </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">      </span><span class="nt">&quot;ORIGIN&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IGP&quot;</span>
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">      </span><span class="p">},</span>
-</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">      </span><span class="nt">&quot;ASPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">64515</span><span class="p">,</span><span class="w"> </span><span class="mi">15169</span><span class="p">]</span>
-</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">      </span><span class="p">},</span>
-</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">      </span><span class="nt">&quot;NEXTHOP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.1&quot;</span>
-</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">      </span><span class="p">},</span>
-</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">      </span><span class="nt">&quot;COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span>
-</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;64515:100&quot;</span><span class="p">]</span>
-</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="w">      </span><span class="p">}</span>
-</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="w">  </span><span class="p">},</span>
-</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="w">  </span><span class="p">{}</span>
-</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="p">]</span>
-</span></code></pre></div>
-<h2 id="flowspec-messages">Flowspec Messages<a class="headerlink" href="#flowspec-messages" title="Permanent link">&para;</a></h2>
-<p>Flowspec (Flow Specification) messages are a special type of UPDATE that carries traffic filtering rules instead of routing prefixes. They use the <code>MP_REACH</code> or <code>MP_UNREACH</code> attributes with AFI/SAFI set to <code>IPV4/FLOWSPEC</code> or <code>IPV6/FLOWSPEC</code>.</p>
-<h3 id="flowspec-in-mp_reach">Flowspec in MP_REACH<a class="headerlink" href="#flowspec-in-mp_reach" title="Permanent link">&para;</a></h3>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nt">&quot;MP_REACH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OX&quot;</span><span class="p">,</span>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span><span class="nt">&quot;af&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IPV4/FLOWSPEC&quot;</span><span class="p">,</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">    </span><span class="nt">&quot;nexthop&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">    </span><span class="nt">&quot;rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">]</span>
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="p">}</span>
-</span></code></pre></div>
-<h3 id="flowspec-rules">Flowspec Rules<a class="headerlink" href="#flowspec-rules" title="Permanent link">&para;</a></h3>
-<p>Each Flowspec rule is a JSON object with components (match conditions):</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="p">{</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="nt">&quot;DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.0/24&quot;</span><span class="p">,</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span><span class="nt">&quot;SRC&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;198.51.100.0/24&quot;</span><span class="p">,</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span><span class="nt">&quot;PROTO&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;==&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">}],</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">  </span><span class="nt">&quot;PORT_DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;==&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">}]</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="p">}</span>
-</span></code></pre></div>
-<h4 id="flowspec-components">Flowspec Components<a class="headerlink" href="#flowspec-components" title="Permanent link">&para;</a></h4>
+<p><strong>Flags</strong> are a string of characters:</p>
 <table>
 <thead>
 <tr>
-<th>Component</th>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>O</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>T</code></td>
+<td>Transitive</td>
+</tr>
+<tr>
+<td><code>P</code></td>
+<td>Partial</td>
+</tr>
+<tr>
+<td><code>X</code></td>
+<td>Extended length</td>
+</tr>
+</tbody>
+</table>
+<h3 id="attribute-reference">Attribute Reference<a class="headerlink" href="#attribute-reference" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Flags</th>
+<th>Value format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ORIGIN</code></td>
+<td><code>T</code></td>
+<td><code>"IGP"</code>, <code>"EGP"</code>, or <code>"INCOMPLETE"</code></td>
+<td>Route origin (RFC 4271)</td>
+</tr>
+<tr>
+<td><code>ASPATH</code></td>
+<td><code>T</code></td>
+<td>array of integers / nested arrays</td>
+<td>AS path (see below)</td>
+</tr>
+<tr>
+<td><code>NEXTHOP</code></td>
+<td><code>T</code></td>
+<td><code>"192.0.2.1"</code></td>
+<td>IPv4 next-hop address</td>
+</tr>
+<tr>
+<td><code>MED</code></td>
+<td><code>O</code></td>
+<td>integer</td>
+<td>Multi-Exit Discriminator</td>
+</tr>
+<tr>
+<td><code>LOCALPREF</code></td>
+<td><code>T</code></td>
+<td>integer</td>
+<td>Local Preference</td>
+</tr>
+<tr>
+<td><code>AGGREGATE</code></td>
+<td><code>T</code></td>
+<td><em>(empty/presence)</em></td>
+<td>Atomic Aggregate marker</td>
+</tr>
+<tr>
+<td><code>AGGREGATOR</code></td>
+<td><code>OT</code></td>
+<td><code>{"asn": N, "addr": "IP"}</code></td>
+<td>Aggregator (RFC 4271)</td>
+</tr>
+<tr>
+<td><code>COMMUNITY</code></td>
+<td><code>OT</code></td>
+<td><code>["65000:100", "65000:200"]</code></td>
+<td>Standard communities (RFC 1997)</td>
+</tr>
+<tr>
+<td><code>ORIGINATOR</code></td>
+<td><code>O</code></td>
+<td><code>"192.0.2.1"</code></td>
+<td>Route Reflector originator</td>
+</tr>
+<tr>
+<td><code>CLUSTER_LIST</code></td>
+<td><code>O</code></td>
+<td><code>["192.0.2.1", "192.0.2.2"]</code></td>
+<td>Route Reflector cluster list</td>
+</tr>
+<tr>
+<td><code>MP_REACH</code></td>
+<td><code>OX</code></td>
+<td>object (see MP-BGP section)</td>
+<td>Multi-protocol NLRI</td>
+</tr>
+<tr>
+<td><code>MP_UNREACH</code></td>
+<td><code>OX</code></td>
+<td>object (see MP-BGP section)</td>
+<td>Multi-protocol withdrawals</td>
+</tr>
+<tr>
+<td><code>EXT_COMMUNITY</code></td>
+<td><code>OT</code></td>
+<td>array of objects (see below)</td>
+<td>Extended communities (RFC 4360)</td>
+</tr>
+<tr>
+<td><code>AS4PATH</code></td>
+<td><code>OT</code></td>
+<td>same format as <code>ASPATH</code></td>
+<td>4-byte AS path (RFC 6793)</td>
+</tr>
+<tr>
+<td><code>AS4AGGREGATOR</code></td>
+<td><code>OT</code></td>
+<td>same format as <code>AGGREGATOR</code></td>
+<td>4-byte Aggregator (RFC 6793)</td>
+</tr>
+<tr>
+<td><code>OTC</code></td>
+<td><code>OT</code></td>
+<td>integer</td>
+<td>Only-To-Customer (RFC 9234)</td>
+</tr>
+<tr>
+<td><code>LARGE_COMMUNITY</code></td>
+<td><code>OT</code></td>
+<td><code>["65000:100:1", "65000:200:2"]</code></td>
+<td>Large communities (RFC 8092)</td>
+</tr>
+</tbody>
+</table>
+<p>Unrecognized attributes appear as <code>ATTR_N</code> with a hex string value.</p>
+<h3 id="aspath">ASPATH<a class="headerlink" href="#aspath" title="Permanent link">&para;</a></h3>
+<p>AS_SEQUENCE segments are flat; AS_SET segments are nested arrays:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">&quot;ASPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">64515</span><span class="p">,</span><span class="w"> </span><span class="mi">20473</span><span class="p">,</span><span class="w"> </span><span class="mi">15169</span><span class="p">]}</span>
+</span></code></pre></div>
+<p>With an AS_SET:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">&quot;ASPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">64515</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">20473</span><span class="p">,</span><span class="w"> </span><span class="mi">15169</span><span class="p">]]}</span>
+</span></code></pre></div>
+<p>The AS_SET <code>[20473, 15169]</code> is a single hop containing multiple ASNs. AS_CONFED_SEQUENCE and AS_CONFED_SET use the same representation (flat/nested) with no distinct marker.</p>
+<h3 id="communities">Communities<a class="headerlink" href="#communities" title="Permanent link">&para;</a></h3>
+<p><strong>Standard</strong> (<code>COMMUNITY</code>) — array of <code>"ASN:VALUE"</code> strings (both uint16):</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">&quot;COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;64515:100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;8218:20000&quot;</span><span class="p">]}</span>
+</span></code></pre></div>
+<p><strong>Large</strong> (<code>LARGE_COMMUNITY</code>) — array of <code>"ASN:VALUE1:VALUE2"</code> strings (all uint32):</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">&quot;LARGE_COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;20473:300:15169&quot;</span><span class="p">]}</span>
+</span></code></pre></div>
+<p><strong>Extended</strong> (<code>EXT_COMMUNITY</code>) — array of objects with <code>type</code>, <code>value</code>, and optional <code>nontransitive</code>:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">&quot;EXT_COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TARGET&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;65000:100&quot;</span><span class="p">},</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IP4_TARGET&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.1:100&quot;</span><span class="p">},</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AS4_TARGET&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;65000:100&quot;</span><span class="p">},</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ORIGIN&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;65000:200&quot;</span><span class="p">}</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Extended community type names:</p>
+<table>
+<thead>
+<tr>
+<th>Type name</th>
+<th>Description</th>
+<th>Value format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TARGET</code></td>
+<td>Route Target (2-byte ASN)</td>
+<td><code>"ASN:value"</code></td>
+</tr>
+<tr>
+<td><code>ORIGIN</code></td>
+<td>Route Origin (2-byte ASN)</td>
+<td><code>"ASN:value"</code></td>
+</tr>
+<tr>
+<td><code>IP4_TARGET</code></td>
+<td>Route Target (IPv4)</td>
+<td><code>"IP:value"</code></td>
+</tr>
+<tr>
+<td><code>IP4_ORIGIN</code></td>
+<td>Route Origin (IPv4)</td>
+<td><code>"IP:value"</code></td>
+</tr>
+<tr>
+<td><code>AS4_TARGET</code></td>
+<td>Route Target (4-byte ASN)</td>
+<td><code>"ASN:value"</code></td>
+</tr>
+<tr>
+<td><code>AS4_ORIGIN</code></td>
+<td>Route Origin (4-byte ASN)</td>
+<td><code>"ASN:value"</code></td>
+</tr>
+</tbody>
+</table>
+<p>Unknown types appear as <code>"0xNNNN"</code>. The <code>"nontransitive": true</code> field is added when the community is non-transitive across ASes.</p>
+<p>For Flowspec-specific extended community types (<code>FLOW_RATE_BYTES</code>, <code>FLOW_REDIRECT_AS2</code>, etc.), see <a href="../flowspec/">Flowspec</a>.</p>
+<h2 id="mp-bgp-multi-protocol">MP-BGP (Multi-Protocol)<a class="headerlink" href="#mp-bgp-multi-protocol" title="Permanent link">&para;</a></h2>
+<h3 id="mp_reach">MP_REACH<a class="headerlink" href="#mp_reach" title="Permanent link">&para;</a></h3>
+<p>For IPv6 and other multi-protocol reachable NLRI:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">&quot;MP_REACH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OX&quot;</span><span class="p">,</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nt">&quot;af&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IPV6/UNICAST&quot;</span><span class="p">,</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nt">&quot;nexthop&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2001:db8::1&quot;</span><span class="p">,</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="nt">&quot;prefixes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;2001:db8:1::/48&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2001:db8:2::/48&quot;</span><span class="p">]</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
 <th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>DST</code></td>
-<td>prefix</td>
-<td>Destination prefix</td>
+<td><code>af</code></td>
+<td>string</td>
+<td>Address family: <code>"AFI/SAFI"</code></td>
 </tr>
 <tr>
-<td><code>SRC</code></td>
-<td>prefix</td>
-<td>Source prefix</td>
+<td><code>nexthop</code></td>
+<td>string</td>
+<td>Next-hop address (omitted when unspecified)</td>
 </tr>
 <tr>
-<td><code>PROTO</code></td>
-<td>operators</td>
-<td>IP protocol (e.g., 6=TCP, 17=UDP)</td>
+<td><code>link-local</code></td>
+<td>string</td>
+<td>IPv6 link-local next-hop (optional, IPv6 only)</td>
 </tr>
 <tr>
-<td><code>PORT</code></td>
-<td>operators</td>
-<td>Source or destination port</td>
-</tr>
-<tr>
-<td><code>PORT_DST</code></td>
-<td>operators</td>
-<td>Destination port</td>
-</tr>
-<tr>
-<td><code>PORT_SRC</code></td>
-<td>operators</td>
-<td>Source port</td>
-</tr>
-<tr>
-<td><code>ICMP_TYPE</code></td>
-<td>operators</td>
-<td>ICMP type</td>
-</tr>
-<tr>
-<td><code>ICMP_CODE</code></td>
-<td>operators</td>
-<td>ICMP code</td>
-</tr>
-<tr>
-<td><code>TCP_FLAGS</code></td>
-<td>bitmask ops</td>
-<td>TCP flags (bitmask matching)</td>
-</tr>
-<tr>
-<td><code>PKTLEN</code></td>
-<td>operators</td>
-<td>Packet length</td>
-</tr>
-<tr>
-<td><code>DSCP</code></td>
-<td>operators</td>
-<td>DSCP value</td>
-</tr>
-<tr>
-<td><code>FRAG</code></td>
-<td>bitmask ops</td>
-<td>Fragmentation flags (bitmask matching)</td>
-</tr>
-<tr>
-<td><code>LABEL</code></td>
-<td>operators</td>
-<td>IPv6 flow label (IPv6 only)</td>
+<td><code>prefixes</code></td>
+<td>array</td>
+<td>Prefix strings in CIDR notation</td>
 </tr>
 </tbody>
 </table>
-<h4 id="numeric-operators">Numeric Operators<a class="headerlink" href="#numeric-operators" title="Permanent link">&para;</a></h4>
-<p>For components like <code>PROTO</code>, <code>PORT_DST</code>, etc., the value is an array of operator objects:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="p">[</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;==&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">},</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;and&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="p">]</span>
+<p>For Flowspec address families, the format uses <code>rules</code> instead of <code>prefixes</code> — see <a href="../flowspec/">Flowspec</a>.</p>
+<p>When the NLRI is not parsed (unsupported address family), the value falls back to:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span><span class="nt">&quot;af&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AFI/SAFI&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;nh&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0x...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0x...&quot;</span><span class="p">}</span>
 </span></code></pre></div>
-<p><strong>Operator types</strong>:</p>
-<ul>
-<li><code>==</code>: Equal</li>
-<li><code>&gt;</code>: Greater than</li>
-<li><code>&gt;=</code>: Greater than or equal</li>
-<li><code>&lt;</code>: Less than</li>
-<li><code>&lt;=</code>: Less than or equal</li>
-<li><code>!=</code>: Not equal</li>
-<li><code>true</code>: Always match</li>
-<li><code>false</code>: Never match</li>
-</ul>
-<p><strong>Optional fields</strong>:</p>
-<ul>
-<li><code>and: true</code>: Logical AND with next condition (default is OR)</li>
-</ul>
-<h4 id="bitmask-operators">Bitmask Operators<a class="headerlink" href="#bitmask-operators" title="Permanent link">&para;</a></h4>
-<p>For <code>TCP_FLAGS</code> and <code>FRAG</code> components:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="p">[</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALL&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0x12&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;len&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="p">]</span>
+<h3 id="mp_unreach">MP_UNREACH<a class="headerlink" href="#mp_unreach" title="Permanent link">&para;</a></h3>
+<p>Same structure without <code>nexthop</code>:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nt">&quot;MP_UNREACH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OX&quot;</span><span class="p">,</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="nt">&quot;af&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IPV6/UNICAST&quot;</span><span class="p">,</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="nt">&quot;prefixes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;2001:db8:3::/48&quot;</span><span class="p">]</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="p">}</span>
 </span></code></pre></div>
-<p><strong>Bitmask operations</strong>:</p>
-<ul>
-<li><code>ANY</code>: Match if any bit is set</li>
-<li><code>ALL</code>: Match if all bits are set</li>
-<li><code>NONE</code>: Match if no bits are set</li>
-<li><code>NOT-ALL</code>: Match if not all bits are set</li>
-</ul>
-<p><strong>Fields</strong>:</p>
-<ul>
-<li><code>val</code>: Hex string (e.g., <code>0x12</code>) representing the bitmask</li>
-<li><code>len</code>: Length in bytes (1, 2, 4, or 8)</li>
-</ul>
-<h4 id="ipv6-prefix-with-offset">IPv6 Prefix with Offset<a class="headerlink" href="#ipv6-prefix-with-offset" title="Permanent link">&para;</a></h4>
-<p>For IPv6 Flowspec, prefixes can specify an offset:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nt">&quot;DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2001:db8::/32-64&quot;</span>
-</span></code></pre></div>
-<p>Format: <code>address/offset-length</code> where offset is the bit position to start matching from.</p>
-<h3 id="flowspec-actions-extended-communities">Flowspec Actions (Extended Communities)<a class="headerlink" href="#flowspec-actions-extended-communities" title="Permanent link">&para;</a></h3>
-<p>Flowspec rules typically have associated actions in extended communities:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="nt">&quot;EXT_COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">  </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">  </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;REDIR_IP4&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ip&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">}</span>
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="w">  </span><span class="p">]</span>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="p">}</span>
-</span></code></pre></div>
-<p><strong>Common Flowspec actions</strong>:</p>
-<ul>
-<li><strong>REDIR_IP4</strong> / <strong>REDIR_IP6</strong>: Redirect traffic to VRF</li>
-<li><strong>RATE</strong>: Rate limit in bytes/second (0 = discard)</li>
-<li><strong>MARK</strong>: DSCP marking value</li>
-<li><strong>RT</strong>: Route Target (for VRF import/export)</li>
-</ul>
-<h3 id="complete-flowspec-example">Complete Flowspec Example<a class="headerlink" href="#complete-flowspec-example" title="Permanent link">&para;</a></h3>
-<p>This example blocks TCP traffic to port 80 from a specific prefix:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">[</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">  </span><span class="s2">&quot;R&quot;</span><span class="p">,</span>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">  </span><span class="mi">15</span><span class="p">,</span>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">  </span><span class="s2">&quot;2025-07-11T10:50:00.000&quot;</span><span class="p">,</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">  </span><span class="s2">&quot;UPDATE&quot;</span><span class="p">,</span>
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">      </span><span class="nt">&quot;ORIGIN&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IGP&quot;</span>
-</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="w">      </span><span class="p">},</span>
-</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="w">      </span><span class="nt">&quot;ASPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
-</span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">65055</span><span class="p">]</span>
-</span><span id="__span-25-15"><a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a><span class="w">      </span><span class="p">},</span>
-</span><span id="__span-25-16"><a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a><span class="w">      </span><span class="nt">&quot;MP_REACH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-25-17"><a id="__codelineno-25-17" name="__codelineno-25-17" href="#__codelineno-25-17"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OX&quot;</span><span class="p">,</span>
-</span><span id="__span-25-18"><a id="__codelineno-25-18" name="__codelineno-25-18" href="#__codelineno-25-18"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-25-19"><a id="__codelineno-25-19" name="__codelineno-25-19" href="#__codelineno-25-19"></a><span class="w">          </span><span class="nt">&quot;af&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IPV4/FLOWSPEC&quot;</span><span class="p">,</span>
-</span><span id="__span-25-20"><a id="__codelineno-25-20" name="__codelineno-25-20" href="#__codelineno-25-20"></a><span class="w">          </span><span class="nt">&quot;nexthop&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span>
-</span><span id="__span-25-21"><a id="__codelineno-25-21" name="__codelineno-25-21" href="#__codelineno-25-21"></a><span class="w">          </span><span class="nt">&quot;rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-25-22"><a id="__codelineno-25-22" name="__codelineno-25-22" href="#__codelineno-25-22"></a><span class="w">            </span><span class="p">{</span>
-</span><span id="__span-25-23"><a id="__codelineno-25-23" name="__codelineno-25-23" href="#__codelineno-25-23"></a><span class="w">              </span><span class="nt">&quot;DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.0/24&quot;</span><span class="p">,</span>
-</span><span id="__span-25-24"><a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a><span class="w">              </span><span class="nt">&quot;PROTO&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;==&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">}],</span>
-</span><span id="__span-25-25"><a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a><span class="w">              </span><span class="nt">&quot;PORT_DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;==&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">}]</span>
-</span><span id="__span-25-26"><a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a><span class="w">            </span><span class="p">}</span>
-</span><span id="__span-25-27"><a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a><span class="w">          </span><span class="p">]</span>
-</span><span id="__span-25-28"><a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-25-29"><a id="__codelineno-25-29" name="__codelineno-25-29" href="#__codelineno-25-29"></a><span class="w">      </span><span class="p">},</span>
-</span><span id="__span-25-30"><a id="__codelineno-25-30" name="__codelineno-25-30" href="#__codelineno-25-30"></a><span class="w">      </span><span class="nt">&quot;EXT_COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-25-31"><a id="__codelineno-25-31" name="__codelineno-25-31" href="#__codelineno-25-31"></a><span class="w">        </span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span>
-</span><span id="__span-25-32"><a id="__codelineno-25-32" name="__codelineno-25-32" href="#__codelineno-25-32"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-25-33"><a id="__codelineno-25-33" name="__codelineno-25-33" href="#__codelineno-25-33"></a><span class="w">          </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">}</span>
-</span><span id="__span-25-34"><a id="__codelineno-25-34" name="__codelineno-25-34" href="#__codelineno-25-34"></a><span class="w">        </span><span class="p">]</span>
-</span><span id="__span-25-35"><a id="__codelineno-25-35" name="__codelineno-25-35" href="#__codelineno-25-35"></a><span class="w">      </span><span class="p">}</span>
-</span><span id="__span-25-36"><a id="__codelineno-25-36" name="__codelineno-25-36" href="#__codelineno-25-36"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-25-37"><a id="__codelineno-25-37" name="__codelineno-25-37" href="#__codelineno-25-37"></a><span class="w">  </span><span class="p">},</span>
-</span><span id="__span-25-38"><a id="__codelineno-25-38" name="__codelineno-25-38" href="#__codelineno-25-38"></a><span class="w">  </span><span class="p">{}</span>
-</span><span id="__span-25-39"><a id="__codelineno-25-39" name="__codelineno-25-39" href="#__codelineno-25-39"></a><span class="p">]</span>
+<h2 id="complete-update-example">Complete UPDATE Example<a class="headerlink" href="#complete-update-example" title="Permanent link">&para;</a></h2>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">[</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="s2">&quot;R&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">243</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;2025-07-11T11:23:50.860&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;UPDATE&quot;</span><span class="p">,</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="p">{</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="nt">&quot;reach&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;8.8.8.0/24&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;8.8.4.0/24&quot;</span><span class="p">],</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">      </span><span class="nt">&quot;ORIGIN&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IGP&quot;</span><span class="p">},</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">      </span><span class="nt">&quot;ASPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">64515</span><span class="p">,</span><span class="w"> </span><span class="mi">15169</span><span class="p">]},</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">      </span><span class="nt">&quot;NEXTHOP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.1&quot;</span><span class="p">},</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">      </span><span class="nt">&quot;COMMUNITY&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OT&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;64515:100&quot;</span><span class="p">]},</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">      </span><span class="nt">&quot;OTC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;flags&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OTP&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6777</span><span class="p">}</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;PEER_AS&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;8218&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;PEER_IP&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;5.57.80.210&quot;</span><span class="p">}</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="p">]</span>
 </span></code></pre></div>
 <h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Hex Encoding</strong>: When the upper layer is not parsed (e.g., unsupported attribute), the JSON value is a hex string like <code>0x1234abcd</code>.</li>
-<li><strong>Time Format</strong>: Timestamps use <code>YYYY-MM-DDTHH:MM:SS.mmm</code> format (millisecond precision).</li>
-<li><strong>AFI/SAFI Format</strong>: Address family identifiers use <code>AFI/SAFI</code> format (e.g., <code>IPV4/UNICAST</code>, <code>IPV6/FLOWSPEC</code>).</li>
-<li><strong>Prefixes</strong>: IP prefixes use standard CIDR notation (e.g., <code>192.0.2.0/24</code>, <code>2001:db8::/32</code>).</li>
-<li><strong>Bidirectional</strong>: The JSON format fully supports both encoding (JSON to BGP wire) and decoding (BGP wire to JSON).</li>
+<li><strong>Hex fallback</strong>: Unparsed upper layers and attributes appear as hex strings like <code>"0x1234abcd"</code>.</li>
+<li><strong>Bidirectional</strong>: The format fully supports both encoding (JSON to BGP wire) and decoding (BGP wire to JSON).</li>
+<li><strong>Timestamps</strong>: Millisecond precision, format <code>YYYY-MM-DDTHH:MM:SS.mmm</code>.</li>
+<li><strong>Prefixes</strong>: Standard CIDR notation (<code>192.0.2.0/24</code>, <code>2001:db8::/32</code>).</li>
+<li><strong>Metadata</strong> (<code>[5]</code>): Contains pipeline tags (e.g., from the <code>tag</code> stage, <code>ris-live</code> peer info, <code>rpki</code> validation status). Can be <code>null</code> when no metadata is attached.</li>
 </ul>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../filters/">Message Filters</a> - Filter BGP messages using the <code>grep</code> and <code>drop</code> stages</li>
-<li><a href="../examples/">Examples</a> - Practical bgpipe command-line examples</li>
-<li><a href="https://github.com/bgpfix/bgpfix">bgpfix library</a> - The underlying Go library implementing this format</li>
+<li><a href="../flowspec/">Flowspec Format</a> — Flowspec rules and actions in JSON</li>
+<li><a href="../filters/">Message Filters</a> — Filter BGP messages using <code>grep</code> and <code>drop</code> stages</li>
+<li><a href="../examples/">Examples</a> — Practical bgpipe command-line examples</li>
+<li><a href="https://github.com/bgpfix/bgpfix">bgpfix library</a> — The underlying Go library</li>
 </ul>
 
 
