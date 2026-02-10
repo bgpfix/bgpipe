@@ -1,84 +1,106 @@
 # JSON Message Format
 
-bgpipe can represent BGP messages in a structured JSON format for easy processing and filtering.
-This page documents the format, which is implemented by the [bgpfix library](https://github.com/bgpfix/bgpfix). For example, the JSON translation feature can be useful for external processors - e.g. Python scripts via the `exec` or `websocket` stages - or for BGP message inspection or archiving.
+bgpipe can read and write BGP messages in a structured JSON format for processing, filtering, and archiving.
+This page is a reference for the format, implemented by the [bgpfix library](https://github.com/bgpfix/bgpfix).
 
-## Overview
+## Message Envelope
 
-Each BGP message is represented as a JSON array with the following structure:
+Each BGP message is a JSON array with up to 6 elements:
 
 ```json
-[dir, seq, time, type, data, meta]
+["R", 243, "2025-07-11T11:23:50.860", "UPDATE", {...}, {...}]
 ```
 
-Where:
+| Index | Name   | Type       | Description                                                   |
+|-------|--------|------------|---------------------------------------------------------------|
+| `[0]` | `dir`  | string     | Direction: `"L"` (left-bound) or `"R"` (right-bound)         |
+| `[1]` | `seq`  | integer    | Monotonically increasing sequence number                      |
+| `[2]` | `time` | string     | Timestamp: `YYYY-MM-DDTHH:MM:SS.mmm` |
+| `[3]` | `type` | string     | Message type (see table below)                                |
+| `[4]` | `data` | object/string/null | Type-specific payload (see below)                    |
+| `[5]` | `meta` | object/null | Message tags (key-value map)              |
 
-| Index | Name | Type | Description |
-|-------|------|------|-------------|
-| `[0]` | `dir` | string | direction: `L` (left) or `R` (right) |
-| `[1]` | `seq` | int | sequence number (monotonic counter) |
-| `[2]` | `time` | string | timestamp in `YYYY-MM-DDTHH:MM:SS.mmm` format |
-| `[3]` | `type` | string/int | type: `OPEN`, `UPDATE`, `KEEPALIVE`, etc. |
-| `[4]` | `data` | object/string | type-specific object or raw hex string (optional) |
-| `[5]` | `meta` | object | bgpipe metadata (optional) |
+### Message Types
 
-Example KEEPALIVE Message
+| Type        | `data` field contains                              |
+|-------------|-----------------------------------------------------|
+| `OPEN`      | BGP session parameters and capabilities (object)    |
+| `UPDATE`    | Prefixes and path attributes (object)               |
+| `KEEPALIVE` | `null`                                              |
 
+Unknown or unparsed types produce a hex string like `"0x1234abcd"`.
+
+### Example
+
+KEEPALIVE — the simplest message:
 ```json
 ["R", 2, "2025-07-11T08:47:22.659", "KEEPALIVE"]
 ```
 
 ## OPEN Messages
 
-For OPEN messages, the `data` field contains a JSON object with the BGP session parameters and capabilities:
+The `data` field contains BGP session parameters:
 
 ```json
 {
   "bgp": 4,
   "asn": 65055,
-  "id": "192.0.2.1",
-  "hold": 90,
-  "caps": { ... } // or "params": "0x..." if no caps
+  "id": "85.232.240.180",
+  "hold": 7200,
+  "caps": { ... }
 }
 ```
 
-Where:
+| Field    | Type    | Description                                                  |
+|----------|---------|--------------------------------------------------------------|
+| `bgp`   | integer | BGP protocol version (always `4`)                            |
+| `asn`   | integer | Autonomous System Number (2-byte in OPEN, see `AS4` cap)     |
+| `id`    | string  | BGP Router ID in dotted-decimal notation                     |
+| `hold`  | integer | Hold time in seconds                                         |
+| `caps`  | object  | BGP capabilities (see below)                                 |
+| `params`| string  | Raw optional parameters as hex (only when no capabilities)   |
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `bgp` | int | BGP protocol version (always 4) |
-| `asn` | int | Autonomous System Number (2-byte) |
-| `id` | string | BGP Router ID in dotted-decimal IPv4 format |
-| `hold` | int | Hold time in seconds |
-| `caps` | object | BGP capabilities (see below) |
-| `params` | string | Raw optional parameters as hex string (only if no caps) |
+### Capabilities
 
-The `caps` object contains BGP capabilities:
+The `caps` object maps capability names to their values:
 
 ```json
 {
-  "MP": ["IPV4/UNICAST"],
+  "MP": ["IPV4/UNICAST", "IPV6/UNICAST", "IPV4/FLOWSPEC"],
   "ROUTE_REFRESH": true,
   "EXTENDED_MESSAGE": true,
-  "AS4": 64515
+  "AS4": 65055,
+  "ADDPATH": ["IPV4/UNICAST/SEND", "IPV6/UNICAST/BIDIR"],
+  "ROLE": "CUSTOMER",
+  "FQDN": {"host": "router1", "domain": "example.com"},
+  "EXTENDED_NEXTHOP": ["IPV4/UNICAST/IPV6"]
 }
 ```
 
-Common capabilities (see [bgpfix source](https://github.com/bgpfix/bgpfix/blob/main/caps/cap.go)):
+| Capability             | Value type          | Description                                    |
+|------------------------|---------------------|------------------------------------------------|
+| `MP`                   | array of strings    | Multi-protocol AFI/SAFI list (RFC 4760)        |
+| `ROUTE_REFRESH`        | `true`              | Route Refresh support (RFC 2918)               |
+| `EXTENDED_MESSAGE`     | `true`              | Extended message support (RFC 8654)            |
+| `AS4`                  | integer             | 4-byte ASN (RFC 6793)                          |
+| `ADDPATH`              | array of strings    | ADD-PATH directions (RFC 7911): `AFI/SAFI/DIR` where DIR is `RECEIVE`, `SEND`, or `BIDIR` |
+| `ROLE`                 | string              | BGP Role (RFC 9234): `PROVIDER`, `RS`, `RS-CLIENT`, `CUSTOMER`, or `PEER` |
+| `FQDN`                | object              | Hostname capability (draft): `{"host": "...", "domain": "..."}` |
+| `EXTENDED_NEXTHOP`     | array of strings    | Extended next-hop (RFC 8950): `AFI/SAFI/NH_AFI` |
+| `GRACEFUL_RESTART`     | (presence/value)    | Graceful Restart (RFC 4724)                    |
+| `ENHANCED_ROUTE_REFRESH` | `true`            | Enhanced Route Refresh (RFC 7313)              |
+| `LLGR`                 | (presence/value)    | Long-Lived Graceful Restart                    |
+| `PRE_ROUTE_REFRESH`    | `true`              | Pre-standard Route Refresh (code 128)          |
 
-- **`MP`**: Array of supported AFI/SAFI combinations (e.g., `IPV4/UNICAST`, `IPV6/FLOWSPEC`)
-- **`ROUTE_REFRESH`**: Boolean, supports Route Refresh (RFC 2918)
-- **`EXTENDED_MESSAGE`**: Boolean, supports messages larger than 4096 bytes (RFC 8654)
-- **`AS4`**: Number, 4-byte ASN value (RFC 6793)
+Unknown capabilities appear as `"CAP_N"` with a hex string value.
 
-Complete example:
+AFI/SAFI strings use the format `AFI/SAFI`, e.g.: `IPV4/UNICAST`, `IPV6/UNICAST`, `IPV4/MULTICAST`, `IPV6/MULTICAST`, `IPV4/FLOWSPEC`, `IPV6/FLOWSPEC`, `IPV4/MPLS_VPN`, etc.
+
+### Complete OPEN Example
 
 ```json
 [
-  "L",
-  1,
-  "2025-07-11T08:47:22.659",
-  "OPEN",
+  "L", 1, "2025-07-11T08:47:22.659", "OPEN",
   {
     "bgp": 4,
     "asn": 65055,
@@ -86,40 +108,49 @@ Complete example:
     "hold": 7200,
     "caps": {
       "MP": ["IPV4/FLOWSPEC"],
-      "ROUTE_REFRESH": true
+      "ROUTE_REFRESH": true,
+      "EXTENDED_NEXTHOP": ["IPV4/UNICAST/IPV6", "IPV4/MULTICAST/IPV6"],
+      "AS4": 65055,
+      "PRE_ROUTE_REFRESH": true
     }
-  }
+  },
+  null
 ]
 ```
 
 ## UPDATE Messages
 
-For UPDATE messages, element `data` field contains a JSON object with reachable/withdrawn IPv4 prefixes and the path attributes:
+The `data` field contains prefixes and path attributes:
 
 ```json
 {
-  "reach": [ ... ],
-  "unreach": [ ... ],
+  "reach": ["8.8.8.0/24", "8.8.4.0/24"],
+  "unreach": ["192.0.2.0/24"],
   "attrs": { ... }
 }
 ```
 
-Where:
+| Field     | Type   | Description                                                  |
+|-----------|--------|--------------------------------------------------------------|
+| `reach`   | array  | Announced IPv4 unicast prefixes (CIDR notation)              |
+| `unreach` | array  | Withdrawn IPv4 unicast prefixes (CIDR notation)              |
+| `attrs`   | object | Path attributes (see below)                                  |
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `reach` | array | Array of reachable IPv4 unicast prefixes (announced routes) |
-| `unreach` | array | Array of unreachable IPv4 unicast prefixes (withdrawn routes) |
-| `attrs` | object | BGP path attributes (see below) |
+For multi-protocol routes (IPv6, Flowspec, etc.), prefixes are in the `MP_REACH` and `MP_UNREACH` attributes instead.
 
-**Note**: For MP-BGP (multi-protocol) routes (IPv6, Flowspec, etc.), prefixes are embedded within the `MP_REACH` or `MP_UNREACH` attributes.
+### ADD-PATH
+
+When ADD-PATH (RFC 7911) is negotiated, each prefix carries a 32-bit Path Identifier. In JSON, the path ID is prepended to the prefix string with `#` delimiters:
+
+```json
+"reach": ["#42#8.8.8.0/24", "#42#8.8.4.0/24"]
+```
+
+The format is `#<path-id>#<prefix>`. Without ADD-PATH, prefixes appear as plain CIDR strings.
 
 ### Path Attributes
 
-The `attrs` object contains BGP path attributes. Each attribute has:
-
-- **Key**: Attribute name (e.g., `ORIGIN`, `ASPATH`, `COMMUNITY`)
-- **Value**: Object with `flags` and `value` fields
+Each attribute in `attrs` is an object with `flags` and `value`:
 
 ```json
 "ORIGIN": {
@@ -128,122 +159,103 @@ The `attrs` object contains BGP path attributes. Each attribute has:
 }
 ```
 
-#### Attribute Flags
+**Flags** are a string of characters:
 
-Flags are a string combining these characters:
+| Flag | Meaning          |
+|------|------------------|
+| `O`  | Optional         |
+| `T`  | Transitive       |
+| `P`  | Partial          |
+| `X`  | Extended length  |
 
-- **`O`**: Optional
-- **`T`**: Transitive
-- **`P`**: Partial
-- **`X`**: Extended length
+### Attribute Reference
 
-Well-known attributes (ORIGIN, ASPATH, NEXTHOP) use `T` only. Optional attributes use combinations like `OT`.
+| Attribute          | Flags | Value format                           | Description                     |
+|--------------------|-------|----------------------------------------|---------------------------------|
+| `ORIGIN`           | `T`   | `"IGP"`, `"EGP"`, or `"INCOMPLETE"`   | Route origin (RFC 4271)         |
+| `ASPATH`           | `T`   | array of integers / nested arrays      | AS path (see below)             |
+| `NEXTHOP`          | `T`   | `"192.0.2.1"`                          | IPv4 next-hop address           |
+| `MED`              | `O`   | integer                                | Multi-Exit Discriminator        |
+| `LOCALPREF`        | `T`   | integer                                | Local Preference                |
+| `AGGREGATE`        | `T`   | *(empty/presence)*                     | Atomic Aggregate marker         |
+| `AGGREGATOR`       | `OT`  | `{"asn": N, "addr": "IP"}`            | Aggregator (RFC 4271)           |
+| `COMMUNITY`        | `OT`  | `["65000:100", "65000:200"]`           | Standard communities (RFC 1997) |
+| `ORIGINATOR`       | `O`   | `"192.0.2.1"`                          | Route Reflector originator      |
+| `CLUSTER_LIST`     | `O`   | `["192.0.2.1", "192.0.2.2"]`          | Route Reflector cluster list    |
+| `MP_REACH`         | `OX`  | object (see MP-BGP section)            | Multi-protocol NLRI             |
+| `MP_UNREACH`       | `OX`  | object (see MP-BGP section)            | Multi-protocol withdrawals      |
+| `EXT_COMMUNITY`    | `OT`  | array of objects (see below)           | Extended communities (RFC 4360) |
+| `AS4PATH`          | `OT`  | same format as `ASPATH`                | 4-byte AS path (RFC 6793)       |
+| `AS4AGGREGATOR`    | `OT`  | same format as `AGGREGATOR`            | 4-byte Aggregator (RFC 6793)    |
+| `OTC`              | `OT`  | integer                                | Only-To-Customer (RFC 9234)     |
+| `LARGE_COMMUNITY`  | `OT`  | `["65000:100:1", "65000:200:2"]`       | Large communities (RFC 8092)    |
 
-### Common Path Attributes
+Unrecognized attributes appear as `ATTR_N` with a hex string value.
 
-#### ORIGIN
+### ASPATH
 
-Origin of the route:
-
-```json
-"ORIGIN": {
-  "flags": "T",
-  "value": "IGP"  // or EGP or INCOMPLETE
-}
-```
-
-#### ASPATH
-
-AS path as an array. AS sequences are flat arrays, AS sets are nested arrays:
-
-```json
-"ASPATH": {
-  "flags": "T",
-  "value": [64515, 20473, 15169]  // AS_SEQUENCE
-}
-```
-
-With AS_SET:
-
-```json
-"ASPATH": {
-  "flags": "T",
-  "value": [64515, [20473, 15169]]  // last is AS_SET
-}
-```
-
-#### NEXTHOP
-
-IPv4 next-hop address:
+AS_SEQUENCE segments are flat; AS_SET segments are nested arrays:
 
 ```json
-"NEXTHOP": {
-  "flags": "T",
-  "value": "192.0.2.1"
-}
+"ASPATH": {"flags": "T", "value": [64515, 20473, 15169]}
 ```
 
-#### MED (Multi-Exit Discriminator)
+With an AS_SET:
 
 ```json
-"MED": {
-  "flags": "O",
-  "value": 100
-}
+"ASPATH": {"flags": "T", "value": [64515, [20473, 15169]]}
 ```
 
-#### LOCALPREF (Local Preference)
+The AS_SET `[20473, 15169]` is a single hop containing multiple ASNs. AS_CONFED_SEQUENCE and AS_CONFED_SET use the same representation (flat/nested) with no distinct marker.
+
+### Communities
+
+**Standard** (`COMMUNITY`) — array of `"ASN:VALUE"` strings (both uint16):
 
 ```json
-"LOCALPREF": {
-  "flags": "T",
-  "value": 200
-}
+"COMMUNITY": {"flags": "OT", "value": ["64515:100", "8218:20000"]}
 ```
 
-#### COMMUNITY
-
-Standard BGP communities as `ASN:value` strings:
+**Large** (`LARGE_COMMUNITY`) — array of `"ASN:VALUE1:VALUE2"` strings (all uint32):
 
 ```json
-"COMMUNITY": {
-  "flags": "OT",
-  "value": ["65000:100", "65000:200"]
-}
+"LARGE_COMMUNITY": {"flags": "OT", "value": ["20473:300:15169"]}
 ```
 
-#### LARGE_COMMUNITY
-
-Large BGP communities (RFC 8092):
-
-```json
-"LARGE_COMMUNITY": {
-  "flags": "OT",
-  "value": ["65000:100:1", "65000:200:2"]
-}
-```
-
-#### EXT_COMMUNITY (Extended Communities)
-
-Extended communities with type-specific encoding:
+**Extended** (`EXT_COMMUNITY`) — array of objects with `type`, `value`, and optional `nontransitive`:
 
 ```json
 "EXT_COMMUNITY": {
   "flags": "OT",
   "value": [
-    {"type": "RT", "asn": 65000, "val": 100},
-    {"type": "RT", "ip": "192.0.2.1", "val": 100}
+    {"type": "TARGET", "value": "65000:100"},
+    {"type": "IP4_TARGET", "value": "192.0.2.1:100"},
+    {"type": "AS4_TARGET", "value": "65000:100"},
+    {"type": "ORIGIN", "value": "65000:200"}
   ]
 }
 ```
 
-Common types: `RT` (Route Target), `RO` (Route Origin), `REDIR_IP4` (Flowspec redirect), `RATE` (Flowspec rate-limit).
+Extended community type names:
 
-### MP-BGP Attributes
+| Type name           | Description                          | Value format          |
+|---------------------|--------------------------------------|-----------------------|
+| `TARGET`            | Route Target (2-byte ASN)            | `"ASN:value"`         |
+| `ORIGIN`            | Route Origin (2-byte ASN)            | `"ASN:value"`         |
+| `IP4_TARGET`        | Route Target (IPv4)                  | `"IP:value"`          |
+| `IP4_ORIGIN`        | Route Origin (IPv4)                  | `"IP:value"`          |
+| `AS4_TARGET`        | Route Target (4-byte ASN)            | `"ASN:value"`         |
+| `AS4_ORIGIN`        | Route Origin (4-byte ASN)            | `"ASN:value"`         |
 
-#### MP_REACH
+Unknown types appear as `"0xNNNN"`. The `"nontransitive": true` field is added when the community is non-transitive across ASes.
 
-Multi-protocol reachable NLRI (used for IPv6, Flowspec, etc.):
+For Flowspec-specific extended community types (`FLOW_RATE_BYTES`, `FLOW_REDIRECT_AS2`, etc.), see [Flowspec](flowspec.md).
+
+## MP-BGP (Multi-Protocol)
+
+### MP_REACH
+
+For IPv6 and other multi-protocol reachable NLRI:
 
 ```json
 "MP_REACH": {
@@ -256,11 +268,24 @@ Multi-protocol reachable NLRI (used for IPv6, Flowspec, etc.):
 }
 ```
 
-For Flowspec, see the Flowspec section below.
+| Field       | Type          | Description                                     |
+|-------------|---------------|-------------------------------------------------|
+| `af`        | string        | Address family: `"AFI/SAFI"`                    |
+| `nexthop`   | string        | Next-hop address (omitted when unspecified)      |
+| `link-local`| string        | IPv6 link-local next-hop (optional, IPv6 only)  |
+| `prefixes`  | array         | Prefix strings in CIDR notation                 |
 
-#### MP_UNREACH
+For Flowspec address families, the format uses `rules` instead of `prefixes` — see [Flowspec](flowspec.md).
 
-Multi-protocol unreachable NLRI (withdrawals):
+When the NLRI is not parsed (unsupported address family), the value falls back to:
+
+```json
+{"af": "AFI/SAFI", "nh": "0x...", "data": "0x..."}
+```
+
+### MP_UNREACH
+
+Same structure without `nexthop`:
 
 ```json
 "MP_UNREACH": {
@@ -272,222 +297,36 @@ Multi-protocol unreachable NLRI (withdrawals):
 }
 ```
 
-### Complete UPDATE Example
+## Complete UPDATE Example
 
 ```json
 [
-  "R",
-  243,
-  "2025-07-11T11:23:50.860",
-  "UPDATE",
+  "R", 243, "2025-07-11T11:23:50.860", "UPDATE",
   {
     "reach": ["8.8.8.0/24", "8.8.4.0/24"],
     "attrs": {
-      "ORIGIN": {
-        "flags": "T",
-        "value": "IGP"
-      },
-      "ASPATH": {
-        "flags": "T",
-        "value": [64515, 15169]
-      },
-      "NEXTHOP": {
-        "flags": "T",
-        "value": "192.0.2.1"
-      },
-      "COMMUNITY": {
-        "flags": "OT",
-        "value": ["64515:100"]
-      }
+      "ORIGIN": {"flags": "T", "value": "IGP"},
+      "ASPATH": {"flags": "T", "value": [64515, 15169]},
+      "NEXTHOP": {"flags": "T", "value": "192.0.2.1"},
+      "COMMUNITY": {"flags": "OT", "value": ["64515:100"]},
+      "OTC": {"flags": "OTP", "value": 6777}
     }
   },
-  {}
-]
-```
-
-## Flowspec Messages
-
-Flowspec (Flow Specification) messages are a special type of UPDATE that carries traffic filtering rules instead of routing prefixes. They use the `MP_REACH` or `MP_UNREACH` attributes with AFI/SAFI set to `IPV4/FLOWSPEC` or `IPV6/FLOWSPEC`.
-
-### Flowspec in MP_REACH
-
-```json
-"MP_REACH": {
-  "flags": "OX",
-  "value": {
-    "af": "IPV4/FLOWSPEC",
-    "nexthop": "0.0.0.0",
-    "rules": [ ... ]
-  }
-}
-```
-
-### Flowspec Rules
-
-Each Flowspec rule is a JSON object with components (match conditions):
-
-```json
-{
-  "DST": "192.0.2.0/24",
-  "SRC": "198.51.100.0/24",
-  "PROTO": [{"op": "==", "val": 6}],
-  "PORT_DST": [{"op": "==", "val": 80}]
-}
-```
-
-#### Flowspec Components
-
-| Component | Type | Description |
-|-----------|------|-------------|
-| `DST` | prefix | Destination prefix |
-| `SRC` | prefix | Source prefix |
-| `PROTO` | operators | IP protocol (e.g., 6=TCP, 17=UDP) |
-| `PORT` | operators | Source or destination port |
-| `PORT_DST` | operators | Destination port |
-| `PORT_SRC` | operators | Source port |
-| `ICMP_TYPE` | operators | ICMP type |
-| `ICMP_CODE` | operators | ICMP code |
-| `TCP_FLAGS` | bitmask ops | TCP flags (bitmask matching) |
-| `PKTLEN` | operators | Packet length |
-| `DSCP` | operators | DSCP value |
-| `FRAG` | bitmask ops | Fragmentation flags (bitmask matching) |
-| `LABEL` | operators | IPv6 flow label (IPv6 only) |
-
-#### Numeric Operators
-
-For components like `PROTO`, `PORT_DST`, etc., the value is an array of operator objects:
-
-```json
-[
-  {"op": "==", "val": 80},
-  {"op": ">=", "val": 1024, "and": true}
-]
-```
-
-**Operator types**:
-
-- `==`: Equal
-- `>`: Greater than
-- `>=`: Greater than or equal
-- `<`: Less than
-- `<=`: Less than or equal
-- `!=`: Not equal
-- `true`: Always match
-- `false`: Never match
-
-**Optional fields**:
-
-- `and: true`: Logical AND with next condition (default is OR)
-
-#### Bitmask Operators
-
-For `TCP_FLAGS` and `FRAG` components:
-
-```json
-[
-  {"op": "ALL", "val": "0x12", "len": 1}
-]
-```
-
-**Bitmask operations**:
-
-- `ANY`: Match if any bit is set
-- `ALL`: Match if all bits are set
-- `NONE`: Match if no bits are set
-- `NOT-ALL`: Match if not all bits are set
-
-**Fields**:
-
-- `val`: Hex string (e.g., `0x12`) representing the bitmask
-- `len`: Length in bytes (1, 2, 4, or 8)
-
-#### IPv6 Prefix with Offset
-
-For IPv6 Flowspec, prefixes can specify an offset:
-
-```json
-"DST": "2001:db8::/32-64"
-```
-
-Format: `address/offset-length` where offset is the bit position to start matching from.
-
-### Flowspec Actions (Extended Communities)
-
-Flowspec rules typically have associated actions in extended communities:
-
-```json
-"EXT_COMMUNITY": {
-  "flags": "OT",
-  "value": [
-    {"type": "REDIR_IP4", "ip": "192.0.2.1", "val": 100},
-    {"type": "RATE", "rate": 0}
-  ]
-}
-```
-
-**Common Flowspec actions**:
-
-- **REDIR_IP4** / **REDIR_IP6**: Redirect traffic to VRF
-- **RATE**: Rate limit in bytes/second (0 = discard)
-- **MARK**: DSCP marking value
-- **RT**: Route Target (for VRF import/export)
-
-### Complete Flowspec Example
-
-This example blocks TCP traffic to port 80 from a specific prefix:
-
-```json
-[
-  "R",
-  15,
-  "2025-07-11T10:50:00.000",
-  "UPDATE",
-  {
-    "attrs": {
-      "ORIGIN": {
-        "flags": "T",
-        "value": "IGP"
-      },
-      "ASPATH": {
-        "flags": "T",
-        "value": [65055]
-      },
-      "MP_REACH": {
-        "flags": "OX",
-        "value": {
-          "af": "IPV4/FLOWSPEC",
-          "nexthop": "0.0.0.0",
-          "rules": [
-            {
-              "DST": "192.0.2.0/24",
-              "PROTO": [{"op": "==", "val": 6}],
-              "PORT_DST": [{"op": "==", "val": 80}]
-            }
-          ]
-        }
-      },
-      "EXT_COMMUNITY": {
-        "flags": "OT",
-        "value": [
-          {"type": "RATE", "rate": 0}
-        ]
-      }
-    }
-  },
-  {}
+  {"PEER_AS": "8218", "PEER_IP": "5.57.80.210"}
 ]
 ```
 
 ## Implementation Notes
 
-- **Hex Encoding**: When the upper layer is not parsed (e.g., unsupported attribute), the JSON value is a hex string like `0x1234abcd`.
-- **Time Format**: Timestamps use `YYYY-MM-DDTHH:MM:SS.mmm` format (millisecond precision).
-- **AFI/SAFI Format**: Address family identifiers use `AFI/SAFI` format (e.g., `IPV4/UNICAST`, `IPV6/FLOWSPEC`).
-- **Prefixes**: IP prefixes use standard CIDR notation (e.g., `192.0.2.0/24`, `2001:db8::/32`).
-- **Bidirectional**: The JSON format fully supports both encoding (JSON to BGP wire) and decoding (BGP wire to JSON).
+- **Hex fallback**: Unparsed upper layers and attributes appear as hex strings like `"0x1234abcd"`.
+- **Bidirectional**: The format fully supports both encoding (JSON to BGP wire) and decoding (BGP wire to JSON).
+- **Timestamps**: Millisecond precision, format `YYYY-MM-DDTHH:MM:SS.mmm`.
+- **Prefixes**: Standard CIDR notation (`192.0.2.0/24`, `2001:db8::/32`).
+- **Metadata** (`[5]`): Contains pipeline tags (e.g., from the `tag` stage, `ris-live` peer info, `rpki` validation status). Can be `null` when no metadata is attached.
 
 ## See Also
 
-- [Message Filters](filters.md) - Filter BGP messages using the `grep` and `drop` stages
-- [Examples](examples.md) - Practical bgpipe command-line examples
-- [bgpfix library](https://github.com/bgpfix/bgpfix) - The underlying Go library implementing this format
+- [Flowspec Format](flowspec.md) — Flowspec rules and actions in JSON
+- [Message Filters](filters.md) — Filter BGP messages using `grep` and `drop` stages
+- [Examples](examples.md) — Practical bgpipe command-line examples
+- [bgpfix library](https://github.com/bgpfix/bgpfix) — The underlying Go library

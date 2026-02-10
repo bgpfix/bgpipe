@@ -77,10 +77,8 @@ func (s *Grep) Attach() (err error) {
 
 func (s *Grep) check(m *msg.Msg) bool {
 	// evaluate the filter
-	s.eval.SetMsg(m)
-	if mx := pipe.GetContext(m); mx != nil {
-		s.eval.SetPipe(mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
-	}
+	mx := pipe.UseContext(m)
+	s.eval.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
 	res := s.eval.Run(s.filter)
 
 	// emit events / kill the session?

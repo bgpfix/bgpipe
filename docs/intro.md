@@ -1,15 +1,27 @@
-`bgpipe` is a unique open-source tool that combines BGP monitoring with active message manipulation capabilities. While traditional BGP tools are often limited to passive observation, `bgpipe` operates as a transparent proxy between BGP speakers, allowing real-time inspection and modification of BGP messages.
+The tools available today for working with BGP are fundamentally passive.
+[BMP](https://datatracker.ietf.org/doc/html/rfc7854) streams a copy of the RIB to a collector.
+[MRT](https://datatracker.ietf.org/doc/html/rfc6396) dumps give you a snapshot you can analyze after the fact.
+CLI scraping lets you poll a router's state.
+All of these let you *observe* — but none of them let you *act*.
 
-`bgpipe` processes BGP messages through a series of stages, where each stage performs specific actions such as message filtering, format conversion, or security enhancement. For example, you can:
+When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s — the response is manual: log in, type commands, hope the vendor's filtering syntax does what you think it does.
+There is no standard, programmable layer between BGP speakers where you can inspect, filter, and transform messages in real time.
 
-- Convert BGP messages to JSON and back for easy processing
-- Add TCP-MD5 authentication to existing BGP sessions
-- Filter BGP updates based on prefix lengths or AS paths
-- Apply rate limits and prefix thresholds to prevent flooding attacks
-- Archive BGP sessions to MRT files or remote WebSocket servers
-- Process messages through external programs like Python scripts
+**bgpipe** fills that gap. It operates as a transparent proxy sitting on the BGP wire between two speakers. Every message flowing in either direction passes through a pipeline of composable stages — each doing one thing well, chained together like UNIX pipes:
 
-See the [quickstart guide](quickstart.md) for a practical introduction to bgpipe. You can also watch the below [RIPE88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/).
+```
+router A  ──▶  [ listen ── grep ── rpki ── limit ── connect ]  ──▶  router B
+```
+
+Stages can filter messages (`grep`, `drop`), enforce policy (`limit`, `rpki`), transform data (`update`, `tag`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
+
+Because bgpipe speaks native BGP on both sides, routers see a normal peer — no protocol changes, no vendor lock-in.
+Because every message has a full [JSON representation](json-format.md) (including [Flowspec](flowspec.md)), you can pipe BGP through `jq`, Python, or any tool that handles JSON.
+Because it supports [MRT](https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit), [BMP](https://datatracker.ietf.org/doc/html/rfc7854), and [ExaBGP](https://github.com/Exa-Networks/exabgp/) formats, it integrates with existing infrastructure.
+
+The result is a single tool that handles monitoring, filtering, security enforcement, format conversion, and session manipulation — all from the command line, all composable, all scriptable.
+
+See the [quickstart guide](quickstart.md) for a practical introduction. You can also watch the [RIPE 88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/) below.
 
 <video preload="metadata" style="width: 100%;" controls poster="https://ripe88.ripe.net/wp-content/themes/fluida-plus/images/webcast.jpg">
 <source type="video/mp4" src="https://ripe88.ripe.net/archive/video/pawel-foremski_bgp-pipe-open-source-bgp-reverse-proxy_side_20240523-140239.mp4">

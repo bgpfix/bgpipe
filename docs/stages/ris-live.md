@@ -38,8 +38,8 @@ errors, triggering a reconnect.
 
 Use `--sub` to pass a
 [RIS Live subscription filter](https://ris-live.ripe.net/manual/#ris_subscribe)
-to limit the data at the source. The subscription JSON must include
-`"includeRaw": true` for bgpipe to process the raw BGP messages.
+to limit the data at the source. The subscription JSON should include
+`"includeRaw": true` (or will be added automatically).
 
 The global `-g` / `--guess-asn` flag is recommended when using this stage,
 as different RIS peers may use 2-byte or 4-byte ASNs.
@@ -73,7 +73,7 @@ bgpipe -go -- ris-live -- grep 'prefix ~ 1.1.1.0/24'
 Subscribe to a specific collector:
 
 ```bash
-bgpipe -go -- ris-live --sub '{"host":"rrc01","includeRaw":true}'
+bgpipe -go -- ris-live --sub '{"host":"rrc01"}'
 ```
 
 Stream with RPKI validation, show only invalid:

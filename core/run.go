@@ -93,11 +93,18 @@ func (s *StageBase) runStop(ev *pipe.Event) bool {
 			}
 		}()
 
-		// give it 3s to exit cleanly
-		select {
-		case <-s.done:
-		case <-time.After(3 * time.Second):
-			s.Warn().Msg("stop timeout, forcing cancel")
+		// give it time to exit cleanly?
+		if t := s.Options.StopTimeout; t >= 0 {
+			if t == 0 {
+				t = 3 * time.Second
+			}
+			select {
+			case <-s.done:
+			case <-time.After(t):
+				s.Warn().Msg("stop timeout, forcing cancel")
+				s.Cancel(ErrStageStopped)
+			}
+		} else {
 			s.Cancel(ErrStageStopped)
 		}
 	}
