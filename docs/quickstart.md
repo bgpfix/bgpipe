@@ -30,7 +30,7 @@ Options:
   -o, --stdout           write JSON to stdout
   -I, --stdin-wait       like --stdin but wait for EVENT_ESTABLISHED
   -O, --stdout-wait      like --stdout but wait for EVENT_EOR
-  -2, --short-asn        use 2-byte ASN numbers
+  -2, --short-asn        force 2-byte AS numbers
   -g, --guess-asn        guess AS number byte size
       --caps string      use given BGP capabilities (JSON format)
 
@@ -39,10 +39,14 @@ Supported stages (run <stage> -h to get its help)
   drop                   drop messages that match a filter
   exec                   handle messages in a background process
   grep                   drop messages that DO NOT match a filter
+  head                   stop pipeline after N messages
   limit                  limit prefix lengths and counts
   listen                 let a BGP client connect over TCP
   pipe                   process messages through a named pipe
   read                   read messages from file or URL
+  ris-live               read BGP updates from RIPE RIS Live
+  rpki                   validate UPDATEs using RPKI
+  rv-live                read BGP updates from RouteViews.org via Kafka
   speaker                run a simple BGP speaker
   stdin                  read messages from stdin
   stdout                 print messages to stdout
@@ -63,19 +67,27 @@ Stage usage: connect [OPTIONS] ADDR
 Description: connect to a BGP endpoint over TCP
 
 Options:
-  --timeout duration   TCP connect timeout (0 means off) (default 15s)
-  --closed-timeout duration
-           TCP half-closed timeout (0 means off) (default 1s)
-      --md5 string         TCP MD5 password
+      --bind string               local address to bind to (IP or IP:port)
+      --md5 string                TCP MD5 password
+      --timeout duration          TCP connect timeout (0 means off) (default 15s)
+      --closed-timeout duration   TCP half-closed timeout (0 means off) (default 1s)
+      --keepalive duration        TCP keepalive period (-1 means off) (default 15s)
+      --retry                     retry connection on temporary errors
+      --retry-max int             maximum number of connection retries (0 means unlimited)
+      --tls                       connect over TLS
+      --insecure                  do not validate TLS certificates
+      --no-ipv6                   avoid IPv6 if possible
 
 Common Options:
-  -L, --left               operate in the L direction
-  -R, --right              operate in the R direction
-  -A, --args               consume all CLI arguments till --
-  -W, --wait strings       wait for given event before starting
-  -S, --stop strings       stop after given event is handled
-  -N, --new string         which stage to send new messages to (default "next")
-  -O, --of string          stage output filter (drop non-matching output)
+  -L, --left                      operate in the L direction
+  -R, --right                     operate in the R direction
+  -A, --args                      consume all CLI arguments till --
+  -W, --wait strings              wait for given event before starting
+  -S, --stop strings              stop after given event is handled
+  -N, --new string                which stage to send new messages to (default "next")
+  -O, --of stringArray            stage output filter (drop non-matching output)
+      --rate-limit float          delay messages if over the rate limit
+      --rate-sample float         sample messages if over the rate limit
 ```
 
 As you can see, the `connect` stage has its own set of options, such as `--timeout`, `--closed-timeout`, and `--md5`, which are specific to establishing a BGP connection. The common options, such as `-L`, `-R`, etc. are available for all stages and control how the stage operates in the pipeline context.

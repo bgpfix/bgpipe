@@ -78,6 +78,12 @@ Every stage accepts the following options:
 | `--rate-limit` *N* | Delay messages to stay under *N* messages/sec |
 | `--rate-sample` *N* | Randomly sample messages when over *N* messages/sec |
 
+Stages that produce messages also accept:
+
+| Option | Description |
+|--------|-------------|
+| `-N`, `--new` *target* | Which stage to send new messages to (default `next`) |
+
 In `--wait` and `--stop`, multiple events can be comma-separated. If you refer a stage name (e.g., `listen`), the event is expanded by appending `/READY` (e.g., `listen/READY`), which is emitted when the stage is ready to process messages (e.g., after accepting a new connection). You can also refer to custom events emitted by stages (e.g., `grep/match`).
 
 Stages that support input or output filtering:
