@@ -100,6 +100,28 @@ $ bgpipe -go \
 
 </div>
 
----
+## Features
 
-Built on [bgpfix](https://bgpfix.org/) · MIT license
+- **Transparent proxy** — sits between two BGP speakers; routers see a normal peer
+- **Full JSON translation** — bidirectional BGP ↔ JSON for every message type, including [Flowspec](flowspec.md)
+- **Built-in filters** — match on prefixes, AS paths, communities, attributes, and [tags](stages/tag.md) with a concise [filter language](filters.md)
+- **RPKI validation** — validate UPDATEs against RPKI using RTR protocol (e.g. Cloudflare, Routinator)
+- **Prefix and rate limits** — enforce prefix count/length thresholds and message rate limits per session
+- **UPDATE rewriting** — add, remove, or modify path attributes on the fly
+- **Multiple data formats** — read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format
+- **Compression support** — transparent gzip/bzip2/zstd for MRT and other file formats
+- **HTTP/HTTPS sources** — read directly from URLs (e.g. RouteViews or RIS MRT archives)
+- **External program integration** — pipe messages through any process (`exec`, `pipe` stages)
+- **WebSocket transport** — exchange messages over encrypted WebSockets for remote processing
+- **TCP-MD5 handling** — add or drop TCP-MD5 independently on each side of a session
+- **Live data feeds** — stream from [RIPE RIS Live](https://ris-live.ripe.net/) or [RouteViews](https://www.routeviews.org/) in real time
+- **Message tagging** — attach metadata to messages for downstream filtering and routing decisions
+- **20 pipeline stages** — composable building blocks, each doing one thing well ([full list](stages/index.md))
+
+## Project
+
+bgpipe is hosted on [GitHub](https://github.com/bgpfix/bgpipe) under the MIT license,
+built on the [bgpfix](https://bgpfix.org/) library.
+
+- Report bugs and request features on [GitHub Issues](https://github.com/bgpfix/bgpipe/issues)
+- For collaboration inquiries, contact [bgpipe@bgpipe.org](mailto:bgpipe@bgpipe.org)

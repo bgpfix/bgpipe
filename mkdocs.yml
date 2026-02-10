@@ -3,10 +3,6 @@ nav:
   - Introduction: intro.md
   - Quick Start: quickstart.md
   - Examples: examples.md
-  - JSON:
-    - Message format: json-format.md
-    - Flowspec: flowspec.md
-  - Filtering: filters.md
   - Stages:
     - Overview: stages/index.md
     - connect: stages/connect.md
@@ -28,6 +24,10 @@ nav:
     - update: stages/update.md
     - websocket: stages/websocket.md
     - write: stages/write.md
+  - JSON:
+    - Message format: json-format.md
+    - Flowspec: flowspec.md
+  - Filtering: filters.md
 
 site_name: "bgpipe: BGP pipeline processor"
 site_url: 'https://bgpipe.org/'

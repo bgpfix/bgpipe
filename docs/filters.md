@@ -64,7 +64,7 @@ A filter is one or more expressions chained with `&&` (AND) and `||` (OR):
 
 - Most attributes apply to **UPDATE messages only**. Non-UPDATE messages (OPEN, KEEPALIVE, etc.) evaluate to `false` for UPDATE-only attributes. Use `type` conditions for non-UPDATE matching.
 - The `~` operator uses **Go regexp syntax** (not shell globs) when matching strings.
-- `&&` binds tighter than `||`: `A && B || C` is evaluated as `(A && B) || C`. Use parentheses for explicit grouping when mixing operators.
+- `&&` and `||` are evaluated **left to right** with short-circuit. Use parentheses for explicit grouping when mixing operators: `(A && B) || C` instead of `A && B || C`.
 
 ## Attributes
 
