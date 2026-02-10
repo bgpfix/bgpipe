@@ -37,4 +37,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-// replace github.com/bgpfix/bgpfix => ./.src/bgpfix
+replace github.com/bgpfix/bgpfix => ./.src/bgpfix
