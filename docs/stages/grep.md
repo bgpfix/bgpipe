@@ -78,7 +78,7 @@ Kill the session if a default route is announced:
 ```bash
 bgpipe \
     -- connect 192.0.2.1 \
-    -- grep --kill-match default 'prefix == 0.0.0.0/0' \
+    -- grep --kill-match 'prefix == 0.0.0.0/0' \
     -- connect 10.0.0.1
 ```
 
