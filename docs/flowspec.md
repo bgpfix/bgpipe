@@ -90,13 +90,14 @@ The **Type** column indicates which operator format the component uses: see [Num
 
 ### IPv6 Prefix with Offset
 
-IPv6 Flowspec prefixes can include a bit offset:
+IPv6 Flowspec prefixes can include a bit offset (RFC 8956):
 
 ```json
-"DST": "2001:db8::/0-32"
+"SRC": "::1234:5678:9a00:0/64-104"
 ```
 
 Format: `address/offset-length` where offset is the bit position to start matching from.
+When offset is 0, the ordinary `address/length` format is used instead.
 
 ## Numeric Operators
 
