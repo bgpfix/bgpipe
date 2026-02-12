@@ -6,6 +6,8 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="bgpipe: open-source BGP reverse proxy, firewall, and pipeline processor with RPKI validation, JSON translation, and composable stages">
+      
       
       
         <link rel="canonical" href="https://bgpipe.org/filters/">
@@ -341,6 +343,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../examples/" class="md-nav__link">
         
   
@@ -376,10 +405,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -397,8 +426,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -990,10 +1019,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1011,8 +1040,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1784,8 +1813,8 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tbody>
 <tr>
 <td><code>af</code></td>
-<td><code>==</code></td>
-<td>Address family (AFI/SAFI). Only <code>==</code> is supported.</td>
+<td><code>==</code>, <code>!=</code></td>
+<td>Address family (AFI/SAFI).</td>
 </tr>
 </tbody>
 </table>
@@ -1814,6 +1843,7 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>ipv6                             # IPv6 unicast
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>af == IPV4/FLOWSPEC              # IPv4 Flowspec
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>af == IPV6                       # any IPv6 (unicast, multicast, etc.)
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>af != UNICAST                    # non-unicast SAFI (e.g., flowspec, multicast)
 </span></code></pre></div>
 <h3 id="prefixes-nlri">Prefixes (NLRI)<a class="headerlink" href="#prefixes-nlri" title="Permanent link">&para;</a></h3>
 <table>
@@ -2168,8 +2198,9 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>community                      # has any standard community
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>community == &quot;3356:100&quot;        # has exact community 3356:100
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>community ~ &quot;3356:&quot;            # any community with ASN 3356
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>com_large ~ &quot;1234:5678:9&quot;      # large community matching pattern
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>ext_community ~ &quot;TARGET&quot;       # has any Route Target extended community
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>community !~ &quot;3356:&quot;           # no standard community from ASN 3356
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>com_large ~ &quot;1234:5678:9&quot;      # large community matching pattern
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>ext_community ~ &quot;TARGET&quot;       # has any Route Target extended community
 </span></code></pre></div>
 <h3 id="tags">Tags<a class="headerlink" href="#tags" title="Permanent link">&para;</a></h3>
 <table>
@@ -2225,16 +2256,17 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>tag[rpki/status] == INVALID    # RPKI validation failed
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>tag[PEER_AS] == &quot;8218&quot;         # from RIS peer AS8218
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>tags[region] ~ &quot;^eu-&quot;          # region tag starts with &quot;eu-&quot;
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>tag[rpki/status] != VALID      # anything except VALID
 </span></code></pre></div>
 <h2 id="operator-compatibility">Operator Compatibility<a class="headerlink" href="#operator-compatibility" title="Permanent link">&para;</a></h2>
-<p>Not all operators work with all attributes. This table summarizes:</p>
+<p>Not all operators work with all attributes. This table summarizes:
+<code>!=</code> and <code>!~</code> are supported wherever <code>==</code> and <code>~</code> are supported (they are parsed as negated forms).</p>
 <table>
 <thead>
 <tr>
 <th>Attribute</th>
 <th>(exists)</th>
 <th><code>==</code></th>
-<th><code>!=</code></th>
 <th><code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></th>
 <th><code>~</code> <code>!~</code></th>
 </tr>
@@ -2243,7 +2275,6 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>type</code></td>
 <td></td>
-<td>yes</td>
 <td>yes</td>
 <td></td>
 <td></td>
@@ -2254,11 +2285,9 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td>yes</td>
 <td></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
 <td><code>prefix</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes</td>
 <td>yes (specificity)</td>
@@ -2268,13 +2297,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td><code>nexthop</code></td>
 <td>yes</td>
 <td>yes</td>
-<td>yes</td>
 <td>yes (numeric IP)</td>
 <td>yes (containment)</td>
 </tr>
 <tr>
 <td><code>aspath</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes</td>
 <td>yes (ASN value)</td>
@@ -2284,13 +2311,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td><code>aspath_len</code></td>
 <td>yes</td>
 <td>yes</td>
-<td>yes</td>
 <td>yes (hop count)</td>
 <td></td>
 </tr>
 <tr>
 <td><code>origin</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes</td>
 <td></td>
@@ -2300,13 +2325,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td><code>med</code></td>
 <td>yes</td>
 <td>yes</td>
-<td>yes</td>
 <td>yes (uint32)</td>
 <td></td>
 </tr>
 <tr>
 <td><code>local_pref</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes</td>
 <td>yes (uint32)</td>
@@ -2316,13 +2339,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td><code>community</code></td>
 <td>yes</td>
 <td>yes</td>
-<td>yes</td>
 <td></td>
 <td>yes (regex)</td>
 </tr>
 <tr>
 <td><code>ext_community</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes</td>
 <td></td>
@@ -2332,13 +2353,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td><code>large_community</code></td>
 <td>yes</td>
 <td>yes</td>
-<td>yes</td>
 <td></td>
 <td>yes (regex)</td>
 </tr>
 <tr>
 <td><code>tag</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes</td>
 <td></td>

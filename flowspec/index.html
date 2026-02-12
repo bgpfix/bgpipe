@@ -6,6 +6,8 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="bgpipe: open-source BGP reverse proxy, firewall, and pipeline processor with RPKI validation, JSON translation, and composable stages">
+      
       
       
         <link rel="canonical" href="https://bgpipe.org/flowspec/">
@@ -343,6 +345,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../examples/" class="md-nav__link">
         
   
@@ -378,10 +407,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -399,8 +428,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -994,10 +1023,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1015,8 +1044,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1637,10 +1666,11 @@ The <strong>action</strong> in <code>EXT_COMMUNITY</code> rate-limits matching t
 </table>
 <p>The <strong>Type</strong> column indicates which operator format the component uses: see <a href="#numeric-operators">Numeric Operators</a> or <a href="#bitmask-operators">Bitmask Operators</a> below.</p>
 <h3 id="ipv6-prefix-with-offset">IPv6 Prefix with Offset<a class="headerlink" href="#ipv6-prefix-with-offset" title="Permanent link">&para;</a></h3>
-<p>IPv6 Flowspec prefixes can include a bit offset:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">&quot;DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2001:db8::/32/0-32&quot;</span>
+<p>IPv6 Flowspec prefixes can include a bit offset (RFC 8956):</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">&quot;SRC&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;::1234:5678:9a00:0/64-104&quot;</span>
 </span></code></pre></div>
-<p>Format: <code>address/length/offset-length</code> where offset is the bit position to start matching from.</p>
+<p>Format: <code>address/offset-length</code> where offset is the bit position to start matching from.
+When offset is 0, the ordinary <code>address/length</code> format is used instead.</p>
 <h2 id="numeric-operators">Numeric Operators<a class="headerlink" href="#numeric-operators" title="Permanent link">&para;</a></h2>
 <p>Components of the <strong>numeric</strong> type (<code>PROTO</code>, <code>PORT</code>, <code>PORT_DST</code>, <code>PORT_SRC</code>, <code>ICMP_TYPE</code>, <code>ICMP_CODE</code>, <code>PKTLEN</code>, <code>DSCP</code>, <code>LABEL</code>) use arrays of operator objects:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">&quot;PORT_DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -1660,7 +1690,7 @@ The <strong>action</strong> in <code>EXT_COMMUNITY</code> rate-limits matching t
 <tbody>
 <tr>
 <td><code>op</code></td>
-<td>string</td>
+<td>string or boolean</td>
 <td>Comparison operator (see <a href="#numeric-operator-values">Numeric Operator Values</a>)</td>
 </tr>
 <tr>

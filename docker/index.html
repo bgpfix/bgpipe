@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://bgpipe.org/intro/">
+        <link rel="canonical" href="https://bgpipe.org/docker/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../quickstart/">
       
       
-        <link rel="next" href="../quickstart/">
+        <link rel="next" href="../examples/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Introduction - bgpipe: BGP pipeline processor</title>
+        <title>Docker - bgpipe: BGP pipeline processor</title>
       
     
     
@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#docker" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -114,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Introduction
+              Docker
             
           </span>
         </div>
@@ -283,17 +288,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../intro/" class="md-nav__link">
         
   
   
@@ -309,7 +307,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -345,10 +342,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../docker/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -364,6 +388,120 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-files-from-the-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading Files from the Host
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bgp-sessions-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BGP Sessions (Port Forwarding)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-compose-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Compose Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker Compose Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ris-live-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RIS Live Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrt-to-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRT to JSON
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rpki-proxy-with-routinator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RPKI Proxy with Routinator
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building Locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1163,6 +1301,110 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-files-from-the-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading Files from the Host
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bgp-sessions-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BGP Sessions (Port Forwarding)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-compose-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Compose Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker Compose Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ris-live-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RIS Live Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrt-to-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRT to JSON
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rpki-proxy-with-routinator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RPKI Proxy with Routinator
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building Locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1182,37 +1424,102 @@
   
 
 
-  <h1>Introduction</h1>
-
-<p>The tools available today for working with BGP are fundamentally passive.
-<a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a> streams a copy of the RIB to a collector.
-<a href="https://datatracker.ietf.org/doc/html/rfc6396">MRT</a> dumps give you a snapshot you can analyze after the fact.
-CLI scraping lets you poll a router's state.
-All of these let you <em>observe</em> — but none of them let you <em>act</em>.</p>
-<p>When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s — the response is manual: log in, type commands, hope the vendor's filtering syntax does what you think it does.
-There is no standard, programmable layer between BGP speakers where you can inspect, filter, and transform messages in real time.</p>
-<p><strong>bgpipe</strong> fills that gap. It operates as a transparent proxy sitting on the BGP wire between two speakers. Every message flowing in either direction passes through a pipeline of composable stages — each doing one thing well, chained together like UNIX pipes:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>router A  ──▶  [ listen ── grep ── rpki ── limit ── connect ]  ──▶  router B
+<h1 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h1>
+<p>bgpipe is published as a minimal, multi-architecture Docker image at <code>ghcr.io/bgpfix/bgpipe</code>.</p>
+<p>Available tags:</p>
+<ul>
+<li><code>latest</code> - latest build from <code>main</code> branch</li>
+<li><code>vX.Y.Z</code> - specific release</li>
+<li><code>vX.Y</code> - latest patch of a minor release</li>
+</ul>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># print help</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span>--help
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># find RPKI-invalid announcements in RIPE RIS live stream</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span>-go<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rpki/status] == INVALID&#39;</span>
 </span></code></pre></div>
-<p>Stages can filter messages (<code>grep</code>, <code>drop</code>), enforce policy (<code>limit</code>, <code>rpki</code>), transform data (<code>update</code>, <code>tag</code>), bridge formats (<code>read</code>, <code>write</code>, <code>stdin</code>, <code>stdout</code>), connect to external systems (<code>exec</code>, <code>pipe</code>, <code>websocket</code>), or tap into live data feeds (<code>ris-live</code>, <code>rv-live</code>).</p>
-<p>Because bgpipe speaks native BGP on both sides, routers see a normal peer — no protocol changes, no vendor lock-in.
-Because every message has a full <a href="../json-format/">JSON representation</a> (including <a href="../flowspec/">Flowspec</a>), you can pipe BGP through <code>jq</code>, Python, or any tool that handles JSON.
-Because it supports <a href="https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit">MRT</a>, <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a>, and <a href="https://github.com/Exa-Networks/exabgp/">ExaBGP</a> formats, it integrates with existing infrastructure.</p>
-<p>The result is a single tool that handles monitoring, filtering, security enforcement, format conversion, and session manipulation — all from the command line, all composable, all scriptable.</p>
-<p>See the <a href="../quickstart/">quickstart guide</a> for a practical introduction. You can also watch the <a href="https://ripe88.ripe.net/archives/video/1365/">RIPE 88 bgpipe talk</a> below.</p>
-<video preload="metadata" style="width: 100%;" controls poster="https://ripe88.ripe.net/wp-content/themes/fluida-plus/images/webcast.jpg">
-<source type="video/mp4" src="https://ripe88.ripe.net/archive/video/pawel-foremski_bgp-pipe-open-source-bgp-reverse-proxy_side_20240523-140239.mp4">
-</video>
-
-<p>The talk was summarized in June 2024 by Geoff Huston <a href="https://blog.apnic.net/2024/06/11/routing-topics-at-ripe-88/">on the APNIC blog</a> as follows:</p>
-<blockquote>
-<p>Observing and measuring the dynamic behaviour of BGP has used a small set of tools for quite some time. There’s the BGP Monitoring Protocol (BMP, <a href="https://datatracker.ietf.org/doc/html/rfc7854">RFC 7854</a>), there’s the Multi-threaded Routing Toolkit (MRT) for BGP snapshot and update logs, and if you really want to head back to the earliest days of this work, there are scripts to interrogate a router via the command-line interface, CLI. All of these are observation tools, but they cannot alter the BGP messages that are being passed between BGP speakers.</p>
-<p>The bgpipe tool, presented by Paweł Foremski, is an interesting tool that operates both as a BGP ‘wire sniffer’ but also allows BGP messages to be altered on the fly (Figure 1).</p>
-<p><img alt="Figure 1 — bgpipe overview (from RIPE 88 presentation)" src="../img/bgpipe-flow.png" /></p>
-<p>Internally, the bgpipe process can be configured to invoke supplied ‘callback’ routines when part of a BGP message matches some provided pattern, such as a particular IP prefix, update attribute patterns or such, and it can also be configured to have ‘events’ which processing elements in bgpipe can subscribe to. Simple use cases are to take a BGP session and produce a JSON-formatted log of all BGP messages or take an unencrypted BGP session and add TCP-MD5 encryption. More advanced cases can make use of an external call interface to add route validation checks using RPKI credentials.</p>
-<p>There has been some concern about using IPv6 prefixes to perform a BGP more specific route flooding attack and its possible to use a bgpipe module to perform various forms of prefix thresholds (per origin Autonomous System (AS) or per aggregate prefix) to detect and filter out the effects of such flooding attacks.</p>
-<p>It’s early days in this work, but it is certainly an intriguing and novel BGP tool.</p>
-</blockquote>
+<h2 id="reading-files-from-the-host">Reading Files from the Host<a class="headerlink" href="#reading-files-from-the-host" title="Permanent link">&para;</a></h2>
+<p>Mount a host directory to pass MRT files or capture output:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># read a local MRT file and write JSON output to the host</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>-v<span class="w"> </span>/path/to/data:/data<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>/data/updates.mrt<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>/data/output.json
+</span></code></pre></div>
+<h2 id="bgp-sessions-port-forwarding">BGP Sessions (Port Forwarding)<a class="headerlink" href="#bgp-sessions-port-forwarding" title="Permanent link">&para;</a></h2>
+<p>To run bgpipe as a proxy accessible from the host or other containers, expose port 179:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># transparent proxy: host:1790 → bgpipe → 192.0.2.1:179</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>-p<span class="w"> </span><span class="m">1790</span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span><span class="s2">&quot;listen&quot;</span><span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<p><code>--wait listen</code> tells the <code>connect</code> stage to wait until <code>listen</code> has accepted a connection before dialling out. This ensures the two halves of the proxy session are always synchronized.</p>
+<h2 id="docker-compose-examples">Docker Compose Examples<a class="headerlink" href="#docker-compose-examples" title="Permanent link">&para;</a></h2>
+<p>Docker Compose is included with <a href="https://docs.docker.com/desktop/">Docker Desktop</a>. To run any example below, save it as <code>compose.yml</code> in a new directory and run:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w">       </span><span class="c1"># start (Ctrl+C to stop)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>down<span class="w">     </span><span class="c1"># clean up</span>
+</span></code></pre></div>
+<h3 id="ris-live-monitoring">RIS Live Monitoring<a class="headerlink" href="#ris-live-monitoring" title="Permanent link">&para;</a></h3>
+<p>The simplest example to try — no files or routers needed. Streams live BGP from <a href="https://ris-live.ripe.net/">RIPE RIS Live</a> and prints matching routes to stdout:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">services</span><span class="p">:</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">bgpipe</span><span class="p">:</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/bgpfix/bgpipe:latest</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">      </span><span class="no">-- ris-live</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="no">-- grep &#39;prefix ~ 8.0.0.0/8&#39;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="no">-- stdout</span>
+</span></code></pre></div>
+<h3 id="mrt-to-json">MRT to JSON<a class="headerlink" href="#mrt-to-json" title="Permanent link">&para;</a></h3>
+<p>Fetch a live MRT file from RIPE RIS and write it as JSON. The <code>read</code> stage handles URLs and gzip decompression automatically; the output JSON lands on the host via a volume mount:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">services</span><span class="p">:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">bgpipe</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/bgpfix/bgpipe:latest</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./data:/data</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">      </span><span class="no">-- read https://data.ris.ripe.net/rrc01/2025.11/updates.20251107.2300.gz</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="no">-- write /data/output.json</span>
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mkdir<span class="w"> </span>data
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>up
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># output.json appears in ./data/ when done</span>
+</span></code></pre></div>
+<h3 id="rpki-proxy-with-routinator">RPKI Proxy with Routinator<a class="headerlink" href="#rpki-proxy-with-routinator" title="Permanent link">&para;</a></h3>
+<p>Run bgpipe as a RPKI-validating BGP proxy. <a href="https://routinator.docs.nlnetlabs.nl/">Routinator</a> is an open-source RPKI validator by NLnet Labs that bgpipe connects to over RTR.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">services</span><span class="p">:</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">routinator</span><span class="p">:</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nlnetlabs/routinator:latest</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">server --rtr 0.0.0.0:3323 --http 0.0.0.0:8323</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">bgpipe</span><span class="p">:</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/bgpfix/bgpipe:latest</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="no">-- listen :179</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">      </span><span class="no">-- rpki --rtr routinator:3323</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">      </span><span class="no">-- connect --wait listen 192.0.2.1</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;1790:179&quot;</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">routinator</span>
+</span></code></pre></div>
+<p>Replace <code>192.0.2.1</code> with the address of your downstream router. bgpipe listens on port 1790 on the host, accepts one BGP connection, and proxies it through RPKI validation before forwarding to the real router.</p>
+<h2 id="building-locally">Building Locally<a class="headerlink" href="#building-locally" title="Permanent link">&para;</a></h2>
+<p>The Dockerfile auto-detects the target platform, so a plain <code>docker build</code> produces the right image for your machine — no flags needed:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bgpfix/bgpipe
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">cd</span><span class="w"> </span>bgpipe
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>bgpipe<span class="w"> </span>.
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>bgpipe<span class="w"> </span>--help
+</span></code></pre></div>
+<p>To explicitly target a different platform:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>docker<span class="w"> </span>build<span class="w"> </span>--platform<span class="w"> </span>linux/arm64<span class="w"> </span>-t<span class="w"> </span>bgpipe<span class="w"> </span>.
+</span></code></pre></div>
 
 
 
