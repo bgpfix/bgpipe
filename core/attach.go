@@ -124,6 +124,10 @@ func (b *Bgpipe) AttachStages() error {
 		})
 	}
 
+	if err := b.attachHTTPStages(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

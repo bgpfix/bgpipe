@@ -10,6 +10,7 @@ import (
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/pipe"
+	"github.com/go-chi/chi/v5"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
@@ -39,6 +40,10 @@ type Stage interface {
 	// or after Run() exits (in order to clean-up).
 	// It should safely finish all I/O and make Run return if it's still running.
 	Stop() error
+
+	// RouteHTTP can register optional HTTP routes for this stage under /<stage-name>/*.
+	// A stage may leave this empty.
+	RouteHTTP(r chi.Router) error
 }
 
 // StageOptions describe high-level settings of a stage
@@ -78,12 +83,13 @@ type StageBase struct {
 	P *pipe.Pipe   // bgpfix pipe
 	K *koanf.Koanf // integrated config (args / config file / etc)
 
-	Index   int          // stage index (zero means internal)
-	Cmd     string       // stage command name
-	Name    string       // human-friendly stage name
-	Flags   []string     // consumed flags
-	Args    []string     // consumed args
-	Options StageOptions // stage options
+	Index    int          // stage index (zero means internal)
+	Cmd      string       // stage command name
+	Name     string       // human-friendly stage name
+	HTTPPath string       // mounted HTTP path (eg. /metrics), if any
+	Flags    []string     // consumed flags
+	Args     []string     // consumed args
+	Options  StageOptions // stage options
 
 	FilterIn  []*filter.Filter // message filter for pipe callbacks (input to stage)
 	FilterOut []*filter.Filter // message filter for pipe inputs (output from stage)
@@ -121,6 +127,11 @@ func (s *StageBase) Run() error {
 
 // Stop is the default Stage implementation that does nothing.
 func (s *StageBase) Stop() error {
+	return nil
+}
+
+// RouteHTTP is the default Stage implementation that does nothing.
+func (s *StageBase) RouteHTTP(r chi.Router) error {
 	return nil
 }
 

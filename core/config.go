@@ -40,6 +40,10 @@ func (b *Bgpipe) Configure() error {
 		}()
 	}
 
+	if err := b.configureHTTP(); err != nil {
+		return err
+	}
+
 	// capabilities?
 	switch v := k.String("caps"); {
 	case len(v) == 0: // none
@@ -70,6 +74,7 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.String("pprof", "", "bind pprof to given listen address")
+	f.String("http", "", "bind stage HTTP API to given listen address")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
 	f.StringSliceP("kill", "k", nil, "kill session on any of these events")
 	f.BoolP("stdin", "i", false, "read JSON from stdin")
