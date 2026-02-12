@@ -23,7 +23,7 @@ jobs:
       - name: Build binaries
         run: |
           VERSION="${GITHUB_REF_NAME}"
-          LDFLAGS="-s -w -X main.version=${VERSION}"
+          LDFLAGS="-s -w -X main.BuildVersion=${VERSION}"
           mkdir dist
 
           build() {
