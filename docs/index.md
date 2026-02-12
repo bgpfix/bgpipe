@@ -36,7 +36,7 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
 Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) on the fly, and show RPKI-invalid announcements.
 
 ```bash
-$ bgpipe -go \
+$ docker run --rm ghcr.io/bgpfix/bgpipe:latest bgpipe -go \
     -- ris-live \
     -- rpki --invalid=keep \
     -- grep 'tag[rpki/status] == INVALID'

@@ -67,9 +67,9 @@ services:
   bgpipe:
     image: ghcr.io/bgpfix/bgpipe:latest
     command: >-
-      --stdout
       -- ris-live
       -- grep 'prefix ~ 8.0.0.0/8'
+      -- stdout
 ```
 
 ### MRT to JSON
@@ -106,9 +106,8 @@ services:
   bgpipe:
     image: ghcr.io/bgpfix/bgpipe:latest
     command: >-
-      --stdout
       -- listen :179
-      -- rpki --rtr routinator:3323 --invalid=drop
+      -- rpki --rtr routinator:3323
       -- connect --wait listen 192.0.2.1
     ports:
       - "1790:179"

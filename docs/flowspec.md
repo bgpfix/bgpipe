@@ -93,10 +93,10 @@ The **Type** column indicates which operator format the component uses: see [Num
 IPv6 Flowspec prefixes can include a bit offset:
 
 ```json
-"DST": "2001:db8::/32/0-32"
+"DST": "2001:db8::/0-32"
 ```
 
-Format: `address/length/offset-length` where offset is the bit position to start matching from.
+Format: `address/offset-length` where offset is the bit position to start matching from.
 
 ## Numeric Operators
 
@@ -113,7 +113,7 @@ This matches destination ports 8000-9000: the first condition matches >= 8000 an
 
 | Field | Type    | Description                                                   |
 |-------|---------|---------------------------------------------------------------|
-| `op`  | string  | Comparison operator (see [Numeric Operator Values](#numeric-operator-values)) |
+| `op`  | string or boolean | Comparison operator (see [Numeric Operator Values](#numeric-operator-values)) |
 | `val` | integer | Value to compare against                                      |
 | `and` | boolean | If `true`, AND the result of this condition with the next one. Default: OR with the next condition. |
 

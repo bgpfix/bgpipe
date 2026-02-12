@@ -95,7 +95,7 @@ type == NOTIFY             # match NOTIFICATION messages
 
 | Attribute | Operators | Description                              |
 |-----------|-----------|------------------------------------------|
-| `af`      | `==`      | Address family (AFI/SAFI). Only `==` is supported. |
+| `af`      | `==`, `!=` | Address family (AFI/SAFI). |
 
 **Shortcuts:**
 
@@ -113,6 +113,7 @@ ipv4 && update                   # IPv4 unicast updates
 ipv6                             # IPv6 unicast
 af == IPV4/FLOWSPEC              # IPv4 Flowspec
 af == IPV6                       # any IPv6 (unicast, multicast, etc.)
+af != UNICAST                    # non-unicast SAFI (e.g., flowspec, multicast)
 ```
 
 ### Prefixes (NLRI)
@@ -290,6 +291,7 @@ Examples:
 community                      # has any standard community
 community == "3356:100"        # has exact community 3356:100
 community ~ "3356:"            # any community with ASN 3356
+community !~ "3356:"           # no standard community from ASN 3356
 com_large ~ "1234:5678:9"      # large community matching pattern
 ext_community ~ "TARGET"       # has any Route Target extended community
 ```
@@ -317,27 +319,29 @@ Examples:
 tag[rpki/status] == INVALID    # RPKI validation failed
 tag[PEER_AS] == "8218"         # from RIS peer AS8218
 tags[region] ~ "^eu-"          # region tag starts with "eu-"
+tag[rpki/status] != VALID      # anything except VALID
 ```
 
 ## Operator Compatibility
 
 Not all operators work with all attributes. This table summarizes:
+`!=` and `!~` are supported wherever `==` and `~` are supported (they are parsed as negated forms).
 
-| Attribute       | (exists) | `==` | `!=` | `<` `<=` `>` `>=` | `~` `!~`  |
-|-----------------|----------|------|------|--------------------|-----------|
-| `type`          |          | yes  | yes  |                    |           |
-| `af`            |          | yes  |      |                    |           |
-| `prefix`        | yes      | yes  | yes  | yes (specificity)  | yes (overlap) |
-| `nexthop`       | yes      | yes  | yes  | yes (numeric IP)   | yes (containment) |
-| `aspath`        | yes      | yes  | yes  | yes (ASN value)    | yes (regex) |
-| `aspath_len`    | yes      | yes  | yes  | yes (hop count)    |           |
-| `origin`        | yes      | yes  | yes  |                    |           |
-| `med`           | yes      | yes  | yes  | yes (uint32)       |           |
-| `local_pref`    | yes      | yes  | yes  | yes (uint32)       |           |
-| `community`     | yes      | yes  | yes  |                    | yes (regex) |
-| `ext_community` | yes      | yes  | yes  |                    | yes (regex) |
-| `large_community`| yes     | yes  | yes  |                    | yes (regex) |
-| `tag`           | yes      | yes  | yes  |                    | yes (regex) |
+| Attribute       | (exists) | `==` | `<` `<=` `>` `>=` | `~` `!~`  |
+|-----------------|----------|------|--------------------|-----------|
+| `type`          |          | yes  |                    |           |
+| `af`            |          | yes  |                    |           |
+| `prefix`        | yes      | yes  | yes (specificity)  | yes (overlap) |
+| `nexthop`       | yes      | yes  | yes (numeric IP)   | yes (containment) |
+| `aspath`        | yes      | yes  | yes (ASN value)    | yes (regex) |
+| `aspath_len`    | yes      | yes  | yes (hop count)    |           |
+| `origin`        | yes      | yes  |                    |           |
+| `med`           | yes      | yes  | yes (uint32)       |           |
+| `local_pref`    | yes      | yes  | yes (uint32)       |           |
+| `community`     | yes      | yes  |                    | yes (regex) |
+| `ext_community` | yes      | yes  |                    | yes (regex) |
+| `large_community`| yes     | yes  |                    | yes (regex) |
+| `tag`           | yes      | yes  |                    | yes (regex) |
 
 ## See Also
 
