@@ -51,7 +51,7 @@ docker run --rm \
 
 ## Docker Compose Examples
 
-Docker Compose is included with [Docker Desktop](https://docs.docker.com/desktop/). To run any example below, save it as `compose.yml` in a new directory and run:
+[Docker Compose](https://docs.docker.com/compose/) lets you define multi-container setups in a single YAML file. To run any example below, save it as `compose.yml` in a new directory and run:
 
 ```bash
 docker compose up       # start (Ctrl+C to stop)
@@ -67,6 +67,7 @@ services:
   bgpipe:
     image: ghcr.io/bgpfix/bgpipe:latest
     command: >-
+      -g
       -- ris-live
       -- grep 'prefix ~ 8.0.0.0/8'
       -- stdout
@@ -92,30 +93,6 @@ mkdir data
 docker compose up
 # output.json appears in ./data/ when done
 ```
-
-### RPKI Proxy with Routinator
-
-Run bgpipe as a RPKI-validating BGP proxy. [Routinator](https://routinator.docs.nlnetlabs.nl/) is an open-source RPKI validator by NLnet Labs that bgpipe connects to over RTR.
-
-```yaml
-services:
-  routinator:
-    image: nlnetlabs/routinator:latest
-    command: server --rtr 0.0.0.0:3323 --http 0.0.0.0:8323
-
-  bgpipe:
-    image: ghcr.io/bgpfix/bgpipe:latest
-    command: >-
-      -- listen :179
-      -- rpki --rtr routinator:3323
-      -- connect --wait listen 192.0.2.1
-    ports:
-      - "1790:179"
-    depends_on:
-      - routinator
-```
-
-Replace `192.0.2.1` with the address of your downstream router. bgpipe listens on port 1790 on the host, accepts one BGP connection, and proxies it through RPKI validation before forwarding to the real router.
 
 ## Building Locally
 

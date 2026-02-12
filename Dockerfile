@@ -5,6 +5,7 @@
 FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
 
 ARG TARGETOS TARGETARCH TARGETVARIANT
+ARG BUILD_VERSION=dev
 
 WORKDIR /build
 
@@ -16,7 +17,7 @@ RUN go mod download
 COPY . .
 RUN GOARM="$(echo ${TARGETVARIANT} | tr -d v)" \
     CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM="${GOARM}" \
-    go build -ldflags="-s -w" -trimpath -o bgpipe .
+    go build -ldflags="-s -w -X main.BuildVersion=${BUILD_VERSION}" -trimpath -o bgpipe .
 
 # ---
 

@@ -2,7 +2,6 @@ nav:
   - Home: index.md
   - Introduction: intro.md
   - Quick Start: quickstart.md
-  - Docker: docker.md
   - Examples: examples.md
   - Stages:
     - Overview: stages/index.md
@@ -29,6 +28,7 @@ nav:
     - Message format: json-format.md
     - Flowspec: flowspec.md
   - Filtering: filters.md
+  - Docker: docker.md
 
 site_name: "bgpipe: BGP pipeline processor"
 site_description: "bgpipe: open-source BGP reverse proxy, firewall, and pipeline processor with RPKI validation, JSON translation, and composable stages"

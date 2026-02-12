@@ -173,7 +173,12 @@ func (s *Rpki) HandlePDU(rc *rtrlib.ClientSession, pdu rtrlib.PDU) {
 
 		s.rtr_valid = false
 		s.nextFlush()
-		rc.SendResetQuery()
+
+		// code 2 = "No Data Available" (eg. server still initializing);
+		// do not retry immediately — wait for the periodic refresh instead
+		if p.ErrorCode != rtrlib.PDU_ERROR_NODATA {
+			rc.SendResetQuery()
+		}
 	}
 }
 
