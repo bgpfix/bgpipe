@@ -35,10 +35,17 @@ jobs:
             local out="dist/${name}${suffix}"
 
             echo "Building $out ..."
-            env CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" GOARM="$arm" \
-              go build -ldflags="$LDFLAGS" -trimpath -o "$out" . \
-              && echo "  OK $(du -sh $out | cut -f1)" \
-              || echo "  SKIP (unsupported)"
+            local output
+            if output=$(env CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" GOARM="$arm" \
+              go build -ldflags="$LDFLAGS" -trimpath -o "$out" . 2>&1); then
+              echo "  OK $(du -sh "$out" | cut -f1)"
+            elif echo "$output" | grep -q "unsupported GOOS/GOARCH"; then
+              echo "  SKIP (unsupported ${os}/${arch})"
+            else
+              echo "$output" >&2
+              echo "  FAIL ${os}/${arch}" >&2
+              return 1
+            fi
           }
 
           # Linux

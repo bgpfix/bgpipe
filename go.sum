@@ -1,7 +1,5 @@
 github.com/bgp/stayrtr v0.6.3 h1:d3MW7FV7yV9bP46aEZhggCcxK8tgooB5XEwa6dYVXM4=
 github.com/bgp/stayrtr v0.6.3/go.mod h1:gLXsFU0j2wTKYxDQqXHl9R34FpD1IH59KHwhgFdI3r8=
-github.com/bgpfix/bgpfix v0.17.1 h1:4RiCfEat/lmmhcAo/jHF7fkyfCvuqbIfhwCEoXTkDEo=
-github.com/bgpfix/bgpfix v0.17.1/go.mod h1:25ngm2AbTiTU3dLDoI9QdbqeSS/BtDpVC3ZnkjAl/n0=
 github.com/bgpfix/bgpfix v0.17.2 h1:SgfM89Podspwb4hsgfGU8ZZXrnGfptcxuGhAHM1HUvo=
 github.com/bgpfix/bgpfix v0.17.2/go.mod h1:25ngm2AbTiTU3dLDoI9QdbqeSS/BtDpVC3ZnkjAl/n0=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=

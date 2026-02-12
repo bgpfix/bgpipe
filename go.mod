@@ -2,7 +2,7 @@ module github.com/bgpfix/bgpipe
 
 go 1.24.0
 
-toolchain go1.24.3
+toolchain go1.26.0
 
 require (
 	github.com/bgp/stayrtr v0.6.3
