@@ -1,3 +1,7 @@
+---
+description: "bgpipe is an open-source BGP reverse proxy and pipeline processor — filter, transform, and monitor live BGP sessions with RPKI validation, JSON translation, MRT processing, and many composable stages."
+---
+
 # bgpipe: BGP pipeline processor
 
 **bgpipe** is an open-source tool that processes [BGP](https://en.wikipedia.org/wiki/Border_Gateway_Protocol) messages
@@ -33,14 +37,13 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
 
 ## Quick Demo
 
-Read [live data from RIPE RIS](https://ris-live.ripe.net/), do real-time [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) using [Cloudflare RTR server](https://rpki.cloudflare.com/), and show the first RPKI-invalid announcement.
+Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) on the fly, and show RPKI-invalid announcements.
 
 ```bash
-$ bgpipe -go \
+$ docker run --rm ghcr.io/bgpfix/bgpipe:latest bgpipe -go \
     -- ris-live \
     -- rpki --invalid=keep \
-    -- grep 'tag[rpki/status] == INVALID' \
-    -- head -n 1
+    -- grep 'tag[rpki/status] == INVALID'
 ```
 
 ```json

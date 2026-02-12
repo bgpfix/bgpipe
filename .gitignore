@@ -3,3 +3,6 @@
 /site
 .python-version
 uv.lock
+.src/
+tmp/
+*.txt
