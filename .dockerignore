@@ -14,6 +14,7 @@ docs/
 scripts/
 site/
 test/
+tmp/
 
 bgpipe
 Dockerfile
