@@ -2,6 +2,7 @@ nav:
   - Home: index.md
   - Introduction: intro.md
   - Quick Start: quickstart.md
+  - Docker: docker.md
   - Examples: examples.md
   - Stages:
     - Overview: stages/index.md

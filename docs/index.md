@@ -33,14 +33,13 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
 
 ## Quick Demo
 
-Read [live data from RIPE RIS](https://ris-live.ripe.net/), do real-time [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) using [Cloudflare RTR server](https://rpki.cloudflare.com/), and show the first RPKI-invalid announcement.
+Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) on the fly, and show RPKI-invalid announcements.
 
 ```bash
 $ bgpipe -go \
     -- ris-live \
     -- rpki --invalid=keep \
-    -- grep 'tag[rpki/status] == INVALID' \
-    -- head -n 1
+    -- grep 'tag[rpki/status] == INVALID'
 ```
 
 ```json

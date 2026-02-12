@@ -1,16 +1,35 @@
 ## Installation
 
-To get started with `bgpipe`, you need to install it on your system, ie. where you want it to proxy or terminate BGP sessions. `bgpipe` is a single binary that can be run on any machine, preferably Linux. It does not require any additional libraries or dependencies, making it easy to deploy - just copy the binary to your target machine.
+`bgpipe` is a single static binary with no external dependencies. Pick the installation method that fits your workflow:
 
-You can download pre-built binaries from the [GitHub Releases page](https://github.com/bgpfix/bgpipe/releases/latest).
+=== "Docker"
 
-Alternatively, you can compile from source. You need to have [Go installed](https://go.dev/doc/install) first. Then, you can run:
+    ```bash
+    docker pull ghcr.io/bgpfix/bgpipe:latest
+    docker run --rm ghcr.io/bgpfix/bgpipe:latest --help
+    ```
 
-```bash
-go install github.com/bgpfix/bgpipe@latest   # note (1)
-```
+    See the [Docker guide](docker.md) for volume mounts, compose examples, and multi-arch support.
 
-1. Make sure to put the resultant `bgpipe` binary in your `$PATH`. Go installs executables in the directory named by the `$GOBIN` environment variable, which defaults to `$GOPATH/bin`, or `$HOME/go/bin` if the `$GOPATH` variable is not set.
+=== "Binary"
+
+    ```bash
+    wget -O bgpipe \
+        https://github.com/bgpfix/bgpipe/releases/latest/download/bgpipe-linux-amd64
+    chmod +x bgpipe
+    ./bgpipe --help
+    ```
+
+    Grab a pre-built binary for your platform from the [GitHub Releases page](https://github.com/bgpfix/bgpipe/releases/latest).
+
+=== "Go install"
+
+    ```bash
+    go install github.com/bgpfix/bgpipe@latest
+    bgpipe --help
+    ```
+
+    Install [Go](https://go.dev/) first. Follow the [go install](https://go.dev/ref/mod#go-install) documentation if needed.
 
 ## Running bgpipe
 

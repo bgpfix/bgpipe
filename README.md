@@ -1,5 +1,8 @@
 # bgpipe: BGP pipeline processor
 
+[![Docker Image](https://ghcr-badge.egpl.dev/bgpfix/bgpipe/size?label=docker)](https://github.com/bgpfix/bgpipe/pkgs/container/bgpipe)
+[![GitHub Release](https://img.shields.io/github/v/release/bgpfix/bgpipe)](https://github.com/bgpfix/bgpipe/releases/latest)
+
 An open-source tool that processes BGP messages through a pipeline of composable stages, built on [the bgpfix library](https://github.com/bgpfix/bgpfix).
 
 **Full documentation at [bgpipe.org](https://bgpipe.org/)**
@@ -35,11 +38,15 @@ bgpipe \
 
 ## Installation
 
-Download pre-built binaries from [GitHub Releases](https://github.com/bgpfix/bgpipe/releases/latest), or install from source:
-
+**Docker** (fastest):
 ```bash
-go install github.com/bgpfix/bgpipe@latest
+docker pull ghcr.io/bgpfix/bgpipe:latest
+docker run --rm ghcr.io/bgpfix/bgpipe:latest --help
 ```
+
+**Binary**: download from [GitHub Releases](https://github.com/bgpfix/bgpipe/releases/latest).
+
+**Go**: `go install github.com/bgpfix/bgpipe@latest`
 
 Run `bgpipe -h` or `bgpipe <stage> -h` for built-in help.
 
