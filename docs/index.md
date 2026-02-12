@@ -1,3 +1,7 @@
+---
+description: "bgpipe is an open-source BGP reverse proxy and pipeline processor — filter, transform, and monitor live BGP sessions with RPKI validation, JSON translation, MRT processing, and many composable stages."
+---
+
 # bgpipe: BGP pipeline processor
 
 **bgpipe** is an open-source tool that processes [BGP](https://en.wikipedia.org/wiki/Border_Gateway_Protocol) messages

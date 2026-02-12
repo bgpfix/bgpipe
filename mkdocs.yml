@@ -31,6 +31,7 @@ nav:
   - Filtering: filters.md
 
 site_name: "bgpipe: BGP pipeline processor"
+site_description: "bgpipe: open-source BGP reverse proxy, firewall, and pipeline processor with RPKI validation, JSON translation, and composable stages"
 site_url: 'https://bgpipe.org/'
 repo_url: https://github.com/bgpfix/bgpipe
 
