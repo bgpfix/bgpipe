@@ -1,6 +1,6 @@
 # Message Filters
 
-Filters let you select BGP messages based on type, prefixes, AS path, origin, MED, LOCAL_PREF, communities, tags, and more.
+Filters let you select BGP messages based on type, prefixes, AS path, origin, MED, LOCAL_PREF, OTC, communities, tags, timestamps, and arbitrary JSON paths.
 They are used by the [`grep`](stages/grep.md) and [`drop`](stages/grep.md) stages, and by the `--if` and `--of` options on any stage.
 
 - `grep FILTER` — keep only matching messages
@@ -177,17 +177,20 @@ nexthop ~ 0.0.0.0/0            # any next-hop (always matches)
 
 | Attribute      | Operators                    | Description                     |
 |---------------|------------------------------|---------------------------------|
-| `aspath`      | `==`, `~`, `<`, `<=`, `>`, `>=` | Full AS_PATH                |
+| `aspath`      | `==`, `~`, `<`, `<=`, `>`, `>=` | Any hop (int) or full path (string/regex) |
 | `aspath[N]`   | `==`, `<`, `<=`, `>`, `>=`  | Specific hop by index           |
+| `aspath[*]`   | `==`, `<`, `<=`, `>`, `>=`  | Any hop (explicit, including AS_SET members) |
 | `as_origin`   | `==`, `<`, `<=`, `>`, `>=`  | Origin AS (last hop, index -1)  |
 | `as_upstream`  | `==`, `<`, `<=`, `>`, `>=` | Upstream of origin (index -2)   |
 | `as_peer`     | `==`, `<`, `<=`, `>`, `>=`  | Peer AS (first hop, index 0)    |
 | `aspath_len`  | `==`, `<`, `<=`, `>`, `>=`  | AS_PATH length (hop count)      |
+| `aspath_hops` | `==`, `<`, `<=`, `>`, `>=`  | AS_PATH unique hops (ignoring prepending) |
 
 **Index rules:**
 
 - Positive: `aspath[0]` is the first (leftmost) AS, `aspath[1]` is second, etc.
 - Negative: `aspath[-1]` is the last (origin) AS, `aspath[-2]` is the upstream, etc.
+- Wildcard: `aspath[*]` matches any hop (equivalent to no index for int comparisons).
 
 **Operator semantics:**
 
@@ -213,6 +216,8 @@ aspath ~ "^15169,"             # path starts with AS15169
 as_origin > 64511              # origin ASN is in the private range (> 64511)
 aspath_len > 5                 # reject long paths
 aspath_len == 0                # no AS_PATH (direct peering or incomplete)
+aspath_hops == 2               # exactly 2 unique ASNs (e.g., 65001 65001 3356 has len=3 but hops=2)
+aspath_hops > 5                # more than 5 unique hops (ignoring prepending)
 ```
 
 ### Origin
@@ -265,6 +270,24 @@ Examples:
 local_pref == 100              # default local preference
 local_pref > 100               # preferred routes
 localpref <= 50                # low-preference routes
+```
+
+### OTC (Only To Customer)
+
+| Attribute            | Operators                    | Description                         |
+|----------------------|------------------------------|-------------------------------------|
+| `otc`                | `==`, `<`, `<=`, `>`, `>=`   | OTC attribute value (ASN, [RFC 9234](https://www.rfc-editor.org/rfc/rfc9234)) |
+| `only_to_customer`   | *(alias for `otc`)*          |                                     |
+
+Without an operator, tests for the attribute's existence.
+
+Examples:
+
+```text
+otc                            # has OTC attribute
+otc == 65001                   # OTC value is AS65001
+otc > 64511                    # OTC ASN in the private range
+!otc                           # no OTC attribute (route leak candidate)
 ```
 
 ### Communities
@@ -322,6 +345,108 @@ tags[region] ~ "^eu-"          # region tag starts with "eu-"
 tag[rpki/status] != VALID      # anything except VALID
 ```
 
+### Direction
+
+| Attribute       | Operators | Description              |
+|-----------------|-----------|--------------------------|
+| `dir`           | `==`, `!=` | Message direction       |
+| `direction`     | *(alias for `dir`)*      |          |
+
+Values: `L` (left/local) or `R` (right/remote). Case-insensitive.
+
+Without an operator, tests whether the direction is set (non-zero). Works on **all message types**.
+
+Examples:
+
+```text
+dir == L                           # left-direction messages
+dir == R                           # right-direction messages
+dir != L                           # not left-direction
+```
+
+### Sequence Number
+
+| Attribute       | Operators                    | Description              |
+|-----------------|------------------------------|--------------------------|
+| `seq`           | `==`, `<`, `<=`, `>`, `>=`   | Message sequence number  |
+| `sequence`      | *(alias for `seq`)*          |                          |
+
+Without an operator, tests whether the sequence number is non-zero. Works on **all message types**.
+
+Examples:
+
+```text
+seq > 0                            # has a sequence number
+seq == 42                          # exact sequence number
+seq >= 100 && seq < 200            # sequence number range
+```
+
+### Timestamp
+
+| Attribute       | Operators                         | Description              |
+|-----------------|-----------------------------------|--------------------------|
+| `time`          | `==`, `~`, `<`, `<=`, `>`, `>=`   | Message timestamp        |
+| `timestamp`     | *(alias for `time`)*              |                          |
+
+The timestamp is formatted as ISO 8601: `2006-01-02T15:04:05.000`. Comparison operators use **lexicographic string comparison**, which is correct for this fixed-width format.
+
+Without an operator, tests whether the timestamp is non-zero. Works on **all message types**.
+
+Examples:
+
+```text
+time                               # timestamp is set (non-zero)
+time ~ "^2023-03"                  # March 2023
+time > "2023-01-01"                # after start of 2023
+time == "2023-03-01T12:30:45.000"  # exact timestamp
+time >= "2023-01-01" && time < "2024-01-01"  # all of 2023
+```
+
+### JSON Path
+
+| Attribute       | Operators                         | Description                          |
+|-----------------|-----------------------------------|--------------------------------------|
+| `json[PATH]`    | `==`, `~`, `<`, `<=`, `>`, `>=`   | Extract from message upper layer JSON |
+
+Extracts a value from the message's upper layer JSON (the UPDATE/OPEN object) using a dot-separated path. The path segments are passed to a JSON path extractor.
+
+Without an operator, tests for the path's existence. Numeric operators (`<`, `<=`, `>`, `>=`) parse the extracted value as a number — if it's not a number, the expression evaluates to false. The `==` operator compares extracted text as a string. The `~` operator runs a regex against the raw JSON text at the path.
+
+Works on **all message types** (returns false for KEEPALIVE which has no upper layer).
+
+Examples:
+
+```text
+json[reach]                                # has reachable prefixes
+json[attrs.ORIGIN.value] == IGP            # ORIGIN is IGP
+json[attrs.MED.value] > 100               # MED above 100
+json[attrs.COMMUNITY.value] ~ "3356:"     # community text contains "3356:"
+json[attrs.MP_REACH.value.af]              # MP_REACH has af field
+```
+
+### Attribute Path
+
+| Attribute       | Operators                         | Description                          |
+|-----------------|-----------------------------------|--------------------------------------|
+| `attr[NAME]`     | `==`, `~`, `<`, `<=`, `>`, `>=`  | Shortcut for `json[attrs.NAME.value]` |
+| `attr[NAME.sub]` | `==`, `~`, `<`, `<=`, `>`, `>=`  | Navigate into attribute value        |
+
+Convenience shortcut for accessing BGP attribute values via JSON. `attr[ORIGIN]` is equivalent to `json[attrs.ORIGIN.value]`, and `attr[MP_REACH.af]` is equivalent to `json[attrs.MP_REACH.value.af]`.
+
+The attribute name is resolved against known BGP attribute codes (case-insensitive). Unknown attribute names produce a parse error.
+
+Without an operator, tests for the attribute's existence. Operator semantics are the same as `json[PATH]`.
+
+Examples:
+
+```text
+attr[ORIGIN] == IGP                # ORIGIN is IGP
+attr[MED] > 100                    # MED above 100
+attr[COMMUNITY] ~ "3356:"         # any community from AS3356
+attr[MP_REACH.af]                  # MP_REACH has af field
+attr[LOCALPREF] >= 200             # high local preference
+```
+
 ## Operator Compatibility
 
 Not all operators work with all attributes. This table summarizes:
@@ -335,13 +460,20 @@ Not all operators work with all attributes. This table summarizes:
 | `nexthop`       | yes      | yes  | yes (numeric IP)   | yes (containment) |
 | `aspath`        | yes      | yes  | yes (ASN value)    | yes (regex) |
 | `aspath_len`    | yes      | yes  | yes (hop count)    |           |
+| `aspath_hops`   | yes      | yes  | yes (unique hops)  |           |
 | `origin`        | yes      | yes  |                    |           |
 | `med`           | yes      | yes  | yes (uint32)       |           |
 | `local_pref`    | yes      | yes  | yes (uint32)       |           |
+| `otc`           | yes      | yes  | yes (uint32)       |           |
 | `community`     | yes      | yes  |                    | yes (regex) |
 | `ext_community` | yes      | yes  |                    | yes (regex) |
 | `large_community`| yes     | yes  |                    | yes (regex) |
 | `tag`           | yes      | yes  |                    | yes (regex) |
+| `dir`           | yes      | yes  |                    |           |
+| `seq`           | yes      | yes  | yes (int64)        |           |
+| `time`          | yes      | yes  | yes (string)       | yes (regex) |
+| `json[PATH]`    | yes      | yes  | yes (numeric)      | yes (regex) |
+| `attr[NAME]`    | yes      | yes  | yes (numeric)      | yes (regex) |
 
 ## See Also
 
