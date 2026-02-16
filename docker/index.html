@@ -1451,7 +1451,7 @@
 </span></code></pre></div>
 <h2 id="bgp-sessions-port-forwarding">BGP Sessions (Port Forwarding)<a class="headerlink" href="#bgp-sessions-port-forwarding" title="Permanent link">&para;</a></h2>
 <p>To run bgpipe as a proxy accessible from the host or other containers, expose port 179:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># transparent proxy: host:1790 → bgpipe → 192.0.2.1:179</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># transparent proxy: host:1790 -&gt; bgpipe -&gt; 192.0.2.1:179</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>-p<span class="w"> </span><span class="m">1790</span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span><span class="se">\</span>
@@ -1460,19 +1460,21 @@
 </span></code></pre></div>
 <p><code>--wait listen</code> tells the <code>connect</code> stage to wait until <code>listen</code> has accepted a connection before dialling out. This ensures the two halves of the proxy session are always synchronized.</p>
 <h2 id="docker-compose-examples">Docker Compose Examples<a class="headerlink" href="#docker-compose-examples" title="Permanent link">&para;</a></h2>
-<p>Docker Compose is included with <a href="https://docs.docker.com/desktop/">Docker Desktop</a>. To run any example below, save it as <code>compose.yml</code> in a new directory and run:</p>
+<p><a href="https://docs.docker.com/compose/">Docker Compose</a> lets you define multi-container setups in a
+single YAML file. To run any example below, save it as <code>compose.yml</code> in a new directory and run:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w">       </span><span class="c1"># start (Ctrl+C to stop)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>down<span class="w">     </span><span class="c1"># clean up</span>
 </span></code></pre></div>
 <h3 id="ris-live-monitoring">RIS Live Monitoring<a class="headerlink" href="#ris-live-monitoring" title="Permanent link">&para;</a></h3>
-<p>The simplest example to try — no files or routers needed. Streams live BGP from <a href="https://ris-live.ripe.net/">RIPE RIS Live</a> and prints matching routes to stdout:</p>
+<p>The simplest example to try - no files or routers needed. Streams live BGP from <a href="https://ris-live.ripe.net/">RIPE RIS Live</a> and prints matching routes to stdout:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">services</span><span class="p">:</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">bgpipe</span><span class="p">:</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/bgpfix/bgpipe:latest</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">      </span><span class="no">-- ris-live</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="no">-- grep &#39;prefix ~ 8.0.0.0/8&#39;</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="no">-- stdout</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">      </span><span class="no">-g</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="no">-- ris-live</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="no">-- grep &#39;prefix ~ 8.0.0.0/8&#39;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">      </span><span class="no">-- stdout</span>
 </span></code></pre></div>
 <h3 id="mrt-to-json">MRT to JSON<a class="headerlink" href="#mrt-to-json" title="Permanent link">&para;</a></h3>
 <p>Fetch a live MRT file from RIPE RIS and write it as JSON. The <code>read</code> stage handles URLs and gzip decompression automatically; the output JSON lands on the host via a volume mount:</p>
