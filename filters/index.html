@@ -1317,6 +1317,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#otc-only-to-customer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OTC (Only To Customer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#communities" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1332,6 +1343,28 @@
     <span class="md-ellipsis">
       
         Tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#message-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-path-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON Path Extraction
       
     </span>
   </a>
@@ -1588,6 +1621,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#otc-only-to-customer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OTC (Only To Customer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#communities" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1603,6 +1647,28 @@
     <span class="md-ellipsis">
       
         Tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#message-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-path-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON Path Extraction
       
     </span>
   </a>
@@ -1660,10 +1726,10 @@
 <p>Filters let you select BGP messages based on type, prefixes, AS path, origin, MED, LOCAL_PREF, communities, tags, and more.
 They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href="../stages/grep/"><code>drop</code></a> stages, and by the <code>--if</code> and <code>--of</code> options on any stage.</p>
 <ul>
-<li><code>grep FILTER</code> — keep only matching messages</li>
-<li><code>drop FILTER</code> — remove matching messages</li>
-<li><code>STAGE --if FILTER</code> — skip stage processing for non-matching messages (input filter)</li>
-<li><code>STAGE --of FILTER</code> — drop non-matching stage output (output filter)</li>
+<li><code>grep FILTER</code>: keep only matching messages</li>
+<li><code>drop FILTER</code>: remove matching messages</li>
+<li><code>STAGE --if FILTER</code>: skip stage processing for non-matching messages (input filter)</li>
+<li><code>STAGE --of FILTER</code>: drop non-matching stage output (output filter)</li>
 </ul>
 <h2 id="quick-examples">Quick Examples<a class="headerlink" href="#quick-examples" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># keep only IPv6 updates from AS65000</span>
@@ -1686,11 +1752,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>[!] attribute[index] [operator value] [&amp;&amp; | ||] ...
 </span></code></pre></div>
 <ul>
-<li><code>( ... )</code> — group expressions</li>
-<li><code>!</code> — negate an expression</li>
-<li><code>attribute</code> — what to test (e.g., <code>prefix</code>, <code>aspath</code>, <code>community</code>)</li>
-<li><code>[index]</code> — optional selector within the attribute</li>
-<li><code>operator value</code> — comparison; when omitted, tests for attribute existence</li>
+<li><code>( ... )</code> - group expressions</li>
+<li><code>!</code> - negate an expression</li>
+<li><code>attribute</code> - what to test (e.g., <code>prefix</code>, <code>aspath</code>, <code>community</code>)</li>
+<li><code>[index]</code> - optional selector within the attribute</li>
+<li><code>operator value</code> - comparison; when omitted, tests for attribute existence</li>
 </ul>
 <h3 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">&para;</a></h3>
 <table>
@@ -1990,6 +2056,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td>Specific hop by index</td>
 </tr>
 <tr>
+<td><code>aspath[*]</code></td>
+<td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td>
+<td>Any hop matches</td>
+</tr>
+<tr>
 <td><code>as_origin</code></td>
 <td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td>
 <td>Origin AS (last hop, index -1)</td>
@@ -2009,12 +2080,18 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td>
 <td>AS_PATH length (hop count)</td>
 </tr>
+<tr>
+<td><code>aspath_hops</code></td>
+<td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td>
+<td>Unique consecutive hops (ignores prepending)</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Index rules:</strong></p>
 <ul>
 <li>Positive: <code>aspath[0]</code> is the first (leftmost) AS, <code>aspath[1]</code> is second, etc.</li>
 <li>Negative: <code>aspath[-1]</code> is the last (origin) AS, <code>aspath[-2]</code> is the upstream, etc.</li>
+<li>Wildcard: <code>aspath[*]</code> matches if <strong>any</strong> hop satisfies the comparison.</li>
 </ul>
 <p><strong>Operator semantics:</strong></p>
 <table>
@@ -2029,7 +2106,7 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td>(none)</td>
 <td>AS_PATH exists and is non-empty</td>
-<td>—</td>
+<td>-</td>
 </tr>
 <tr>
 <td><code>==</code> (int)</td>
@@ -2039,12 +2116,12 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>==</code> (string)</td>
 <td>Full path string matches exactly</td>
-<td>—</td>
+<td>-</td>
 </tr>
 <tr>
 <td><code>~</code> (regex)</td>
 <td>Regex match on JSON path text</td>
-<td>—</td>
+<td>-</td>
 </tr>
 <tr>
 <td><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td>
@@ -2061,9 +2138,10 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>aspath[-2] == 3356             # upstream of origin is AS3356
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>aspath ~ &quot;,15169,&quot;             # AS15169 appears anywhere in the path
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>aspath ~ &quot;^15169,&quot;             # path starts with AS15169
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>as_origin &gt; 64511              # origin ASN is in the private range (&gt; 64511)
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>aspath_len &gt; 5                 # reject long paths
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>aspath_len == 0                # no AS_PATH (direct peering or incomplete)
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>aspath_len &gt; 5                 # reject long paths
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>aspath_len == 0                # no AS_PATH (direct peering or incomplete)
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>aspath_hops == 1               # single unique origin
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>aspath[*] &gt; 64511              # any hop ASN &gt; 64511
 </span></code></pre></div>
 <h3 id="origin">Origin<a class="headerlink" href="#origin" title="Permanent link">&para;</a></h3>
 <table>
@@ -2145,6 +2223,33 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>local_pref &gt; 100               # preferred routes
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>localpref &lt;= 50                # low-preference routes
 </span></code></pre></div>
+<h3 id="otc-only-to-customer">OTC (Only To Customer)<a class="headerlink" href="#otc-only-to-customer" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Operators</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>otc</code></td>
+<td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td>
+<td>OTC attribute (RFC 9234)</td>
+</tr>
+<tr>
+<td><code>only_to_customer</code></td>
+<td><em>(alias for <code>otc</code>)</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Without an operator, tests for the attribute's existence.</p>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>otc                            # has OTC attribute
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>otc == 65001                   # OTC value is 65001
+</span></code></pre></div>
 <h3 id="communities">Communities<a class="headerlink" href="#communities" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2197,12 +2302,12 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </table>
 <p>The <code>~</code> regex matches against the JSON representation. For standard communities, this is <code>"ASN:VALUE"</code> strings. For extended communities, the JSON contains the full structure with type names like <code>TARGET</code>, <code>IP4_TARGET</code>, etc. (see <a href="../json-format/#communities">JSON Format</a>).</p>
 <p>Examples:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>community                      # has any standard community
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>community == &quot;3356:100&quot;        # has exact community 3356:100
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>community ~ &quot;3356:&quot;            # any community with ASN 3356
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>community !~ &quot;3356:&quot;           # no standard community from ASN 3356
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>com_large ~ &quot;1234:5678:9&quot;      # large community matching pattern
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>ext_community ~ &quot;TARGET&quot;       # has any Route Target extended community
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>community                      # has any standard community
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>community == &quot;3356:100&quot;        # has exact community 3356:100
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>community ~ &quot;3356:&quot;            # any community with ASN 3356
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>community !~ &quot;3356:&quot;           # no standard community from ASN 3356
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>com_large ~ &quot;1234:5678:9&quot;      # large community matching pattern
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>ext_community ~ &quot;TARGET&quot;       # has any Route Target extended community
 </span></code></pre></div>
 <h3 id="tags">Tags<a class="headerlink" href="#tags" title="Permanent link">&para;</a></h3>
 <table>
@@ -2255,10 +2360,83 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </tbody>
 </table>
 <p>Examples:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>tag[rpki/status] == INVALID    # RPKI validation failed
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>tag[PEER_AS] == &quot;8218&quot;         # from RIS peer AS8218
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>tags[region] ~ &quot;^eu-&quot;          # region tag starts with &quot;eu-&quot;
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>tag[rpki/status] != VALID      # anything except VALID
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>tag[rpki/status] == INVALID    # RPKI validation failed
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>tag[PEER_AS] == &quot;8218&quot;         # from RIS peer AS8218
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>tags[region] ~ &quot;^eu-&quot;          # region tag starts with &quot;eu-&quot;
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>tag[rpki/status] != VALID      # anything except VALID
+</span></code></pre></div>
+<h3 id="message-metadata">Message Metadata<a class="headerlink" href="#message-metadata" title="Permanent link">&para;</a></h3>
+<p>These attributes work on <strong>all message types</strong> (not just UPDATEs).</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Operators</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dir</code>, <code>direction</code></td>
+<td><code>==</code>, <code>!=</code></td>
+<td>Message direction (<code>L</code> or <code>R</code>)</td>
+</tr>
+<tr>
+<td><code>seq</code>, <code>sequence</code></td>
+<td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td>
+<td>Message sequence number</td>
+</tr>
+<tr>
+<td><code>time</code>, <code>timestamp</code></td>
+<td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>~</code></td>
+<td>Message timestamp</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>time</code> attribute compares against timestamps. Values are parsed flexibly (e.g., <code>"2023-03-01"</code>, <code>"2023-03-01T12:30:45.000"</code>). The <code>~</code> operator matches against the ISO 8601 string representation.</p>
+<p>Without an operator, tests for a non-zero value.</p>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>dir == L                       # messages from the left side
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>dir != R                       # not from the right side
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>seq &gt; 100                      # sequence number above 100
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>time &gt; &quot;2023-01-01&quot;            # after January 1, 2023
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>time ~ &quot;^2023-03&quot;              # any time in March 2023
+</span></code></pre></div>
+<h3 id="json-path-extraction">JSON Path Extraction<a class="headerlink" href="#json-path-extraction" title="Permanent link">&para;</a></h3>
+<p>These attributes extract values from the message's JSON representation. The <code>json</code> attribute works on <strong>all message types</strong>, whereas the <code>attr</code> attribute works for UPDATEs only.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Operators</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>json[PATH]</code></td>
+<td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>~</code></td>
+<td>Extract value at JSON path</td>
+</tr>
+<tr>
+<td><code>attr[ATTR.PATH]</code></td>
+<td><code>==</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>~</code></td>
+<td>Shortcut for attribute values</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>json</code> attribute uses a dot-separated path to navigate the message data JSON (type-specific representation). The <code>attr</code> attribute is a convenience shortcut: <code>attr[ORIGIN]</code> is equivalent to <code>json[attrs.ORIGIN.value]</code>, and <code>attr[MP_REACH.af]</code> is equivalent to <code>json[attrs.MP_REACH.value.af]</code>.</p>
+<p><strong>Array indexing:</strong> Numeric path segments are treated as array indices. For example, <code>json[reach.0]</code> accesses the first element of the <code>reach</code> array, and <code>attr[COMMUNITY.0]</code> accesses the first community value.</p>
+<p>Attribute names in <code>attr[...]</code> are case-insensitive and resolved against known BGP attribute codes (with or without <code>ATTR_</code> prefix).</p>
+<p>Without an operator, tests for the path's existence. Numeric comparisons (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>) parse the extracted value as a number.</p>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>json[attrs.ORIGIN.value] == IGP        # ORIGIN is IGP
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>json[attrs.MED.value] &gt; 100            # MED value above 100
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>json[reach.0] ~ &quot;10\.&quot;                 # first announced prefix starts with 10.
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>attr[ORIGIN] == IGP                    # same as json[attrs.ORIGIN.value] == IGP
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>attr[MED] &gt; 100                        # same as json[attrs.MED.value] &gt; 100
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>attr[COMMUNITY.0] ~ &quot;^3356:&quot;           # first community is from AS3356
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>attr[MP_REACH.af] == &quot;IPV4/FLOWSPEC&quot;   # MP_REACH address family
 </span></code></pre></div>
 <h2 id="operator-compatibility">Operator Compatibility<a class="headerlink" href="#operator-compatibility" title="Permanent link">&para;</a></h2>
 <p>Not all operators work with all attributes. This table summarizes:
@@ -2267,7 +2445,6 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <thead>
 <tr>
 <th>Attribute</th>
-<th>(exists)</th>
 <th><code>==</code></th>
 <th><code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></th>
 <th><code>~</code> <code>!~</code></th>
@@ -2276,14 +2453,12 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tbody>
 <tr>
 <td><code>type</code></td>
-<td></td>
 <td>yes</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td><code>af</code></td>
-<td></td>
 <td>yes</td>
 <td></td>
 <td></td>
@@ -2291,13 +2466,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>prefix</code></td>
 <td>yes</td>
-<td>yes</td>
 <td>yes (specificity)</td>
 <td>yes (overlap)</td>
 </tr>
 <tr>
 <td><code>nexthop</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes (numeric IP)</td>
 <td>yes (containment)</td>
@@ -2305,13 +2478,17 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>aspath</code></td>
 <td>yes</td>
-<td>yes</td>
 <td>yes (ASN value)</td>
 <td>yes (regex)</td>
 </tr>
 <tr>
 <td><code>aspath_len</code></td>
 <td>yes</td>
+<td>yes (hop count)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>aspath_hops</code></td>
 <td>yes</td>
 <td>yes (hop count)</td>
 <td></td>
@@ -2319,13 +2496,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>origin</code></td>
 <td>yes</td>
-<td>yes</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td><code>med</code></td>
-<td>yes</td>
 <td>yes</td>
 <td>yes (uint32)</td>
 <td></td>
@@ -2333,6 +2508,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>local_pref</code></td>
 <td>yes</td>
+<td>yes (uint32)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>otc</code></td>
 <td>yes</td>
 <td>yes (uint32)</td>
 <td></td>
@@ -2340,13 +2520,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>community</code></td>
 <td>yes</td>
-<td>yes</td>
 <td></td>
 <td>yes (regex)</td>
 </tr>
 <tr>
 <td><code>ext_community</code></td>
-<td>yes</td>
 <td>yes</td>
 <td></td>
 <td>yes (regex)</td>
@@ -2354,24 +2532,52 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <tr>
 <td><code>large_community</code></td>
 <td>yes</td>
-<td>yes</td>
 <td></td>
 <td>yes (regex)</td>
 </tr>
 <tr>
 <td><code>tag</code></td>
 <td>yes</td>
+<td></td>
+<td>yes (regex)</td>
+</tr>
+<tr>
+<td><code>dir</code></td>
 <td>yes</td>
 <td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>seq</code></td>
+<td>yes</td>
+<td>yes (int64)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>yes</td>
+<td>yes (timestamp)</td>
+<td>yes (regex)</td>
+</tr>
+<tr>
+<td><code>json</code></td>
+<td>yes</td>
+<td>yes (numeric)</td>
+<td>yes (regex)</td>
+</tr>
+<tr>
+<td><code>attr</code></td>
+<td>yes</td>
+<td>yes (numeric)</td>
 <td>yes (regex)</td>
 </tr>
 </tbody>
 </table>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../stages/grep/">grep / drop</a> — Stages that use filters</li>
-<li><a href="../json-format/">JSON Format</a> — BGP message JSON structure (community <code>~</code> matches against this)</li>
-<li><a href="../examples/">Examples</a> — Practical bgpipe pipelines</li>
+<li><a href="../stages/grep/">grep / drop</a> - Stages that use filters</li>
+<li><a href="../json-format/">JSON Format</a> - BGP message JSON structure (community <code>~</code> matches against this)</li>
+<li><a href="../examples/">Examples</a> - Practical bgpipe pipelines</li>
 </ul>
 
 
