@@ -3,10 +3,10 @@
 Filters let you select BGP messages based on type, prefixes, AS path, origin, MED, LOCAL_PREF, communities, tags, and more.
 They are used by the [`grep`](stages/grep.md) and [`drop`](stages/grep.md) stages, and by the `--if` and `--of` options on any stage.
 
-- `grep FILTER` — keep only matching messages
-- `drop FILTER` — remove matching messages
-- `STAGE --if FILTER` — skip stage processing for non-matching messages (input filter)
-- `STAGE --of FILTER` — drop non-matching stage output (output filter)
+- `grep FILTER`: keep only matching messages
+- `drop FILTER`: remove matching messages
+- `STAGE --if FILTER`: skip stage processing for non-matching messages (input filter)
+- `STAGE --of FILTER`: drop non-matching stage output (output filter)
 
 ## Quick Examples
 
@@ -35,11 +35,11 @@ A filter is one or more expressions chained with `&&` (AND) and `||` (OR):
 [!] attribute[index] [operator value] [&& | ||] ...
 ```
 
-- `( ... )` — group expressions
-- `!` — negate an expression
-- `attribute` — what to test (e.g., `prefix`, `aspath`, `community`)
-- `[index]` — optional selector within the attribute
-- `operator value` — comparison; when omitted, tests for attribute existence
+- `( ... )` - group expressions
+- `!` - negate an expression
+- `attribute` - what to test (e.g., `prefix`, `aspath`, `community`)
+- `[index]` - optional selector within the attribute
+- `operator value` - comparison; when omitted, tests for attribute existence
 
 ### Operators
 
@@ -179,24 +179,27 @@ nexthop ~ 0.0.0.0/0            # any next-hop (always matches)
 |---------------|------------------------------|---------------------------------|
 | `aspath`      | `==`, `~`, `<`, `<=`, `>`, `>=` | Full AS_PATH                |
 | `aspath[N]`   | `==`, `<`, `<=`, `>`, `>=`  | Specific hop by index           |
+| `aspath[*]`   | `==`, `<`, `<=`, `>`, `>=`  | Any hop matches                 |
 | `as_origin`   | `==`, `<`, `<=`, `>`, `>=`  | Origin AS (last hop, index -1)  |
 | `as_upstream`  | `==`, `<`, `<=`, `>`, `>=` | Upstream of origin (index -2)   |
 | `as_peer`     | `==`, `<`, `<=`, `>`, `>=`  | Peer AS (first hop, index 0)    |
 | `aspath_len`  | `==`, `<`, `<=`, `>`, `>=`  | AS_PATH length (hop count)      |
+| `aspath_hops` | `==`, `<`, `<=`, `>`, `>=`  | Unique consecutive hops (ignores prepending) |
 
 **Index rules:**
 
 - Positive: `aspath[0]` is the first (leftmost) AS, `aspath[1]` is second, etc.
 - Negative: `aspath[-1]` is the last (origin) AS, `aspath[-2]` is the upstream, etc.
+- Wildcard: `aspath[*]` matches if **any** hop satisfies the comparison.
 
 **Operator semantics:**
 
 | Operator | Without index                          | With index                       |
 |----------|----------------------------------------|----------------------------------|
-| (none)   | AS_PATH exists and is non-empty        | —                                |
+| (none)   | AS_PATH exists and is non-empty        | -                                |
 | `==` (int) | **Any hop** equals the value         | Specific hop equals the value    |
-| `==` (string) | Full path string matches exactly | —                                |
-| `~` (regex) | Regex match on JSON path text       | —                                |
+| `==` (string) | Full path string matches exactly | -                                |
+| `~` (regex) | Regex match on JSON path text       | -                                |
 | `<`, `<=`, `>`, `>=` | **Any hop** ASN satisfies comparison | Specific hop ASN satisfies comparison |
 
 The `~` regex matches against the JSON representation of the AS path (comma-separated ASNs without brackets).
@@ -210,9 +213,10 @@ aspath[1] == 3356              # second hop is AS3356
 aspath[-2] == 3356             # upstream of origin is AS3356
 aspath ~ ",15169,"             # AS15169 appears anywhere in the path
 aspath ~ "^15169,"             # path starts with AS15169
-as_origin > 64511              # origin ASN is in the private range (> 64511)
 aspath_len > 5                 # reject long paths
 aspath_len == 0                # no AS_PATH (direct peering or incomplete)
+aspath_hops == 1               # single unique origin
+aspath[*] > 64511              # any hop ASN > 64511
 ```
 
 ### Origin
@@ -265,6 +269,22 @@ Examples:
 local_pref == 100              # default local preference
 local_pref > 100               # preferred routes
 localpref <= 50                # low-preference routes
+```
+
+### OTC (Only To Customer)
+
+| Attribute          | Operators                    | Description              |
+|--------------------|------------------------------|--------------------------|
+| `otc`              | `==`, `<`, `<=`, `>`, `>=`   | OTC attribute (RFC 9234) |
+| `only_to_customer` | *(alias for `otc`)*          |                          |
+
+Without an operator, tests for the attribute's existence.
+
+Examples:
+
+```text
+otc                            # has OTC attribute
+otc == 65001                   # OTC value is 65001
 ```
 
 ### Communities
@@ -322,29 +342,89 @@ tags[region] ~ "^eu-"          # region tag starts with "eu-"
 tag[rpki/status] != VALID      # anything except VALID
 ```
 
+### Message Metadata
+
+These attributes work on **all message types** (not just UPDATEs).
+
+| Attribute              | Operators                    | Description              |
+|------------------------|------------------------------|--------------------------|
+| `dir`, `direction`     | `==`, `!=`                   | Message direction (`L` or `R`) |
+| `seq`, `sequence`      | `==`, `<`, `<=`, `>`, `>=`   | Message sequence number  |
+| `time`, `timestamp`    | `==`, `<`, `<=`, `>`, `>=`, `~` | Message timestamp     |
+
+The `time` attribute compares against timestamps. Values are parsed flexibly (e.g., `"2023-03-01"`, `"2023-03-01T12:30:45.000"`). The `~` operator matches against the ISO 8601 string representation.
+
+Without an operator, tests for a non-zero value.
+
+Examples:
+
+```text
+dir == L                       # messages from the left side
+dir != R                       # not from the right side
+seq > 100                      # sequence number above 100
+time > "2023-01-01"            # after January 1, 2023
+time ~ "^2023-03"              # any time in March 2023
+```
+
+### JSON Path Extraction
+
+These attributes extract values from the message's JSON representation. The `json` attribute works on **all message types**, whereas the `attr` attribute works for UPDATEs only.
+
+| Attribute           | Operators                          | Description                   |
+|---------------------|------------------------------------|-------------------------------|
+| `json[PATH]`        | `==`, `<`, `<=`, `>`, `>=`, `~`    | Extract value at JSON path    |
+| `attr[ATTR.PATH]`   | `==`, `<`, `<=`, `>`, `>=`, `~`    | Shortcut for attribute values |
+
+The `json` attribute uses a dot-separated path to navigate the message data JSON (type-specific representation). The `attr` attribute is a convenience shortcut: `attr[ORIGIN]` is equivalent to `json[attrs.ORIGIN.value]`, and `attr[MP_REACH.af]` is equivalent to `json[attrs.MP_REACH.value.af]`.
+
+**Array indexing:** Numeric path segments are treated as array indices. For example, `json[reach.0]` accesses the first element of the `reach` array, and `attr[COMMUNITY.0]` accesses the first community value.
+
+Attribute names in `attr[...]` are case-insensitive and resolved against known BGP attribute codes (with or without `ATTR_` prefix).
+
+Without an operator, tests for the path's existence. Numeric comparisons (`<`, `<=`, `>`, `>=`) parse the extracted value as a number.
+
+Examples:
+
+```text
+json[attrs.ORIGIN.value] == IGP        # ORIGIN is IGP
+json[attrs.MED.value] > 100            # MED value above 100
+json[reach.0] ~ "10\."                 # first announced prefix starts with 10.
+attr[ORIGIN] == IGP                    # same as json[attrs.ORIGIN.value] == IGP
+attr[MED] > 100                        # same as json[attrs.MED.value] > 100
+attr[COMMUNITY.0] ~ "^3356:"           # first community is from AS3356
+attr[MP_REACH.af] == "IPV4/FLOWSPEC"   # MP_REACH address family
+```
+
 ## Operator Compatibility
 
 Not all operators work with all attributes. This table summarizes:
 `!=` and `!~` are supported wherever `==` and `~` are supported (they are parsed as negated forms).
 
-| Attribute       | (exists) | `==` | `<` `<=` `>` `>=` | `~` `!~`  |
-|-----------------|----------|------|--------------------|-----------|
-| `type`          |          | yes  |                    |           |
-| `af`            |          | yes  |                    |           |
-| `prefix`        | yes      | yes  | yes (specificity)  | yes (overlap) |
-| `nexthop`       | yes      | yes  | yes (numeric IP)   | yes (containment) |
-| `aspath`        | yes      | yes  | yes (ASN value)    | yes (regex) |
-| `aspath_len`    | yes      | yes  | yes (hop count)    |           |
-| `origin`        | yes      | yes  |                    |           |
-| `med`           | yes      | yes  | yes (uint32)       |           |
-| `local_pref`    | yes      | yes  | yes (uint32)       |           |
-| `community`     | yes      | yes  |                    | yes (regex) |
-| `ext_community` | yes      | yes  |                    | yes (regex) |
-| `large_community`| yes     | yes  |                    | yes (regex) |
-| `tag`           | yes      | yes  |                    | yes (regex) |
+| Attribute        | `==` | `<` `<=` `>` `>=` | `~` `!~`  |
+|------------------|------|--------------------|-----------|
+| `type`           | yes  |                    |           |
+| `af`             | yes  |                    |           |
+| `prefix`         | yes  | yes (specificity)  | yes (overlap) |
+| `nexthop`        | yes  | yes (numeric IP)   | yes (containment) |
+| `aspath`         | yes  | yes (ASN value)    | yes (regex) |
+| `aspath_len`     | yes  | yes (hop count)    |           |
+| `aspath_hops`    | yes  | yes (hop count)    |           |
+| `origin`         | yes  |                    |           |
+| `med`            | yes  | yes (uint32)       |           |
+| `local_pref`     | yes  | yes (uint32)       |           |
+| `otc`            | yes  | yes (uint32)       |           |
+| `community`      | yes  |                    | yes (regex) |
+| `ext_community`  | yes  |                    | yes (regex) |
+| `large_community`| yes  |                    | yes (regex) |
+| `tag`            | yes  |                    | yes (regex) |
+| `dir`            | yes  |                    |           |
+| `seq`            | yes  | yes (int64)        |           |
+| `time`           | yes  | yes (timestamp)    | yes (regex) |
+| `json`           | yes  | yes (numeric)      | yes (regex) |
+| `attr`           | yes  | yes (numeric)      | yes (regex) |
 
 ## See Also
 
-- [grep / drop](stages/grep.md) — Stages that use filters
-- [JSON Format](json-format.md) — BGP message JSON structure (community `~` matches against this)
-- [Examples](examples.md) — Practical bgpipe pipelines
+- [grep / drop](stages/grep.md) - Stages that use filters
+- [JSON Format](json-format.md) - BGP message JSON structure (community `~` matches against this)
+- [Examples](examples.md) - Practical bgpipe pipelines

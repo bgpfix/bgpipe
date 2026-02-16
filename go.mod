@@ -6,7 +6,7 @@ toolchain go1.26.0
 
 require (
 	github.com/bgp/stayrtr v0.6.3
-	github.com/bgpfix/bgpfix v0.17.2
+	github.com/bgpfix/bgpfix v0.18.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/gorilla/websocket v1.5.3
@@ -25,6 +25,7 @@ require (
 
 require (
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
+	github.com/itlightning/dateparse v0.2.1 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -37,4 +38,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-//replace github.com/bgpfix/bgpfix => ./.src/bgpfix
+//replace github.com/bgpfix/bgpfix => ../bgpfix
