@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/signal"
 	"slices"
@@ -16,6 +17,7 @@ import (
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
+	"github.com/go-chi/chi/v5"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -34,8 +36,11 @@ type Bgpipe struct {
 	K      *koanf.Koanf   // global config
 	Pipe   *pipe.Pipe     // bgpfix pipe
 	Stages []*StageBase   // pipe stages
+	HTTP      *http.Server // optional shared HTTP server
+	StartTime time.Time    // when the pipeline started
 
-	repo map[string]NewStage // maps cmd to new stage func
+	repo    map[string]NewStage // maps cmd to new stage func
+	httpmux *chi.Mux            // shared HTTP routes
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L
@@ -101,6 +106,14 @@ func (b *Bgpipe) Run() error {
 
 	// attach our b.Start
 	b.Pipe.Options.OnStart(b.onStart)
+
+	// record start time and start optional HTTP API
+	b.StartTime = time.Now()
+	if err := b.startHTTP(); err != nil {
+		b.Error().Err(err).Msg("could not start HTTP API")
+		return err
+	}
+	defer b.stopHTTP()
 
 	// handle signals
 	go b.handleSignals()

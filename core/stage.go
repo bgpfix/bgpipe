@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/pipe"
+	"github.com/go-chi/chi/v5"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
@@ -39,6 +41,10 @@ type Stage interface {
 	// or after Run() exits (in order to clean-up).
 	// It should safely finish all I/O and make Run return if it's still running.
 	Stop() error
+
+	// RouteHTTP can register optional HTTP routes for this stage under /<stage-name>/*.
+	// A stage may leave this empty.
+	RouteHTTP(r chi.Router) error
 }
 
 // StageOptions describe high-level settings of a stage
@@ -78,12 +84,13 @@ type StageBase struct {
 	P *pipe.Pipe   // bgpfix pipe
 	K *koanf.Koanf // integrated config (args / config file / etc)
 
-	Index   int          // stage index (zero means internal)
-	Cmd     string       // stage command name
-	Name    string       // human-friendly stage name
-	Flags   []string     // consumed flags
-	Args    []string     // consumed args
-	Options StageOptions // stage options
+	Index    int          // stage index (zero means internal)
+	Cmd      string       // stage command name
+	Name     string       // human-friendly stage name
+	HTTPPath string       // mounted HTTP path (eg. /metrics), if any
+	Flags    []string     // consumed flags
+	Args     []string     // consumed args
+	Options  StageOptions // stage options
 
 	FilterIn  []*filter.Filter // message filter for pipe callbacks (input to stage)
 	FilterOut []*filter.Filter // message filter for pipe inputs (output from stage)
@@ -121,6 +128,11 @@ func (s *StageBase) Run() error {
 
 // Stop is the default Stage implementation that does nothing.
 func (s *StageBase) Stop() error {
+	return nil
+}
+
+// RouteHTTP is the default Stage implementation that does nothing.
+func (s *StageBase) RouteHTTP(r chi.Router) error {
 	return nil
 }
 
@@ -220,6 +232,59 @@ func (s *StageBase) String() string {
 	} else {
 		return s.Name
 	}
+}
+
+var reMetricUnsafe = regexp.MustCompile(`[^a-z0-9_]+`)
+
+// SanitizeMetricLabel converts a string to a valid Prometheus label [a-z0-9_]
+func SanitizeMetricLabel(s string) string {
+	s = strings.ToLower(s)
+	s = reMetricUnsafe.ReplaceAllString(s, "_")
+	s = strings.Trim(s, "_")
+	if s == "" {
+		s = "unknown"
+	}
+	return s
+}
+
+// MetricPrefix returns a sanitized Prometheus metric prefix for this stage,
+// e.g. "bgpipe_metrics_" or "bgpipe_my_counters_".
+func (s *StageBase) MetricPrefix() string {
+	name := SanitizeMetricLabel(s.Name)
+	if name == "unknown" {
+		name = fmt.Sprintf("stage_%d", s.Index)
+	}
+	return "bgpipe_" + name + "_"
+}
+
+// HTTPSlug returns a URL-safe path component for this stage,
+// e.g. "metrics" or "my-counters".
+func (s *StageBase) HTTPSlug() string {
+	name := strings.TrimPrefix(strings.TrimSpace(s.Name), "@")
+	if name == "" {
+		name = s.Cmd
+	}
+
+	name = strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z':
+			return r
+		case r >= 'A' && r <= 'Z':
+			return r
+		case r >= '0' && r <= '9':
+			return r
+		case r == '-', r == '_', r == '.':
+			return r
+		default:
+			return '-'
+		}
+	}, name)
+
+	name = strings.Trim(name, "-_.")
+	if name == "" {
+		return fmt.Sprintf("stage-%d", s.Index)
+	}
+	return name
 }
 
 // StringDir returns eg. "-LR [FIRST]" depending on stage direction
