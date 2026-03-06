@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://bgpipe.org/stages/write/">
+        <link rel="canonical" href="https://bgpipe.org/stages/metrics/">
       
       
-        <link rel="prev" href="../websocket/">
+        <link rel="prev" href="../listen/">
       
       
-        <link rel="next" href="../../json-format/">
+        <link rel="next" href="../pipe/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>write - bgpipe: BGP pipeline processor</title>
+        <title>metrics - bgpipe: BGP pipeline processor</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#write" class="md-skip">
+        <a href="#metrics" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              write
+              metrics
             
           </span>
         </div>
@@ -642,10 +642,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../metrics/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    metrics
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -661,6 +688,131 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#synopsis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synopsis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filter-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter arguments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generic-counters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generic counters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP endpoints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -978,37 +1130,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    write
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../write/" class="md-nav__link">
         
   
   
@@ -1024,81 +1149,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Synopsis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Description
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Options
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1321,6 +1371,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filter-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter arguments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1328,6 +1406,28 @@
     <span class="md-ellipsis">
       
         Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generic-counters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generic counters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP endpoints
       
     </span>
   </a>
@@ -1376,30 +1476,50 @@
   
 
 
-<h1 id="write">write<a class="headerlink" href="#write" title="Permanent link">&para;</a></h1>
-<p>Write messages to a file.</p>
+<h1 id="metrics">metrics<a class="headerlink" href="#metrics" title="Permanent link">&para;</a></h1>
+<p>Count messages matching filter expressions and expose Prometheus metrics.</p>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [...] -- write [OPTIONS] PATH
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe --http :8080 [...] -- metrics [OPTIONS] [-A] [LABEL: FILTER] ...
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>The <strong>write</strong> stage writes BGP messages to a local file. It is a consumer that
-supports bidirectional operation with <code>-LR</code> and mirrors messages flowing
-through the pipeline, serializing them to disk without consuming them -
-downstream stages still see every message.</p>
-<p>The <em>PATH</em> argument supports time-based placeholders for automatic file rotation:</p>
-<ul>
-<li><code>$TIME</code> is replaced with the current time formatted according to <code>--time-format</code></li>
-<li><code>${format}</code> uses a custom Go time format (e.g., <code>${2006-01-02}</code>)</li>
-</ul>
-<p>When <code>--every</code> is set, the stage rotates to a new file at the given interval.
-The minimum rotation interval is 60 seconds.</p>
-<p>Files are written atomically: data is first written to a <code>.tmp</code> file, then
-renamed to the final path on successful completion. Empty files are removed
-automatically. Parent directories are created as needed.</p>
-<p>The output format is auto-detected from the file extension by default.
-For example, <code>output.json</code> selects JSON, <code>output.mrt</code> selects MRT.
-Compression is also auto-detected: <code>.gz</code> (gzip), <code>.bz2</code> (bzip2),
-<code>.zst</code> / <code>.zstd</code> (Zstandard).</p>
+<p>The <strong>metrics</strong> stage counts BGP messages flowing through the pipeline
+and exposes them as Prometheus counters. It always tracks generic counters
+(total messages, by direction, by message type), and optionally evaluates
+user-defined filter expressions with labeled counters.</p>
+<p>Requires <code>--http</code> to expose metrics via HTTP. The global <code>/metrics</code> endpoint
+serves all Prometheus metrics in text format. The stage also mounts a JSON
+summary at <code>/stage/metrics/</code>.</p>
+<h3 id="filter-arguments">Filter arguments<a class="headerlink" href="#filter-arguments" title="Permanent link">&para;</a></h3>
+<p>Each positional argument defines a filter rule in the format <code>LABEL: FILTER</code>.
+If no <code>:</code> (colon-space) separator is present, the argument text is used as
+both label and filter expression. Labels are sanitized to <code>[a-z0-9_]</code> for
+Prometheus compatibility.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span>ipv4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="s1">&#39;v6: ipv6&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="s1">&#39;google: as_origin == 15169&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="s1">&#39;long_path: aspath_len &gt; 5&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span></code></pre></div>
+<p>This creates counters like:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe_metrics_match{filter=&quot;ipv4&quot;} 42
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>bgpipe_metrics_match{filter=&quot;v6&quot;} 18
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>bgpipe_metrics_match{filter=&quot;google&quot;} 5
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>bgpipe_metrics_match{filter=&quot;long_path&quot;} 3
+</span></code></pre></div>
+<h3 id="batch-mode">Batch mode<a class="headerlink" href="#batch-mode" title="Permanent link">&para;</a></h3>
+<p>For offline analysis (e.g., measuring an MRT file), use <code>--output</code> to write
+the final counter values to a file when the pipeline exits. This captures
+metrics that would otherwise be lost because the pipeline finishes before
+a scraper can read <code>/metrics</code>.</p>
+<p>Place the <code>metrics</code> stage <strong>after</strong> the source stage so it sees the messages:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>updates.mrt<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--<span class="w"> </span>metrics<span class="w"> </span>--output<span class="w"> </span>results.prom<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>grep<span class="w"> </span>bgpipe<span class="w"> </span>results.prom
+</span></code></pre></div>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1412,74 +1532,109 @@ Compression is also auto-detected: <code>.gz</code> (gzip), <code>.bz2</code> (b
 </thead>
 <tbody>
 <tr>
-<td><code>--format</code></td>
+<td><code>--output</code></td>
 <td>string</td>
-<td><code>auto</code></td>
-<td>Data format: <code>json</code>, <code>raw</code>, <code>mrt</code>, <code>exa</code>, <code>bmp</code>, <code>obmp</code>, or <code>auto</code> (detected from extension)</td>
-</tr>
-<tr>
-<td><code>--append</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Append to file if it already exists</td>
-</tr>
-<tr>
-<td><code>--create</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Fail if the file already exists</td>
-</tr>
-<tr>
-<td><code>--compress</code></td>
-<td>string</td>
-<td><code>auto</code></td>
-<td>Compression: <code>auto</code>, <code>gz</code>, <code>bzip2</code>, <code>zstd</code>, or <code>none</code></td>
-</tr>
-<tr>
-<td><code>--every</code></td>
-<td>duration</td>
-<td><code>0</code></td>
-<td>Rotate to a new file at this interval (min 60s)</td>
-</tr>
-<tr>
-<td><code>--time-format</code></td>
-<td>string</td>
-<td><code>20060102.1504</code></td>
-<td>Go time format for <code>$TIME</code> placeholder</td>
-</tr>
-<tr>
-<td><code>--type</code></td>
-<td>strings</td>
 <td></td>
-<td>Write only messages of given type(s)</td>
+<td>Write final metrics to file on exit (Prometheus text format)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="generic-counters">Generic counters<a class="headerlink" href="#generic-counters" title="Permanent link">&para;</a></h2>
+<p>These are always created (prefix derived from stage name):</p>
+<table>
+<thead>
+<tr>
+<th>Counter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgpipe_metrics_messages_total</code></td>
+<td>Total messages seen (all directions/types)</td>
 </tr>
 <tr>
-<td><code>--skip</code></td>
-<td>strings</td>
-<td></td>
-<td>Skip messages of given type(s)</td>
+<td><code>bgpipe_metrics_messages_total{dir="left",type="update"}</code></td>
+<td>UPDATE messages flowing left</td>
+</tr>
+<tr>
+<td><code>bgpipe_metrics_messages_total{dir="right",type="update"}</code></td>
+<td>UPDATE messages flowing right</td>
+</tr>
+<tr>
+<td><code>bgpipe_metrics_messages_total{dir="left",type="open"}</code></td>
+<td>OPEN messages flowing left</td>
+</tr>
+<tr>
+<td><code>bgpipe_metrics_messages_total{dir="right",type="keepalive"}</code></td>
+<td>KEEPALIVE messages flowing right</td>
+</tr>
+<tr>
+<td><em>(all dir × type combinations)</em></td>
+<td>One series per direction+type pair</td>
+</tr>
+</tbody>
+</table>
+<p>Each <code>(dir, type)</code> combination is a separate Prometheus series, enabling PromQL
+aggregations like <code>sum by (dir)</code>, <code>sum by (type)</code>, or filtering on
+<code>{dir="right",type="update"}</code>.</p>
+<h2 id="http-endpoints">HTTP endpoints<a class="headerlink" href="#http-endpoints" title="Permanent link">&para;</a></h2>
+<p>When <code>--http</code> is set:</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td>Web dashboard with pipeline info, stages, uptime, and links</td>
+</tr>
+<tr>
+<td><code>/metrics</code></td>
+<td>Global Prometheus metrics (all stages, all Go runtime)</td>
+</tr>
+<tr>
+<td><code>/hc</code></td>
+<td>Health check (JSON, k8s-compatible)</td>
+</tr>
+<tr>
+<td><code>/stage/metrics/</code></td>
+<td>JSON summary of this stage's counters</td>
+</tr>
+<tr>
+<td><code>/debug/pprof/</code></td>
+<td>Go pprof (when <code>--pprof</code> is enabled)</td>
 </tr>
 </tbody>
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<p>Write a BGP session to a JSON file:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>-LR<span class="w"> </span>session.json<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+<p>Monitor a live BGP session with Prometheus scraping:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:9090<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">&#39;bogon: as_origin &gt; 64512&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
-<p>Write compressed MRT with hourly rotation:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>-LR<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">&#39;updates.$TIME.mrt.gz&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+<p>Measure an MRT dump offline and save results:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>updates.20230301.0000.mrt<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>--output<span class="w"> </span>stats.prom<span class="w"> </span>-A<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">&#39;google: as_origin == 15169&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>updates.20230301.json
 </span></code></pre></div>
-<p>Archive only UPDATE messages:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>input.mrt.gz<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>--type<span class="w"> </span>UPDATE<span class="w"> </span>updates.json
-</span></code></pre></div>
-<p>Append to an existing log:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>new-data.mrt.gz<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>--append<span class="w"> </span>archive.json
+<p>Named stage with custom metric prefix:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span>@my_counters<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># produces: bgpipe_my_counters_messages_total, bgpipe_my_counters_match{filter=&quot;ipv4&quot;}, etc.</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<p><a href="../read/">read</a>,
-<a href="../stdout/">stdout</a>,
+<p><a href="../../filters/">Message Filters</a>,
+<a href="../grep/">grep</a>,
+<a href="../rpki/">rpki</a>,
 <a href="../">Stages overview</a></p>
 
 
