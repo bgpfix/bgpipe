@@ -7,9 +7,6 @@ import (
 	"slices"
 	"strings"
 
-	"net/http"
-	_ "net/http/pprof"
-
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/rs/zerolog"
@@ -33,11 +30,8 @@ func (b *Bgpipe) Configure() error {
 		zerolog.SetGlobalLevel(lvl)
 	}
 
-	// pprof?
-	if v := k.String("pprof"); len(v) > 0 {
-		go func() {
-			b.Fatal().Err(http.ListenAndServe(v, nil)).Msg("pprof failed")
-		}()
+	if err := b.configureHTTP(); err != nil {
+		return err
 	}
 
 	// capabilities?
@@ -69,7 +63,8 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("version", "v", false, "print detailed version info and quit")
 	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
-	f.String("pprof", "", "bind pprof to given listen address")
+	f.String("http", "", "bind HTTP API + Prometheus /metrics to given address")
+	f.Bool("pprof", false, "enable pprof at /debug/pprof/ (requires --http)")
 	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
 	f.StringSliceP("kill", "k", nil, "kill session on any of these events")
 	f.BoolP("stdin", "i", false, "read JSON from stdin")

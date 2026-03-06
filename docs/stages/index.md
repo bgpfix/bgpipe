@@ -19,6 +19,7 @@ bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGS] [--] STAGE2 [OPTIONS] [ARGS] ...
 | [head](head.md) | Stop the pipeline after N messages |
 | [limit](limit.md) | Enforce prefix length and count limits |
 | [listen](listen.md) | Accept an incoming BGP connection over TCP |
+| [metrics](metrics.md) | Count messages matching filters (Prometheus metrics) |
 | [pipe](pipe.md) | Exchange messages through a named pipe (FIFO) |
 | [read](read.md) | Read messages from a file or URL |
 | [ris-live](ris-live.md) | Stream BGP updates from RIPE RIS Live |

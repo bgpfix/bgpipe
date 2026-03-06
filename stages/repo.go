@@ -14,6 +14,7 @@ var Repo = map[string]core.NewStage{
 	"head":      NewHead,
 	"limit":     NewLimit,
 	"listen":    NewListen,
+	"metrics":   NewMetrics,
 	"pipe":      NewPipe,
 	"read":      NewRead,
 	"ris-live":  NewRisLive,

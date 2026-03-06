@@ -5,18 +5,20 @@ go 1.24.0
 toolchain go1.26.0
 
 require (
+	github.com/VictoriaMetrics/metrics v1.41.2
 	github.com/bgp/stayrtr v0.6.3
 	github.com/bgpfix/bgpfix v0.18.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
+	github.com/go-chi/chi/v5 v5.2.5
 	github.com/gorilla/websocket v1.5.3
 	github.com/klauspost/compress v1.18.4
 	github.com/knadh/koanf/providers/posflag v1.0.1
-	github.com/knadh/koanf/v2 v2.3.2
+	github.com/knadh/koanf/v2 v2.3.3
 	github.com/puzpuzpuz/xsync/v4 v4.4.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.10
-	github.com/twmb/franz-go v1.20.6
+	github.com/twmb/franz-go v1.20.7
 	github.com/twmb/franz-go/pkg/kadm v1.17.2
 	github.com/valyala/bytebufferpool v1.0.0
 	golang.org/x/sys v0.41.0
@@ -31,8 +33,10 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/pierrec/lz4/v4 v4.1.25 // indirect
+	github.com/pierrec/lz4/v4 v4.1.26 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.12.0 // indirect
+	github.com/valyala/fastrand v1.1.0 // indirect
+	github.com/valyala/histogram v1.2.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 )

@@ -1,8 +1,10 @@
 package rpki
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"net/netip"
 	"strings"
 	"sync"
@@ -10,9 +12,11 @@ import (
 	"time"
 
 	rtrlib "github.com/bgp/stayrtr/lib"
+	"github.com/VictoriaMetrics/metrics"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
+	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -65,6 +69,12 @@ type Rpki struct {
 	next4    ROA                 // next roa4 (pending apply)
 	next6    ROA                 // next roa6 (pending apply)
 
+	// prometheus metrics
+	cMessages *metrics.Counter // bgpipe_rpki_messages_total
+	cValid    *metrics.Counter // bgpipe_rpki_valid_total
+	cInvalid  *metrics.Counter // bgpipe_rpki_invalid_total
+	cNotFound *metrics.Counter // bgpipe_rpki_not_found_total
+
 	// file watcher state
 	file_mod  time.Time // last modification time
 	file_hash [32]byte  // last file hash
@@ -115,6 +125,25 @@ func NewRpki(parent *core.StageBase) core.Stage {
 
 func (s *Rpki) Attach() error {
 	k := s.K
+
+	// create prometheus counters and gauges
+	prefix := s.MetricPrefix()
+	s.cMessages = metrics.GetOrCreateCounter(prefix + "messages_total")
+	s.cValid = metrics.GetOrCreateCounter(prefix + "valid_total")
+	s.cInvalid = metrics.GetOrCreateCounter(prefix + "invalid_total")
+	s.cNotFound = metrics.GetOrCreateCounter(prefix + "not_found_total")
+	metrics.NewGauge(prefix+"roa4_prefixes", func() float64 {
+		if r4 := s.roa4.Load(); r4 != nil {
+			return float64(len(*r4))
+		}
+		return 0
+	})
+	metrics.NewGauge(prefix+"roa6_prefixes", func() float64 {
+		if r6 := s.roa6.Load(); r6 != nil {
+			return float64(len(*r6))
+		}
+		return 0
+	})
 
 	// Parse invalid action
 	switch strings.ToLower(k.String("invalid")) {
@@ -181,5 +210,36 @@ func (s *Rpki) Stop() error {
 		s.rtr_conn.Close()
 	}
 	s.rtr_mu.Unlock()
+	return nil
+}
+
+func (s *Rpki) RouteHTTP(r chi.Router) error {
+	r.Get("/", func(w http.ResponseWriter, req *http.Request) {
+		var roa4size, roa6size int
+		if r4 := s.roa4.Load(); r4 != nil {
+			roa4size = len(*r4)
+		}
+		if r6 := s.roa6.Load(); r6 != nil {
+			roa6size = len(*r6)
+		}
+
+		source := "rtr"
+		if s.file != "" {
+			source = "file"
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"source":  source,
+			"roa4":    roa4size,
+			"roa6":    roa6size,
+			"metrics": map[string]uint64{
+				"messages":  s.cMessages.Get(),
+				"valid":     s.cValid.Get(),
+				"invalid":   s.cInvalid.Get(),
+				"not_found": s.cNotFound.Get(),
+			},
+		})
+	})
 	return nil
 }

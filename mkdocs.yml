@@ -12,6 +12,7 @@ nav:
     - head: stages/head.md
     - limit: stages/limit.md
     - listen: stages/listen.md
+    - metrics: stages/metrics.md
     - pipe: stages/pipe.md
     - read: stages/read.md
     - ris-live: stages/ris-live.md

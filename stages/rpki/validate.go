@@ -55,6 +55,8 @@ func (s *Rpki) validatePrefix(roa4, roa6 ROA, p netip.Prefix, origin uint32) int
 
 // validateMsg is the callback for UPDATE messages
 func (s *Rpki) validateMsg(m *msg.Msg) bool {
+	s.cMessages.Inc()
+
 	u := &m.Update
 	tags := pipe.UseTags(m)
 
@@ -70,6 +72,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 	check_delete := func(p nlri.Prefix) bool {
 		switch s.validatePrefix(roa4, roa6, p.Prefix, origin) {
 		case rpki_valid:
+			s.cValid.Inc()
 			valid = append(valid, p)
 			if s.tag {
 				tags["rpki/"+p.String()] = "VALID"
@@ -77,6 +80,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 			return false // keep prefix
 
 		case rpki_not_found:
+			s.cNotFound.Inc()
 			not_found = append(not_found, p)
 			if s.tag {
 				tags["rpki/"+p.String()] = "NOT_FOUND"
@@ -84,6 +88,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 			return false // keep prefix
 
 		case rpki_invalid:
+			s.cInvalid.Inc()
 			invalid = append(invalid, p)
 			return invalid_delete // drop prefix iff requested
 		}
