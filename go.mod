@@ -6,7 +6,6 @@ toolchain go1.26.0
 
 require (
 	github.com/VictoriaMetrics/metrics v1.41.2
-	github.com/bgp/stayrtr v0.6.3
 	github.com/bgpfix/bgpfix v0.18.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
@@ -38,8 +37,7 @@ require (
 	github.com/valyala/fastrand v1.1.0 // indirect
 	github.com/valyala/histogram v1.2.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
 )
 
 // for dev: use the latest code in ../bgpfix
-//replace github.com/bgpfix/bgpfix => ../bgpfix
+// replace github.com/bgpfix/bgpfix => ../bgpfix

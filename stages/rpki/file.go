@@ -78,8 +78,9 @@ func (s *Rpki) fileParse(data []byte) error {
 	}
 }
 
-// fileParseJSON parses Routinator-style JSON
-// Format: {"roas": [{"prefix": "192.0.2.0/24", "maxLength": 24, "asn": "AS65001"}, ...]}
+// fileParseJSON parses Routinator-style JSON.
+// Supports ROAs: {"roas": [{"prefix": "192.0.2.0/24", "maxLength": 24, "asn": "AS65001"}, ...]}
+// And ASPAs:     {"aspas": [{"customer_asid": 65001, "provider_asids": [65002, 65003]}, ...]}
 func (s *Rpki) fileParseJSON(data []byte) error {
 	var doc struct {
 		ROAs []struct {
@@ -87,6 +88,10 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 			MaxLength int    `json:"maxLength"`
 			ASN       any    `json:"asn"` // can be string "AS65001" or int 65001
 		} `json:"roas"`
+		ASPAs []struct {
+			CustomerASID  uint32   `json:"customer_asid"`
+			ProviderASIDs []uint32 `json:"provider_asids"`
+		} `json:"aspas"`
 	}
 
 	if err := json.Unmarshal(data, &doc); err != nil {
@@ -101,7 +106,7 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 		}
 		prefix = prefix.Masked()
 
-		// Parse ASN (handle both "AS65001" and 65001)
+		// parse ASN (handle both "AS65001" and 65001)
 		var asn uint32
 		switch v := roa.ASN.(type) {
 		case string:
@@ -123,6 +128,14 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 		}
 
 		s.nextRoa(true, prefix, uint8(roa.MaxLength), asn)
+	}
+
+	for _, aspa := range doc.ASPAs {
+		if aspa.CustomerASID == 0 {
+			s.Warn().Msg("ASPA entry with zero customer ASN, skipping")
+			continue
+		}
+		s.nextAspaEntry(true, aspa.CustomerASID, aspa.ProviderASIDs)
 	}
 
 	return nil

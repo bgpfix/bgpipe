@@ -1,6 +1,7 @@
 package rpki
 
 import (
+	"fmt"
 	"net/netip"
 	"slices"
 	"strings"
@@ -104,7 +105,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 		mpp.Prefixes = slices.DeleteFunc(mpp.Prefixes, check_delete)
 	}
 
-	// act based on validation results
+	// act based on ROV validation results
 	if len(invalid) > 0 {
 		// message (will be) modified?
 		if s.tag || s.invalid != rpki_keep {
@@ -163,7 +164,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 		}
 	}
 
-	// if we're here, m does not contain invalid prefixes
+	// if we're here, m does not contain ROV-invalid prefixes
 	if s.tag {
 		switch {
 		case len(not_found) > 0:
@@ -176,5 +177,142 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 		}
 	}
 
-	return true
+	// ASPA validation (independent of ROV result)
+	keep, err := s.validateAspa(m, u, tags)
+	if err != nil {
+		s.Fatal().Err(err).Msg("ASPA role error")
+		return false
+	}
+	return keep
+}
+
+// validateAspa performs ASPA path validation for the UPDATE message.
+// Returns (false, nil) to drop the message, (true, nil) to keep it, or (false, err) on fatal error.
+func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) (bool, error) {
+	aspa := s.aspa.Load()
+	if aspa == nil || len(*aspa) == 0 {
+		return true, nil // no ASPA data, skip
+	}
+	if !u.HasReach() {
+		return true, nil // withdrawal-only UPDATE has no AS_PATH to validate
+	}
+
+	// NB: role is resolved exactly once, on the first UPDATE. BGP guarantees OPEN+KEEPALIVE
+	// are exchanged before any UPDATE, so p.R/L.Open should be populated by the time we
+	// get here. If --role auto and the peer didn't send the BGP Role capability, ASPA is
+	// permanently skipped for this session; use --role to override.
+	var resolveErr error
+	s.peer_role_mu.Do(func() {
+		roleName := s.role_name
+		if roleName != "auto" {
+			role, ok := parseRoleName(roleName)
+			if !ok {
+				resolveErr = fmt.Errorf("unknown --role value: %q", roleName)
+				return
+			}
+			s.peer_role = int(role)
+			s.peer_role_ok = true
+			s.peer_downstream = aspIsDownstream(role)
+			s.Info().Str("role", roleName).Msg("ASPA: peer role set via --role flag")
+		} else {
+			peerRole, ok := aspPeerRole(s.P, m.Dir)
+			if !ok {
+				// no BGP Role capability → skip ASPA (user can use --role to force)
+				s.Warn().Msg("ASPA: peer did not send BGP Role capability, skipping ASPA validation (use --role to override)")
+				s.peer_role = -1
+				s.peer_role_ok = false
+				return
+			}
+			s.peer_role = int(peerRole)
+			s.peer_role_ok = true
+			s.peer_downstream = aspIsDownstream(peerRole)
+			s.Info().Int("role", int(peerRole)).Bool("downstream", s.peer_downstream).Msg("ASPA: peer role detected via BGP Role capability")
+		}
+	})
+	if resolveErr != nil {
+		return false, resolveErr
+	}
+	if !s.peer_role_ok {
+		return true, nil // role not available, skip ASPA
+	}
+
+	flat := u.AsPath().Flat()
+
+	// verify
+	var result int
+	if flat == nil {
+		result = aspa_invalid // AS_SET present or empty path → invalid per spec
+	} else {
+		result = aspVerify(*aspa, flat, s.peer_downstream)
+	}
+
+	// update metrics
+	switch result {
+	case aspa_valid:
+		s.cAspaValid.Inc()
+	case aspa_unknown:
+		s.cAspaUnknown.Inc()
+	case aspa_invalid:
+		s.cAspaInvalid.Inc()
+	}
+
+	// tag the message?
+	if s.aspa_tag {
+		switch result {
+		case aspa_valid:
+			tags["aspa/status"] = "VALID"
+		case aspa_unknown:
+			tags["aspa/status"] = "UNKNOWN"
+		case aspa_invalid:
+			tags["aspa/status"] = "INVALID"
+		}
+		m.Edit()
+	}
+
+	// nothing more to do unless INVALID
+	if result != aspa_invalid {
+		return true, nil
+	}
+
+	// send an event?
+	if s.aspa_event != "" {
+		s.Event(s.aspa_event, m)
+	}
+
+	// apply action
+	switch s.aspa_action {
+	case rpki_keep:
+		// nothing
+	case rpki_drop:
+		return false, nil
+	case rpki_withdraw, rpki_filter:
+		invalid_prefixes := drainReachable(u)
+		if len(invalid_prefixes) > 0 {
+			u.AddUnreach(invalid_prefixes...)
+		}
+		m.Edit()
+	case rpki_split:
+		invalid_prefixes := drainReachable(u)
+		m.Edit()
+		if len(invalid_prefixes) > 0 && s.in_split != nil {
+			m2 := s.P.GetMsg().Switch(msg.UPDATE)
+			m2.Time = m.Time
+			m2.Update.AddUnreach(invalid_prefixes...)
+			s.in_split.WriteMsg(m2)
+		}
+	}
+
+	return true, nil
+}
+
+// drainReachable collects all reachable prefixes (IPv4 and MP) into a slice,
+// clearing them from the UPDATE in the process.
+func drainReachable(u *msg.Update) []nlri.Prefix {
+	prefixes := slices.Clone(u.Reach)
+	u.Reach = nil
+	if mpp := u.ReachMP().Prefixes(); mpp != nil {
+		prefixes = append(prefixes, mpp.Prefixes...)
+		mpp.Prefixes = nil
+	}
+	return prefixes
 }
