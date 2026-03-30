@@ -17,6 +17,7 @@ require (
 	github.com/puzpuzpuz/xsync/v4 v4.4.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.10
+	github.com/stretchr/testify v1.11.1
 	github.com/twmb/franz-go v1.20.7
 	github.com/twmb/franz-go/pkg/kadm v1.17.2
 	github.com/valyala/bytebufferpool v1.0.0
@@ -25,6 +26,7 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/itlightning/dateparse v0.2.1 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
@@ -33,11 +35,13 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.12.0 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	github.com/valyala/histogram v1.2.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 // for dev: use the latest code in ../bgpfix
-// replace github.com/bgpfix/bgpfix => ../bgpfix
+replace github.com/bgpfix/bgpfix => ../bgpfix

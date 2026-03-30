@@ -8,21 +8,20 @@ import (
 	"github.com/bgpfix/bgpipe/pkg/util"
 )
 
-// rtrRun manages the RTR client connection loop with reconnection logic.
+// rtrRun manages the RTR client connection loop with reconnection.
 func (s *Rpki) rtrRun() {
 	k := s.K
 
-	// NB: callbacks are called serially from the Client.Run goroutine;
-	// only rtr_valid needs mutex since rtrRefresh reads it concurrently.
-	client := rtr.NewClient(rtr.Options{
-		Logger: &s.Logger,
+	client := rtr.NewClient(&rtr.Options{
+		Logger:  &s.Logger,
+		Version: rtr.VersionAuto,
 
 		OnROA: func(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) {
-			s.nextRoa(add, prefix, maxLen, asn)
+			s.nextVRP(add, prefix, maxLen, asn)
 		},
 
 		OnASPA: func(add bool, cas uint32, providers []uint32) {
-			s.nextAspaEntry(add, cas, providers)
+			s.nextASPA(add, cas, providers)
 		},
 
 		OnEndOfData: func(sessid uint16, serial uint32) {
@@ -42,7 +41,6 @@ func (s *Rpki) rtrRun() {
 		},
 
 		OnError: func(code uint16, text string) {
-			// code ErrNoData = server still initializing; non-fatal, just log at debug
 			if code != rtr.ErrNoData {
 				s.Warn().Uint16("code", code).Str("text", text).Msg("RTR error")
 			} else {
@@ -51,12 +49,9 @@ func (s *Rpki) rtrRun() {
 		},
 	})
 
-	// start the periodic refresh goroutine
 	go s.rtrRefresh(client, k.Duration("rtr-refresh"))
 
 	for s.Ctx.Err() == nil {
-		// NB: measure retry time vs. dial time to protect from retrying too fast
-		// if the server keeps dropping us immediately
 		retry := time.Now().Add(k.Duration("rtr-retry"))
 
 		conn, err := util.DialRetry(s.StageBase, nil, "tcp", s.rtr)
@@ -70,10 +65,9 @@ func (s *Rpki) rtrRun() {
 		s.rtr_mu.Unlock()
 
 		s.nextFlush()
-		err = client.Run(s.Ctx, conn)
+		err = client.Run(s.Ctx, conn) // NB: Run always closes conn
 
 		s.rtr_mu.Lock()
-		s.rtr_conn.Close()
 		s.rtr_conn = nil
 		s.rtr_valid = false
 		s.rtr_mu.Unlock()
@@ -101,7 +95,6 @@ func (s *Rpki) rtrRefresh(client *rtr.Client, interval time.Duration) {
 			s.rtr_mu.Lock()
 			valid := s.rtr_valid
 			s.rtr_mu.Unlock()
-
 			if valid {
 				s.Debug().Msg("RTR periodic refresh")
 				client.SendSerial()

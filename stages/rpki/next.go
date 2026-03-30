@@ -8,42 +8,40 @@ import (
 )
 
 func (s *Rpki) nextFlush() {
-	s.next4 = make(ROA)
-	s.next6 = make(ROA)
-	s.nextAspa = make(ASPA)
+	s.next4 = make(VRPs)
+	s.next6 = make(VRPs)
+	s.next_aspa = make(ASPA)
 }
 
 func (s *Rpki) nextApply() {
-	// atomically publish the pending caches as current
-	roa4, roa6, aspa := s.next4, s.next6, s.nextAspa
-	s.roa4.Store(&roa4)
-	s.roa6.Store(&roa6)
+	v4, v6, aspa := s.next4, s.next6, s.next_aspa
+	s.vrp4.Store(&v4)
+	s.vrp6.Store(&v6)
 	s.aspa.Store(&aspa)
 
-	// signal that the cache is ready (once)
-	s.Info().Int("v4", len(roa4)).Int("v6", len(roa6)).Int("aspa", len(aspa)).Msg("RPKI cache updated")
-	util.Close(s.roa_done)
+	s.Info().Int("v4", len(v4)).Int("v6", len(v6)).Int("aspa", len(aspa)).Msg("RPKI cache updated")
+	util.Close(s.vrp_done)
 
-	// make copy-on-write next caches from current
-	s.next4 = make(ROA, len(roa4))
-	for p, entries := range roa4 {
+	// copy-on-write: clone current into next for incremental updates
+	s.next4 = make(VRPs, len(v4))
+	for p, entries := range v4 {
 		if len(entries) > 0 {
 			s.next4[p] = slices.Clone(entries)
 		}
 	}
-	s.next6 = make(ROA, len(roa6))
-	for p, entries := range roa6 {
+	s.next6 = make(VRPs, len(v6))
+	for p, entries := range v6 {
 		if len(entries) > 0 {
 			s.next6[p] = slices.Clone(entries)
 		}
 	}
-	s.nextAspa = make(ASPA, len(aspa))
+	s.next_aspa = make(ASPA, len(aspa))
 	for cas, provs := range aspa {
-		s.nextAspa[cas] = slices.Clone(provs)
+		s.next_aspa[cas] = slices.Clone(provs)
 	}
 }
 
-func (s *Rpki) nextRoa(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) {
+func (s *Rpki) nextVRP(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) {
 	p := prefix.Masked()
 	next := s.next4
 	maxBits := 32
@@ -53,11 +51,11 @@ func (s *Rpki) nextRoa(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) 
 	}
 
 	if ml := int(maxLen); ml < prefix.Bits() || ml > maxBits {
-		s.Warn().Str("prefix", prefix.String()).Int("maxLength", ml).Msg("invalid MaxLength, skipping")
+		s.Warn().Str("prefix", prefix.String()).Int("maxLength", ml).Msg("invalid maxLength, skipping")
 		return
 	}
 
-	entry := ROAEntry{MaxLen: maxLen, ASN: asn}
+	entry := VRP{MaxLen: maxLen, ASN: asn}
 	i := slices.Index(next[p], entry)
 
 	if add {
@@ -71,11 +69,10 @@ func (s *Rpki) nextRoa(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) 
 	}
 }
 
-// nextAspaEntry adds or removes a single ASPA record in the pending cache.
-func (s *Rpki) nextAspaEntry(add bool, cas uint32, providers []uint32) {
+func (s *Rpki) nextASPA(add bool, cas uint32, providers []uint32) {
 	if add {
-		s.nextAspa[cas] = slices.Clone(providers)
+		s.next_aspa[cas] = slices.Clone(providers)
 	} else {
-		delete(s.nextAspa, cas)
+		delete(s.next_aspa, cas)
 	}
 }
