@@ -109,11 +109,9 @@ type Rpki struct {
 	file_hash [32]byte
 
 	// RTR client state (protected by rtr_mu)
-	rtr_mu     sync.Mutex
-	rtr_conn   net.Conn
-	rtr_sessid uint16
-	rtr_serial uint32
-	rtr_valid  bool
+	rtr_mu    sync.Mutex
+	rtr_conn  net.Conn
+	rtr_valid bool
 }
 
 func NewRpki(parent *core.StageBase) core.Stage {

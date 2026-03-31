@@ -27,8 +27,6 @@ func (s *Rpki) rtrRun() {
 		OnEndOfData: func(sessid uint16, serial uint32) {
 			s.nextApply()
 			s.rtr_mu.Lock()
-			s.rtr_sessid = sessid
-			s.rtr_serial = serial
 			s.rtr_valid = true
 			s.rtr_mu.Unlock()
 		},
