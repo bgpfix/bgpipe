@@ -143,6 +143,15 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 
 		if do_split {
 			s.split.WriteMsg(m2)
+			// tag the original (valid/not-found) message so downstream filters work
+			if s.tag {
+				switch {
+				case len(valid) > 0:
+					tags["rpki/status"] = "VALID"
+				case len(not_found) > 0:
+					tags["rpki/status"] = "NOT_FOUND"
+				}
+			}
 		}
 
 		if s.rov_act != act_keep && !do_split && !u.HasReach() && !u.HasUnreach() {

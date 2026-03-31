@@ -125,6 +125,36 @@ func TestNextApply(t *testing.T) {
 	}
 }
 
+func TestNextVRP_InvalidMaxLength(t *testing.T) {
+	s := newTestRpki()
+
+	// maxLen=33 exceeds IPv4 max of 32 → should be rejected
+	p4 := netip.MustParsePrefix("192.0.2.0/24")
+	s.nextVRP(true, p4, 33, 65001)
+	if len(s.next4[p4]) != 0 {
+		t.Error("maxLen=33 should be rejected for IPv4")
+	}
+
+	// maxLen=129 exceeds IPv6 max of 128 → should be rejected
+	p6 := netip.MustParsePrefix("2001:db8::/32")
+	s.nextVRP(true, p6, 129, 65002)
+	if len(s.next6[p6]) != 0 {
+		t.Error("maxLen=129 should be rejected for IPv6")
+	}
+
+	// maxLen < prefix length → should be rejected
+	s.nextVRP(true, p4, 20, 65001)
+	if len(s.next4[p4]) != 0 {
+		t.Error("maxLen < prefix length should be rejected")
+	}
+
+	// valid maxLen should be accepted
+	s.nextVRP(true, p4, 32, 65001)
+	if len(s.next4[p4]) != 1 {
+		t.Error("maxLen=32 should be accepted for /24 IPv4")
+	}
+}
+
 func TestPrefixMasking(t *testing.T) {
 	s := newTestRpkiSimple()
 
