@@ -164,31 +164,32 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) b
 		return true // withdrawal-only, no AS_PATH to validate
 	}
 
-	// NB: role resolved exactly once on first UPDATE. BGP guarantees OPEN
+	// NB: role resolved once per direction on first UPDATE. BGP guarantees OPEN
 	// is exchanged before any UPDATE. If --aspa-role auto and peer didn't
-	// send BGP Role capability, ASPA is permanently skipped for this session.
-	s.peer_role_mu.Do(func() {
+	// send BGP Role capability, ASPA is permanently skipped for this direction.
+	di := m.Dir & 1 // direction index: 0=R, 1=L
+	s.peer_role_mu[di].Do(func() {
 		if s.aspa_role != "auto" {
 			// NB: validated in Attach()
 			role, _ := parseRoleName(s.aspa_role)
-			s.peer_role = int(role)
-			s.peer_role_ok = true
-			s.peer_down = aspIsDownstream(role)
-			s.Info().Str("role", s.aspa_role).Msg("ASPA: peer role set via --aspa-role")
+			s.peer_role[di] = int(role)
+			s.peer_role_ok[di] = true
+			s.peer_down[di] = aspIsDownstream(role)
+			s.Info().Str("role", s.aspa_role).Str("dir", m.Dir.String()).Msg("ASPA: peer role set via --aspa-role")
 		} else {
 			role, ok := aspPeerRole(s.P, m.Dir)
 			if !ok {
-				s.Warn().Msg("ASPA: peer did not send BGP Role capability, skipping (use --aspa-role to override)")
-				s.peer_role = -1
+				s.Warn().Str("dir", m.Dir.String()).Msg("ASPA: peer did not send BGP Role capability, skipping (use --aspa-role to override)")
+				s.peer_role[di] = -1
 				return
 			}
-			s.peer_role = int(role)
-			s.peer_role_ok = true
-			s.peer_down = aspIsDownstream(role)
-			s.Info().Int("role", int(role)).Bool("downstream", s.peer_down).Msg("ASPA: peer role detected")
+			s.peer_role[di] = int(role)
+			s.peer_role_ok[di] = true
+			s.peer_down[di] = aspIsDownstream(role)
+			s.Info().Int("role", int(role)).Bool("downstream", s.peer_down[di]).Str("dir", m.Dir.String()).Msg("ASPA: peer role detected")
 		}
 	})
-	if !s.peer_role_ok {
+	if !s.peer_role_ok[di] {
 		return true
 	}
 
@@ -206,7 +207,7 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) b
 	} else if len(flat) > 1 {
 		// NB: per draft §5.4/5.5 step 2, path[0] must equal neighbor AS.
 		// RS peers don't prepend their ASN (RFC 7947).
-		if s.peer_role != int(caps.ROLE_RS) {
+		if s.peer_role[di] != int(caps.ROLE_RS) {
 			peerASN := aspPeerASN(s.P, m.Dir)
 			if peerASN == 0 {
 				s.Warn().Msg("ASPA: peer ASN unknown, first-hop check skipped")
@@ -214,10 +215,10 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) b
 			if peerASN != 0 && flat[0] != peerASN {
 				result = aspa_invalid
 			} else {
-				result = aspVerify(*aspa, flat, s.peer_down)
+				result = aspVerify(*aspa, flat, s.peer_down[di])
 			}
 		} else {
-			result = aspVerify(*aspa, flat, s.peer_down)
+			result = aspVerify(*aspa, flat, s.peer_down[di])
 		}
 	} else {
 		result = aspa_valid // single-hop

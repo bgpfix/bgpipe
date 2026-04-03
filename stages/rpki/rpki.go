@@ -78,11 +78,11 @@ type Rpki struct {
 	aspa_ev   string // emit event on ASPA INVALID
 	aspa_role string // --aspa-role flag value
 
-	// resolved peer role (set once on first UPDATE)
-	peer_role   int       // caps.ROLE_* constant; -1 = unresolved
-	peer_role_mu sync.Once
-	peer_role_ok bool     // true if resolved successfully
-	peer_down   bool      // true if peer is provider/RS (downstream path)
+	// resolved peer role (per-direction, set once on first UPDATE per dir)
+	peer_role    [2]int       // caps.ROLE_* constant; -1 = unresolved
+	peer_role_mu [2]sync.Once
+	peer_role_ok [2]bool     // true if resolved successfully
+	peer_down    [2]bool     // true if peer is provider/RS (downstream path)
 
 	// VRP cache (current = atomic pointer; next = pending)
 	vrp_done chan bool
@@ -118,7 +118,7 @@ func NewRpki(parent *core.StageBase) core.Stage {
 	s := &Rpki{
 		StageBase: parent,
 		vrp_done:  make(chan bool),
-		peer_role: -1,
+		peer_role: [2]int{-1, -1},
 	}
 
 	s.vrp4.Store(new(VRPs))
