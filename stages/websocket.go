@@ -269,7 +269,15 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	upgrader := &websocket.Upgrader{
 		HandshakeTimeout: s.timeout,
 		CheckOrigin: func(r *http.Request) bool {
-			return r.Header.Get("Origin") == ""
+			origin := r.Header.Get("Origin")
+			if origin == "" {
+				return true
+			}
+			u, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+			return strings.EqualFold(u.Host, r.Host)
 		},
 	}
 	conn, err := upgrader.Upgrade(w, r, headers)

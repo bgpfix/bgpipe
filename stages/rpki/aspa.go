@@ -19,15 +19,14 @@ const (
 )
 
 // aspAuthorized checks ASPA authorization for a CAS→PAS hop.
+// NB: provider lists must be sorted (see nextASPA).
 func aspAuthorized(aspa ASPA, cas, pas uint32) int {
 	provs, ok := aspa[cas]
 	if !ok {
 		return asp_no_att
 	}
-	for _, p := range provs {
-		if p == pas {
-			return asp_prov
-		}
+	if _, found := slices.BinarySearch(provs, pas); found {
+		return asp_prov
 	}
 	return asp_not
 }

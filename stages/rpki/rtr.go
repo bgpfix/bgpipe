@@ -25,16 +25,23 @@ func (s *Rpki) rtrRun() {
 		},
 
 		OnEndOfData: func(sessid uint16, serial uint32) {
-			s.nextApply()
 			s.rtr_mu.Lock()
+			changed := !s.rtr_has || s.rtr_serial != serial || s.rtr_sessid != sessid
+			s.rtr_serial = serial
+			s.rtr_sessid = sessid
+			s.rtr_has = true
 			s.rtr_valid = true
 			s.rtr_mu.Unlock()
+			if changed {
+				s.nextApply()
+			}
 		},
 
 		OnCacheReset: func() {
 			s.nextFlush()
 			s.rtr_mu.Lock()
 			s.rtr_valid = false
+			s.rtr_has = false
 			s.rtr_mu.Unlock()
 		},
 

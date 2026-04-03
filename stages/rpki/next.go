@@ -71,7 +71,16 @@ func (s *Rpki) nextVRP(add bool, prefix netip.Prefix, maxLen uint8, asn uint32) 
 
 func (s *Rpki) nextASPA(add bool, cas uint32, providers []uint32) {
 	if add {
-		s.next_aspa[cas] = slices.Clone(providers)
+		// normalize: remove zeros, deduplicate, sort for BinarySearch
+		norm := make([]uint32, 0, len(providers))
+		for _, p := range providers {
+			if p != 0 {
+				norm = append(norm, p)
+			}
+		}
+		slices.Sort(norm)
+		norm = slices.Compact(norm)
+		s.next_aspa[cas] = norm
 	} else {
 		delete(s.next_aspa, cas)
 	}

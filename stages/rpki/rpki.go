@@ -79,10 +79,10 @@ type Rpki struct {
 	aspa_role string // --aspa-role flag value
 
 	// resolved peer role (per-direction, set once on first UPDATE per dir)
-	peer_role    [2]int       // caps.ROLE_* constant; -1 = unresolved
+	peer_role    [2]int // caps.ROLE_* constant; -1 = unresolved
 	peer_role_mu [2]sync.Once
-	peer_role_ok [2]bool     // true if resolved successfully
-	peer_down    [2]bool     // true if peer is provider/RS (downstream path)
+	peer_role_ok [2]bool // true if resolved successfully
+	peer_down    [2]bool // true if peer is provider/RS (downstream path)
 
 	// VRP cache (current = atomic pointer; next = pending)
 	vrp_done chan bool
@@ -109,9 +109,12 @@ type Rpki struct {
 	file_hash [32]byte
 
 	// RTR client state (protected by rtr_mu)
-	rtr_mu    sync.Mutex
-	rtr_conn  net.Conn
-	rtr_valid bool
+	rtr_mu     sync.Mutex
+	rtr_conn   net.Conn
+	rtr_valid  bool
+	rtr_serial uint32 // last applied serial
+	rtr_sessid uint16 // last applied session ID
+	rtr_has    bool   // true once first EndOfData received
 }
 
 func NewRpki(parent *core.StageBase) core.Stage {
