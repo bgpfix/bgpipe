@@ -25,6 +25,8 @@ func NewSpeaker(parent *core.StageBase) core.Stage {
 	o.Flags.Int("asn", do.LocalASN, "local ASN, -1 means use remote ASN")
 	o.Flags.String("id", "", "local router ID, empty means use remote-1")
 	o.Flags.Int("hold", do.LocalHoldTime, "hold time")
+	o.Flags.Int("remote-asn", do.RemoteASN, "expected remote ASN, -1 means accept any")
+	o.Flags.Int("remote-hold", do.RemoteHoldTime, "minimum acceptable remote hold time (s)")
 	return s
 }
 
@@ -39,6 +41,8 @@ func (s *Speaker) Attach() error {
 	so.Passive = !k.Bool("active")
 	so.LocalASN = k.Int("asn")
 	so.LocalHoldTime = k.Int("hold")
+	so.RemoteASN = k.Int("remote-asn")
+	so.RemoteHoldTime = k.Int("remote-hold")
 
 	lid := k.String("id")
 	if len(lid) > 0 {
