@@ -142,6 +142,7 @@ func (s *Websocket) Attach() error {
 			}
 			cred = make([]byte, 128)
 			n, err := fh.Read(cred)
+			fh.Close()
 			if err != nil {
 				return fmt.Errorf("--auth: file %s: %w", v, err)
 			}
