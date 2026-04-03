@@ -95,6 +95,11 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 		}
 		prefix = prefix.Masked()
 
+		if roa.MaxLength < 0 || roa.MaxLength > 128 {
+			s.Warn().Str("prefix", roa.Prefix).Int("maxLength", roa.MaxLength).Msg("maxLength out of range, skipping")
+			continue
+		}
+
 		var asn uint32
 		switch v := roa.ASN.(type) {
 		case string:
@@ -105,8 +110,6 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 				continue
 			}
 			asn = uint32(n)
-		case int:
-			asn = uint32(v)
 		case float64:
 			asn = uint32(v)
 		default:
@@ -157,6 +160,10 @@ func (s *Rpki) fileParseCSV(data []byte) error {
 		maxLen, err := strconv.Atoi(strings.TrimSpace(parts[1]))
 		if err != nil {
 			s.Warn().Int("line", i+1).Err(err).Msg("invalid maxLength, skipping")
+			continue
+		}
+		if maxLen < 0 || maxLen > 128 {
+			s.Warn().Int("line", i+1).Int("maxLength", maxLen).Msg("maxLength out of range, skipping")
 			continue
 		}
 
