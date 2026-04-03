@@ -3,6 +3,7 @@ package stages
 import (
 	"bytes"
 	"context"
+	"crypto/subtle"
 	"crypto/tls"
 	"encoding/base64"
 	"errors"
@@ -33,8 +34,8 @@ type Websocket struct {
 	tls       *tls.Config   // TLS config (may be nil)
 	headers   http.Header   // HTTP headers
 
-	url        url.URL              // URL address
-	srv        *http.Server         // http server (may be nil)
+	url         url.URL              // URL address
+	srv         *http.Server         // http server (may be nil)
 	client_conn *websocket.Conn      // websocket client conn
 	server_conn chan *websocket.Conn // websocket server conns
 
@@ -190,6 +191,7 @@ func (s *Websocket) prepareClient() error {
 			s.Info().
 				Interface("headers", resp.Header).
 				Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
+			conn.SetReadLimit(65535)
 			s.client_conn = conn
 			return nil // success
 		} else if !s.retry || (s.retry_max > 0 && try >= s.retry_max) {
@@ -219,11 +221,11 @@ func (s *Websocket) prepareServer() error {
 
 	// prepare listener
 	s.srv = &http.Server{
-		// TODO: ErrorLog?
-		Handler:     mux,
-		Addr:        s.url.Host,
-		BaseContext: func(l net.Listener) context.Context { return s.Ctx },
-		TLSConfig:   s.tls,
+		Handler:           mux,
+		Addr:              s.url.Host,
+		BaseContext:       func(l net.Listener) context.Context { return s.Ctx },
+		TLSConfig:         s.tls,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	// ok go!
@@ -251,7 +253,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 
 	// require authorization?
 	if auth := headers.Get("Authorization"); len(auth) > 0 {
-		if r.Header.Get("Authorization") != auth {
+		if subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte(auth)) != 1 {
 			s.Warn().Msgf("%s: not authorized", r.RemoteAddr)
 			w.Header().Set("WWW-Authenticate", `Basic realm="bgpipe"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -266,6 +268,9 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	// websocket upgrader
 	upgrader := &websocket.Upgrader{
 		HandshakeTimeout: s.timeout,
+		CheckOrigin: func(r *http.Request) bool {
+			return r.Header.Get("Origin") == ""
+		},
 	}
 	conn, err := upgrader.Upgrade(w, r, headers)
 	if err != nil {
@@ -274,6 +279,8 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 	} else {
 		s.Info().Msgf("%s: connected", r.RemoteAddr)
 	}
+
+	conn.SetReadLimit(65535)
 
 	// publish conn for broadcasts + signal to connWriter
 	if !util.Send(s.server_conn, conn) || !util.Send(s.eio.Output, nil) {
