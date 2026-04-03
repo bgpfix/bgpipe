@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/msg"
@@ -153,14 +154,14 @@ func parseRoleName(name string) (byte, bool) {
 }
 
 // validateAspa performs ASPA path validation for the UPDATE message.
-// Returns (false, nil) to drop, (true, nil) to keep, or (false, err) on fatal error.
-func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) (bool, error) {
+// Returns false to drop, true to keep.
+func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) bool {
 	aspa := s.aspa.Load()
 	if aspa == nil || len(*aspa) == 0 {
-		return true, nil // no ASPA data
+		return true // no ASPA data
 	}
 	if !u.HasReach() {
-		return true, nil // withdrawal-only, no AS_PATH to validate
+		return true // withdrawal-only, no AS_PATH to validate
 	}
 
 	// NB: role resolved exactly once on first UPDATE. BGP guarantees OPEN
@@ -188,7 +189,12 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) (
 		}
 	})
 	if !s.peer_role_ok {
-		return true, nil
+		return true
+	}
+
+	// empty AS_PATH = iBGP or locally-originated, nothing to validate
+	if u.AsPath().Len() == 0 {
+		return true
 	}
 
 	flat := u.AsPath().Unique()
@@ -196,12 +202,15 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) (
 	// verify path
 	var result int
 	if flat == nil {
-		result = aspa_invalid // AS_SET or empty → invalid per spec
+		result = aspa_invalid // AS_SET present → invalid per ASPA spec §3
 	} else if len(flat) > 1 {
 		// NB: per draft §5.4/5.5 step 2, path[0] must equal neighbor AS.
 		// RS peers don't prepend their ASN (RFC 7947).
 		if s.peer_role != int(caps.ROLE_RS) {
 			peerASN := aspPeerASN(s.P, m.Dir)
+			if peerASN == 0 {
+				s.Warn().Msg("ASPA: peer ASN unknown, first-hop check skipped")
+			}
 			if peerASN != 0 && flat[0] != peerASN {
 				result = aspa_invalid
 			} else {
@@ -238,7 +247,7 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) (
 	}
 
 	if result != aspa_invalid {
-		return true, nil
+		return true
 	}
 
 	// event
@@ -249,7 +258,7 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) (
 	// action: ASPA condemns the entire path, not individual prefixes
 	switch s.aspa_act {
 	case act_drop:
-		return false, nil
+		return false
 	case act_withdraw:
 		// move all reachable prefixes to withdrawn
 		reach := slices.Clone(u.Reach)
@@ -261,8 +270,12 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) (
 		if len(reach) > 0 {
 			u.AddUnreach(reach...)
 		}
+		// NB: pure withdrawal must not carry path attributes (RFC 4271 §4.3)
+		if !u.HasReach() {
+			u.Attrs.Filter(attrs.ATTR_MP_UNREACH)
+		}
 		m.Edit()
 	}
 
-	return true, nil
+	return true
 }
