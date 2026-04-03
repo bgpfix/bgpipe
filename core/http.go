@@ -3,10 +3,8 @@ package core
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,13 +30,34 @@ func (b *Bgpipe) configureHTTP() error {
 
 	m := chi.NewRouter()
 
-	// add auth middleware
+	// auth middleware (nil when no auth configured)
 	mw, err := b.httpAuthMiddleware()
 	if err != nil {
 		return err
 	}
 	if mw != nil {
 		m.Use(mw)
+	}
+
+	// fixed routes
+	m.Get("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+		vmmetrics.WritePrometheus(w, true)
+	})
+	m.Get("/hc", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"status":  "ok",
+			"version": b.Version,
+			"stages":  b.StageCount(),
+			"uptime":  time.Since(b.StartTime).Truncate(time.Second).String(),
+		})
+	})
+	m.Get("/", b.httpDashboard)
+
+	// pprof
+	if err := b.configurePprof(m); err != nil {
+		return err
 	}
 
 	b.httpmux = m
@@ -51,51 +70,28 @@ func (b *Bgpipe) configureHTTP() error {
 	return nil
 }
 
-// httpAuthMiddleware returns middleware enforcing --http-auth or --http-token.
-// --http-auth takes precedence and disables --http-token.
+// httpAuthMiddleware returns middleware enforcing --http-auth.
+// Returns nil if --http-open is set. Returns error if --http-auth is missing.
 func (b *Bgpipe) httpAuthMiddleware() (func(http.Handler) http.Handler, error) {
-	// --http-auth: Basic Auth (like websocket --auth)
-	if authStr := strings.TrimSpace(b.K.String("http-auth")); authStr != "" {
-		cred, err := b.readCredential(authStr)
-		if err != nil {
-			return nil, fmt.Errorf("--http-auth: %w", err)
-		}
-		expected := "Basic " + base64.StdEncoding.EncodeToString(cred)
-		b.Info().Msg("HTTP API authentication: Basic Auth")
-		return func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				got := r.Header.Get("Authorization")
-				if subtle.ConstantTimeCompare([]byte(got), []byte(expected)) != 1 {
-					w.Header().Set("WWW-Authenticate", `Basic realm="bgpipe"`)
-					http.Error(w, "unauthorized", http.StatusUnauthorized)
-					return
-				}
-				next.ServeHTTP(w, r)
-			})
-		}, nil
-	}
-
-	// --http-token: URL token (?token=...)
-	tokenStr := strings.TrimSpace(b.K.String("http-token"))
-	if tokenStr == "off" {
-		b.Warn().Msg("HTTP API authentication disabled (--http-token off)")
+	if b.K.Bool("http-open") {
 		return nil, nil
 	}
-	if tokenStr == "" {
-		// generate random token
-		var buf [16]byte
-		if _, err := rand.Read(buf[:]); err != nil {
-			return nil, fmt.Errorf("generating HTTP token: %w", err)
-		}
-		tokenStr = hex.EncodeToString(buf[:])
-	}
-	b.Info().Str("token", tokenStr).Msg("HTTP API authentication: token required (?token=...)")
 
+	authStr := strings.TrimSpace(b.K.String("http-auth"))
+	if authStr == "" {
+		return nil, fmt.Errorf("--http requires --http-auth (or --http-open to disable auth)")
+	}
+
+	cred, err := b.readCredential(authStr)
+	if err != nil {
+		return nil, fmt.Errorf("--http-auth: %w", err)
+	}
+	expected := []byte("Basic " + base64.StdEncoding.EncodeToString(cred))
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			got := r.URL.Query().Get("token")
-			if subtle.ConstantTimeCompare([]byte(got), []byte(tokenStr)) != 1 {
-				http.Error(w, "unauthorized: missing or invalid ?token= parameter", http.StatusUnauthorized)
+			if subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), expected) != 1 {
+				w.Header().Set("WWW-Authenticate", `Basic realm="bgpipe"`)
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -125,6 +121,45 @@ func (b *Bgpipe) readCredential(v string) ([]byte, error) {
 	return []byte(v), nil
 }
 
+func (b *Bgpipe) configurePprof(m *chi.Mux) error {
+	pprofVal := strings.TrimSpace(b.K.String("pprof"))
+	if pprofVal == "" {
+		return nil
+	}
+
+	// separate pprof server? overwrite m with a fresh mux
+	if pprofVal != "http" {
+		m = chi.NewMux()
+	}
+
+	m.HandleFunc("/debug/pprof/*", pprof.Index)
+	m.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	m.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	m.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	m.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	if pprofVal == "http" {
+		b.httppprof = true
+		return nil
+	}
+
+	// start separate pprof server (no auth)
+	ln, err := net.Listen("tcp", pprofVal)
+	if err != nil {
+		return fmt.Errorf("could not bind --pprof %s: %w", pprofVal, err)
+	}
+
+	go func() {
+		srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second}
+		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			b.Warn().Err(err).Msg("pprof server error")
+		}
+	}()
+
+	b.Info().Msgf("pprof: http://%s/debug/pprof/", ln.Addr())
+	return nil
+}
+
 func (b *Bgpipe) startHTTP() error {
 	if b.HTTP == nil {
 		return nil
@@ -143,7 +178,7 @@ func (b *Bgpipe) startHTTP() error {
 		b.Cancel(fmt.Errorf("http server failed: %w", err))
 	}()
 
-	b.Info().Str("addr", ln.Addr().String()).Msg("HTTP API listening")
+	b.Info().Msgf("HTTP API: http://%s/", ln.Addr())
 	return nil
 }
 
@@ -159,15 +194,15 @@ func (b *Bgpipe) stopHTTP() {
 	}
 }
 
-func (b *Bgpipe) attachHTTPStages() error {
+// attachHTTPStages mounts per-stage HTTP routes on the shared mux.
+func (b *Bgpipe) attachHTTPStages() {
 	if b.httpmux == nil {
-		return nil
+		return
 	}
 
 	m := b.httpmux
 	used := make(map[string]struct{})
 
-	// mount per-stage routes
 	for _, s := range b.Stages {
 		if s == nil {
 			continue
@@ -175,7 +210,8 @@ func (b *Bgpipe) attachHTTPStages() error {
 
 		r := chi.NewRouter()
 		if err := s.Stage.RouteHTTP(r); err != nil {
-			return s.Errorf("could not register HTTP API: %w", err)
+			s.Warn().Err(err).Msg("could not register HTTP API")
+			continue
 		}
 		if len(r.Routes()) == 0 {
 			continue
@@ -192,77 +228,6 @@ func (b *Bgpipe) attachHTTPStages() error {
 
 		s.Info().Str("http", s.HTTPPath).Msg("stage HTTP API mounted")
 	}
-
-	// GET /metrics — Prometheus
-	m.Get("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
-		vmmetrics.WritePrometheus(w, true)
-	})
-
-	// GET /hc — k8s health check
-	m.Get("/hc", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
-			"status":  "ok",
-			"version": b.Version,
-			"stages":  b.StageCount(),
-			"uptime":  time.Since(b.StartTime).Truncate(time.Second).String(),
-		})
-	})
-
-	// GET / — web dashboard
-	m.Get("/", b.httpDashboard)
-
-	// pprof
-	if err := b.attachPprof(m); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (b *Bgpipe) attachPprof(m *chi.Mux) error {
-	pprofVal := strings.TrimSpace(b.K.String("pprof"))
-	if pprofVal == "" {
-		return nil
-	}
-
-	if pprofVal == "http" {
-		// mount on the shared --http mux
-		m.HandleFunc("/debug/pprof/", pprof.Index)
-		m.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		m.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		m.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		m.HandleFunc("/debug/pprof/trace", pprof.Trace)
-		b.Info().Msg("pprof enabled at /debug/pprof/ (on --http)")
-		return nil
-	}
-
-	// separate pprof server on its own address (no auth middleware)
-	pprofMux := http.NewServeMux()
-	pprofMux.HandleFunc("/debug/pprof/", pprof.Index)
-	pprofMux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	pprofMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	pprofMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	pprofMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-
-	ln, err := net.Listen("tcp", pprofVal)
-	if err != nil {
-		return fmt.Errorf("could not bind --pprof %s: %w", pprofVal, err)
-	}
-
-	go func() {
-		srv := &http.Server{
-			Handler:           pprofMux,
-			ReadHeaderTimeout: 5 * time.Second,
-		}
-		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			b.Warn().Err(err).Msg("pprof server error")
-		}
-	}()
-
-	b.Info().Str("addr", ln.Addr().String()).Msg("pprof enabled on separate server")
-	return nil
 }
 
 func (b *Bgpipe) httpDashboard(w http.ResponseWriter, r *http.Request) {
@@ -368,8 +333,6 @@ func (b *Bgpipe) httpDashboard(w http.ResponseWriter, r *http.Request) {
 			httpCol)
 	}
 
-	pprofVal := strings.TrimSpace(b.K.String("pprof"))
-
 	fmt.Fprintf(&buf, `
   </table>
 
@@ -378,7 +341,7 @@ func (b *Bgpipe) httpDashboard(w http.ResponseWriter, r *http.Request) {
     <a href="/metrics">Prometheus Metrics</a>
     <a href="/hc">Health Check</a>`)
 
-	if pprofVal == "http" {
+	if b.httppprof {
 		fmt.Fprintf(&buf, `
     <a href="/debug/pprof/">pprof</a>`)
 	}
