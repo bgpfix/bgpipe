@@ -185,7 +185,7 @@ func (s *Websocket) prepareClient() error {
 			s.Info().
 				Interface("headers", resp.Header).
 				Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
-			conn.SetReadLimit(65535)
+			conn.SetReadLimit(4 * 1024 * 1024) // 4MB max message
 			s.client_conn = conn
 			return nil // success
 		} else if !s.retry || (s.retry_max > 0 && try >= s.retry_max) {
@@ -282,7 +282,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 		s.Info().Msgf("%s: connected", r.RemoteAddr)
 	}
 
-	conn.SetReadLimit(65535)
+	conn.SetReadLimit(4 * 1024 * 1024) // 4MB max message
 
 	// publish conn for broadcasts + signal to connWriter
 	if !util.Send(s.server_conn, conn) || !util.Send(s.eio.Output, nil) {
@@ -290,15 +290,9 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// block on conn reader
+	// block on conn reader (closes conn on return)
 	err = s.connReader(conn, nil)
 	s.Info().Err(err).Msgf("%s: reader finished", r.RemoteAddr)
-
-	// close
-	err = conn.Close()
-	if err != nil {
-		s.Warn().Err(err).Msgf("%s: close error", r.RemoteAddr)
-	}
 }
 
 func (s *Websocket) Stop() error {
