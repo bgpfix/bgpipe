@@ -32,15 +32,16 @@ type Bgpipe struct {
 	Ctx    context.Context
 	Cancel context.CancelCauseFunc
 
-	F      *pflag.FlagSet // global flags
-	K      *koanf.Koanf   // global config
-	Pipe   *pipe.Pipe     // bgpfix pipe
-	Stages []*StageBase   // pipe stages
-	HTTP      *http.Server // optional shared HTTP server
-	StartTime time.Time    // when the pipeline started
+	F         *pflag.FlagSet // global flags
+	K         *koanf.Koanf   // global config
+	Pipe      *pipe.Pipe     // bgpfix pipe
+	Stages    []*StageBase   // pipe stages
+	HTTP      *http.Server   // optional shared HTTP server
+	StartTime time.Time      // when the pipeline started
 
-	repo    map[string]NewStage // maps cmd to new stage func
-	httpmux *chi.Mux            // shared HTTP routes
+	repo      map[string]NewStage // maps cmd to new stage func
+	httpmux   *chi.Mux            // shared HTTP routes
+	httppprof bool                // true if pprof mounted on --http
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L

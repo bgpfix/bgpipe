@@ -23,7 +23,7 @@ func TestFileParseJSON_ValidRoutinatorFormat(t *testing.T) {
 
 	// Check IPv4 entries
 	if len(s.next4) != 2 {
-		t.Errorf("expected 2 IPv4 ROAs, got %d", len(s.next4))
+		t.Errorf("expected 2 IPv4 VRPs, got %d", len(s.next4))
 	}
 
 	p1 := netip.MustParsePrefix("192.0.2.0/24")
@@ -42,7 +42,7 @@ func TestFileParseJSON_ValidRoutinatorFormat(t *testing.T) {
 
 	// Check IPv6 entries
 	if len(s.next6) != 1 {
-		t.Errorf("expected 1 IPv6 ROA, got %d", len(s.next6))
+		t.Errorf("expected 1 IPv6 VRP, got %d", len(s.next6))
 	}
 
 	p3 := netip.MustParsePrefix("2001:db8::/32")
@@ -133,10 +133,10 @@ func TestFileParseCSV_Valid(t *testing.T) {
 	}
 
 	if len(s.next4) != 2 {
-		t.Errorf("expected 2 IPv4 ROAs, got %d", len(s.next4))
+		t.Errorf("expected 2 IPv4 VRPs, got %d", len(s.next4))
 	}
 	if len(s.next6) != 1 {
-		t.Errorf("expected 1 IPv6 ROA, got %d", len(s.next6))
+		t.Errorf("expected 1 IPv6 VRP, got %d", len(s.next6))
 	}
 
 	// Verify specific entries
@@ -158,7 +158,7 @@ func TestFileParseCSV_NoHeader(t *testing.T) {
 	}
 
 	if len(s.next4) != 2 {
-		t.Errorf("expected 2 IPv4 ROAs, got %d", len(s.next4))
+		t.Errorf("expected 2 IPv4 VRPs, got %d", len(s.next4))
 	}
 }
 
@@ -179,7 +179,7 @@ func TestFileParseCSV_Comments(t *testing.T) {
 	}
 
 	if len(s.next4) != 2 {
-		t.Errorf("expected 2 IPv4 ROAs (comments ignored), got %d", len(s.next4))
+		t.Errorf("expected 2 IPv4 VRPs (comments ignored), got %d", len(s.next4))
 	}
 }
 
@@ -218,7 +218,7 @@ invalid line
 	// Should have 2 valid entries (first and last)
 	// Others are skipped due to various validation errors
 	if len(s.next4) != 2 {
-		t.Errorf("expected 2 valid IPv4 ROAs, got %d", len(s.next4))
+		t.Errorf("expected 2 valid IPv4 VRPs, got %d", len(s.next4))
 	}
 }
 
@@ -257,10 +257,10 @@ func TestFileParse_AutoDetect(t *testing.T) {
 			}
 
 			if len(s.next4) != tt.wantV4 {
-				t.Errorf("got %d IPv4 ROAs, want %d", len(s.next4), tt.wantV4)
+				t.Errorf("got %d IPv4 VRPs, want %d", len(s.next4), tt.wantV4)
 			}
 			if len(s.next6) != tt.wantV6 {
-				t.Errorf("got %d IPv6 ROAs, want %d", len(s.next6), tt.wantV6)
+				t.Errorf("got %d IPv6 VRPs, want %d", len(s.next6), tt.wantV6)
 			}
 		})
 	}

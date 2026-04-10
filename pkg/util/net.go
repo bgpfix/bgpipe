@@ -15,6 +15,9 @@ import (
 	"github.com/bgpfix/bgpipe/core"
 )
 
+// ConnPublish publishes connection information to stage s's pipe KV store, for the benefit of other stages.
+// It sets L_LOCAL_ADDR, L_LOCAL_PORT, L_REMOTE_ADDR, L_REMOTE_PORT for the first stage,
+// and R_LOCAL_ADDR, R_LOCAL_PORT, R_REMOTE_ADDR, R_REMOTE_PORT for the last stage.
 func ConnPublish(s *core.StageBase, conn net.Conn) {
 	var todo map[string]string
 	if s.IsFirst {
