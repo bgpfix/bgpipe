@@ -353,7 +353,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 	if s.ipv4 {
 		before += len(u.Unreach)
 		u.Unreach = slices.DeleteFunc(u.Unreach, dropUnreach)
-		after += len(u.Reach)
+		after += len(u.Unreach)
 	}
 
 	// prefixes in the MP part?
