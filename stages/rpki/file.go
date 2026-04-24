@@ -84,7 +84,8 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 		} `json:"roas"`
 		ASPAs []struct {
 			CustomerASID  uint32   `json:"customer_asid"`
-			ProviderASIDs []uint32 `json:"provider_asids"`
+			ProviderASIDs []uint32 `json:"provider_asids"` // Routinator
+			Providers     []uint32 `json:"providers"`      // rpki-client
 		} `json:"aspas"`
 	}
 
@@ -130,7 +131,13 @@ func (s *Rpki) fileParseJSON(data []byte) error {
 			s.Warn().Msg("ASPA entry with zero customer ASN, skipping")
 			continue
 		}
-		s.nextASPA(true, aspa.CustomerASID, aspa.ProviderASIDs)
+		// NB: Routinator uses provider_asids, rpki-client uses providers.
+		// rpki-client emits [0] for "no providers" — nextASPA filters zeros.
+		provs := aspa.ProviderASIDs
+		if provs == nil {
+			provs = aspa.Providers
+		}
+		s.nextASPA(true, aspa.CustomerASID, provs)
 	}
 
 	return nil

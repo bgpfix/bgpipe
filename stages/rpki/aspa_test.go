@@ -49,7 +49,10 @@ func TestAspVerify_Upstream_Valid(t *testing.T) {
 		65002: {65001},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_valid, aspVerify(aspa, path, false))
+	result, cas, pas := aspVerify(aspa, path, false)
+	require.Equal(t, aspa_valid, result)
+	require.Zero(t, cas)
+	require.Zero(t, pas)
 }
 
 func TestAspVerify_Upstream_Invalid(t *testing.T) {
@@ -59,7 +62,10 @@ func TestAspVerify_Upstream_Invalid(t *testing.T) {
 		65002: {65001},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_invalid, aspVerify(aspa, path, false))
+	result, cas, pas := aspVerify(aspa, path, false)
+	require.Equal(t, aspa_invalid, result)
+	require.Equal(t, uint32(65003), cas) // 65003 has ASPA but doesn't list 65002
+	require.Equal(t, uint32(65002), pas)
 }
 
 func TestAspVerify_Upstream_Unknown(t *testing.T) {
@@ -68,12 +74,18 @@ func TestAspVerify_Upstream_Unknown(t *testing.T) {
 		65003: {65002},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_unknown, aspVerify(aspa, path, false))
+	result, cas, pas := aspVerify(aspa, path, false)
+	require.Equal(t, aspa_unknown, result)
+	require.Zero(t, cas)
+	require.Zero(t, pas)
 }
 
 func TestAspVerify_Upstream_SingleHop(t *testing.T) {
 	aspa := ASPA{}
-	require.Equal(t, aspa_valid, aspVerify(aspa, []uint32{65001}, false))
+	result, cas, pas := aspVerify(aspa, []uint32{65001}, false)
+	require.Equal(t, aspa_valid, result)
+	require.Zero(t, cas)
+	require.Zero(t, pas)
 }
 
 func TestAspVerify_Upstream_TwoHop_Valid(t *testing.T) {
@@ -81,7 +93,8 @@ func TestAspVerify_Upstream_TwoHop_Valid(t *testing.T) {
 	aspa := ASPA{
 		65002: {65001},
 	}
-	require.Equal(t, aspa_valid, aspVerify(aspa, []uint32{65001, 65002}, false))
+	result, _, _ := aspVerify(aspa, []uint32{65001, 65002}, false)
+	require.Equal(t, aspa_valid, result)
 }
 
 func TestAspVerify_Upstream_TwoHop_Invalid(t *testing.T) {
@@ -89,7 +102,10 @@ func TestAspVerify_Upstream_TwoHop_Invalid(t *testing.T) {
 	aspa := ASPA{
 		65002: {65099},
 	}
-	require.Equal(t, aspa_invalid, aspVerify(aspa, []uint32{65001, 65002}, false))
+	result, cas, pas := aspVerify(aspa, []uint32{65001, 65002}, false)
+	require.Equal(t, aspa_invalid, result)
+	require.Equal(t, uint32(65002), cas)
+	require.Equal(t, uint32(65001), pas)
 }
 
 // --- aspVerify downstream tests ---
@@ -104,22 +120,28 @@ func TestAspVerify_Downstream_ValleyFree(t *testing.T) {
 		65001: {65002},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_valid, aspVerify(aspa, path, true))
+	result, cas, pas := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_valid, result)
+	require.Zero(t, cas)
+	require.Zero(t, pas)
 }
 
 func TestAspVerify_Downstream_NotValleyFree(t *testing.T) {
 	// path: 65001 → 65002 → 65003 (origin)
 	// all ASes have ASPA records but the path is not valley-free:
-	// up-ramp: aspAuthorized(65003, 65002) → 65003 says 65099, not 65002 → NotProvider → break (maxUp=0)
-	// down-ramp: aspAuthorized(65001, 65002) → 65001 says 65099, not 65002 → NotProvider → break (maxDown=0)
-	// maxUp + maxDown = 0 < 2 → invalid
+	// up-ramp: aspAuthorized(65003, 65002) → 65003 says 65099 → asp_not → break (maxUp=0, upCAS=65003, upPAS=65002)
+	// down-ramp: aspAuthorized(65001, 65002) → 65001 says 65099 → asp_not → break (maxDown=0, dnCAS=65001, dnPAS=65002)
+	// maxUp + maxDown = 0 < n-2 = 1 → invalid; down-ramp failure preferred (dnCAS != 0)
 	aspa := ASPA{
 		65003: {65099},
 		65002: {65099},
 		65001: {65099},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_invalid, aspVerify(aspa, path, true))
+	result, cas, pas := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_invalid, result)
+	require.Equal(t, uint32(65001), cas) // down-ramp: 65001 doesn't list 65002 as provider
+	require.Equal(t, uint32(65002), pas)
 }
 
 func TestAspVerify_Downstream_ShortPathCanStillBeValid(t *testing.T) {
@@ -131,7 +153,8 @@ func TestAspVerify_Downstream_ShortPathCanStillBeValid(t *testing.T) {
 		65003: {65002},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_valid, aspVerify(aspa, path, true))
+	result, _, _ := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_valid, result)
 }
 
 func TestAspVerify_Downstream_LongValleyFree(t *testing.T) {
@@ -144,7 +167,8 @@ func TestAspVerify_Downstream_LongValleyFree(t *testing.T) {
 		65001: {65002},
 	}
 	path := []uint32{65001, 65002, 65003, 65004}
-	require.Equal(t, aspa_valid, aspVerify(aspa, path, true))
+	result, _, _ := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_valid, result)
 }
 
 func TestAspVerify_Downstream_PeerPeering(t *testing.T) {
@@ -157,7 +181,8 @@ func TestAspVerify_Downstream_PeerPeering(t *testing.T) {
 		65001: {65002},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_valid, aspVerify(aspa, path, true))
+	result, _, _ := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_valid, result)
 }
 
 func TestAspVerify_Downstream_Tier1PeeringIsUnknown(t *testing.T) {
@@ -171,15 +196,69 @@ func TestAspVerify_Downstream_Tier1PeeringIsUnknown(t *testing.T) {
 		65003: {},
 	}
 	path := []uint32{65001, 65002, 65003, 65004}
-	require.Equal(t, aspa_unknown, aspVerify(aspa, path, true))
+	result, _, _ := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_unknown, result)
 }
 
 func TestAspVerify_EmptyASPA(t *testing.T) {
 	// no ASPA data → all hops are NoAttestation → unknown
 	aspa := ASPA{}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_unknown, aspVerify(aspa, path, false))
-	require.Equal(t, aspa_unknown, aspVerify(aspa, path, true))
+	result1, cas1, _ := aspVerify(aspa, path, false)
+	require.Equal(t, aspa_unknown, result1)
+	require.Zero(t, cas1)
+	result2, cas2, _ := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_unknown, result2)
+	require.Zero(t, cas2)
+}
+
+// --- aspVerify hop tracking tests ---
+
+func TestAspVerify_Upstream_HopAtFirstFail(t *testing.T) {
+	// path: [65001, 65002, 65003]; 65002 has ASPA but doesn't list 65001 as provider
+	// first check: aspAuthorized(65002, 65001) → asp_not → INVALID, CAS=65002, PAS=65001
+	aspa := ASPA{
+		65002: {65099},
+		65003: {65002},
+	}
+	path := []uint32{65001, 65002, 65003}
+	result, cas, pas := aspVerify(aspa, path, false)
+	require.Equal(t, aspa_invalid, result)
+	require.Equal(t, uint32(65002), cas)
+	require.Equal(t, uint32(65001), pas)
+}
+
+func TestAspVerify_Upstream_HopAtSecondFail(t *testing.T) {
+	// path: [65001, 65002, 65003]; first hop OK, second fails
+	// aspAuthorized(65002, 65001) → asp_prov ✓
+	// aspAuthorized(65003, 65002) → asp_not → INVALID, CAS=65003, PAS=65002
+	aspa := ASPA{
+		65002: {65001},
+		65003: {65099},
+	}
+	path := []uint32{65001, 65002, 65003}
+	result, cas, pas := aspVerify(aspa, path, false)
+	require.Equal(t, aspa_invalid, result)
+	require.Equal(t, uint32(65003), cas)
+	require.Equal(t, uint32(65002), pas)
+}
+
+func TestAspVerify_Downstream_HopPrefersDnRamp(t *testing.T) {
+	// path: [65001, 65002, 65003, 65004]
+	// down-ramp: aspAuthorized(65001, 65002) → 65001 says 65099, not 65002 → asp_not (dnCAS=65001, dnPAS=65002)
+	// up-ramp: aspAuthorized(65004, 65003) → 65004 says 65099, not 65003 → asp_not (upCAS=65004, upPAS=65003)
+	// INVALID: prefer down-ramp (dnCAS != 0)
+	aspa := ASPA{
+		65001: {65099},
+		65002: {65099},
+		65003: {65099},
+		65004: {65099},
+	}
+	path := []uint32{65001, 65002, 65003, 65004}
+	result, cas, pas := aspVerify(aspa, path, true)
+	require.Equal(t, aspa_invalid, result)
+	require.Equal(t, uint32(65001), cas) // down-ramp failure preferred
+	require.Equal(t, uint32(65002), pas)
 }
 
 // --- parseRoleName tests ---

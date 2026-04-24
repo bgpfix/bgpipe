@@ -1,6 +1,7 @@
 package rpki
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -35,30 +36,32 @@ func aspAuthorized(aspa ASPA, cas, pas uint32) int {
 //
 // path[0] is the most-recently-traversed AS (direct peer),
 // path[N-1] is the origin AS. Returns aspa_valid, aspa_unknown, or aspa_invalid.
+// On aspa_invalid, failCAS and failPAS identify the hop where CAS has an ASPA record
+// that does not list PAS as a provider (asp_not). Both are 0 for other results.
 //
 // downstream=true when received from a provider or RS (downstream direction).
 // downstream=false when received from a customer, peer, or RS-client (upstream).
 //
 // NB: does not check path[0] == neighbor AS (draft §5.4/5.5 step 2).
 // The caller must do that check, skipping it for RS peers (RFC 7947).
-func aspVerify(aspa ASPA, path []uint32, downstream bool) int {
+func aspVerify(aspa ASPA, path []uint32, downstream bool) (result int, failCAS, failPAS uint32) {
 	n := len(path)
 	if n <= 1 {
-		return aspa_valid
+		return aspa_valid, 0, 0
 	}
 
 	if !downstream {
 		// upstream: every hop should go up (each AS sent to its provider)
-		result := aspa_valid
+		result = aspa_valid
 		for i := 0; i < n-1; i++ {
 			switch aspAuthorized(aspa, path[i+1], path[i]) {
 			case asp_not:
-				return aspa_invalid
+				return aspa_invalid, path[i+1], path[i]
 			case asp_no_att:
 				result = aspa_unknown
 			}
 		}
-		return result
+		return result, 0, 0
 	}
 
 	// downstream: find up-ramp from origin + down-ramp from peer.
@@ -68,11 +71,13 @@ func aspVerify(aspa ASPA, path []uint32, downstream bool) int {
 	//
 	// max counts Provider and NoAttestation until first NotProvider;
 	// min counts only leading Provider hops (stops at first NoAttestation).
+	var upCAS, upPAS uint32
 	maxUp, minUp := 0, 0
 	exact := true
 	for i := n - 2; i >= 0; i-- {
 		auth := aspAuthorized(aspa, path[i+1], path[i])
 		if auth == asp_not {
+			upCAS, upPAS = path[i+1], path[i]
 			break
 		}
 		maxUp++
@@ -83,11 +88,13 @@ func aspVerify(aspa ASPA, path []uint32, downstream bool) int {
 		}
 	}
 
+	var dnCAS, dnPAS uint32
 	maxDown, minDown := 0, 0
 	exact = true
 	for i := 0; i < n-1; i++ {
 		auth := aspAuthorized(aspa, path[i], path[i+1])
 		if auth == asp_not {
+			dnCAS, dnPAS = path[i], path[i+1]
 			break
 		}
 		maxDown++
@@ -99,12 +106,17 @@ func aspVerify(aspa ASPA, path []uint32, downstream bool) int {
 	}
 
 	if maxUp+maxDown < n-2 {
-		return aspa_invalid
+		// NB: a >1-pair gap means both ramps hit asp_not; report the
+		// down-ramp failure (closer to the peer) if available.
+		if dnCAS != 0 {
+			return aspa_invalid, dnCAS, dnPAS
+		}
+		return aspa_invalid, upCAS, upPAS
 	}
 	if minUp+minDown < n-2 {
-		return aspa_unknown
+		return aspa_unknown, 0, 0
 	}
-	return aspa_valid
+	return aspa_valid, 0, 0
 }
 
 // aspPeerASN returns the peer's ASN from its OPEN message, or 0 if unavailable.
@@ -207,6 +219,7 @@ func (s *Rpki) validateAspa(m *msg.Msg) bool {
 	// verify path
 	flat := aspath.Unique()
 	var result int
+	var failCAS, failPAS uint32
 	if flat == nil {
 		result = aspa_invalid // AS_SET present → invalid per ASPA spec §3
 	} else if len(flat) > 1 {
@@ -216,15 +229,17 @@ func (s *Rpki) validateAspa(m *msg.Msg) bool {
 			// FIXME: aspPeerASN on every UPDATE is inefficient
 			peerASN := aspPeerASN(s.P, m.Dir)
 			if peerASN == 0 {
-				s.Warn().Msg("ASPA: peer ASN unknown, first-hop check skipped")
+				s.peer_asn_unk_w[di].Do(func() {
+					s.Warn().Str("dir", m.Dir.String()).Msg("ASPA: peer ASN unknown, first-hop check skipped")
+				})
 			}
 			if peerASN != 0 && flat[0] != peerASN {
 				result = aspa_invalid
 			} else {
-				result = aspVerify(*aspa, flat, s.peer_down[di])
+				result, failCAS, failPAS = aspVerify(*aspa, flat, s.peer_down[di])
 			}
 		} else {
-			result = aspVerify(*aspa, flat, s.peer_down[di])
+			result, failCAS, failPAS = aspVerify(*aspa, flat, s.peer_down[di])
 		}
 	} else {
 		result = aspa_valid // single-hop
@@ -249,6 +264,9 @@ func (s *Rpki) validateAspa(m *msg.Msg) bool {
 			tags["aspa/status"] = "UNKNOWN"
 		case aspa_invalid:
 			tags["aspa/status"] = "INVALID"
+			if failCAS != 0 {
+				tags["aspa/invalid-hop"] = fmt.Sprintf("%d %d", failCAS, failPAS)
+			}
 		}
 		m.Edit()
 	}

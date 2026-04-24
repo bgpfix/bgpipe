@@ -266,6 +266,33 @@ func TestFileParse_AutoDetect(t *testing.T) {
 	}
 }
 
+func TestFileParseJSON_ASPA_BothKeyVariants(t *testing.T) {
+	// Routinator uses `provider_asids`, rpki-client uses `providers`
+	// and encodes "no providers" as [0] — nextASPA must strip zeros.
+	json := []byte(`{
+		"roas": [],
+		"aspas": [
+			{"customer_asid": 65001, "provider_asids": [65010, 65011]},
+			{"customer_asid": 65002, "providers": [65020, 65021]},
+			{"customer_asid": 65003, "providers": [0]}
+		]
+	}`)
+
+	s := newTestRpki()
+	if err := s.fileParseJSON(json); err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if got := s.next_aspa[65001]; len(got) != 2 || got[0] != 65010 || got[1] != 65011 {
+		t.Errorf("Routinator key: got %v, want [65010 65011]", got)
+	}
+	if got := s.next_aspa[65002]; len(got) != 2 || got[0] != 65020 || got[1] != 65021 {
+		t.Errorf("rpki-client key: got %v, want [65020 65021]", got)
+	}
+	if got, ok := s.next_aspa[65003]; !ok || len(got) != 0 {
+		t.Errorf(`rpki-client "no providers" ([0]): got %v (ok=%v), want empty slice`, got, ok)
+	}
+}
+
 func TestFileParse_PrefixMasking(t *testing.T) {
 	s := newTestRpki()
 

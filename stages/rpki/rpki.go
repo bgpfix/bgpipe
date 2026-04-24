@@ -79,10 +79,11 @@ type Rpki struct {
 	aspa_role string // --aspa-role flag value
 
 	// resolved peer role (per-direction, set once on first UPDATE per dir)
-	peer_role    [2]int // caps.ROLE_* constant; -1 = unresolved
-	peer_role_mu [2]sync.Once
-	peer_role_ok [2]bool // true if resolved successfully
-	peer_down    [2]bool // true if peer is provider/RS (downstream path)
+	peer_role      [2]int // caps.ROLE_* constant; -1 = unresolved
+	peer_role_mu   [2]sync.Once
+	peer_role_ok   [2]bool     // true if resolved successfully
+	peer_down      [2]bool     // true if peer is provider/RS (downstream path)
+	peer_asn_unk_w [2]sync.Once // warn once per dir when peer ASN unknown
 
 	// VRP cache (current = atomic pointer; next = pending)
 	vrp_done chan bool
