@@ -62,7 +62,9 @@ func aspVerify(aspa ASPA, path []uint32, downstream bool) int {
 	}
 
 	// downstream: find up-ramp from origin + down-ramp from peer.
-	// Valid if up_ramp + down_ramp covers all N-1 pairs (valley-free).
+	// Valid if the ramps leave at most one central pair uncovered.
+	// That corresponds to the draft's rule that the two apexes may be
+	// adjacent, i.e. separated by a single peer hop.
 	//
 	// max counts Provider and NoAttestation until first NotProvider;
 	// min counts only leading Provider hops (stops at first NoAttestation).
@@ -96,10 +98,10 @@ func aspVerify(aspa ASPA, path []uint32, downstream bool) int {
 		}
 	}
 
-	if maxUp+maxDown < n-1 {
+	if maxUp+maxDown < n-2 {
 		return aspa_invalid
 	}
-	if minUp+minDown < n-1 {
+	if minUp+minDown < n-2 {
 		return aspa_unknown
 	}
 	return aspa_valid
@@ -155,11 +157,15 @@ func parseRoleName(name string) (byte, bool) {
 
 // validateAspa performs ASPA path validation for the UPDATE message.
 // Returns false to drop, true to keep.
-func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) bool {
+func (s *Rpki) validateAspa(m *msg.Msg) bool {
 	aspa := s.aspa.Load()
 	if aspa == nil || len(*aspa) == 0 {
 		return true // no ASPA data
 	}
+
+	u := &m.Update
+	tags := pipe.UseTags(m)
+
 	if !u.HasReach() {
 		return true // withdrawal-only, no AS_PATH to validate
 	}
@@ -171,6 +177,7 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) b
 	// NB: role resolved once per direction on first UPDATE. BGP guarantees OPEN
 	// is exchanged before any UPDATE. If --aspa-role auto and peer didn't
 	// send BGP Role capability, ASPA is permanently skipped for this direction.
+	// FIXME: aspa_role same for both directions does not make sense in -LR mode.
 	di := m.Dir & 1 // direction index: 0=R, 1=L
 	s.peer_role_mu[di].Do(func() {
 		if s.aspa_role != "auto" {
@@ -206,6 +213,7 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) b
 		// NB: per draft §5.4/5.5 step 2, path[0] must equal neighbor AS.
 		// RS peers don't prepend their ASN (RFC 7947).
 		if s.peer_role[di] != int(caps.ROLE_RS) {
+			// FIXME: aspPeerASN on every UPDATE is inefficient
 			peerASN := aspPeerASN(s.P, m.Dir)
 			if peerASN == 0 {
 				s.Warn().Msg("ASPA: peer ASN unknown, first-hop check skipped")

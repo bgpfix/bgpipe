@@ -170,7 +170,7 @@ func (s *Rpki) validateMsg(m *msg.Msg) bool {
 
 	// ASPA validation (independent of ROV, requires --aspa)
 	if s.aspa_on {
-		return s.validateAspa(m, u, tags)
+		return s.validateAspa(m)
 	}
 	return true
 }

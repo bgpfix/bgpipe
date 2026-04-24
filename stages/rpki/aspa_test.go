@@ -122,17 +122,16 @@ func TestAspVerify_Downstream_NotValleyFree(t *testing.T) {
 	require.Equal(t, aspa_invalid, aspVerify(aspa, path, true))
 }
 
-func TestAspVerify_Downstream_Unknown(t *testing.T) {
+func TestAspVerify_Downstream_ShortPathCanStillBeValid(t *testing.T) {
 	// path: 65001 → 65002 → 65003 (origin)
-	// 65003 says 65002 is provider (up-ramp=1)
-	// 65001 has no ASPA (down max=1, min=0)
-	// maxUp + maxDown = 1 + 1 = 2 >= 2 ✓
-	// minUp + minDown = 1 + 0 = 1 < 2 → unknown
+	// 65003 says 65002 is provider, while 65001 has no ASPA.
+	// The draft still considers this valid: the up-ramp can extend all the way
+	// to the neighbor side, and the down-ramp can degenerate to the neighbor AS.
 	aspa := ASPA{
 		65003: {65002},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_unknown, aspVerify(aspa, path, true))
+	require.Equal(t, aspa_valid, aspVerify(aspa, path, true))
 }
 
 func TestAspVerify_Downstream_LongValleyFree(t *testing.T) {
@@ -150,17 +149,29 @@ func TestAspVerify_Downstream_LongValleyFree(t *testing.T) {
 
 func TestAspVerify_Downstream_PeerPeering(t *testing.T) {
 	// 3-hop with peering at top: 65001 → 65002 → 65003 (origin)
-	// all ASes have ASPA records so all lookups are definitive:
-	// up-ramp: aspAuthorized(65003, 65002) → 65003 says 65099, not 65002 → NotProvider → maxUp=0
-	// down-ramp: aspAuthorized(65001, 65002) → 65001 says 65002 → Provider → maxDown=1
-	// maxUp+maxDown=0+1=1 < 2 → invalid
+	// The draft allows one central hop between the up-ramp apex and down-ramp
+	// apex. Here, 65002-65003 is that peer hop, so the path is still valid.
 	aspa := ASPA{
 		65003: {65099}, // 65003's provider is 65099, not 65002
 		65002: {65099}, // 65002 has record (needed for definitive NotProvider results)
 		65001: {65002},
 	}
 	path := []uint32{65001, 65002, 65003}
-	require.Equal(t, aspa_invalid, aspVerify(aspa, path, true))
+	require.Equal(t, aspa_valid, aspVerify(aspa, path, true))
+}
+
+func TestAspVerify_Downstream_Tier1PeeringIsUnknown(t *testing.T) {
+	// 4-hop path with a single Tier1-Tier1 peer hop in the middle:
+	// 65001 → 65002 → 65003 → 65004 (origin)
+	// 65002 and 65003 publish AS0 ASPAs (represented here as empty provider
+	// lists), so their mutual hop is a definitive NotProvider. The outer hops
+	// are unattested, so the path is deployable today but only UNKNOWN.
+	aspa := ASPA{
+		65002: {},
+		65003: {},
+	}
+	path := []uint32{65001, 65002, 65003, 65004}
+	require.Equal(t, aspa_unknown, aspVerify(aspa, path, true))
 }
 
 func TestAspVerify_EmptyASPA(t *testing.T) {
