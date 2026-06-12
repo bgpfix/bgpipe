@@ -28,16 +28,16 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
     Download and install bgpipe<br>
     [:octicons-arrow-right-24: GitHub Releases](https://github.com/bgpfix/bgpipe/releases)
 
--   :material-bomb:{ .lg } __Research__
+-   :material-pipe:{ .lg } __Stages__
 
-    Read background paper<br>
-    [:octicons-arrow-right-24: Kirin Attack](https://kirin-attack.github.io/)
+    Browse the building blocks<br>
+    [:octicons-arrow-right-24: Stage Reference](stages/index.md)
 
 </div>
 
 ## Quick Demo
 
-Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) on the fly, and show RPKI-invalid announcements.
+Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) on the fly, and show RPKI-invalid announcements — one command, no config:
 
 ```bash
 $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
@@ -73,13 +73,51 @@ $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
 ]
 ```
 
+More one-liners:
+
+```bash
+# convert an MRT archive to JSON, straight from RouteViews (or RIS) URL
+$ bgpipe -- read https://archive.routeviews.org/bgpdata/2026.06/UPDATES/updates.20260601.0000.bz2 \
+         -- write updates.json
+
+# proxy a BGP session, log everything as JSON, drop RPKI-invalid prefixes
+$ bgpipe --stdout \
+    -- listen :179 \
+    -- rov --invalid=withdraw \
+    -- connect --wait listen 192.0.2.1
+```
+
+## Install
+
+=== "Docker"
+
+    ```bash
+    docker pull ghcr.io/bgpfix/bgpipe:latest
+    ```
+
+=== "Binary"
+
+    ```bash
+    wget -O bgpipe \
+        https://github.com/bgpfix/bgpipe/releases/latest/download/bgpipe-linux-amd64
+    chmod +x bgpipe
+    ```
+
+=== "Go install"
+
+    ```bash
+    go install github.com/bgpfix/bgpipe@latest
+    ```
+
+A single static binary, no dependencies — see the [Quick Start](quickstart.md) for details and other platforms.
+
 ## Use Cases
 
 <div class="grid cards" markdown>
 
 -   :material-shield-lock:{ .lg } **BGP Firewall**
 
-    Drop-in proxy with RPKI validation, prefix limits, and rate limiting
+    Drop-in proxy with RPKI ROV + ASPA validation, prefix limits, and rate limiting
 
 -   :material-code-json:{ .lg } **Full JSON Translation**
 
@@ -105,10 +143,11 @@ $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
 
 ## Features
 
-- **Transparent proxy** — sits between two BGP speakers; routers see a normal peer
+- **Transparent proxy** — sits between two BGP speakers; with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer — no router reconfiguration
 - **Full JSON translation** — bidirectional BGP ↔ JSON for every message type, including [Flowspec](flowspec.md)
 - **Built-in filters** — match on prefixes, AS paths, communities, attributes, and [tags](stages/tag.md) with a concise [filter language](filters.md)
-- **RPKI validation** — validate UPDATEs against RPKI using RTR protocol (e.g. Cloudflare, Routinator)
+- **RPKI origin validation** — [rov](stages/rov.md) stage implements RFC 6811, fed over RTR (e.g. Cloudflare, Routinator), HTTP(S), or files
+- **ASPA path verification** — [aspa](stages/aspa.md) stage detects route leaks per the IETF draft — available today, before router vendors ship it
 - **Prefix and rate limits** — enforce prefix count/length thresholds and message rate limits per session
 - **UPDATE rewriting** — add, remove, or modify path attributes on the fly
 - **Multiple data formats** — read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format
@@ -126,5 +165,7 @@ $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
 bgpipe is hosted on [GitHub](https://github.com/bgpfix/bgpipe) under the MIT license,
 built on the [bgpfix](https://bgpfix.org/) library.
 
+- Watch the [RIPE 88 talk](https://ripe88.ripe.net/archives/video/1365/) for a 15-minute introduction
+- Read the [Kirin attack paper](https://kirin-attack.github.io/) that started the project
 - Report bugs and request features on [GitHub Issues](https://github.com/bgpfix/bgpipe/issues)
 - For collaboration inquiries, contact [bgpipe@bgpipe.org](mailto:bgpipe@bgpipe.org)
