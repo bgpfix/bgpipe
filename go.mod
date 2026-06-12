@@ -6,7 +6,7 @@ toolchain go1.26.0
 
 require (
 	github.com/VictoriaMetrics/metrics v1.43.1
-	github.com/bgpfix/bgpfix v0.19.1-0.20260612100952-76be15dba503
+	github.com/bgpfix/bgpfix v0.19.1-0.20260612102632-a1802665075f
 	github.com/buger/jsonparser v1.1.2
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/go-chi/chi/v5 v5.2.5
