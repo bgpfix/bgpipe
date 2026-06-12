@@ -10,10 +10,10 @@ There is no standard, programmable layer between BGP speakers where you can insp
 **bgpipe** fills that gap. It operates as a transparent proxy sitting on the BGP wire between two speakers. Every message flowing in either direction passes through a pipeline of composable stages — each doing one thing well, chained together like UNIX pipes:
 
 ```
-router A  ──▶  [ listen ── grep ── rpki ── limit ── connect ]  ──▶  router B
+router A  ──▶  [ listen ── grep ── rov ── limit ── connect ]  ──▶  router B
 ```
 
-Stages can filter messages (`grep`, `drop`), enforce policy (`limit`, `rpki`), transform data (`update`, `tag`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
+Stages can filter messages (`grep`, `drop`), enforce policy (`limit`, `rov`, `aspa`), transform data (`update`, `tag`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
 
 Because bgpipe speaks native BGP on both sides, routers see a normal peer — no protocol changes, no vendor lock-in.
 Because every message has a full [JSON representation](json-format.md) (including [Flowspec](flowspec.md)), you can pipe BGP through `jq`, Python, or any tool that handles JSON.

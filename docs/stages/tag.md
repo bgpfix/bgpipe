@@ -18,7 +18,7 @@ the [JSON representation](../json-format.md).
 Tags are useful for:
 
 - Annotating messages with pipeline context (e.g., source collector, timestamp)
-- Passing information between stages (e.g., from [rpki](rpki.md) to [grep](grep.md))
+- Passing information between stages (e.g., from [rov](rov.md) to [grep](grep.md))
 - Filtering based on custom criteria using `tag[key]` in [filter expressions](../filters.md)
 
 This stage supports bidirectional operation with `-LR`. Without `-LR`, it

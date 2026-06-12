@@ -12,6 +12,7 @@ bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGS] [--] STAGE2 [OPTIONS] [ARGS] ...
 
 | Stage | Description |
 |-------|-------------|
+| [aspa](aspa.md) | Validate AS paths using RPKI ASPA |
 | [connect](connect.md) | Connect to a BGP endpoint over TCP |
 | [drop](grep.md) | Drop messages matching a filter; keep the rest |
 | [exec](exec.md) | Pipe messages through an external process |
@@ -23,7 +24,7 @@ bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGS] [--] STAGE2 [OPTIONS] [ARGS] ...
 | [pipe](pipe.md) | Exchange messages through a named pipe (FIFO) |
 | [read](read.md) | Read messages from a file or URL |
 | [ris-live](ris-live.md) | Stream BGP updates from RIPE RIS Live |
-| [rpki](rpki.md) | Validate UPDATE messages using RPKI |
+| [rov](rov.md) | Validate route origins using RPKI ROV |
 | [rv-live](rv-live.md) | Stream BGP updates from RouteViews via Kafka |
 | [speaker](speaker.md) | Run a simple BGP speaker |
 | [stdin](stdin.md) | Read messages from standard input |

@@ -128,58 +128,58 @@ bgpipe -g \
 
 ## Stream live BGP with RPKI filtering
 
-Stages: [ris-live](stages/ris-live.md), [rpki](stages/rpki.md), [update](stages/update.md), [write](stages/write.md)
+Stages: [ris-live](stages/ris-live.md), [rov](stages/rov.md), [update](stages/update.md), [write](stages/write.md)
 
-Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against [BGP hijacking](https://en.wikipedia.org/wiki/BGP_hijacking) and route leaks. The updates will not be modified on the BGP level (`--invalid=keep` flag), but will be tagged with `rpki/status = INVALID`. The `update` stage is then used to add a community `123:456` to invalid updates for easy identification. Finally, the stream is saved to a file in JSON format.
+Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against [BGP hijacking](https://en.wikipedia.org/wiki/BGP_hijacking) and route leaks. The updates will not be modified on the BGP level (`--invalid=keep` flag), but will be tagged with `rov/status = INVALID`. The `update` stage is then used to add a community `123:456` to invalid updates for easy identification. Finally, the stream is saved to a file in JSON format.
 
 ```bash
 # Real-time BGP monitoring with RPKI validation
 bgpipe -g \
   -- ris-live \
-  -- rpki --invalid=keep \
-  -- update --if 'tag[rpki/status] = INVALID' --add-com 123:456 \
+  -- rov --invalid=keep \
+  -- update --if 'tag[rov/status] = INVALID' --add-com 123:456 \
   -- write ris-rpki-updates.json
 ```
 
 ## Secure your BGP sessions with RPKI
 
-Stages: [listen](stages/listen.md), [rpki](stages/rpki.md), [connect](stages/connect.md)
+Stages: [listen](stages/listen.md), [rov](stages/rov.md), [connect](stages/connect.md)
 
-Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can use `--file` to load a local ROA cache).
+Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can point the global `--rpki` option at another server or a local ROA cache file).
 
 ```bash
 # Secure 5.6.7.8 by filtering RPKI-invalid prefixes coming from 1.2.3.4
 bgpipe \
   -- listen 1.2.3.4 \
-  -- rpki \
+  -- rov \
   -- connect 5.6.7.8
 ```
 
 ## Strict RPKI enforcement mode
 
-Stages: [listen](stages/listen.md), [rpki](stages/rpki.md), [connect](stages/connect.md)
+Stages: [listen](stages/listen.md), [rov](stages/rov.md), [connect](stages/connect.md)
 
 Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from `1.2.3.4` clients forwarded to `5.6.7.8` where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.
 
 ```bash
 # Drop messages announcing INVALID and/or NOT_FOUND prefixes
-bgpipe --events rpki/dropped \
+bgpipe --events rov/dropped \
   -- listen 1.2.3.4 \
-  -- rpki --strict --invalid=drop --event dropped \
+  -- rov --strict --invalid=drop --event dropped \
   -- connect 5.6.7.8
 ```
 
 ## Real-time invalid-route quarantine
 
-Stages: [ris-live](stages/ris-live.md), [rpki](stages/rpki.md), [grep](stages/grep.md), [update](stages/update.md), [write](stages/write.md), [websocket](stages/websocket.md)
+Stages: [ris-live](stages/ris-live.md), [rov](stages/rov.md), [grep](stages/grep.md), [update](stages/update.md), [write](stages/write.md), [websocket](stages/websocket.md)
 
 Tag, quarantine, and mirror only RPKI-invalid announcements in real time. This keeps a clean audit trail for responders while streaming live alerts to a remote monitor.
 
 ```bash
 bgpipe -g \
   -- ris-live \
-  -- rpki --invalid keep \
-  -- grep 'tag[rpki/status] == INVALID' \
+  -- rov --invalid keep \
+  -- grep 'tag[rov/status] == INVALID' \
   -- update --add-com 65000:666 \
   -- write invalid-routes.$TIME.json \
   -- websocket --write wss://monitor.example.com/bgp

@@ -17,8 +17,8 @@ docker run --rm ghcr.io/bgpfix/bgpipe:latest --help
 # find RPKI-invalid announcements in RIPE RIS live stream
 docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
     -- ris-live \
-    -- rpki --invalid=keep \
-    -- grep 'tag[rpki/status] == INVALID'
+    -- rov --invalid=keep \
+    -- grep 'tag[rov/status] == INVALID'
 ```
 
 ## Reading Files from the Host
@@ -108,8 +108,9 @@ services:
   bgpipe:
     image: ghcr.io/bgpfix/bgpipe:latest
     command: >-
+      --rpki routinator:3323
       -- listen :179
-      -- rpki --rtr routinator:3323
+      -- rov
       -- connect --wait listen 192.0.2.1
     ports:
       - "1790:179"

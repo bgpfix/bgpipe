@@ -39,21 +39,29 @@ When you run `bgpipe` without any arguments, it will print the help message, for
 Usage: bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGUMENTS] [--] STAGE2...
 
 Options:
-  -v, --version          print detailed version info and quit
-  -n, --explain          print the pipeline as configured and quit
-  -l, --log string       log level (debug/info/warn/error/disabled) (default "info")
-      --pprof string     bind pprof to given listen address
-  -e, --events strings   log given events ("all" means all events) (default [PARSE,ESTABLISHED,EOR])
-  -k, --kill strings     kill session on any of these events
-  -i, --stdin            read JSON from stdin
-  -o, --stdout           write JSON to stdout
-  -I, --stdin-wait       like --stdin but wait for EVENT_ESTABLISHED
-  -O, --stdout-wait      like --stdout but wait for EVENT_EOR
-  -2, --short-asn        force 2-byte AS numbers
-  -g, --guess-asn        guess AS number byte size
-      --caps string      use given BGP capabilities (JSON format)
+  -v, --version                 print detailed version info and quit
+  -n, --explain                 print the pipeline as configured and quit
+  -l, --log string              log level (debug/info/warn/error/disabled) (default "info")
+      --http string             bind HTTP API + Prometheus /metrics to given address
+      --http-auth string        HTTP Basic Auth credentials (user:pass, $ENV, or /path)
+      --http-open               disable HTTP authentication (dangerous)
+      --pprof string            enable pprof: 'http' to add to --http, or addr for separate server
+  -e, --events strings          log given events ("all" means all events) (default [PARSE,ESTABLISHED,EOR])
+  -k, --kill strings            kill session on any of these events
+  -i, --stdin                   read JSON from stdin
+  -o, --stdout                  write JSON to stdout
+  -I, --stdin-wait              like --stdin but wait for EVENT_ESTABLISHED
+  -O, --stdout-wait             like --stdout but wait for EVENT_EOR
+  -2, --short-asn               force 2-byte AS numbers
+  -g, --guess-asn               guess AS number byte size
+      --caps string             use given BGP capabilities (JSON format)
+      --rpki string             RPKI cache source: RTR host:port, tls://host:port, URL, or a local file path (default "rtr.rpki.cloudflare.com:8282")
+      --rpki-refresh duration   RPKI RTR/URL refresh interval (default 1h0m0s)
+      --rpki-retry duration     RPKI RTR reconnect interval (default 10m0s)
+      --rpki-insecure           do not validate the RPKI RTR server TLS certificate
 
 Supported stages (run <stage> -h to get its help)
+  aspa                   validate AS paths using RPKI ASPA
   connect                connect to a BGP endpoint over TCP
   drop                   drop messages that match a filter
   exec                   handle messages in a background process
@@ -61,10 +69,11 @@ Supported stages (run <stage> -h to get its help)
   head                   stop pipeline after N messages
   limit                  limit prefix lengths and counts
   listen                 let a BGP client connect over TCP
+  metrics                count messages matching filters (Prometheus metrics)
   pipe                   process messages through a named pipe
   read                   read messages from file or URL
   ris-live               read BGP updates from RIPE RIS Live
-  rpki                   validate UPDATEs using RPKI
+  rov                    validate route origins using RPKI ROV
   rv-live                read BGP updates from RouteViews.org via Kafka
   speaker                run a simple BGP speaker
   stdin                  read messages from stdin

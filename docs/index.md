@@ -42,8 +42,8 @@ Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](h
 ```bash
 $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
     -- ris-live \
-    -- rpki --invalid=keep \
-    -- grep 'tag[rpki/status] == INVALID'
+    -- rov --invalid=keep \
+    -- grep 'tag[rov/status] == INVALID'
 ```
 
 ```json
@@ -66,9 +66,9 @@ $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
         "COLLECTOR":"rrc19",
         "RIS_HOST":"rrc19.ripe.net",
         "RIS_ID":"196.60.9.188-019c479748f40019",
-        "rpki/201.49.180.0/23":"INVALID",
-        "rpki/201.49.181.0/24":"INVALID",
-        "rpki/status":"INVALID"
+        "rov/201.49.180.0/23":"INVALID",
+        "rov/201.49.181.0/24":"INVALID",
+        "rov/status":"INVALID"
     }
 ]
 ```

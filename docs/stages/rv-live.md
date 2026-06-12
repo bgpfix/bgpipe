@@ -96,7 +96,7 @@ Archive RouteViews data with RPKI validation:
 ```bash
 bgpipe -g \
     -- rv-live \
-    -- rpki --invalid keep \
+    -- rov --invalid keep \
     -- write --every 1h 'rv-updates.$TIME.json.gz'
 ```
 

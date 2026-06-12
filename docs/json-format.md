@@ -322,7 +322,7 @@ Same structure without `nexthop`:
 - **Bidirectional**: The format fully supports both encoding (JSON to BGP wire) and decoding (BGP wire to JSON).
 - **Timestamps**: Millisecond precision, format `YYYY-MM-DDTHH:MM:SS.mmm`.
 - **Prefixes**: Standard CIDR notation (`192.0.2.0/24`, `2001:db8::/32`).
-- **Metadata** (`[5]`): Contains pipeline tags (e.g., from the `tag` stage, `ris-live` peer info, `rpki` validation status). Can be `null` when no metadata is attached.
+- **Metadata** (`[5]`): Contains pipeline tags (e.g., from the `tag` stage, `ris-live` peer info, `rov` validation status). Can be `null` when no metadata is attached.
 
 ## See Also
 

@@ -73,8 +73,8 @@ Conditionally modify: add a community only to RPKI-invalid updates:
 ```bash
 bgpipe \
     -- connect 192.0.2.1 \
-    -- rpki --invalid keep \
-    -- update --if 'tag[rpki/status] == INVALID' --add-com 65000:666 \
+    -- rov --invalid keep \
+    -- update --if 'tag[rov/status] == INVALID' --add-com 65000:666 \
     -- connect 10.0.0.1
 ```
 
@@ -90,5 +90,5 @@ bgpipe \
 ## See Also
 
 [grep](grep.md),
-[rpki](rpki.md),
+[rov](rov.md),
 [Stages overview](index.md)
