@@ -1,6 +1,6 @@
 # write
 
-Write messages to a file.
+Write messages to a file or standard output.
 
 ## Synopsis
 
@@ -10,10 +10,11 @@ bgpipe [...] -- write [OPTIONS] PATH
 
 ## Description
 
-The **write** stage writes BGP messages to a local file. It is a consumer that
-supports bidirectional operation with `-LR` and mirrors messages flowing
-through the pipeline, serializing them to disk without consuming them -
-downstream stages still see every message.
+The **write** stage writes BGP messages to a local file, or to standard
+output when *PATH* is `-`. It is a consumer that supports bidirectional
+operation with `-LR` and mirrors messages flowing through the pipeline,
+serializing them to disk without consuming them - downstream stages still
+see every message.
 
 The *PATH* argument supports time-based placeholders for automatic file rotation:
 
@@ -30,7 +31,8 @@ automatically. Parent directories are created as needed.
 The output format is auto-detected from the file extension by default.
 For example, `output.json` selects JSON, `output.mrt` selects MRT.
 Compression is also auto-detected: `.gz` (gzip), `.bz2` (bzip2),
-`.zst` / `.zstd` (Zstandard).
+`.zst` / `.zstd` (Zstandard). Writing to standard output defaults to JSON;
+use `--format` to override.
 
 ## Options
 

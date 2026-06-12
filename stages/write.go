@@ -111,7 +111,9 @@ func (s *Write) Attach() error {
 
 	// need to detect the data format?
 	if s.eio.DetectNeeded() {
-		if !s.eio.DetectPath(s.fpath) {
+		if s.fpath == "-" {
+			s.K.Set("format", "json") // stdout defaults to JSON
+		} else if !s.eio.DetectPath(s.fpath) {
 			return fmt.Errorf("could not detect target data format")
 		}
 	}
@@ -167,29 +169,35 @@ func (s *Write) openFile() error {
 		s.n = 0
 	}
 
-	// get target file path
-	fpath := s.fpath + ".tmp"
-	if strings.Contains(s.fpath, "$") {
-		t := time.Now().UTC()
-		if s.every > 0 {
-			t = t.Truncate(s.every)
+	// write to stdout?
+	if s.fpath == "-" {
+		s.fh = os.Stdout
+	} else {
+		// get target file path
+		fpath := s.fpath + ".tmp"
+		if strings.Contains(s.fpath, "$") {
+			t := time.Now().UTC()
+			if s.every > 0 {
+				t = t.Truncate(s.every)
+			}
+			fpath = s.pathTime(s.fpath, t) + ".tmp"
 		}
-		fpath = s.pathTime(s.fpath, t) + ".tmp"
-	}
 
-	// create parent directories if they don't exist
-	fdir := path.Dir(fpath)
-	if err := os.MkdirAll(fdir, 0755); err != nil {
-		return fmt.Errorf("failed to create directories for %s: %w", fpath, err)
-	}
+		// create parent directories if they don't exist
+		fdir := path.Dir(fpath)
+		if err := os.MkdirAll(fdir, 0755); err != nil {
+			return fmt.Errorf("failed to create directories for %s: %w", fpath, err)
+		}
 
-	// try to open the new target
-	s.Debug().Msgf("%s: opening", fpath)
-	fh, err := os.OpenFile(fpath, s.flags, 0644)
-	if err != nil {
-		return err
+		// try to open the new target
+		s.Debug().Msgf("%s: opening", fpath)
+		fh, err := os.OpenFile(fpath, s.flags, 0644)
+		if err != nil {
+			return err
+		}
+		s.fh = fh
 	}
-	s.fh = fh
+	fh := s.fh
 
 	// transparent compress?
 	switch s.compress {
@@ -217,6 +225,14 @@ func (s *Write) openFile() error {
 func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
 	if wr == nil || fh == nil {
 		return // nothing to close
+	}
+
+	// stdout: just flush the compressor, if any
+	if fh == os.Stdout {
+		if wr != fh {
+			wr.Close()
+		}
+		return
 	}
 
 	fpath := fh.Name()

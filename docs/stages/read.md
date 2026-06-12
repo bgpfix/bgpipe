@@ -1,6 +1,6 @@
 # read
 
-Read messages from a file or URL.
+Read messages from a file, URL, or standard input.
 
 ## Synopsis
 
@@ -10,8 +10,8 @@ bgpipe [...] -- read [OPTIONS] PATH
 
 ## Description
 
-The **read** stage reads BGP messages from a local file or a remote HTTP/HTTPS
-URL and injects them into the pipeline. It supports bidirectional operation
+The **read** stage reads BGP messages from a local file, a remote HTTP/HTTPS
+URL, or standard input (use `-` as *PATH*) and injects them into the pipeline. It supports bidirectional operation
 with `-LR` and uses the data to set each message direction. Without `-LR`,
 messages are injected in the stage direction.
 
