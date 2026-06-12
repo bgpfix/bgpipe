@@ -29,7 +29,15 @@ By default, **listen** messages flow left-to-right (`-R` direction), but if it i
 | `--timeout` | duration | `0` | Accept timeout; 0 means wait indefinitely |
 | `--closed-timeout` | duration | `1s` | TCP half-closed timeout; 0 disables |
 | `--keepalive` | duration | `15s` | TCP keepalive period; -1 disables |
-| `--md5` | string | | TCP MD5 password (Linux only) |
+| `--md5` | string | | TCP MD5 password (Linux/OpenBSD) |
+| `--transparent` | bool | `false` | Transparent proxy mode (Linux TPROXY); see below |
+| `--ttl` | int | `0` | Outgoing IP TTL / hop limit; 0 leaves the kernel default |
+
+With `--transparent` (Linux only), the listener sets `IP_TRANSPARENT` and
+accepts connections destined to a *foreign* address (redirected to this host
+via TPROXY, PBR, or an inline bridge), recovering the original destination. It
+publishes the captured tuple for a transparent [connect](connect.md) stage to
+re-originate — see [connect](connect.md#transparent-mode) for the full setup.
 
 ## Examples
 
