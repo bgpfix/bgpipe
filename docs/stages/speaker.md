@@ -35,6 +35,8 @@ between two BGP speakers that negotiate with each other directly.
 | `--asn` | int | `-1` | Local ASN; -1 means mirror the remote ASN |
 | `--id` | string | | Router ID; empty means derive from remote |
 | `--hold` | int | `90` | Hold time in seconds |
+| `--remote-asn` | int | `-1` | Expected remote ASN; -1 means accept any |
+| `--remote-hold` | int | `0` | Minimum acceptable remote hold time in seconds; 0 means any |
 
 ## Examples
 

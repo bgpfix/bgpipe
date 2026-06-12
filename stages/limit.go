@@ -63,7 +63,7 @@ func NewLimit(parent *core.StageBase) core.Stage {
 	sf.IntP("session", "s", 0, "global session limit (0 = no limit)")
 	sf.IntP("origin", "o", 0, "per-AS origin limit (0 = no limit)")
 	sf.IntP("block", "b", 0, "per-IP block limit (0 = no limit)")
-	sf.IntP("block-length", "B", 0, "IP block length (max. 64, 0 = 8/32 for v4/v6)")
+	sf.IntP("block-length", "B", 0, "IP block length (max. 64, 0 = 16/32 for v4/v6)")
 
 	so.Descr = "limit prefix lengths and counts"
 
