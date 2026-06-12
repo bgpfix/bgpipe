@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://bgpipe.org/stages/rpki/">
+        <link rel="canonical" href="https://bgpipe.org/stages/rov/">
       
       
         <link rel="prev" href="../ris-live/">
@@ -27,7 +27,7 @@
     
     
       
-        <title>rpki - bgpipe: BGP pipeline processor</title>
+        <title>rov - bgpipe: BGP pipeline processor</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#rpki" class="md-skip">
+        <a href="#rov" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              rpki
+              rov
             
           </span>
         </div>
@@ -181,6 +181,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -429,6 +431,34 @@
     
   
     Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aspa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aspa
   
 
     
@@ -773,7 +803,7 @@
   <span class="md-ellipsis">
     
   
-    rpki
+    rov
   
 
     
@@ -791,7 +821,7 @@
   <span class="md-ellipsis">
     
   
-    rpki
+    rov
   
 
     
@@ -840,10 +870,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#actions-for-invalid-routes" class="md-nav__link">
+  <a href="#rpki-data-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Actions for INVALID routes
+        RPKI Data Source
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actions-for-invalid-prefixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions for INVALID prefixes
       
     </span>
   </a>
@@ -877,50 +918,6 @@
   
     <nav class="md-nav" aria-label="Options">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#rtr-connection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RTR Connection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#local-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local File
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rov-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ROV Policy
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#aspa-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ASPA Policy
-      
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#prometheus-metrics" class="md-nav__link">
@@ -1431,10 +1428,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#actions-for-invalid-routes" class="md-nav__link">
+  <a href="#rpki-data-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Actions for INVALID routes
+        RPKI Data Source
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actions-for-invalid-prefixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions for INVALID prefixes
       
     </span>
   </a>
@@ -1468,50 +1476,6 @@
   
     <nav class="md-nav" aria-label="Options">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#rtr-connection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RTR Connection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#local-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local File
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rov-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ROV Policy
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#aspa-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ASPA Policy
-      
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#prometheus-metrics" class="md-nav__link">
@@ -1588,20 +1552,17 @@
   
 
 
-<h1 id="rpki">rpki<a class="headerlink" href="#rpki" title="Permanent link">&para;</a></h1>
-<p>Validate UPDATE messages using RPKI (ROV + ASPA).</p>
+<h1 id="rov">rov<a class="headerlink" href="#rov" title="Permanent link">&para;</a></h1>
+<p>Validate route origins using RPKI ROV.</p>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [...] -- rpki [OPTIONS]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [--rpki SOURCE] [...] -- rov [OPTIONS]
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>The <strong>rpki</strong> stage validates BGP UPDATE messages against RPKI (Resource Public
-Key Infrastructure) data. It performs ROV by default, and optionally ASPA when
-<code>--aspa</code> is set.</p>
-<p><strong>ROV (Route Origin Validation,
-<a href="https://datatracker.ietf.org/doc/html/rfc6811">RFC 6811</a>)</strong> checks whether the
-origin AS is authorized to announce each prefix, using VRPs (Validated ROA
-Payloads) received from an RPKI cache server or loaded from a file. Each prefix
-is assigned one of three states:</p>
+<p>The <strong>rov</strong> stage performs RPKI Route Origin Validation
+(<a href="https://datatracker.ietf.org/doc/html/rfc6811">RFC 6811</a>) of BGP UPDATE
+messages: it checks whether the origin AS is authorized to announce each
+prefix, using VRPs (Validated ROA Payloads) from the shared
+<a href="#rpki-data-source">RPKI cache</a>. Each prefix is assigned one of three states:</p>
 <ul>
 <li><strong>VALID</strong> -- a VRP covers this prefix with a matching origin AS and maxLength</li>
 <li><strong>INVALID</strong> -- a VRP exists for the prefix but the origin AS or length does not match</li>
@@ -1610,41 +1571,77 @@ is assigned one of three states:</p>
 <p>ROV in this stage assumes the origin ASN comes from the AS_PATH, so it is aimed
 at eBGP edges and route-server feeds. Empty AS_PATH updates, common on iBGP or
 locally originated routes, are out of scope here.</p>
-<p><strong>ASPA (Autonomous System Provider Authorization,
-<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/">draft-ietf-sidrops-aspa-verification</a>)</strong> detects route leaks by verifying that the AS_PATH is valley-free,
-using ASPA records that attest provider-customer relationships between ASes.
-Each path is assigned one of three states:</p>
-<ul>
-<li><strong>VALID</strong> -- the path is valley-free with full cryptographic attestation</li>
-<li><strong>UNKNOWN</strong> -- the path appears valley-free but some ASes lack ASPA records
-  (insufficient attestation, not evidence of a leak)</li>
-<li><strong>INVALID</strong> -- the path provably violates valley-free routing (route leak)</li>
-</ul>
-<p>ASPA validation is <strong>disabled by default</strong> and requires <code>--aspa</code> to enable. It
-also requires:</p>
-<ol>
-<li>ASPA records from an RTR v2 server
-   (<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/">draft-ietf-sidrops-8210bis</a>)
-   or a JSON file with ASPA data</li>
-<li>Knowledge of the peer's BGP role, either auto-detected via the
-   <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a> BGP Role
-   capability, or set explicitly with <code>--aspa-role</code></li>
-</ol>
-<p>If <code>--aspa-role auto</code> (the default) and the peer does not send the BGP Role
-capability in their OPEN message, ASPA validation is skipped for the session
-and a warning is logged. Set <code>--aspa-role</code> to force ASPA validation when the
-peer lacks this capability.</p>
-<p>ASPA also verifies that the first AS in the path matches the neighbor's ASN
-(per draft-ietf-sidrops-aspa-verification, Section 5). This check is skipped
-for Route Server peers (<code>--aspa-role rs</code>), as RSes do not prepend their ASN
-(<a href="https://datatracker.ietf.org/doc/html/rfc7947">RFC 7947</a>).</p>
-<p>The stage obtains VRP and ASPA data either from an RTR server (supporting
-RTR v0/v1/v2 with automatic version negotiation and fallback) or from a local
-file. By default, it connects to Cloudflare's public RTR server at
-<code>rtr.rpki.cloudflare.com:8282</code>.</p>
-<h3 id="actions-for-invalid-routes">Actions for INVALID routes<a class="headerlink" href="#actions-for-invalid-routes" title="Permanent link">&para;</a></h3>
-<p>The <code>--invalid</code> (ROV) and <code>--aspa-invalid</code> (ASPA) options control handling:</p>
-<p><strong>ROV</strong> operates per-prefix and supports all five actions:</p>
+<p>With <code>--strict</code>, NOT_FOUND prefixes are treated the same as INVALID.</p>
+<p>For AS_PATH validation against route leaks, see the <a href="../aspa/">aspa</a> stage.</p>
+<h3 id="rpki-data-source">RPKI Data Source<a class="headerlink" href="#rpki-data-source" title="Permanent link">&para;</a></h3>
+<p>The RPKI cache is shared by all <code>rov</code> and <code>aspa</code> stages in the pipeline, and
+maintained by the bgpipe core. It is configured with global options, specified
+before the first stage:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--rpki</code></td>
+<td>string</td>
+<td><code>rtr.rpki.cloudflare.com:8282</code></td>
+<td>RPKI cache source: RTR <code>host:port</code>, <code>tls://host:port</code>, an HTTP(S) URL, or a local file path</td>
+</tr>
+<tr>
+<td><code>--rpki-refresh</code></td>
+<td>duration</td>
+<td><code>1h</code></td>
+<td>RTR refresh interval (periodic Serial Query), or URL re-fetch interval</td>
+</tr>
+<tr>
+<td><code>--rpki-retry</code></td>
+<td>duration</td>
+<td><code>10m</code></td>
+<td>RTR reconnect interval after failure</td>
+</tr>
+<tr>
+<td><code>--rpki-insecure</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Do not validate the RTR server TLS certificate</td>
+</tr>
+</tbody>
+</table>
+<p>The RTR client supports protocol versions 0/1/2 with automatic version
+negotiation and fallback. ASPA records require an RTR v2 server
+(<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/">draft-ietf-sidrops-8210bis</a>).</p>
+<p>If <code>--rpki</code> is an <code>http://</code> or <code>https://</code> URL, the JSON/CSV data is fetched
+from it and re-fetched every <code>--rpki-refresh</code>. For example,
+<code>--rpki https://console.rpki-client.org/vrps.json</code> uses the public
+<a href="https://console.rpki-client.org/">rpki-client console</a> export, which
+includes both VRPs and ASPAs.</p>
+<p>If <code>--rpki</code> points to an existing local file, it is loaded instead and
+auto-reloaded every 10 seconds. JSON files support VRPs and ASPAs; CSV
+supports VRPs only.</p>
+<p>JSON format (Routinator and rpki-client compatible):</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;roas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.0/24&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AS65001&quot;</span><span class="p">},</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2001:db8::/32&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65002</span><span class="p">}</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="p">],</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&quot;aspas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;customer_asid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65001</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;provider_asids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">65002</span><span class="p">,</span><span class="w"> </span><span class="mi">65003</span><span class="p">]}</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>CSV format (VRPs only; one entry per line, <code>#</code> comments, optional header):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>prefix,maxLength,asn
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>192.0.2.0/24,24,AS65001
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>2001:db8::/32,48,65002
+</span></code></pre></div>
+<h3 id="actions-for-invalid-prefixes">Actions for INVALID prefixes<a class="headerlink" href="#actions-for-invalid-prefixes" title="Permanent link">&para;</a></h3>
+<p>The <code>--invalid</code> option controls handling, per-prefix:</p>
 <table>
 <thead>
 <tr>
@@ -1675,141 +1672,11 @@ file. By default, it connects to Cloudflare's public RTR server at
 </tr>
 </tbody>
 </table>
-<p><strong>ASPA</strong> validates the entire AS_PATH (one per UPDATE), so per-prefix actions
-(<code>filter</code>, <code>split</code>) do not apply. Supported actions:</p>
-<table>
-<thead>
-<tr>
-<th>Action</th>
-<th>Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>withdraw</code></td>
-<td>Move all reachable prefixes to withdrawn</td>
-</tr>
-<tr>
-<td><code>drop</code></td>
-<td>Drop the entire UPDATE message</td>
-</tr>
-<tr>
-<td><code>keep</code></td>
-<td>Keep unchanged (tag only)</td>
-</tr>
-</tbody>
-</table>
 <h3 id="tags">Tags<a class="headerlink" href="#tags" title="Permanent link">&para;</a></h3>
 <p>When <code>--tag</code> is enabled (default), each prefix gets a per-prefix tag
-(<code>rpki/&lt;prefix&gt;</code>) and the message gets an overall <code>rpki/status</code> tag.
-When <code>--aspa-tag</code> is enabled (default) and ASPA is active (<code>--aspa</code>), the
-message gets <code>aspa/status</code>.
+(<code>rov/&lt;prefix&gt;</code>) and the message gets an overall <code>rov/status</code> tag.
 These can be used in downstream <a href="../../filters/">filters</a>.</p>
-<p>With <code>--strict</code>, NOT_FOUND prefixes are treated the same as INVALID.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
-<h3 id="rtr-connection">RTR Connection<a class="headerlink" href="#rtr-connection" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--rtr</code></td>
-<td>string</td>
-<td><code>rtr.rpki.cloudflare.com:8282</code></td>
-<td>RTR cache server address (<code>host:port</code>)</td>
-</tr>
-<tr>
-<td><code>--rtr-refresh</code></td>
-<td>duration</td>
-<td><code>1h</code></td>
-<td>Periodic Serial Query interval</td>
-</tr>
-<tr>
-<td><code>--rtr-retry</code></td>
-<td>duration</td>
-<td><code>10m</code></td>
-<td>Reconnection delay after failure</td>
-</tr>
-<tr>
-<td><code>--timeout</code></td>
-<td>duration</td>
-<td><code>15s</code></td>
-<td>TCP connect timeout (0 to disable)</td>
-</tr>
-<tr>
-<td><code>--retry</code></td>
-<td>bool</td>
-<td><code>true</code></td>
-<td>Retry on connection failure</td>
-</tr>
-<tr>
-<td><code>--retry-max</code></td>
-<td>int</td>
-<td><code>0</code></td>
-<td>Max retries (0 = unlimited)</td>
-</tr>
-<tr>
-<td><code>--tls</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Connect over TLS</td>
-</tr>
-<tr>
-<td><code>--insecure</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Skip TLS certificate validation</td>
-</tr>
-<tr>
-<td><code>--no-ipv6</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Avoid IPv6 for RTR server connection</td>
-</tr>
-</tbody>
-</table>
-<h3 id="local-file">Local File<a class="headerlink" href="#local-file" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--file</code></td>
-<td>string</td>
-<td></td>
-<td>Local RPKI data file, auto-reloaded every 10s (note: JSON supports VRPs and ASPAs; CSV supports VRPs only)</td>
-</tr>
-</tbody>
-</table>
-<p>JSON format (Routinator-compatible: VRPs and optional ASPAs):</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;roas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.0/24&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AS65001&quot;</span><span class="p">},</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2001:db8::/32&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65002</span><span class="p">}</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="p">],</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&quot;aspas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;customer_asid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65001</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;provider_asids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">65002</span><span class="p">,</span><span class="w"> </span><span class="mi">65003</span><span class="p">]}</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="p">]</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>CSV format (VRPs only; one entry per line, <code>#</code> comments, optional header):</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>prefix,maxLength,asn
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>192.0.2.0/24,24,AS65001
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>2001:db8::/32,48,65002
-</span></code></pre></div>
-<h3 id="rov-policy">ROV Policy<a class="headerlink" href="#rov-policy" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1824,7 +1691,7 @@ These can be used in downstream <a href="../../filters/">filters</a>.</p>
 <td><code>--invalid</code></td>
 <td>string</td>
 <td><code>withdraw</code></td>
-<td>Action for ROV INVALID: <code>withdraw</code>, <code>filter</code>, <code>drop</code>, <code>split</code>, <code>keep</code></td>
+<td>Action for INVALID prefixes: <code>withdraw</code>, <code>filter</code>, <code>drop</code>, <code>split</code>, <code>keep</code></td>
 </tr>
 <tr>
 <td><code>--strict</code></td>
@@ -1836,105 +1703,19 @@ These can be used in downstream <a href="../../filters/">filters</a>.</p>
 <td><code>--tag</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>Add <code>rpki/status</code> and <code>rpki/&lt;prefix&gt;</code> tags</td>
+<td>Add <code>rov/status</code> and <code>rov/&lt;prefix&gt;</code> tags</td>
 </tr>
 <tr>
 <td><code>--event</code></td>
 <td>string</td>
 <td></td>
-<td>Emit named event on ROV INVALID</td>
+<td>Emit named event on INVALID prefixes</td>
 </tr>
 <tr>
 <td><code>--no-wait</code></td>
 <td>bool</td>
 <td><code>false</code></td>
-<td>Start before VRP/ASPA cache is ready</td>
-</tr>
-</tbody>
-</table>
-<h3 id="aspa-policy">ASPA Policy<a class="headerlink" href="#aspa-policy" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--aspa</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Enable ASPA path validation</td>
-</tr>
-<tr>
-<td><code>--aspa-invalid</code></td>
-<td>string</td>
-<td><code>withdraw</code></td>
-<td>Action for ASPA INVALID: <code>withdraw</code>, <code>drop</code>, <code>keep</code></td>
-</tr>
-<tr>
-<td><code>--aspa-tag</code></td>
-<td>bool</td>
-<td><code>true</code></td>
-<td>Add <code>aspa/status</code> tag</td>
-</tr>
-<tr>
-<td><code>--aspa-event</code></td>
-<td>string</td>
-<td></td>
-<td>Emit named event on ASPA INVALID</td>
-</tr>
-<tr>
-<td><code>--aspa-role</code></td>
-<td>string</td>
-<td><code>auto</code></td>
-<td>Peer's BGP role: <code>auto</code>, <code>provider</code>, <code>customer</code>, <code>peer</code>, <code>rs</code>, <code>rs-client</code></td>
-</tr>
-</tbody>
-</table>
-<p>The <code>--aspa-role</code> flag specifies the peer's BGP role (from the peer's
-perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a>):</p>
-<table>
-<thead>
-<tr>
-<th><code>--aspa-role</code> value</th>
-<th>Meaning</th>
-<th>ASPA direction</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>provider</code></td>
-<td>Peer is our provider</td>
-<td>Downstream (route came from above)</td>
-</tr>
-<tr>
-<td><code>rs</code></td>
-<td>Peer is a Route Server</td>
-<td>Upstream (first-hop ASN check is skipped)</td>
-</tr>
-<tr>
-<td><code>customer</code></td>
-<td>Peer is our customer</td>
-<td>Upstream (route came from below)</td>
-</tr>
-<tr>
-<td><code>rs-client</code></td>
-<td>Peer is an RS client</td>
-<td>Upstream</td>
-</tr>
-<tr>
-<td><code>peer</code></td>
-<td>Peer is a lateral peer</td>
-<td>Upstream</td>
-</tr>
-<tr>
-<td><code>auto</code></td>
-<td>Auto-detect from BGP Role capability</td>
-<td>Depends on detected role</td>
+<td>Start before the RPKI cache is ready</td>
 </tr>
 </tbody>
 </table>
@@ -1949,66 +1730,34 @@ perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 923
 </thead>
 <tbody>
 <tr>
-<td><code>bgpipe_rpki_messages_total</code></td>
+<td><code>bgpipe_rov_messages_total</code></td>
 <td>counter</td>
 <td>UPDATE messages processed</td>
 </tr>
 <tr>
-<td><code>bgpipe_rpki_rov_valid_total</code></td>
+<td><code>bgpipe_rov_valid_total</code></td>
 <td>counter</td>
 <td>Prefixes with ROV state VALID</td>
 </tr>
 <tr>
-<td><code>bgpipe_rpki_rov_invalid_total</code></td>
+<td><code>bgpipe_rov_invalid_total</code></td>
 <td>counter</td>
 <td>Prefixes with ROV state INVALID</td>
 </tr>
 <tr>
-<td><code>bgpipe_rpki_rov_not_found_total</code></td>
+<td><code>bgpipe_rov_not_found_total</code></td>
 <td>counter</td>
 <td>Prefixes with ROV state NOT_FOUND</td>
 </tr>
 <tr>
 <td><code>bgpipe_rpki_vrps_ipv4</code></td>
 <td>gauge</td>
-<td>IPv4 VRPs loaded</td>
+<td>IPv4 VRPs loaded in the shared cache</td>
 </tr>
 <tr>
 <td><code>bgpipe_rpki_vrps_ipv6</code></td>
 <td>gauge</td>
-<td>IPv6 VRPs loaded</td>
-</tr>
-</tbody>
-</table>
-<p>When <code>--aspa</code> is enabled, the following are also registered:</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>bgpipe_rpki_aspa_valid_total</code></td>
-<td>counter</td>
-<td>Paths with ASPA state VALID</td>
-</tr>
-<tr>
-<td><code>bgpipe_rpki_aspa_unknown_total</code></td>
-<td>counter</td>
-<td>Paths with ASPA state UNKNOWN</td>
-</tr>
-<tr>
-<td><code>bgpipe_rpki_aspa_invalid_total</code></td>
-<td>counter</td>
-<td>Paths with ASPA state INVALID</td>
-</tr>
-<tr>
-<td><code>bgpipe_rpki_aspa_entries</code></td>
-<td>gauge</td>
-<td>ASPA records loaded</td>
+<td>IPv6 VRPs loaded in the shared cache</td>
 </tr>
 </tbody>
 </table>
@@ -2016,54 +1765,43 @@ perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 923
 <p>Basic ROV (default: withdraw INVALID prefixes):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
-<p>ROV + ASPA with explicit peer role:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--aspa<span class="w"> </span>--aspa-role<span class="w"> </span>customer<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
-</span></code></pre></div>
 <p>Tag only, no enforcement -- useful for monitoring:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rpki/status] == INVALID&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span>
 </span></code></pre></div>
 <p>Strict ROV: drop any prefix without a valid VRP:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rpki/dropped<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rov/dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--strict<span class="w"> </span>--invalid<span class="w"> </span>drop<span class="w"> </span>--event<span class="w"> </span>dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<p>Use a local JSON or CSV file instead of RTR:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span>--rpki<span class="w"> </span>/var/lib/rpki/export.json<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--strict<span class="w"> </span>--invalid<span class="w"> </span>drop<span class="w"> </span>--event<span class="w"> </span>dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>filter<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
-<p>Use a local JSON VRP/ASPA file, or a CSV VRP file, instead of RTR:</p>
+<p>Add a community to invalid routes instead of dropping:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--file<span class="w"> </span>/var/lib/rpki/export.json<span class="w"> </span>--invalid<span class="w"> </span>filter<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
-</span></code></pre></div>
-<p>ROV + ASPA monitoring (tag everything, enforce nothing):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span>--aspa<span class="w"> </span>--aspa-invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[aspa/status] == INVALID&#39;</span>
-</span></code></pre></div>
-<p>Add a community to ROV-invalid routes instead of dropping:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rpki/status] == INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>Connect to a private RTR cache over TLS:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--rtr<span class="w"> </span>rpki.example.com:8323<span class="w"> </span>--tls<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bgpipe<span class="w"> </span>--rpki<span class="w"> </span>tls://rpki.example.com:8323<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<p><a href="../limit/">limit</a>,
+<p><a href="../aspa/">aspa</a>,
+<a href="../limit/">limit</a>,
 <a href="../grep/">grep</a>,
 <a href="../update/">update</a>,
 <a href="../">Stages overview</a></p>
@@ -2071,10 +1809,7 @@ perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 923
 <ul>
 <li><a href="https://datatracker.ietf.org/doc/html/rfc6811">RFC 6811</a> -- RPKI-Based Route Origin Validation</li>
 <li><a href="https://datatracker.ietf.org/doc/html/rfc8210">RFC 8210</a> -- RPKI-to-Router Protocol (RTR v1)</li>
-<li><a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a> -- Route Leak Prevention and Detection Using Roles in UPDATE and OPEN Messages</li>
-<li><a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/">draft-ietf-sidrops-aspa-verification</a> -- Verification of AS_PATH Using ASPA Objects</li>
 <li><a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/">draft-ietf-sidrops-8210bis</a> -- RTR v2 (adds ASPA support)</li>
-<li><a href="https://datatracker.ietf.org/doc/html/rfc7947">RFC 7947</a> -- Internet Exchange BGP Route Server</li>
 </ul>
 
 
@@ -2093,8 +1828,16 @@ perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 923
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -2120,7 +1863,7 @@ perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 923
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

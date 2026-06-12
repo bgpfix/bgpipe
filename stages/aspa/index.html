@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://bgpipe.org/stages/write/">
+        <link rel="canonical" href="https://bgpipe.org/stages/aspa/">
       
       
-        <link rel="prev" href="../websocket/">
+        <link rel="prev" href="../">
       
       
-        <link rel="next" href="../../json-format/">
+        <link rel="next" href="../connect/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>write - bgpipe: BGP pipeline processor</title>
+        <title>aspa - bgpipe: BGP pipeline processor</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#write" class="md-skip">
+        <a href="#aspa" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              write
+              aspa
             
           </span>
         </div>
@@ -448,10 +448,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../aspa/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aspa
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -467,6 +494,154 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#synopsis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synopsis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#actions-for-invalid-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions for INVALID paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-peer-feeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-peer feeds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prometheus-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prometheus Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="See Also">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1008,37 +1183,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    write
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../write/" class="md-nav__link">
         
   
   
@@ -1054,81 +1202,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Synopsis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Description
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Options
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1351,6 +1424,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#actions-for-invalid-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions for INVALID paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1361,6 +1462,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-peer-feeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-peer feeds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prometheus-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prometheus Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1384,6 +1513,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="See Also">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1406,32 +1552,68 @@
   
 
 
-<h1 id="write">write<a class="headerlink" href="#write" title="Permanent link">&para;</a></h1>
-<p>Write messages to a file or standard output.</p>
+<h1 id="aspa">aspa<a class="headerlink" href="#aspa" title="Permanent link">&para;</a></h1>
+<p>Validate AS paths using RPKI ASPA.</p>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [...] -- write [OPTIONS] PATH
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [--rpki SOURCE] [...] -- aspa [OPTIONS]
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>The <strong>write</strong> stage writes BGP messages to a local file, or to standard
-output when <em>PATH</em> is <code>-</code>. It is a consumer that supports bidirectional
-operation with <code>-LR</code> and mirrors messages flowing through the pipeline,
-serializing them to disk without consuming them - downstream stages still
-see every message.</p>
-<p>The <em>PATH</em> argument supports time-based placeholders for automatic file rotation:</p>
+<p>The <strong>aspa</strong> stage performs ASPA verification
+(<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/">draft-ietf-sidrops-aspa-verification</a>)
+of BGP UPDATE messages: it detects route leaks by verifying that the AS_PATH
+is valley-free, using ASPA records that attest provider-customer relationships
+between ASes. Each path is assigned one of three states:</p>
 <ul>
-<li><code>$TIME</code> is replaced with the current time formatted according to <code>--time-format</code></li>
-<li><code>${format}</code> uses a custom Go time format (e.g., <code>${2006-01-02}</code>)</li>
+<li><strong>VALID</strong> -- the path is valley-free with full cryptographic attestation</li>
+<li><strong>UNKNOWN</strong> -- the path appears valley-free but some ASes lack ASPA records
+  (insufficient attestation, not evidence of a leak)</li>
+<li><strong>INVALID</strong> -- the path provably violates valley-free routing (route leak)</li>
 </ul>
-<p>When <code>--every</code> is set, the stage rotates to a new file at the given interval.
-The minimum rotation interval is 60 seconds.</p>
-<p>Files are written atomically: data is first written to a <code>.tmp</code> file, then
-renamed to the final path on successful completion. Empty files are removed
-automatically. Parent directories are created as needed.</p>
-<p>The output format is auto-detected from the file extension by default.
-For example, <code>output.json</code> selects JSON, <code>output.mrt</code> selects MRT.
-Compression is also auto-detected: <code>.gz</code> (gzip), <code>.bz2</code> (bzip2),
-<code>.zst</code> / <code>.zstd</code> (Zstandard). Writing to standard output defaults to JSON;
-use <code>--format</code> to override.</p>
+<p>ASPA records come from the shared RPKI cache, maintained by the bgpipe core
+and configured with the global <code>--rpki</code> options -- see
+<a href="../rov/#rpki-data-source">RPKI Data Source</a> for details. Note that ASPA
+records require an RTR v2 server
+(<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/">draft-ietf-sidrops-8210bis</a>)
+or a JSON file with ASPA data.</p>
+<p>ASPA verification also requires knowledge of the peer's BGP role, either
+auto-detected via the <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a>
+BGP Role capability, or set explicitly with <code>--role</code>. If <code>--role auto</code> (the
+default) and the peer does not send the BGP Role capability in their OPEN
+message, ASPA validation is skipped for the session and a warning is logged.</p>
+<p>The stage also verifies that the first AS in the path matches the neighbor's
+ASN (per draft-ietf-sidrops-aspa-verification, Section 5). This check is
+skipped for Route Server peers (<code>--role rs</code>), as RSes do not prepend their ASN
+(<a href="https://datatracker.ietf.org/doc/html/rfc7947">RFC 7947</a>).</p>
+<h3 id="actions-for-invalid-paths">Actions for INVALID paths<a class="headerlink" href="#actions-for-invalid-paths" title="Permanent link">&para;</a></h3>
+<p>ASPA validates the entire AS_PATH (one per UPDATE), so the <code>--invalid</code> action
+applies to the whole message:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>withdraw</code></td>
+<td>Move all reachable prefixes to withdrawn</td>
+</tr>
+<tr>
+<td><code>drop</code></td>
+<td>Drop the entire UPDATE message</td>
+</tr>
+<tr>
+<td><code>keep</code></td>
+<td>Keep unchanged (tag only)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tags">Tags<a class="headerlink" href="#tags" title="Permanent link">&para;</a></h3>
+<p>When <code>--tag</code> is enabled (default), the message gets an <code>aspa/status</code> tag.
+For INVALID paths, the failing hop is reported in <code>aspa/invalid-hop</code> as
+<code>"&lt;customer-asn&gt; &lt;provider-asn&gt;"</code>. These can be used in downstream
+<a href="../../filters/">filters</a>.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1444,75 +1626,174 @@ use <code>--format</code> to override.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>--format</code></td>
+<td><code>--invalid</code></td>
+<td>string</td>
+<td><code>withdraw</code></td>
+<td>Action for INVALID paths: <code>withdraw</code>, <code>drop</code>, <code>keep</code></td>
+</tr>
+<tr>
+<td><code>--tag</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Add <code>aspa/status</code> and <code>aspa/invalid-hop</code> tags</td>
+</tr>
+<tr>
+<td><code>--event</code></td>
+<td>string</td>
+<td></td>
+<td>Emit named event on INVALID paths</td>
+</tr>
+<tr>
+<td><code>--role</code></td>
 <td>string</td>
 <td><code>auto</code></td>
-<td>Data format: <code>json</code>, <code>raw</code>, <code>mrt</code>, <code>exa</code>, <code>bmp</code>, <code>obmp</code>, or <code>auto</code> (detected from extension)</td>
+<td>Peer's BGP role: <code>auto</code>, <code>provider</code>, <code>customer</code>, <code>peer</code>, <code>rs</code>, <code>rs-client</code></td>
 </tr>
 <tr>
-<td><code>--append</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Append to file if it already exists</td>
-</tr>
-<tr>
-<td><code>--create</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Fail if the file already exists</td>
-</tr>
-<tr>
-<td><code>--compress</code></td>
+<td><code>--peer-tag</code></td>
 <td>string</td>
+<td></td>
+<td>Read the peer ASN from given message tag (eg. <code>PEER_AS</code>) instead of OPEN</td>
+</tr>
+<tr>
+<td><code>--no-wait</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Start before the RPKI cache is ready</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multi-peer-feeds">Multi-peer feeds<a class="headerlink" href="#multi-peer-feeds" title="Permanent link">&para;</a></h3>
+<p>Route collector feeds like <a href="../ris-live/">ris-live</a> and <a href="../rv-live/">rv-live</a>
+aggregate sessions from many different peers in a single message stream, so
+there is no single OPEN message to take the neighbor ASN (or BGP role) from.
+Use <code>--peer-tag PEER_AS</code> to read the neighbor ASN per-message from the tag
+that these stages attach, which enables the first-hop check for every peer
+individually. <code>--peer-tag</code> requires an explicit <code>--role</code>, which then applies
+to all peers in the stream. If a message lacks the tag, the first-hop check
+is skipped for that message.</p>
+<p>The <code>--role</code> option specifies the peer's BGP role (from the peer's
+perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a>):</p>
+<table>
+<thead>
+<tr>
+<th><code>--role</code> value</th>
+<th>Meaning</th>
+<th>ASPA direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>provider</code></td>
+<td>Peer is our provider</td>
+<td>Downstream (route came from above)</td>
+</tr>
+<tr>
+<td><code>rs</code></td>
+<td>Peer is a Route Server</td>
+<td>Upstream (first-hop ASN check is skipped)</td>
+</tr>
+<tr>
+<td><code>customer</code></td>
+<td>Peer is our customer</td>
+<td>Upstream (route came from below)</td>
+</tr>
+<tr>
+<td><code>rs-client</code></td>
+<td>Peer is an RS client</td>
+<td>Upstream</td>
+</tr>
+<tr>
+<td><code>peer</code></td>
+<td>Peer is a lateral peer</td>
+<td>Upstream</td>
+</tr>
+<tr>
 <td><code>auto</code></td>
-<td>Compression: <code>auto</code>, <code>gz</code>, <code>bzip2</code>, <code>zstd</code>, or <code>none</code></td>
+<td>Auto-detect from BGP Role capability</td>
+<td>Depends on detected role</td>
+</tr>
+</tbody>
+</table>
+<p>In bidirectional (<code>-LR</code>) mode only <code>--role auto</code> is allowed: a single explicit
+role cannot describe two different peers.</p>
+<h3 id="prometheus-metrics">Prometheus Metrics<a class="headerlink" href="#prometheus-metrics" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgpipe_aspa_messages_total</code></td>
+<td>counter</td>
+<td>UPDATE messages processed</td>
 </tr>
 <tr>
-<td><code>--every</code></td>
-<td>duration</td>
-<td><code>0</code></td>
-<td>Rotate to a new file at this interval (min 60s)</td>
+<td><code>bgpipe_aspa_valid_total</code></td>
+<td>counter</td>
+<td>Paths with ASPA state VALID</td>
 </tr>
 <tr>
-<td><code>--time-format</code></td>
-<td>string</td>
-<td><code>20060102.1504</code></td>
-<td>Go time format for <code>$TIME</code> placeholder</td>
+<td><code>bgpipe_aspa_unknown_total</code></td>
+<td>counter</td>
+<td>Paths with ASPA state UNKNOWN</td>
 </tr>
 <tr>
-<td><code>--type</code></td>
-<td>strings</td>
-<td></td>
-<td>Write only messages of given type(s)</td>
+<td><code>bgpipe_aspa_invalid_total</code></td>
+<td>counter</td>
+<td>Paths with ASPA state INVALID</td>
 </tr>
 <tr>
-<td><code>--skip</code></td>
-<td>strings</td>
-<td></td>
-<td>Skip messages of given type(s)</td>
+<td><code>bgpipe_rpki_aspa_entries</code></td>
+<td>gauge</td>
+<td>ASPA records loaded in the shared cache</td>
 </tr>
 </tbody>
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<p>Write a BGP session to a JSON file:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>-LR<span class="w"> </span>session.json<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+<p>ROV + ASPA with explicit peer role:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>aspa<span class="w"> </span>--role<span class="w"> </span>customer<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
-<p>Write compressed MRT with hourly rotation:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>-LR<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">&#39;updates.$TIME.mrt.gz&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+<p>ASPA route-leak monitoring on a live route collector feed, with current RPKI
+data fetched from the rpki-client console (tag everything, enforce nothing):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span>--rpki<span class="w"> </span>https://console.rpki-client.org/vrps.json<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>aspa<span class="w"> </span>--role<span class="w"> </span>provider<span class="w"> </span>--peer-tag<span class="w"> </span>PEER_AS<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[aspa/status] == INVALID&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>invalid-paths.json
 </span></code></pre></div>
-<p>Archive only UPDATE messages:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>input.mrt.gz<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>--type<span class="w"> </span>UPDATE<span class="w"> </span>updates.json
+<p>Use a local JSON file with ASPA records:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>--rpki<span class="w"> </span>/var/lib/rpki/export.json<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>aspa<span class="w"> </span>--role<span class="w"> </span>customer<span class="w"> </span>--invalid<span class="w"> </span>drop<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
-<p>Append to an existing log:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>new-data.mrt.gz<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>--append<span class="w"> </span>archive.json
+<p>Emit an event for detected route leaks:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>aspa/leak<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>aspa<span class="w"> </span>--role<span class="w"> </span>customer<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span>--event<span class="w"> </span>leak<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<p><a href="../read/">read</a>,
-<a href="../stdout/">stdout</a>,
+<p><a href="../rov/">rov</a>,
+<a href="../grep/">grep</a>,
+<a href="../update/">update</a>,
 <a href="../">Stages overview</a></p>
+<h3 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/">draft-ietf-sidrops-aspa-verification</a> -- Verification of AS_PATH Using ASPA Objects</li>
+<li><a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/">draft-ietf-sidrops-8210bis</a> -- RTR v2 (adds ASPA support)</li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a> -- Route Leak Prevention and Detection Using Roles in UPDATE and OPEN Messages</li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc7947">RFC 7947</a> -- Internet Exchange BGP Route Server</li>
+</ul>
 
 
 

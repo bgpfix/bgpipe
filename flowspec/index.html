@@ -182,6 +182,8 @@
         </button>
       </nav>
       
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
@@ -427,6 +429,34 @@
     
   
     Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/aspa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aspa
   
 
     
@@ -755,14 +785,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../stages/rpki/" class="md-nav__link">
+      <a href="../stages/rov/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    rpki
+    rov
   
 
     
@@ -1702,11 +1732,11 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
 <h2 id="numeric-operators">Numeric Operators<a class="headerlink" href="#numeric-operators" title="Permanent link">&para;</a></h2>
 <p>Components of the <strong>numeric</strong> type (<code>PROTO</code>, <code>PORT</code>, <code>PORT_DST</code>, <code>PORT_SRC</code>, <code>ICMP_TYPE</code>, <code>ICMP_CODE</code>, <code>PKTLEN</code>, <code>DSCP</code>, <code>LABEL</code>) use arrays of operator objects:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">&quot;PORT_DST&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;and&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">},</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="p">}</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">},</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;and&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="p">}</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">]</span>
 </span></code></pre></div>
-<p>This matches destination ports 8000-9000: the first condition matches &gt;= 8000 and is ANDed with the next condition (&lt;= 9000).</p>
+<p>This matches destination ports 8000-9000: the second condition (&lt;= 9000) is ANDed with the preceding one (&gt;= 8000).</p>
 <table>
 <thead>
 <tr>
@@ -1729,11 +1759,11 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
 <tr>
 <td><code>and</code></td>
 <td>boolean</td>
-<td>If <code>true</code>, AND the result of this condition with the next one. Default: OR with the next condition.</td>
+<td>If <code>true</code>, AND this condition with the <em>preceding</em> one. Default: OR.</td>
 </tr>
 </tbody>
 </table>
-<p>Multiple conditions in the array are combined with <strong>OR</strong> by default. Set <code>"and": true</code> on a condition to <strong>AND</strong> it with the following condition instead.</p>
+<p>Multiple conditions in the array are combined with <strong>OR</strong> by default. Set <code>"and": true</code> on a condition to <strong>AND</strong> it with the preceding condition instead, per <a href="https://datatracker.ietf.org/doc/html/rfc8955#section-4.2.1.1">RFC 8955 §4.2.1.1</a>.</p>
 <h3 id="numeric-operator-values">Numeric Operator Values<a class="headerlink" href="#numeric-operator-values" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1780,7 +1810,7 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
 <h2 id="bitmask-operators">Bitmask Operators<a class="headerlink" href="#bitmask-operators" title="Permanent link">&para;</a></h2>
 <p>Components of the <strong>bitmask</strong> type (<code>TCP_FLAGS</code>, <code>FRAG</code>) use arrays of bitmask operator objects:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">&quot;TCP_FLAGS&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALL&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0x02&quot;</span><span class="p">}</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p">{</span><span class="nt">&quot;op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALL&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;len&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;val&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0x2&quot;</span><span class="p">}</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">]</span>
 </span></code></pre></div>
 <p>This matches packets with the SYN flag set.</p>
@@ -1801,7 +1831,7 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
 <tr>
 <td><code>val</code></td>
 <td>string</td>
-<td>Hex bitmask (e.g., <code>"0x02"</code>)</td>
+<td>Hex bitmask (e.g., <code>"0x2"</code>)</td>
 </tr>
 <tr>
 <td><code>len</code></td>
@@ -1811,7 +1841,7 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
 <tr>
 <td><code>and</code></td>
 <td>boolean</td>
-<td>If <code>true</code>, AND the result of this condition with the next one. Default: OR with the next condition.</td>
+<td>If <code>true</code>, AND this condition with the <em>preceding</em> one. Default: OR.</td>
 </tr>
 </tbody>
 </table>
@@ -1943,8 +1973,16 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1970,7 +2008,7 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>

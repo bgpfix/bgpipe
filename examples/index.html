@@ -182,6 +182,8 @@
         </button>
       </nav>
       
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
@@ -666,6 +668,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../stages/aspa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aspa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../stages/connect/" class="md-nav__link">
         
   
@@ -974,14 +1004,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../stages/rpki/" class="md-nav__link">
+      <a href="../stages/rov/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    rpki
+    rov
   
 
     
@@ -1690,40 +1720,40 @@
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span>--<span class="w"> </span>stdout
 </span></code></pre></div>
 <h2 id="stream-live-bgp-with-rpki-filtering">Stream live BGP with RPKI filtering<a class="headerlink" href="#stream-live-bgp-with-rpki-filtering" title="Permanent link">&para;</a></h2>
-<p>Stages: <a href="../stages/ris-live/">ris-live</a>, <a href="../stages/rpki/">rpki</a>, <a href="../stages/update/">update</a>, <a href="../stages/write/">write</a></p>
-<p>Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against <a href="https://en.wikipedia.org/wiki/BGP_hijacking">BGP hijacking</a> and route leaks. The updates will not be modified on the BGP level (<code>--invalid=keep</code> flag), but will be tagged with <code>rpki/status = INVALID</code>. The <code>update</code> stage is then used to add a community <code>123:456</code> to invalid updates for easy identification. Finally, the stream is saved to a file in JSON format.</p>
+<p>Stages: <a href="../stages/ris-live/">ris-live</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/update/">update</a>, <a href="../stages/write/">write</a></p>
+<p>Stream RIS Live UPDATEs and validate them against RPKI to detect and filter invalid route announcements in real-time. This combines global visibility with cryptographic validation to protect against <a href="https://en.wikipedia.org/wiki/BGP_hijacking">BGP hijacking</a> and route leaks. The updates will not be modified on the BGP level (<code>--invalid=keep</code> flag), but will be tagged with <code>rov/status = INVALID</code>. The <code>update</code> stage is then used to add a community <code>123:456</code> to invalid updates for easy identification. Finally, the stream is saved to a file in JSON format.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Real-time BGP monitoring with RPKI validation</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rpki/status] = INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">123</span>:456<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rov/status] = INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">123</span>:456<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>ris-rpki-updates.json
 </span></code></pre></div>
 <h2 id="secure-your-bgp-sessions-with-rpki">Secure your BGP sessions with RPKI<a class="headerlink" href="#secure-your-bgp-sessions-with-rpki" title="Permanent link">&para;</a></h2>
-<p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/rpki/">rpki</a>, <a href="../stages/connect/">connect</a></p>
-<p>Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following <a href="https://datatracker.ietf.org/doc/html/rfc7606">RFC 7606</a>), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can use <code>--file</code> to load a local ROA cache).</p>
+<p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/connect/">connect</a></p>
+<p>Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following <a href="https://datatracker.ietf.org/doc/html/rfc7606">RFC 7606</a>), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can point the global <code>--rpki</code> option at another server or a local ROA cache file).</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Secure 5.6.7.8 by filtering RPKI-invalid prefixes coming from 1.2.3.4</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span>--<span class="w"> </span>rpki<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
 </span></code></pre></div>
 <h2 id="strict-rpki-enforcement-mode">Strict RPKI enforcement mode<a class="headerlink" href="#strict-rpki-enforcement-mode" title="Permanent link">&para;</a></h2>
-<p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/rpki/">rpki</a>, <a href="../stages/connect/">connect</a></p>
+<p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/connect/">connect</a></p>
 <p>Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from <code>1.2.3.4</code> clients forwarded to <code>5.6.7.8</code> where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Drop messages announcing INVALID and/or NOT_FOUND prefixes</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rpki/dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rov/dropped<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>--<span class="w"> </span>rpki<span class="w"> </span>--strict<span class="w"> </span>--invalid<span class="o">=</span>drop<span class="w"> </span>--event<span class="w"> </span>dropped<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--strict<span class="w"> </span>--invalid<span class="o">=</span>drop<span class="w"> </span>--event<span class="w"> </span>dropped<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
 </span></code></pre></div>
 <h2 id="real-time-invalid-route-quarantine">Real-time invalid-route quarantine<a class="headerlink" href="#real-time-invalid-route-quarantine" title="Permanent link">&para;</a></h2>
-<p>Stages: <a href="../stages/ris-live/">ris-live</a>, <a href="../stages/rpki/">rpki</a>, <a href="../stages/grep/">grep</a>, <a href="../stages/update/">update</a>, <a href="../stages/write/">write</a>, <a href="../stages/websocket/">websocket</a></p>
+<p>Stages: <a href="../stages/ris-live/">ris-live</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/grep/">grep</a>, <a href="../stages/update/">update</a>, <a href="../stages/write/">write</a>, <a href="../stages/websocket/">websocket</a></p>
 <p>Tag, quarantine, and mirror only RPKI-invalid announcements in real time. This keeps a clean audit trail for responders while streaming live alerts to a remote monitor.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rpki/status] == INVALID&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>invalid-routes.<span class="nv">$TIME</span>.json<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span>--<span class="w"> </span>websocket<span class="w"> </span>--write<span class="w"> </span>wss://monitor.example.com/bgp
@@ -1770,8 +1800,16 @@
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1797,7 +1835,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>

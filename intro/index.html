@@ -79,6 +79,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#introduction" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -176,6 +181,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -292,6 +299,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -309,6 +336,69 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The gap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-unix-pipeline-for-bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A UNIX pipeline for BGP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#under-the-hood" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Under the hood
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#watch-the-talk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Watch the talk
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -430,6 +520,34 @@
     
   
     Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/aspa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aspa
   
 
     
@@ -758,14 +876,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../stages/rpki/" class="md-nav__link">
+      <a href="../stages/rov/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    rpki
+    rov
   
 
     
@@ -1191,6 +1309,60 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The gap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-unix-pipeline-for-bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A UNIX pipeline for BGP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#under-the-hood" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Under the hood
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#watch-the-talk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Watch the talk
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1210,23 +1382,33 @@
   
 
 
-  <h1>Introduction</h1>
-
-<p>The tools available today for working with BGP are fundamentally passive.
-<a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a> streams a copy of the RIB to a collector.
-<a href="https://datatracker.ietf.org/doc/html/rfc6396">MRT</a> dumps give you a snapshot you can analyze after the fact.
-CLI scraping lets you poll a router's state.
-All of these let you <em>observe</em> — but none of them let you <em>act</em>.</p>
-<p>When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s — the response is manual: log in, type commands, hope the vendor's filtering syntax does what you think it does.
-There is no standard, programmable layer between BGP speakers where you can inspect, filter, and transform messages in real time.</p>
+<h1 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h1>
+<h2 id="the-gap">The gap<a class="headerlink" href="#the-gap" title="Permanent link">&para;</a></h2>
+<p>The tools available today for working with BGP fall into two camps.
+On the monitoring side, <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a> streams a copy of the RIB to a collector, <a href="https://datatracker.ietf.org/doc/html/rfc6396">MRT</a> dumps give you a snapshot to analyze after the fact, and CLI scraping lets you poll a router's state — all observation, no control.
+On the active side, software speakers like <a href="https://github.com/Exa-Networks/exabgp">ExaBGP</a> and <a href="https://github.com/osrg/gobgp">GoBGP</a> let you originate and process routes programmatically — but they are session <em>endpoints</em> with a BGP stack of their own: your router peers <em>with</em> the tool, not <em>through</em> it.</p>
+<p>When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s — the response is mostly manual, expressed in whatever filtering syntax each vendor provides.
+What has been missing is the middle ground: a drop-in, programmable layer <em>inside</em> an existing BGP session, where you can inspect, filter, and transform messages in real time — while the routers on both ends keep talking to each other as before.</p>
+<h2 id="a-unix-pipeline-for-bgp">A UNIX pipeline for BGP<a class="headerlink" href="#a-unix-pipeline-for-bgp" title="Permanent link">&para;</a></h2>
 <p><strong>bgpipe</strong> fills that gap. It operates as a transparent proxy sitting on the BGP wire between two speakers. Every message flowing in either direction passes through a pipeline of composable stages — each doing one thing well, chained together like UNIX pipes:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>router A  ──▶  [ listen ── grep ── rpki ── limit ── connect ]  ──▶  router B
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>router A  ──▶  [ listen ── grep ── rov ── limit ── connect ]  ──▶  router B
 </span></code></pre></div>
-<p>Stages can filter messages (<code>grep</code>, <code>drop</code>), enforce policy (<code>limit</code>, <code>rpki</code>), transform data (<code>update</code>, <code>tag</code>), bridge formats (<code>read</code>, <code>write</code>, <code>stdin</code>, <code>stdout</code>), connect to external systems (<code>exec</code>, <code>pipe</code>, <code>websocket</code>), or tap into live data feeds (<code>ris-live</code>, <code>rv-live</code>).</p>
+<p>Stages can filter messages (<code>grep</code>, <code>drop</code>, <code>head</code>), enforce policy (<code>limit</code>, <code>rov</code>, <code>aspa</code>), transform data (<code>update</code>, <code>tag</code>), measure traffic (<code>metrics</code>), bridge formats (<code>read</code>, <code>write</code>, <code>stdin</code>, <code>stdout</code>), connect to external systems (<code>exec</code>, <code>pipe</code>, <code>websocket</code>), or tap into live data feeds (<code>ris-live</code>, <code>rv-live</code>).</p>
+<p>The same stages work without any routers involved: point <code>read</code> at an
+<a href="https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit">MRT</a> archive or
+<code>ris-live</code> at the RIPE RIS firehose, and bgpipe becomes an offline research tool —
+the pipeline doesn't care whether messages come from a live session or a file.</p>
 <p>Because bgpipe speaks native BGP on both sides, routers see a normal peer — no protocol changes, no vendor lock-in.
 Because every message has a full <a href="../json-format/">JSON representation</a> (including <a href="../flowspec/">Flowspec</a>), you can pipe BGP through <code>jq</code>, Python, or any tool that handles JSON.
 Because it supports <a href="https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit">MRT</a>, <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a>, and <a href="https://github.com/Exa-Networks/exabgp/">ExaBGP</a> formats, it integrates with existing infrastructure.</p>
 <p>The result is a single tool that handles monitoring, filtering, security enforcement, format conversion, and session manipulation — all from the command line, all composable, all scriptable.</p>
+<h2 id="under-the-hood">Under the hood<a class="headerlink" href="#under-the-hood" title="Permanent link">&para;</a></h2>
+<p>Internally, bgpipe runs two message pipelines — one per direction — and stages
+attach callbacks that can inspect, modify, drop, or inject messages, coordinated
+through shared state and an event queue. Each stage implements a small Go
+interface shown on the right:</p>
+<p><img alt="bgpipe architecture: two directional pipelines with stage callbacks, shared state, and an event queue; the Stage interface on the right" src="../img/architecture.svg" /></p>
+<h2 id="watch-the-talk">Watch the talk<a class="headerlink" href="#watch-the-talk" title="Permanent link">&para;</a></h2>
 <p>See the <a href="../quickstart/">quickstart guide</a> for a practical introduction. You can also watch the <a href="https://ripe88.ripe.net/archives/video/1365/">RIPE 88 bgpipe talk</a> below.</p>
 <video preload="metadata" style="width: 100%;" controls poster="https://ripe88.ripe.net/wp-content/themes/fluida-plus/images/webcast.jpg">
 <source type="video/mp4" src="https://ripe88.ripe.net/archive/video/pawel-foremski_bgp-pipe-open-source-bgp-reverse-proxy_side_20240523-140239.mp4">
@@ -1258,8 +1440,16 @@ Because it supports <a href="https://en.wikipedia.org/wiki/Multi-threaded_Routin
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1285,7 +1475,7 @@ Because it supports <a href="https://en.wikipedia.org/wiki/Multi-threaded_Routin
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>

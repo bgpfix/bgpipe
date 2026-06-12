@@ -180,6 +180,8 @@
         </button>
       </nav>
       
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
@@ -326,6 +328,17 @@
     <span class="md-ellipsis">
       
         Quick Demo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install
       
     </span>
   </a>
@@ -516,6 +529,34 @@
     
   
     Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="stages/aspa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aspa
   
 
     
@@ -844,14 +885,14 @@
   
   
     <li class="md-nav__item">
-      <a href="stages/rpki/" class="md-nav__link">
+      <a href="stages/rov/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    rpki
+    rov
   
 
     
@@ -1298,6 +1339,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1374,19 +1426,20 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 <a href="https://github.com/bgpfix/bgpipe/releases"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> GitHub Releases</a></p>
 </li>
 <li>
-<p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11.25 6a3.25 3.25 0 0 1 3.25-3.25A3.25 3.25 0 0 1 17.75 6c0 .42.33.75.75.75s.75-.33.75-.75v-.75h1.5V6a2.25 2.25 0 0 1-2.25 2.25A2.25 2.25 0 0 1 16.25 6a1.75 1.75 0 0 0-1.75-1.75A1.75 1.75 0 0 0 12.75 6H14v1.29c2.89.86 5 3.54 5 6.71a7 7 0 0 1-7 7 7 7 0 0 1-7-7c0-3.17 2.11-5.85 5-6.71V6zM22 6h2v1h-2zm-3-2V2h1v2zm1.91.38 1.42-1.42.71.71-1.42 1.42z"/></svg></span> <strong>Research</strong></p>
-<p>Read background paper<br>
-<a href="https://kirin-attack.github.io/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Kirin Attack</a></p>
+<p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 14h-2v2h-6v-3h2v-2h-2V6a2 2 0 0 0-2-2H4V2H2v8h2V8h6v3H8v2h2v5a2 2 0 0 0 2 2h8v2h2"/></svg></span> <strong>Stages</strong></p>
+<p>Browse the building blocks<br>
+<a href="stages/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Stage Reference</a></p>
 </li>
 </ul>
 </div>
 <h2 id="quick-demo">Quick Demo<a class="headerlink" href="#quick-demo" title="Permanent link">&para;</a></h2>
-<p>Stream <a href="https://ris-live.ripe.net/">live from RIPE RIS</a>, add <a href="https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure">RPKI validation</a> on the fly, and show RPKI-invalid announcements.</p>
+<p>Stream <a href="https://ris-live.ripe.net/">live from RIPE RIS</a>, add <a href="https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure">RPKI validation</a> on the fly, and show RPKI-invalid announcements:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span>-go<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--<span class="w"> </span>rpki<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rpki/status] == INVALID&#39;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span>
 </span></code></pre></div>
+<p>Sample output:
 <div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">[</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="s2">&quot;R&quot;</span><span class="p">,</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="mi">10843</span><span class="p">,</span>
@@ -1406,18 +1459,45 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">        </span><span class="nt">&quot;COLLECTOR&quot;</span><span class="p">:</span><span class="s2">&quot;rrc19&quot;</span><span class="p">,</span>
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="nt">&quot;RIS_HOST&quot;</span><span class="p">:</span><span class="s2">&quot;rrc19.ripe.net&quot;</span><span class="p">,</span>
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">        </span><span class="nt">&quot;RIS_ID&quot;</span><span class="p">:</span><span class="s2">&quot;196.60.9.188-019c479748f40019&quot;</span><span class="p">,</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">        </span><span class="nt">&quot;rpki/201.49.180.0/23&quot;</span><span class="p">:</span><span class="s2">&quot;INVALID&quot;</span><span class="p">,</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="nt">&quot;rpki/201.49.181.0/24&quot;</span><span class="p">:</span><span class="s2">&quot;INVALID&quot;</span><span class="p">,</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">        </span><span class="nt">&quot;rpki/status&quot;</span><span class="p">:</span><span class="s2">&quot;INVALID&quot;</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">        </span><span class="nt">&quot;rov/201.49.180.0/23&quot;</span><span class="p">:</span><span class="s2">&quot;INVALID&quot;</span><span class="p">,</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="nt">&quot;rov/201.49.181.0/24&quot;</span><span class="p">:</span><span class="s2">&quot;INVALID&quot;</span><span class="p">,</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">        </span><span class="nt">&quot;rov/status&quot;</span><span class="p">:</span><span class="s2">&quot;INVALID&quot;</span>
 </span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="p">]</span>
+</span></code></pre></div></p>
+<p>More one-liners:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># convert an MRT archive to JSON, straight from RIPE RIS (or RouteViews) URL</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>$<span class="w"> </span>bgpipe<span class="w"> </span><span class="nb">read</span><span class="w"> </span>https://data.ris.ripe.net/rrc01/latest-update.gz<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>$<span class="w"> </span>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span>--<span class="w"> </span>rov<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
+<h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Docker</label><label for="__tabbed_1_2">Binary</label><label for="__tabbed_1_3">Go install</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>wget<span class="w"> </span>-O<span class="w"> </span>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>https://github.com/bgpfix/bgpipe/releases/latest/download/bgpipe-linux-amd64
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>chmod<span class="w"> </span>+x<span class="w"> </span>bgpipe
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/bgpfix/bgpipe@latest
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p>A single static binary, no dependencies — see the <a href="quickstart/">Quick Start</a> for details and other platforms.</p>
 <h2 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h2>
 <div class="grid cards">
 <ul>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6 0 1.2.6 1.2 1.3v3.5c0 .6-.6 1.2-1.3 1.2H9.2c-.6 0-1.2-.6-1.2-1.3v-3.5c0-.6.6-1.2 1.2-1.2V9.5C9.2 8.1 10.6 7 12 7m0 1.2c-.8 0-1.5.5-1.5 1.3V11h3V9.5c0-.8-.7-1.3-1.5-1.3"/></svg></span> <strong>BGP Firewall</strong></p>
-<p>Drop-in proxy with RPKI validation, prefix limits, and rate limiting</p>
+<p>Drop-in proxy with RPKI ROV + ASPA validation, prefix limits, and rate limiting</p>
 </li>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 3h2v2H5v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5h2v2H5c-1.07-.27-2-.9-2-2v-4a2 2 0 0 0-2-2H0v-2h1a2 2 0 0 0 2-2V5a2 2 0 0 1 2-2m14 0a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1v2h-1a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-2v-2h2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5h-2V3zm-7 12a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m-4 0a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m8 0a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1"/></svg></span> <strong>Full JSON Translation</strong></p>
@@ -1443,10 +1523,11 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 </div>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Transparent proxy</strong> — sits between two BGP speakers; routers see a normal peer</li>
+<li><strong>Transparent proxy</strong> — sits between two BGP speakers; with <a href="stages/connect/#transparent-mode">TPROXY mode</a>, invisible even at the IP layer — no router reconfiguration</li>
 <li><strong>Full JSON translation</strong> — bidirectional BGP ↔ JSON for every message type, including <a href="flowspec/">Flowspec</a></li>
 <li><strong>Built-in filters</strong> — match on prefixes, AS paths, communities, attributes, and <a href="stages/tag/">tags</a> with a concise <a href="filters/">filter language</a></li>
-<li><strong>RPKI validation</strong> — validate UPDATEs against RPKI using RTR protocol (e.g. Cloudflare, Routinator)</li>
+<li><strong>RPKI origin validation</strong> — <a href="stages/rov/">rov</a> stage implements RFC 6811, fed over RTR (e.g. Cloudflare, Routinator), HTTP(S), or files</li>
+<li><strong>ASPA path verification</strong> — <a href="stages/aspa/">aspa</a> stage detects route leaks per the IETF draft — available today, before router vendors ship it</li>
 <li><strong>Prefix and rate limits</strong> — enforce prefix count/length thresholds and message rate limits per session</li>
 <li><strong>UPDATE rewriting</strong> — add, remove, or modify path attributes on the fly</li>
 <li><strong>Multiple data formats</strong> — read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format</li>
@@ -1463,6 +1544,8 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 <p>bgpipe is hosted on <a href="https://github.com/bgpfix/bgpipe">GitHub</a> under the MIT license,
 built on the <a href="https://bgpfix.org/">bgpfix</a> library.</p>
 <ul>
+<li>Watch the <a href="https://ripe88.ripe.net/archives/video/1365/">RIPE 88 talk</a> for a 15-minute introduction</li>
+<li>Read the <a href="https://kirin-attack.github.io/">Kirin attack paper</a> that started the project</li>
 <li>Report bugs and request features on <a href="https://github.com/bgpfix/bgpipe/issues">GitHub Issues</a></li>
 <li>For collaboration inquiries, contact <a href="mailto:bgpipe@bgpipe.org">bgpipe@bgpipe.org</a></li>
 </ul>
@@ -1486,8 +1569,16 @@ built on the <a href="https://bgpfix.org/">bgpfix</a> library.</p>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1513,7 +1604,7 @@ built on the <a href="https://bgpfix.org/">bgpfix</a> library.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["header.autohide", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
       <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
