@@ -13,7 +13,18 @@ There is no standard, programmable layer between BGP speakers where you can insp
 router A  ──▶  [ listen ── grep ── rov ── limit ── connect ]  ──▶  router B
 ```
 
-Stages can filter messages (`grep`, `drop`), enforce policy (`limit`, `rov`, `aspa`), transform data (`update`, `tag`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
+Internally, bgpipe runs two message pipelines — one per direction — and stages
+attach callbacks that can inspect, modify, drop, or inject messages, coordinated
+through shared state and an event queue:
+
+![bgpipe architecture: two directional pipelines with stage callbacks, shared state, and an event queue](img/architecture.svg)
+
+Stages can filter messages (`grep`, `drop`, `head`), enforce policy (`limit`, `rov`, `aspa`), transform data (`update`, `tag`), measure traffic (`metrics`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
+
+The same stages work without any routers involved: point `read` at an
+[MRT](https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit) archive or
+`ris-live` at the RIPE RIS firehose, and bgpipe becomes an offline research tool —
+the pipeline doesn't care whether messages come from a live session or a file.
 
 Because bgpipe speaks native BGP on both sides, routers see a normal peer — no protocol changes, no vendor lock-in.
 Because every message has a full [JSON representation](json-format.md) (including [Flowspec](flowspec.md)), you can pipe BGP through `jq`, Python, or any tool that handles JSON.

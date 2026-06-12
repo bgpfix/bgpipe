@@ -5,7 +5,7 @@ This page is a reference for the format, implemented by the [bgpfix library](htt
 
 ## Message Envelope
 
-Each BGP message is a JSON array with up to 6 elements:
+Each BGP message is a JSON array with 6 elements:
 
 ```json
 ["R", 243, "2025-07-11T11:23:50.860", "UPDATE", {...}, {...}]
@@ -27,6 +27,8 @@ Each BGP message is a JSON array with up to 6 elements:
 | `OPEN`      | BGP session parameters and capabilities (object)    |
 | `UPDATE`    | Prefixes and path attributes (object)               |
 | `KEEPALIVE` | `null`                                              |
+| `NOTIFY`    | Notification payload after the code/subcode bytes, as an ASCII-escaped string |
+| `REFRESH`   | Raw message body as a hex string                    |
 
 Unknown or unparsed types produce a hex string like `"0x1234abcd"`.
 
@@ -34,7 +36,7 @@ Unknown or unparsed types produce a hex string like `"0x1234abcd"`.
 
 KEEPALIVE — the simplest message:
 ```json
-["R", 2, "2025-07-11T08:47:22.659", "KEEPALIVE"]
+["R", 2, "2025-07-11T08:47:22.659", "KEEPALIVE", null, null]
 ```
 
 ## OPEN Messages
@@ -206,7 +208,10 @@ With an AS_SET:
 "ASPATH": {"flags": "T", "value": [64515, [20473, 15169]]}
 ```
 
-The AS_SET `[20473, 15169]` is a single hop containing multiple ASNs. AS_CONFED_SEQUENCE and AS_CONFED_SET use the same representation (flat/nested) with no distinct marker.
+The AS_SET `[20473, 15169]` is a single hop containing multiple ASNs.
+Confederation segments (AS_CONFED_SEQUENCE, AS_CONFED_SET) are not supported:
+an AS_PATH containing them fails to parse, so the message falls back to its
+hex representation.
 
 ### Communities
 
