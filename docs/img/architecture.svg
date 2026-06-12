@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="1600"
-   height="650"
-   viewBox="0 0 1600 650"
+   viewBox="-24 -24 1648 698"
+   style="width:100%;height:auto"
    role="img"
    aria-labelledby="title desc"
    version="1.1"
@@ -42,12 +41,13 @@
      id="title">bgpipe bidirectional architecture</title>
   <desc
      id="desc">Two BGP peers exchange messages through bgpipe. Separate left-to-right and right-to-left message paths are processed by callback chains and coordinated by a shared event bus.</desc>
+  <rect x="-24" y="-24" width="1648" height="698" rx="24" fill="#ffffff"/>
   <defs
      id="defs15">
     <style
        id="style4">
       text {
-        font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;
+        font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif;
         fill: #18212a;
       }
 
@@ -141,7 +141,7 @@
          }
 
          .code-line {
-            font-family: &quot;IBM Plex Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace;
+            font-family: &quot;IBM Plex Mono&quot;, Consolas, monospace, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace;
             font-size: 21px;
             fill: #1f2933;
          }

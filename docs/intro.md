@@ -1,23 +1,23 @@
+# Introduction
+
+## The gap
+
 The tools available today for working with BGP are fundamentally passive.
 [BMP](https://datatracker.ietf.org/doc/html/rfc7854) streams a copy of the RIB to a collector.
 [MRT](https://datatracker.ietf.org/doc/html/rfc6396) dumps give you a snapshot you can analyze after the fact.
 CLI scraping lets you poll a router's state.
 All of these let you *observe* — but none of them let you *act*.
 
-When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s — the response is manual: log in, type commands, hope the vendor's filtering syntax does what you think it does.
+When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s — the response is mostly manual, expressed in whatever filtering syntax each vendor provides.
 There is no standard, programmable layer between BGP speakers where you can inspect, filter, and transform messages in real time.
+
+## A UNIX pipeline for BGP
 
 **bgpipe** fills that gap. It operates as a transparent proxy sitting on the BGP wire between two speakers. Every message flowing in either direction passes through a pipeline of composable stages — each doing one thing well, chained together like UNIX pipes:
 
 ```
 router A  ──▶  [ listen ── grep ── rov ── limit ── connect ]  ──▶  router B
 ```
-
-Internally, bgpipe runs two message pipelines — one per direction — and stages
-attach callbacks that can inspect, modify, drop, or inject messages, coordinated
-through shared state and an event queue:
-
-![bgpipe architecture: two directional pipelines with stage callbacks, shared state, and an event queue](img/architecture.svg)
 
 Stages can filter messages (`grep`, `drop`, `head`), enforce policy (`limit`, `rov`, `aspa`), transform data (`update`, `tag`), measure traffic (`metrics`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
 
@@ -31,6 +31,17 @@ Because every message has a full [JSON representation](json-format.md) (includin
 Because it supports [MRT](https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit), [BMP](https://datatracker.ietf.org/doc/html/rfc7854), and [ExaBGP](https://github.com/Exa-Networks/exabgp/) formats, it integrates with existing infrastructure.
 
 The result is a single tool that handles monitoring, filtering, security enforcement, format conversion, and session manipulation — all from the command line, all composable, all scriptable.
+
+## Under the hood
+
+Internally, bgpipe runs two message pipelines — one per direction — and stages
+attach callbacks that can inspect, modify, drop, or inject messages, coordinated
+through shared state and an event queue. Each stage implements a small Go
+interface shown on the right:
+
+![bgpipe architecture: two directional pipelines with stage callbacks, shared state, and an event queue; the Stage interface on the right](img/architecture.svg)
+
+## Watch the talk
 
 See the [quickstart guide](quickstart.md) for a practical introduction. You can also watch the [RIPE 88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/) below.
 
