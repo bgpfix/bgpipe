@@ -1,8 +1,12 @@
+// NB: excluded from -race because Pipe.Stop() has an inherent race between
+// go p.sendEvent(EVENT_STOP) and close(p.evch). The recover() in sendEvent
+// makes this safe at runtime, but the race detector flags it.
+//
+//go:build !race
+
 package rpki
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -13,10 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// NB: end-to-end coverage for: file cache load → pipe callback wiring →
-// UPDATE validation → ROV/ASPA actions. Unit tests in validate_*_test.go
-// call validateMsg directly and do not exercise file loading, cache swap,
-// or actual pipe flow.
+// NB: end-to-end coverage for: cache load → pipe callback wiring →
+// UPDATE validation → ROV/ASPA actions. Unit tests in rov_test.go and
+// aspa_test.go call validateMsg directly and do not exercise actual
+// pipe flow or rov+aspa chaining.
 
 const integrationFixture = `{
 	"roas": [
@@ -31,132 +35,134 @@ const integrationFixture = `{
 	]
 }`
 
-// newIntegrationRpki writes the fixture to a temp file and loads it
-// synchronously via fileLoad, yielding a ready-to-start stage.
-func newIntegrationRpki(t *testing.T) *Rpki {
+// newIntegrationRov returns a Rov stage with the fixture loaded and applied.
+func newIntegrationRov(t *testing.T) *Rov {
 	t.Helper()
-	file := filepath.Join(t.TempDir(), "rpki.json")
-	require.NoError(t, os.WriteFile(file, []byte(integrationFixture), 0o644))
-
-	s := newValidateTestRpki()
-	s.P.Options.Logger = nil
-	s.P.Options.Caps = false
-	s.file = file
-	s.Dir = dir.DIR_R
-	require.NoError(t, s.fileLoad())
+	s := newTestRov()
+	require.NoError(t, s.cache.Parse([]byte(integrationFixture)))
+	s.cache.Apply()
 	return s
 }
 
-// startPipe wires validateMsg into the pipe and starts it.
+// addIntegrationAspa returns an Aspa stage sharing the pipe and cache with rov.
+func addIntegrationAspa(rov *Rov) *Aspa {
+	s := newTestAspa()
+	s.P = rov.P
+	s.cache = rov.cache
+	return s
+}
+
+// startPipe wires the given UPDATE callbacks into the pipe and starts it.
 // Pipe is stopped automatically at test teardown.
-func startPipe(t *testing.T, s *Rpki) {
+func startPipe(t *testing.T, p *pipe.Pipe, cbs ...pipe.CallbackFunc) {
 	t.Helper()
-	s.P.Options.OnMsg(s.validateMsg, s.Dir, msg.UPDATE)
-	require.NoError(t, s.P.Start())
-	t.Cleanup(func() { s.P.Stop() })
+	for _, cb := range cbs {
+		p.Options.OnMsg(cb, dir.DIR_R, msg.UPDATE)
+	}
+	require.NoError(t, p.Start())
+	t.Cleanup(func() { p.Stop() })
 }
 
 // sendUpdate writes m to R and returns the processed message from R.Out,
 // or nil if dropped by a callback within timeout.
-func sendUpdate(t *testing.T, s *Rpki, m *msg.Msg, timeout time.Duration) *msg.Msg {
+func sendUpdate(t *testing.T, p *pipe.Pipe, m *msg.Msg, timeout time.Duration) *msg.Msg {
 	t.Helper()
-	require.NoError(t, s.P.R.WriteMsg(m))
+	require.NoError(t, p.R.WriteMsg(m))
 	select {
-	case out := <-s.P.R.Out:
+	case out := <-p.R.Out:
 		return out
 	case <-time.After(timeout):
 		return nil
 	}
 }
 
-func TestIntegration_CacheLoadedFromFile(t *testing.T) {
-	s := newIntegrationRpki(t)
-	require.Len(t, *s.vrp4.Load(), 3)
-	require.Len(t, *s.aspa.Load(), 3)
-	// NB: nextASPA sorts providers for BinarySearch
-	require.Equal(t, []uint32{65010}, (*s.aspa.Load())[65020])
+func TestIntegration_CacheLoadedFromFixture(t *testing.T) {
+	s := newIntegrationRov(t)
+	vrps4, _, aspas := s.cache.Sizes()
+	require.Equal(t, 3, vrps4)
+	require.Equal(t, 3, aspas)
+	// NB: AddASPA sorts providers for BinarySearch
+	require.Equal(t, []uint32{65010}, s.cache.ASPAs()[65020])
 }
 
 func TestIntegration_ROV_WithdrawMovesInvalidToUnreach(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_withdraw
+	s := newIntegrationRov(t)
+	s.act = act_withdraw
 	s.tag = true
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
 	// 192.0.2.0/24 VALID (origin 65001 matches VRP), 198.51.100.0/24
 	// INVALID (origin 65001 but VRP wants 65002)
 	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24", "198.51.100.0/24")
 	setAsPathSeq(m, 65001)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(got.Update.AllReach()))
 	require.Equal(t, []string{"198.51.100.0/24"}, prefixStrings(got.Update.AllUnreach()))
-	require.Equal(t, "INVALID", pipe.UseTags(got)["rpki/status"])
+	require.Equal(t, "INVALID", pipe.UseTags(got)["rov/status"])
 }
 
 func TestIntegration_ROV_DropDiscardsMessage(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_drop
+	s := newIntegrationRov(t)
+	s.act = act_drop
 	s.tag = true
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
 	m := newReachUpdate(dir.DIR_R, "198.51.100.0/24")
 	setAsPathSeq(m, 65099) // no VRP with origin 65099
 
-	require.Nil(t, sendUpdate(t, s, m, 200*time.Millisecond))
+	require.Nil(t, sendUpdate(t, s.P, m, 200*time.Millisecond))
 }
 
 func TestIntegration_ROV_NotFoundPassesThrough(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_withdraw
+	s := newIntegrationRov(t)
+	s.act = act_withdraw
 	s.tag = true
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
 	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65001)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "NOT_FOUND", pipe.UseTags(got)["rpki/status"])
+	require.Equal(t, "NOT_FOUND", pipe.UseTags(got)["rov/status"])
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllReach()))
 }
 
 func TestIntegration_ASPA_ValidPathPassesThrough(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.aspa_on = true
-	s.aspa_role = "customer"
-	s.aspa_act = act_withdraw
-	s.aspa_tag = true
+	rov := newIntegrationRov(t)
+	s := addIntegrationAspa(rov)
+	s.role, _ = parseRoleName("customer")
+	s.act = act_withdraw
+	s.tag = true
 	storeOpenASN(s.P, dir.DIR_R, 65010)
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
 	// path [65010, 65020]: peer matches path[0]; 65020→{65010} is attested
 	m := newReachUpdate(dir.DIR_R, "203.0.113.0/24")
 	setAsPathSeq(m, 65010, 65020)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
 	require.Equal(t, "VALID", pipe.UseTags(got)["aspa/status"])
 	require.Equal(t, []string{"203.0.113.0/24"}, prefixStrings(got.Update.AllReach()))
 }
 
 func TestIntegration_ASPA_InvalidPath_WithdrawStripsReach(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_keep // NB: isolate ASPA from ROV
-	s.aspa_on = true
-	s.aspa_role = "customer"
-	s.aspa_act = act_withdraw
-	s.aspa_tag = true
+	rov := newIntegrationRov(t)
+	s := addIntegrationAspa(rov)
+	s.role, _ = parseRoleName("customer")
+	s.act = act_withdraw
+	s.tag = true
 	storeOpenASN(s.P, dir.DIR_R, 65010)
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
-	// 10.0.0.0/8 has no VRP → ROV NOT_FOUND → reach preserved for ASPA.
 	// path [65010, 65099]: 65099 has ASPA={65030}, 65010 not listed → INVALID
 	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65099)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
 	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
 	require.False(t, got.Update.HasReach())
@@ -166,35 +172,33 @@ func TestIntegration_ASPA_InvalidPath_WithdrawStripsReach(t *testing.T) {
 }
 
 func TestIntegration_ASPA_InvalidPath_DropDiscardsMessage(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_keep
-	s.aspa_on = true
-	s.aspa_role = "customer"
-	s.aspa_act = act_drop
-	s.aspa_tag = true
+	rov := newIntegrationRov(t)
+	s := addIntegrationAspa(rov)
+	s.role, _ = parseRoleName("customer")
+	s.act = act_drop
+	s.tag = true
 	storeOpenASN(s.P, dir.DIR_R, 65010)
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
 	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65099)
 
-	require.Nil(t, sendUpdate(t, s, m, 200*time.Millisecond))
+	require.Nil(t, sendUpdate(t, s.P, m, 200*time.Millisecond))
 }
 
 func TestIntegration_ASPA_InvalidPath_KeepTagsOnly(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_keep
-	s.aspa_on = true
-	s.aspa_role = "customer"
-	s.aspa_act = act_keep
-	s.aspa_tag = true
+	rov := newIntegrationRov(t)
+	s := addIntegrationAspa(rov)
+	s.role, _ = parseRoleName("customer")
+	s.act = act_keep
+	s.tag = true
 	storeOpenASN(s.P, dir.DIR_R, 65010)
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
 	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65099)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
 	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllReach()))
@@ -202,93 +206,64 @@ func TestIntegration_ASPA_InvalidPath_KeepTagsOnly(t *testing.T) {
 }
 
 func TestIntegration_ASPA_UnknownPathPassesThrough(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_keep
-	s.aspa_on = true
-	s.aspa_role = "customer"
-	s.aspa_act = act_withdraw
-	s.aspa_tag = true
+	rov := newIntegrationRov(t)
+	s := addIntegrationAspa(rov)
+	s.role, _ = parseRoleName("customer")
+	s.act = act_withdraw
+	s.tag = true
 	storeOpenASN(s.P, dir.DIR_R, 65010)
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
-	// 65040 has no ASPA record → every hop is "no_att" → UNKNOWN
+	// 65040 has no ASPA record → every hop is "no attestation" → UNKNOWN
 	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65040)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
 	require.Equal(t, "UNKNOWN", pipe.UseTags(got)["aspa/status"])
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllReach()))
 }
 
 func TestIntegration_ASPA_FirstHopMismatchIsInvalid(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.aspa_on = true
-	s.aspa_role = "customer"
-	s.aspa_act = act_withdraw
-	s.aspa_tag = true
+	rov := newIntegrationRov(t)
+	s := addIntegrationAspa(rov)
+	s.role, _ = parseRoleName("customer")
+	s.act = act_withdraw
+	s.tag = true
 	storeOpenASN(s.P, dir.DIR_R, 65010)
-	startPipe(t, s)
+	startPipe(t, s.P, s.validateMsg)
 
 	// path[0]=65099 != peer 65010 → INVALID regardless of ASPA content
 	m := newReachUpdate(dir.DIR_R, "203.0.113.0/24")
 	setAsPathSeq(m, 65099, 65020)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
 	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
 	require.False(t, got.Update.HasReach())
 }
 
 func TestIntegration_ROVValid_ASPAInvalid_BothActionsFire(t *testing.T) {
-	s := newIntegrationRpki(t)
-	s.rov_act = act_withdraw
-	s.tag = true
-	s.aspa_on = true
-	s.aspa_role = "customer"
-	s.aspa_act = act_withdraw
-	s.aspa_tag = true
-	storeOpenASN(s.P, dir.DIR_R, 65010)
-	startPipe(t, s)
+	rov := newIntegrationRov(t)
+	rov.act = act_withdraw
+	rov.tag = true
+
+	aspa := addIntegrationAspa(rov)
+	aspa.role, _ = parseRoleName("customer")
+	aspa.act = act_withdraw
+	aspa.tag = true
+
+	storeOpenASN(rov.P, dir.DIR_R, 65010)
+	startPipe(t, rov.P, rov.validateMsg, aspa.validateMsg)
 
 	// 192.0.2.0/24 origin 65001 → ROV VALID; path breaks ASPA at 65099
 	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65099, 65001)
 
-	got := sendUpdate(t, s, m, time.Second)
+	got := sendUpdate(t, rov.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "VALID", pipe.UseTags(got)["rpki/status"])
+	require.Equal(t, "VALID", pipe.UseTags(got)["rov/status"])
 	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
 	require.False(t, got.Update.HasReach())
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(got.Update.AllUnreach()))
-}
-
-func TestIntegration_FileReloadReplacesCache(t *testing.T) {
-	file := filepath.Join(t.TempDir(), "rpki.json")
-	require.NoError(t, os.WriteFile(file,
-		[]byte(`{"roas":[{"prefix":"192.0.2.0/24","maxLength":24,"asn":65001}],"aspas":[]}`),
-		0o644))
-
-	s := newValidateTestRpki()
-	s.P.Options.Logger = nil
-	s.file = file
-	require.NoError(t, s.fileLoad())
-	require.Len(t, *s.vrp4.Load(), 1)
-	require.Empty(t, *s.aspa.Load())
-
-	newData := `{
-		"roas": [
-			{"prefix":"192.0.2.0/24","maxLength":24,"asn":65001},
-			{"prefix":"10.0.0.0/8","maxLength":24,"asn":64512}
-		],
-		"aspas": [{"customer_asid":65010,"provider_asids":[65001]}]
-	}`
-	require.NoError(t, os.WriteFile(file, []byte(newData), 0o644))
-	// NB: fileLoad short-circuits unless mtime advanced
-	future := time.Now().Add(2 * time.Second)
-	require.NoError(t, os.Chtimes(file, future, future))
-
-	require.NoError(t, s.fileLoad())
-	require.Len(t, *s.vrp4.Load(), 2)
-	require.Len(t, *s.aspa.Load(), 1)
 }

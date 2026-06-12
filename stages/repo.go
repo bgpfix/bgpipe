@@ -7,6 +7,7 @@ import (
 )
 
 var Repo = map[string]core.NewStage{
+	"aspa":      rpki.NewAspa,
 	"connect":   NewConnect,
 	"drop":      NewGrep,
 	"exec":      NewExec,
@@ -18,7 +19,7 @@ var Repo = map[string]core.NewStage{
 	"pipe":      NewPipe,
 	"read":      NewRead,
 	"ris-live":  NewRisLive,
-	"rpki":      rpki.NewRpki,
+	"rov":       rpki.NewRov,
 	"rv-live":   rvlive.NewRvLive,
 	"speaker":   NewSpeaker,
 	"stdin":     NewStdin,
