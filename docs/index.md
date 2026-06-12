@@ -37,7 +37,7 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
 
 ## Quick Demo
 
-Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) on the fly, and show RPKI-invalid announcements — one command, no config:
+Stream [live from RIPE RIS](https://ris-live.ripe.net/), add [RPKI validation](https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure) on the fly, and show RPKI-invalid announcements:
 
 ```bash
 $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
@@ -46,6 +46,7 @@ $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
     -- grep 'tag[rov/status] == INVALID'
 ```
 
+Sample output:
 ```json
 [
     "R",
@@ -76,15 +77,11 @@ $ docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
 More one-liners:
 
 ```bash
-# convert an MRT archive to JSON, straight from RouteViews (or RIS) URL
-$ bgpipe -- read https://archive.routeviews.org/bgpdata/2026.06/UPDATES/updates.20260601.0000.bz2 \
-         -- write updates.json
+# convert an MRT archive to JSON, straight from RIPE RIS (or RouteViews) URL
+$ bgpipe read https://data.ris.ripe.net/rrc01/latest-update.gz | head
 
-# proxy a BGP session, log everything as JSON, drop RPKI-invalid prefixes
-$ bgpipe --stdout \
-    -- listen :179 \
-    -- rov --invalid=withdraw \
-    -- connect --wait listen 192.0.2.1
+# proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes
+$ bgpipe -o -- listen :179 -- rov -- connect --wait listen 192.0.2.1
 ```
 
 ## Install
