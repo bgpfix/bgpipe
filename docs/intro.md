@@ -2,14 +2,12 @@
 
 ## The gap
 
-The tools available today for working with BGP are fundamentally passive.
-[BMP](https://datatracker.ietf.org/doc/html/rfc7854) streams a copy of the RIB to a collector.
-[MRT](https://datatracker.ietf.org/doc/html/rfc6396) dumps give you a snapshot you can analyze after the fact.
-CLI scraping lets you poll a router's state.
-All of these let you *observe* — but none of them let you *act*.
+The tools available today for working with BGP fall into two camps.
+On the monitoring side, [BMP](https://datatracker.ietf.org/doc/html/rfc7854) streams a copy of the RIB to a collector, [MRT](https://datatracker.ietf.org/doc/html/rfc6396) dumps give you a snapshot to analyze after the fact, and CLI scraping lets you poll a router's state — all observation, no control.
+On the active side, software speakers like [ExaBGP](https://github.com/Exa-Networks/exabgp) and [GoBGP](https://github.com/osrg/gobgp) let you originate and process routes programmatically — but they are session *endpoints* with a BGP stack of their own: your router peers *with* the tool, not *through* it.
 
 When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s — the response is mostly manual, expressed in whatever filtering syntax each vendor provides.
-There is no standard, programmable layer between BGP speakers where you can inspect, filter, and transform messages in real time.
+What has been missing is the middle ground: a drop-in, programmable layer *inside* an existing BGP session, where you can inspect, filter, and transform messages in real time — while the routers on both ends keep talking to each other as before.
 
 ## A UNIX pipeline for BGP
 
