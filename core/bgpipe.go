@@ -36,6 +36,7 @@ type Bgpipe struct {
 	K         *koanf.Koanf   // global config
 	Pipe      *pipe.Pipe     // bgpfix pipe
 	Stages    []*StageBase   // pipe stages
+	Rpki      *Rpki          // optional shared RPKI cache (see UseRpki)
 	HTTP      *http.Server   // optional shared HTTP server
 	StartTime time.Time      // when the pipeline started
 
@@ -103,6 +104,12 @@ func (b *Bgpipe) Run() error {
 		fmt.Printf("\n<-- MESSAGES FLOWING LEFT <--\n")
 		b.StageDump(dir.DIR_L, os.Stdout)
 		return nil
+	}
+
+	// start the shared RPKI cache, if in use by any stage
+	if err := b.Rpki.Start(); err != nil {
+		b.Error().Err(err).Msg("could not start the RPKI cache")
+		return err
 	}
 
 	// attach our b.Start

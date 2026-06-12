@@ -39,7 +39,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 	o.IsProducer = true
 	o.FilterOut = true
 	o.Bidir = true
-	o.Descr = "read messages from file or URL"
+	o.Descr = "read messages from file, URL, or stdin (-)"
 	o.Args = []string{"path"}
 
 	f := o.Flags
@@ -108,6 +108,9 @@ func (s *Read) Prepare() error {
 			return fmt.Errorf("%s: %s", s.url.String(), resp.Status)
 		}
 		s.fh = resp.Body
+	} else if s.fpath == "-" {
+		s.Info().Msg("reading stdin")
+		s.fh = io.NopCloser(os.Stdin)
 	} else {
 		s.Info().Msgf("opening file %s", s.fpath)
 		fh, err := os.Open(s.fpath)

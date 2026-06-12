@@ -48,43 +48,15 @@ jobs:
             fi
           }
 
-          # Linux
+          # NB: pure Go — anything else can always `go build`
           build linux amd64
           build linux arm64
-          build linux arm   6
-          build linux arm   7
-          build linux 386
-          build linux mips
-          build linux mipsle
-          build linux mips64
-          build linux mips64le
-          build linux ppc64
-          build linux ppc64le
-          build linux s390x
-          build linux riscv64
-          build linux loong64
-
-          # macOS
-          build darwin amd64
           build darwin arm64
-
-          # Windows
-          build windows amd64
-          build windows arm64
-          build windows 386
-
-          # BSDs
+          build darwin amd64
           build freebsd amd64
-          build freebsd arm64
-          build freebsd arm   7
-          build freebsd 386
           build openbsd amd64
-          build openbsd arm64
-          build openbsd 386
-          build netbsd  amd64
-          build netbsd  arm64
-          build netbsd  arm   7
-          build netbsd  386
+          build windows amd64
+          build android arm64
 
           ls -lh dist/
 

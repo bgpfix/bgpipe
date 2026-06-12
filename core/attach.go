@@ -125,8 +125,41 @@ func (b *Bgpipe) AttachStages() error {
 	}
 
 	b.attachHTTPStages()
+	b.checkDeadCallbacks()
 
 	return nil
+}
+
+// checkDeadCallbacks warns about stage callbacks that listen on a direction
+// in which no stage produces messages, which usually means a -L/-R mistake.
+func (b *Bgpipe) checkDeadCallbacks() {
+	// directions that have producers
+	var prod dir.Dir
+	for _, s := range b.Stages {
+		if s == nil {
+			continue
+		}
+		for _, li := range s.inputs {
+			prod |= li.Dir
+		}
+	}
+
+	// callbacks that can never fire?
+	for _, s := range b.Stages {
+		if s == nil {
+			continue
+		}
+		for _, cb := range s.callbacks {
+			d := cb.Dir
+			if d == 0 {
+				d = dir.DIR_LR // zero means no direction limit
+			}
+			if d&prod == 0 {
+				s.Warn().Msgf("listens in direction %s, but no stage produces %s messages (missing -L/-R/-LR somewhere?)", d, d)
+				break // one warning per stage is enough
+			}
+		}
+	}
 }
 
 // attach wraps Stage.Attach and adds some logic

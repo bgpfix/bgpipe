@@ -27,22 +27,12 @@ echo "Building in $DEST"
 [ -d "$DEST" ] && rm -fr "$DEST"
 mkdir -p "$DEST" || { echo "Error: Failed to create directory $DEST" >&2; exit 1; }
 
+# NB: pure Go — anything else can always `go build`
+build linux-amd64
+build linux-arm64
 build darwin-arm64
 build darwin-amd64
-build linux-amd64
-build linux-arm
-# GOARM=6 build linux-arm 6
-# GOARM=7 build linux-arm 7
-build linux-arm64
-build linux-mips
-build linux-mips64
-build linux-mips64le
-build linux-ppc64
-build linux-ppc64le
-
 build freebsd-amd64
-build netbsd-amd64
 build openbsd-amd64
-
 build windows-amd64
-build windows-arm64
+build android-arm64

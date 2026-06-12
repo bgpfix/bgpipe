@@ -3,7 +3,6 @@ package stages
 import (
 	"fmt"
 	"net"
-	"runtime"
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
@@ -32,9 +31,9 @@ func NewListen(parent *core.StageBase) core.Stage {
 	o.IsConsumer = true
 
 	o.Args = []string{"addr"}
-	if runtime.GOOS == "linux" {
-		f.String("md5", "", "TCP MD5 password")
-	}
+	f.String("md5", "", "TCP MD5 password")
+	f.Bool("transparent", false, "transparent proxy mode (Linux TPROXY)")
+	f.Int("ttl", 0, "outgoing IP TTL / hop limit (0 means default)")
 	f.Duration("timeout", 0, "TCP connect timeout (0 means off)")
 	f.Duration("closed-timeout", time.Second, "TCP half-closed timeout (0 means off)")
 	f.Duration("keepalive", 15*time.Second, "TCP keepalive period (-1 means off)")
@@ -60,9 +59,11 @@ func (s *Listen) Prepare() error {
 
 	// listen config
 	var lc net.ListenConfig
-	if v := k.String("md5"); v != "" {
-		lc.Control = util.TcpMd5(v)
+	var transparent util.ControlFunc
+	if k.Bool("transparent") {
+		transparent = util.Transparent()
 	}
+	lc.Control = util.Chain(util.TcpMd5(k.String("md5")), transparent, util.Ttl(k.Int("ttl")))
 	if v := k.Duration("keepalive"); v != 0 {
 		lc.KeepAlive = v
 	}

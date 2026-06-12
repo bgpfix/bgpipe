@@ -323,7 +323,7 @@ ext_community ~ "TARGET"       # has any Route Target extended community
 | `tag`, `tags`   | `==`, `~`     | Pipeline metadata tags               |
 | `tag[KEY]`      | `==`, `~`     | Specific tag by key name             |
 
-Tags are key-value pairs attached to messages by the [`tag`](stages/tag.md) stage and other stages (e.g., `ris-live` adds `PEER_AS`, `PEER_IP`; `rpki` adds `rpki/status`).
+Tags are key-value pairs attached to messages by the [`tag`](stages/tag.md) stage and other stages (e.g., `ris-live` adds `PEER_AS`, `PEER_IP`; `rov` adds `rov/status`).
 
 Tag filters work on **all message types** (not just UPDATEs).
 
@@ -336,10 +336,10 @@ Tag filters work on **all message types** (not just UPDATEs).
 Examples:
 
 ```text
-tag[rpki/status] == INVALID    # RPKI validation failed
+tag[rov/status] == INVALID     # RPKI validation failed
 tag[PEER_AS] == "8218"         # from RIS peer AS8218
 tags[region] ~ "^eu-"          # region tag starts with "eu-"
-tag[rpki/status] != VALID      # anything except VALID
+tag[rov/status] != VALID       # anything except VALID
 ```
 
 ### Message Metadata

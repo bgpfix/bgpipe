@@ -105,20 +105,20 @@ Components of the **numeric** type (`PROTO`, `PORT`, `PORT_DST`, `PORT_SRC`, `IC
 
 ```json
 "PORT_DST": [
-  {"and": true, "op": ">=", "val": 8000},
-  {"op": "<=", "val": 9000}
+  {"op": ">=", "val": 8000},
+  {"and": true, "op": "<=", "val": 9000}
 ]
 ```
 
-This matches destination ports 8000-9000: the first condition matches >= 8000 and is ANDed with the next condition (<= 9000).
+This matches destination ports 8000-9000: the second condition (<= 9000) is ANDed with the preceding one (>= 8000).
 
 | Field | Type    | Description                                                   |
 |-------|---------|---------------------------------------------------------------|
 | `op`  | string or boolean | Comparison operator (see [Numeric Operator Values](#numeric-operator-values)) |
 | `val` | integer | Value to compare against                                      |
-| `and` | boolean | If `true`, AND the result of this condition with the next one. Default: OR with the next condition. |
+| `and` | boolean | If `true`, AND this condition with the *preceding* one. Default: OR. |
 
-Multiple conditions in the array are combined with **OR** by default. Set `"and": true` on a condition to **AND** it with the following condition instead.
+Multiple conditions in the array are combined with **OR** by default. Set `"and": true` on a condition to **AND** it with the preceding condition instead, per [RFC 8955 §4.2.1.1](https://datatracker.ietf.org/doc/html/rfc8955#section-4.2.1.1).
 
 ### Numeric Operator Values
 
@@ -139,7 +139,7 @@ Components of the **bitmask** type (`TCP_FLAGS`, `FRAG`) use arrays of bitmask o
 
 ```json
 "TCP_FLAGS": [
-  {"op": "ALL", "val": "0x02"}
+  {"op": "ALL", "len": 1, "val": "0x2"}
 ]
 ```
 
@@ -148,9 +148,9 @@ This matches packets with the SYN flag set.
 | Field | Type    | Description                                                   |
 |-------|---------|---------------------------------------------------------------|
 | `op`  | string  | Bitmask operation (see [Bitmask Operation Values](#bitmask-operation-values)) |
-| `val` | string  | Hex bitmask (e.g., `"0x02"`)                                  |
+| `val` | string  | Hex bitmask (e.g., `"0x2"`)                                   |
 | `len` | integer | Value length in bytes (1, 2, 4, 8)                            |
-| `and` | boolean | If `true`, AND the result of this condition with the next one. Default: OR with the next condition. |
+| `and` | boolean | If `true`, AND this condition with the *preceding* one. Default: OR. |
 
 ### Bitmask Operation Values
 

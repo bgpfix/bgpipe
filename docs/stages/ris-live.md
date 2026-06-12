@@ -81,8 +81,8 @@ Stream with RPKI validation, show only invalid:
 ```bash
 bgpipe -go \
     -- ris-live \
-    -- rpki --invalid keep \
-    -- grep 'tag[rpki/status] == INVALID'
+    -- rov --invalid keep \
+    -- grep 'tag[rov/status] == INVALID'
 ```
 
 Archive RIS Live to compressed files with hourly rotation:

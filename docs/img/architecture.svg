@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="-24 -24 1648 698"
+   style="width:100%;height:auto"
+   role="img"
+   aria-labelledby="title desc"
+   version="1.1"
+   id="svg115"
+   sodipodi:docname="architecture.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   inkscape:export-filename="architecture.pdf"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <sodipodi:namedview
+     id="namedview117"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="0.72615385"
+     inkscape:cx="878.6017"
+     inkscape:cy="276.11229"
+     inkscape:window-width="1920"
+     inkscape:window-height="1043"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg115" />
+  <title
+     id="title">bgpipe bidirectional architecture</title>
+  <desc
+     id="desc">Two BGP peers exchange messages through bgpipe. Separate left-to-right and right-to-left message paths are processed by callback chains and coordinated by a shared event bus.</desc>
+  <rect x="-24" y="-24" width="1648" height="698" rx="24" fill="#ffffff"/>
+  <defs
+     id="defs15">
+    <style
+       id="style4">
+      text {
+        font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif;
+        fill: #18212a;
+      }
+
+      .title {
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .label {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+
+      .small {
+        font-size: 19px;
+        font-weight: 500;
+      }
+
+      .tiny {
+        font-size: 17px;
+        fill: #52616f;
+      }
+
+      .runtime {
+        fill: #f7f8fa;
+        stroke: #2d3945;
+        stroke-width: 2.2;
+      }
+
+      .lane {
+        fill: #ffffff;
+        stroke: #9fb0c1;
+        stroke-width: 1.6;
+      }
+
+      .peer {
+        fill: #ffffff;
+        stroke: #2d3945;
+        stroke-width: 2;
+      }
+
+      .event-box {
+        fill: #eef3f7;
+        stroke: #5a6d80;
+        stroke-width: 1.6;
+        stroke-dasharray: 8 6;
+      }
+
+      .callback {
+        fill: #5f7f9d;
+        stroke: #2d3945;
+        stroke-width: 1.6;
+      }
+
+      .callback-soft {
+        fill: #c9d6e3;
+        stroke: #5f7f9d;
+        stroke-width: 1.4;
+      }
+
+      .flow {
+        fill: none;
+        stroke: #22303c;
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .tap {
+        fill: none;
+        stroke: #4b6074;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .event-link {
+        fill: none;
+        stroke: #5a6d80;
+        stroke-width: 1.7;
+        stroke-dasharray: 7 6;
+        stroke-linecap: round;
+      }
+
+         .code-panel {
+            fill: #fbfcfe;
+            stroke: #c8d3de;
+            stroke-width: 1.8;
+         }
+
+         .code-line {
+            font-family: &quot;IBM Plex Mono&quot;, Consolas, monospace, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, monospace;
+            font-size: 21px;
+            fill: #1f2933;
+         }
+
+         .code-comment {
+            fill: #6b7280;
+            font-style: italic;
+         }
+
+         .code-kw {
+            fill: #2b6cb0;
+            font-weight: 700;
+         }
+
+         .code-type {
+            fill: #0f766e;
+            font-weight: 700;
+         }
+
+         .code-name {
+            fill: #1f2933;
+            font-weight: 600;
+         }
+
+         .code-pkg {
+            fill: #2b6cb0;
+         }
+    </style>
+    <marker
+       id="arrow-dark"
+       viewBox="0 0 12 12"
+       refX="10.5"
+       refY="6"
+       markerWidth="10"
+       markerHeight="10"
+       orient="auto-start-reverse">
+      <path
+         d="m 1.5,1.5 9,4.5 -9,4.5 z"
+         fill="#22303c"
+         id="path6" />
+    </marker>
+    <marker
+       id="arrow-soft"
+       viewBox="0 0 12 12"
+       refX="10.5"
+       refY="6"
+       markerWidth="9"
+       markerHeight="9"
+       orient="auto-start-reverse">
+      <path
+         d="m 1.5,1.5 9,4.5 -9,4.5 z"
+         fill="#4b6074"
+         id="path9" />
+    </marker>
+    <marker
+       id="arrow-event"
+       viewBox="0 0 12 12"
+       refX="10.5"
+       refY="6"
+       markerWidth="8"
+       markerHeight="8"
+       orient="auto-start-reverse">
+      <path
+         d="m 1.5,1.5 9,4.5 -9,4.5 z"
+         fill="#5a6d80"
+         id="path12" />
+    </marker>
+    <marker
+       id="arrow-soft-3"
+       viewBox="0 0 12 12"
+       refX="10.5"
+       refY="6"
+       markerWidth="9"
+       markerHeight="9"
+       orient="auto-start-reverse">
+      <path
+         d="m 1.5,1.5 9,4.5 -9,4.5 z"
+         fill="#4b6074"
+         id="path9-5" />
+    </marker>
+    <marker
+       id="marker3301"
+       viewBox="0 0 12 12"
+       refX="10.5"
+       refY="6"
+       markerWidth="9"
+       markerHeight="9"
+       orient="auto-start-reverse">
+      <path
+         d="m 1.5,1.5 9,4.5 -9,4.5 z"
+         fill="#4b6074"
+         id="path3299" />
+    </marker>
+    <marker
+       id="marker3305"
+       viewBox="0 0 12 12"
+       refX="10.5"
+       refY="6"
+       markerWidth="9"
+       markerHeight="9"
+       orient="auto-start-reverse">
+      <path
+         d="m 1.5,1.5 9,4.5 -9,4.5 z"
+         fill="#4b6074"
+         id="path3303" />
+    </marker>
+    <marker
+       id="marker3309"
+       viewBox="0 0 12 12"
+       refX="10.5"
+       refY="6"
+       markerWidth="9"
+       markerHeight="9"
+       orient="auto-start-reverse">
+      <path
+         d="m 1.5,1.5 9,4.5 -9,4.5 z"
+         fill="#4b6074"
+         id="path3307" />
+    </marker>
+  </defs>
+  <g
+     id="g442"
+     transform="translate(-26,22)"
+     style="fill:#ffcbc8;fill-opacity:1">
+    <g
+       id="g419"
+       style="fill:#ffcbc8;fill-opacity:1">
+      <rect
+         class="peer"
+         x="36"
+         y="255"
+         width="124"
+         height="96"
+         rx="14"
+         id="rect19"
+         style="fill:#ffcbc8;fill-opacity:1" />
+    </g>
+    <text
+       class="label"
+       x="97.472"
+       y="311.47198"
+       text-anchor="middle"
+       id="text21"
+       style="fill:#ffcbc8;fill-opacity:1">Peer L</text>
+  </g>
+  <g
+     id="g464"
+     transform="translate(-26,22)"
+     style="fill:#ffcbc8;fill-opacity:1">
+    <rect
+       class="peer"
+       x="820"
+       y="255"
+       width="124"
+       height="96"
+       rx="14"
+       id="rect23"
+       style="fill:#ffcbc8;fill-opacity:1" />
+    <text
+       class="label"
+       x="881.62799"
+       y="311.47198"
+       text-anchor="middle"
+       id="text25"
+       style="fill:#ffcbc8;fill-opacity:1">Peer R</text>
+  </g>
+  <rect
+     class="runtime"
+     x="178.10463"
+     y="64.787697"
+     width="571.79071"
+     height="506.28589"
+     rx="21.991951"
+     id="rect27"
+     style="fill:#f5f6f7;fill-opacity:1" />
+  <rect
+     class="lane"
+     x="211.9626"
+     y="185.9626"
+     width="504.0748"
+     height="96.288704"
+     rx="16.002375"
+     id="rect31"
+     style="fill:#c8ecff;fill-opacity:1" />
+  <path
+     class="flow"
+     d="M 232,239 H 696"
+     marker-end="url(#arrow-dark)"
+     id="path33" />
+  <text
+     class="tiny"
+     x="464"
+     y="258"
+     text-anchor="middle"
+     id="text37">inspect · modify · drop · inject</text>
+  <rect
+     class="lane"
+     x="211.95325"
+     y="363.73676"
+     width="504.09351"
+     height="93.954552"
+     rx="16.00297"
+     id="rect39"
+     style="fill:#c8ecff;fill-opacity:1" />
+  <path
+     class="flow"
+     d="M 696,411 H 232"
+     marker-end="url(#arrow-dark)"
+     id="path41" />
+  <text
+     class="tiny"
+     x="464"
+     y="430"
+     text-anchor="middle"
+     id="text45">inspect · modify · drop · inject</text>
+  <path
+     class="flow"
+     d="m 134,239 h 78"
+     marker-end="url(#arrow-dark)"
+     id="path47" />
+  <path
+     class="flow"
+     d="m 716,239 h 78"
+     marker-end="url(#arrow-dark)"
+     id="path49" />
+  <path
+     class="flow"
+     d="M 794,411 H 716"
+     marker-end="url(#arrow-dark)"
+     id="path51" />
+  <path
+     class="flow"
+     d="M 212,411 H 134"
+     marker-end="url(#arrow-dark)"
+     id="path53" />
+  <text
+     class="small"
+     x="87.278862"
+     y="243.85451"
+     text-anchor="middle"
+     id="text55">incoming</text>
+  <text
+     class="small"
+     x="842.60052"
+     y="243.85451"
+     text-anchor="middle"
+     id="text57">outgoing</text>
+  <text
+     class="small"
+     x="843.76904"
+     y="415.85449"
+     text-anchor="middle"
+     id="text59">incoming</text>
+  <text
+     class="small"
+     x="86.110359"
+     y="415.85449"
+     text-anchor="middle"
+     id="text61">outgoing</text>
+  <text
+     class="label"
+     x="453.90399"
+     y="93.364464"
+     text-anchor="middle"
+     id="text63">Callbacks</text>
+  <path
+     class="tap"
+     d="m 352,116 c 0,24 -30,32 -30,58 0,8 7,16 18,22"
+     marker-end="url(#arrow-soft)"
+     id="path75" />
+  <path
+     class="tap"
+     d="m 416,116 c 0,26 -16,36 -16,58 0,10 7,18 18,22"
+     marker-end="url(#arrow-soft)"
+     id="path77" />
+  <path
+     class="tap"
+     d="m 480,116 c 0,26 -16,36 -16,58 0,10 7,18 18,22"
+     marker-end="url(#arrow-soft)"
+     id="path79" />
+  <path
+     class="tap"
+     d="m 544,116 c 0,24 30,32 30,58 0,8 -7,16 -18,22"
+     marker-end="url(#arrow-soft)"
+     id="path81" />
+  <text
+     class="label"
+     x="451.90399"
+     y="558.69983"
+     text-anchor="middle"
+     id="text83">Callbacks</text>
+  <rect
+     class="event-box"
+     x="257"
+     y="297"
+     width="170"
+     height="54"
+     rx="14"
+     id="rect103"
+     style="fill:#f7f0da;fill-opacity:1" />
+  <text
+     class="label"
+     x="341.98801"
+     y="332.62094"
+     text-anchor="middle"
+     id="text105">Shared State</text>
+  <rect
+     class="event-box"
+     x="490.31885"
+     y="297.02567"
+     width="170"
+     height="54"
+     rx="14"
+     id="rect103-6"
+     style="fill:#f7f0da;fill-opacity:1;stroke:#5a6d80;stroke-width:1.6;stroke-dasharray:8, 6" />
+  <text
+     class="label"
+     x="575.30682"
+     y="332.64661"
+     text-anchor="middle"
+     id="text105-7"
+     style="font-weight:600;font-size:24px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:0.01em;fill:#18212a">Event Queue</text>
+  <circle
+     class="callback-soft"
+     cx="356"
+     cy="126"
+     r="18"
+     id="circle65"
+     style="fill:#c9e3d4;fill-opacity:1" />
+  <circle
+     class="callback"
+     cx="418.16275"
+     cy="126"
+     r="18"
+     id="circle67"
+     style="fill:#5f9d6e;fill-opacity:1" />
+  <circle
+     class="callback"
+     cx="480.32556"
+     cy="126"
+     r="18"
+     id="circle69"
+     style="fill:#5f9d6e;fill-opacity:1" />
+  <circle
+     class="callback-soft"
+     cx="542.48828"
+     cy="126"
+     r="18"
+     id="circle71"
+     style="fill:#c9e3d4;fill-opacity:1" />
+  <text
+     class="label"
+     x="578.94409"
+     y="127.96368"
+     id="text73">…</text>
+  <path
+     class="tap"
+     d="m 352.31645,521.79078 c 0,-24 -30,-32 -30,-58 0,-8 7,-16 18,-22"
+     marker-end="url(#arrow-soft-3)"
+     id="path75-6"
+     style="fill:none;stroke:#4b6074;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow-soft-3)" />
+  <path
+     class="tap"
+     d="m 416.31645,521.79078 c 0,-26 -16,-36 -16,-58 0,-10 7,-18 18,-22"
+     marker-end="url(#arrow-soft-3)"
+     id="path77-2"
+     style="fill:none;stroke:#4b6074;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow-soft-3)" />
+  <path
+     class="tap"
+     d="m 480.31645,521.79078 c 0,-26 -16,-36 -16,-58 0,-10 7,-18 18,-22"
+     marker-end="url(#arrow-soft-3)"
+     id="path79-9"
+     style="fill:none;stroke:#4b6074;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow-soft-3)" />
+  <path
+     class="tap"
+     d="m 544.31645,521.79078 c 0,-24 30,-32 30,-58 0,-8 -7,-16 -18,-22"
+     marker-end="url(#arrow-soft-3)"
+     id="path81-1"
+     style="fill:none;stroke:#4b6074;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow-soft-3)" />
+  <circle
+     class="callback-soft"
+     cx="356.31641"
+     cy="-511.79077"
+     r="18"
+     id="circle65-2"
+     style="fill:#c9e3d4;fill-opacity:1;stroke:#5f7f9d;stroke-width:1.4"
+     transform="scale(1,-1)" />
+  <circle
+     class="callback"
+     cx="418.47919"
+     cy="-511.79077"
+     r="18"
+     id="circle67-7"
+     style="fill:#5f9d6e;fill-opacity:1;stroke:#2d3945;stroke-width:1.6"
+     transform="scale(1,-1)" />
+  <circle
+     class="callback"
+     cx="480.64197"
+     cy="-511.79077"
+     r="18"
+     id="circle69-0"
+     style="fill:#5f9d6e;fill-opacity:1;stroke:#2d3945;stroke-width:1.6"
+     transform="scale(1,-1)" />
+  <circle
+     class="callback-soft"
+     cx="542.80469"
+     cy="-511.79077"
+     r="18"
+     id="circle71-9"
+     style="fill:#c9e3d4;fill-opacity:1;stroke:#5f7f9d;stroke-width:1.4"
+     transform="scale(1,-1)" />
+  <text
+     class="label"
+     x="298.81451"
+     y="-510.82672"
+     id="text73-3"
+     style="font-weight:600;font-size:24px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:0.01em;fill:#18212a"
+     transform="scale(1,-1)">…</text>
+  <text
+     class="label"
+     x="457.86765"
+     y="224.688"
+     text-anchor="middle"
+     id="text63-3"
+     style="font-weight:600;font-size:24px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:0.01em;fill:#18212a">Pipeline (R direction)</text>
+  <text
+     class="label"
+     x="71.472"
+     y="333.47198"
+     text-anchor="middle"
+     id="text63-3-6"
+     style="font-weight:600;font-size:24px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:0.01em;fill:#18212a">Peer L</text>
+  <text
+     class="label"
+     x="855.62799"
+     y="333.47198"
+     text-anchor="middle"
+     id="text63-3-6-0"
+     style="font-weight:600;font-size:24px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:0.01em;fill:#18212a">Peer R</text>
+  <text
+     class="label"
+     x="457.86765"
+     y="402.45639"
+     text-anchor="middle"
+     id="text63-3-5"
+     style="font-weight:600;font-size:24px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:0.01em;fill:#18212a">Pipeline (L direction)</text>
+  <metadata
+     id="metadata4248">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>bgpipe bidirectional architecture</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <rect
+     class="code-panel"
+     x="1009.2676"
+     y="65.944344"
+     width="577.37531"
+     height="505.45309"
+     rx="17.980545"
+     id="rect-stage-panel" />
+  <text
+     class="code-line"
+     x="1037.2373"
+     y="113.89246"
+     id="stage-code-1"
+     xml:space="preserve"
+     style="stroke-width:0.998919"><tspan
+       class="code-kw"
+       id="stage-code-1-kw1"
+       style="stroke-width:0.998919">type</tspan><tspan
+       id="stage-code-1-sp1"
+       style="stroke-width:0.998919"> </tspan><tspan
+       class="code-type"
+       id="stage-code-1-type"
+       style="stroke-width:0.998919">Stage</tspan><tspan
+       id="stage-code-1-sp2"
+       style="stroke-width:0.998919"> </tspan><tspan
+       class="code-kw"
+       id="stage-code-1-kw2"
+       style="stroke-width:0.998919">interface</tspan><tspan
+       id="stage-code-1-tail"
+       style="stroke-width:0.998919"> {</tspan></text>
+  <text
+     class="code-line code-comment"
+     x="1065.207"
+     y="157.84491"
+     id="stage-code-2"
+     style="stroke-width:0.998919">// Attach config and pipe hooks.</text>
+  <text
+     class="code-line"
+     x="1065.207"
+     y="185.81465"
+     id="stage-code-3"
+     xml:space="preserve"
+     style="stroke-width:0.998919"><tspan
+       class="code-name"
+       id="stage-code-3-name"
+       style="stroke-width:0.998919">Attach</tspan><tspan
+       id="stage-code-3-mid"
+       style="stroke-width:0.998919">() </tspan><tspan
+       class="code-type"
+       id="stage-code-3-ret"
+       style="stroke-width:0.998919">error</tspan></text>
+  <text
+     class="code-line code-comment"
+     x="1065.207"
+     y="237.75844"
+     id="stage-code-4"
+     style="stroke-width:0.998919">// Prepare files, sockets, and other I/O.</text>
+  <text
+     class="code-line"
+     x="1065.207"
+     y="265.72818"
+     id="stage-code-5"
+     xml:space="preserve"
+     style="stroke-width:0.998919"><tspan
+       class="code-name"
+       id="stage-code-5-name"
+       style="stroke-width:0.998919">Prepare</tspan><tspan
+       id="stage-code-5-mid"
+       style="stroke-width:0.998919">() </tspan><tspan
+       class="code-type"
+       id="stage-code-5-ret"
+       style="stroke-width:0.998919">error</tspan></text>
+  <text
+     class="code-line code-comment"
+     x="1065.207"
+     y="317.67197"
+     id="stage-code-6"
+     style="stroke-width:0.998919">// Run stage work until context shutdown.</text>
+  <text
+     class="code-line"
+     x="1065.207"
+     y="345.64172"
+     id="stage-code-7"
+     xml:space="preserve"
+     style="stroke-width:0.998919"><tspan
+       class="code-name"
+       id="stage-code-7-name"
+       style="stroke-width:0.998919">Run</tspan><tspan
+       id="stage-code-7-mid"
+       style="stroke-width:0.998919">() </tspan><tspan
+       class="code-type"
+       id="stage-code-7-ret"
+       style="stroke-width:0.998919">error</tspan></text>
+  <text
+     class="code-line code-comment"
+     x="1065.207"
+     y="397.58551"
+     id="stage-code-8"
+     style="stroke-width:0.998919">// Stop requests a clean shutdown.</text>
+  <text
+     class="code-line"
+     x="1065.207"
+     y="425.55524"
+     id="stage-code-9"
+     xml:space="preserve"
+     style="stroke-width:0.998919"><tspan
+       class="code-name"
+       id="stage-code-9-name"
+       style="stroke-width:0.998919">Stop</tspan><tspan
+       id="stage-code-9-mid"
+       style="stroke-width:0.998919">() </tspan><tspan
+       class="code-type"
+       id="stage-code-9-ret"
+       style="stroke-width:0.998919">error</tspan></text>
+  <text
+     class="code-line code-comment"
+     x="1065.207"
+     y="477.49905"
+     id="stage-code-10"
+     style="stroke-width:0.998919">// Expose optional stage HTTP routes.</text>
+  <text
+     class="code-line"
+     x="1065.207"
+     y="505.46878"
+     id="stage-code-11"
+     xml:space="preserve"
+     style="stroke-width:0.998919"><tspan
+       class="code-name"
+       id="stage-code-11-name"
+       style="stroke-width:0.998919">RouteHTTP</tspan><tspan
+       id="stage-code-11-p1"
+       style="stroke-width:0.998919">(r </tspan><tspan
+       class="code-pkg"
+       id="stage-code-11-pkg"
+       style="stroke-width:0.998919">chi</tspan><tspan
+       id="stage-code-11-p2"
+       style="stroke-width:0.998919">.</tspan><tspan
+       class="code-type"
+       id="stage-code-11-type"
+       style="stroke-width:0.998919">Router</tspan><tspan
+       id="stage-code-11-p3"
+       style="stroke-width:0.998919">) </tspan><tspan
+       class="code-type"
+       id="stage-code-11-ret"
+       style="stroke-width:0.998919">error</tspan></text>
+  <text
+     class="code-line"
+     x="1037.2373"
+     y="545.42554"
+     id="stage-code-12"
+     style="stroke-width:0.998919">}</text>
+</svg>

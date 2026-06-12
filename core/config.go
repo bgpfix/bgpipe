@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/knadh/koanf/providers/posflag"
@@ -76,6 +77,10 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("short-asn", "2", false, "force 2-byte AS numbers")
 	f.BoolP("guess-asn", "g", false, "guess AS number byte size")
 	f.String("caps", "", "use given BGP capabilities (JSON format)")
+	f.String("rpki", "rtr.rpki.cloudflare.com:8282", "RPKI cache source: RTR host:port, tls://host:port, URL, or a local file path")
+	f.Duration("rpki-refresh", time.Hour, "RPKI RTR/URL refresh interval")
+	f.Duration("rpki-retry", 10*time.Minute, "RPKI RTR reconnect interval")
+	f.Bool("rpki-insecure", false, "do not validate the RPKI RTR server TLS certificate")
 }
 
 func (b *Bgpipe) printUsage() {

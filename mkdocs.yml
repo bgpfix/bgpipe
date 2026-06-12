@@ -5,6 +5,7 @@ nav:
   - Examples: examples.md
   - Stages:
     - Overview: stages/index.md
+    - aspa: stages/aspa.md
     - connect: stages/connect.md
     - drop: stages/grep.md
     - exec: stages/exec.md
@@ -16,7 +17,7 @@ nav:
     - pipe: stages/pipe.md
     - read: stages/read.md
     - ris-live: stages/ris-live.md
-    - rpki: stages/rpki.md
+    - rov: stages/rov.md
     - rv-live: stages/rv-live.md
     - speaker: stages/speaker.md
     - stdin: stages/stdin.md
@@ -44,6 +45,10 @@ theme:
     - header.autohide
     - content.code.copy
     - content.code.annotate
+    - content.tabs.link
+    - navigation.top
+    - search.highlight
+    - search.suggest
   palette:
     - scheme: slate
       primary: purple

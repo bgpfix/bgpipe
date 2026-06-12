@@ -1,141 +1,136 @@
 package rpki
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"slices"
+	"strconv"
 	"strings"
+	"sync"
 
+	"github.com/VictoriaMetrics/metrics"
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/dir"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
+	"github.com/bgpfix/bgpfix/rpki"
+	"github.com/bgpfix/bgpipe/core"
+	"github.com/go-chi/chi/v5"
 )
 
-// aspAuthorized return values
-const (
-	asp_no_att = 0 // CAS has no ASPA record
-	asp_prov   = 1 // PAS is in CAS's provider list
-	asp_not    = 2 // CAS has ASPA but PAS is not listed
-)
+// Aspa validates UPDATE AS_PATHs using RPKI ASPA
+// (draft-ietf-sidrops-aspa-verification)
+type Aspa struct {
+	*core.StageBase
+	cache *rpki.Cache // shared RPKI cache, maintained by the core
 
-// aspAuthorized checks ASPA authorization for a CAS→PAS hop.
-// NB: provider lists must be sorted (see nextASPA).
-func aspAuthorized(aspa ASPA, cas, pas uint32) int {
-	provs, ok := aspa[cas]
-	if !ok {
-		return asp_no_att
-	}
-	if _, found := slices.BinarySearch(provs, pas); found {
-		return asp_prov
-	}
-	return asp_not
+	act       int    // action for INVALID paths
+	tag       bool   // add aspa/ tags
+	event     string // emit event on INVALID
+	role      byte   // parsed --role (valid iff !role_auto)
+	role_auto bool   // --role auto: detect from the OPEN message
+	peer_tag  string // --peer-tag flag value
+
+	// resolved peer state, set once per direction on first UPDATE
+	peer [2]aspaPeer
+
+	cnt_msg   *metrics.Counter
+	cnt_valid *metrics.Counter
+	cnt_unk   *metrics.Counter
+	cnt_inv   *metrics.Counter
 }
 
-// aspVerify verifies the flat AS_PATH against ASPA.
-//
-// path[0] is the most-recently-traversed AS (direct peer),
-// path[N-1] is the origin AS. Returns aspa_valid, aspa_unknown, or aspa_invalid.
-//
-// downstream=true when received from a provider or RS (downstream direction).
-// downstream=false when received from a customer, peer, or RS-client (upstream).
-//
-// NB: does not check path[0] == neighbor AS (draft §5.4/5.5 step 2).
-// The caller must do that check, skipping it for RS peers (RFC 7947).
-func aspVerify(aspa ASPA, path []uint32, downstream bool) int {
-	n := len(path)
-	if n <= 1 {
-		return aspa_valid
-	}
-
-	if !downstream {
-		// upstream: every hop should go up (each AS sent to its provider)
-		result := aspa_valid
-		for i := 0; i < n-1; i++ {
-			switch aspAuthorized(aspa, path[i+1], path[i]) {
-			case asp_not:
-				return aspa_invalid
-			case asp_no_att:
-				result = aspa_unknown
-			}
-		}
-		return result
-	}
-
-	// downstream: find up-ramp from origin + down-ramp from peer.
-	// Valid if up_ramp + down_ramp covers all N-1 pairs (valley-free).
-	//
-	// max counts Provider and NoAttestation until first NotProvider;
-	// min counts only leading Provider hops (stops at first NoAttestation).
-	maxUp, minUp := 0, 0
-	exact := true
-	for i := n - 2; i >= 0; i-- {
-		auth := aspAuthorized(aspa, path[i+1], path[i])
-		if auth == asp_not {
-			break
-		}
-		maxUp++
-		if auth == asp_prov && exact {
-			minUp++
-		} else {
-			exact = false
-		}
-	}
-
-	maxDown, minDown := 0, 0
-	exact = true
-	for i := 0; i < n-1; i++ {
-		auth := aspAuthorized(aspa, path[i], path[i+1])
-		if auth == asp_not {
-			break
-		}
-		maxDown++
-		if auth == asp_prov && exact {
-			minDown++
-		} else {
-			exact = false
-		}
-	}
-
-	if maxUp+maxDown < n-1 {
-		return aspa_invalid
-	}
-	if minUp+minDown < n-1 {
-		return aspa_unknown
-	}
-	return aspa_valid
+// aspaPeer holds per-direction peer info resolved from --role and the OPEN message
+type aspaPeer struct {
+	once sync.Once
+	ok   bool   // role resolved successfully?
+	down bool   // peer is our provider (downstream path)?
+	rs   bool   // peer is a route server?
+	asn  uint32 // peer ASN from its OPEN (0 = unknown, first-hop check disabled)
 }
 
-// aspPeerASN returns the peer's ASN from its OPEN message, or 0 if unavailable.
-func aspPeerASN(p *pipe.Pipe, d dir.Dir) uint32 {
-	om := p.LineFor(d).Open.Load()
-	if om == nil {
-		return 0
-	}
-	return uint32(om.GetASN())
+func NewAspa(parent *core.StageBase) core.Stage {
+	s := &Aspa{StageBase: parent}
+
+	o := &s.Options
+	o.Descr = "validate AS paths using RPKI ASPA"
+	o.FilterIn = true
+	o.Bidir = true
+
+	f := o.Flags
+	f.String("invalid", "withdraw", "action for INVALID paths: withdraw|drop|keep")
+	f.Bool("tag", true, "add aspa/ validation status to message tags")
+	f.String("event", "", "emit event on INVALID paths")
+	f.String("role", "auto", "peer BGP role: auto|provider|customer|peer|rs|rs-client")
+	f.String("peer-tag", "", "read peer ASN from given message tag (eg. PEER_AS) instead of OPEN")
+	f.Bool("no-wait", false, "start before the RPKI cache is ready")
+
+	return s
 }
 
-// aspPeerRole reads the BGP Role capability from the peer's OPEN message.
-func aspPeerRole(p *pipe.Pipe, d dir.Dir) (byte, bool) {
-	om := p.LineFor(d).Open.Load()
-	if om == nil {
-		return 0, false
+func (s *Aspa) Attach() error {
+	k := s.K
+
+	switch strings.ToLower(k.String("invalid")) {
+	case "withdraw":
+		s.act = act_withdraw
+	case "drop":
+		s.act = act_drop
+	case "keep":
+		s.act = act_keep
+	default:
+		return fmt.Errorf("--invalid must be withdraw, drop or keep")
 	}
-	c, ok := om.Caps.Get(caps.CAP_ROLE).(*caps.Role)
-	if !ok || c == nil {
-		return 0, false
+
+	s.tag = k.Bool("tag")
+	s.event = k.String("event")
+
+	if role := k.String("role"); strings.EqualFold(role, "auto") {
+		s.role_auto = true
+	} else if r, ok := parseRoleName(role); ok {
+		s.role = r
+	} else {
+		return fmt.Errorf("--role must be auto, provider, customer, peer, rs or rs-client")
 	}
-	return c.Role, true
+
+	// NB: a single --role cannot describe two different peers
+	if s.IsBidir && !s.role_auto {
+		return fmt.Errorf("explicit --role does not work in -LR mode")
+	}
+
+	// NB: --peer-tag targets multi-peer feeds (eg. ris-live), where there is
+	// no OPEN message to auto-detect the role from either
+	s.peer_tag = k.String("peer-tag")
+	if s.peer_tag != "" && s.role_auto {
+		return fmt.Errorf("--peer-tag requires an explicit --role")
+	}
+
+	// use the shared RPKI cache, maintained by the bgpipe core
+	s.cache = s.B.UseRpki()
+
+	// prometheus metrics
+	prefix := s.MetricPrefix()
+	s.cnt_msg = metrics.GetOrCreateCounter(prefix + "messages_total")
+	s.cnt_valid = metrics.GetOrCreateCounter(prefix + "valid_total")
+	s.cnt_unk = metrics.GetOrCreateCounter(prefix + "unknown_total")
+	s.cnt_inv = metrics.GetOrCreateCounter(prefix + "invalid_total")
+
+	// subscribe to UPDATE messages in given direction
+	s.P.OnMsg(s.validateMsg, s.Dir, msg.UPDATE)
+
+	return nil
 }
 
-// aspIsDownstream maps the peer's BGP Role to the downstream flag.
-// Per draft-ietf-sidrops-aspa-verification-24 §5.5: downstream applies
-// only when route is received from a Provider.
-// NB: RS-client receiving from RS uses upstream per §5.4.
-func aspIsDownstream(role byte) bool {
-	return role == caps.ROLE_PROVIDER
+func (s *Aspa) Prepare() error {
+	if !s.K.Bool("no-wait") {
+		return s.cache.WaitReady(s.Ctx)
+	}
+	return nil
 }
 
-// parseRoleName converts a --aspa-role flag string to a caps.ROLE_* constant.
+// parseRoleName converts a --role flag string to a caps.ROLE_* constant.
 func parseRoleName(name string) (byte, bool) {
 	switch strings.ToLower(name) {
 	case "provider":
@@ -153,13 +148,84 @@ func parseRoleName(name string) (byte, bool) {
 	}
 }
 
-// validateAspa performs ASPA path validation for the UPDATE message.
+// peerASN returns the peer's ASN from its OPEN message, or 0 if unavailable.
+func peerASN(p *pipe.Pipe, d dir.Dir) uint32 {
+	om := p.LineFor(d).Open.Load()
+	if om == nil {
+		return 0
+	}
+	return uint32(om.GetASN())
+}
+
+// peerRole reads the BGP Role capability from the peer's OPEN message.
+func peerRole(p *pipe.Pipe, d dir.Dir) (byte, bool) {
+	om := p.LineFor(d).Open.Load()
+	if om == nil {
+		return 0, false
+	}
+	c, ok := om.Caps.Get(caps.CAP_ROLE).(*caps.Role)
+	if !ok || c == nil {
+		return 0, false
+	}
+	return c.Role, true
+}
+
+// resolvePeer resolves the peer state for direction d, once.
+//
+// NB: BGP guarantees OPEN is exchanged before any UPDATE, so both the role
+// and the peer ASN are stable by the time the first UPDATE arrives. If --role
+// is auto and the peer didn't send the BGP Role capability, ASPA validation
+// is permanently skipped for this direction.
+// NB: in -LR mode only --role auto is allowed (checked in Attach), as a
+// single role cannot describe two different peers.
+func (s *Aspa) resolvePeer(d dir.Dir) *aspaPeer {
+	p := &s.peer[d&1] // direction index: 0=R, 1=L
+	p.once.Do(func() {
+		role := s.role
+		if s.role_auto {
+			var ok bool
+			role, ok = peerRole(s.P, d)
+			if !ok {
+				s.Warn().Stringer("dir", d).Msg("ASPA: peer did not send the BGP Role capability, skipping (use --role to override)")
+				return
+			}
+			s.Info().Int("role", int(role)).Stringer("dir", d).Msg("ASPA: peer role detected")
+		} else {
+			s.Info().Int("role", int(role)).Stringer("dir", d).Msg("ASPA: peer role set via --role")
+		}
+
+		p.ok = true
+
+		// NB: per draft-ietf-sidrops-aspa-verification-24 §5.5, the downstream
+		// procedure applies only when the route is received from a Provider;
+		// RS-client receiving from RS uses upstream per §5.4.
+		p.down = role == caps.ROLE_PROVIDER
+		p.rs = role == caps.ROLE_RS
+
+		// NB: with --peer-tag, the peer ASN comes per-message from tags instead
+		if s.peer_tag == "" {
+			p.asn = peerASN(s.P, d)
+			if !p.rs && p.asn == 0 {
+				s.Warn().Stringer("dir", d).Msg("ASPA: peer ASN unknown, first-hop check disabled")
+			}
+		}
+	})
+	return p
+}
+
+// validateMsg is the callback for UPDATE messages.
 // Returns false to drop, true to keep.
-func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) bool {
-	aspa := s.aspa.Load()
-	if aspa == nil || len(*aspa) == 0 {
+func (s *Aspa) validateMsg(m *msg.Msg) bool {
+	s.cnt_msg.Inc()
+
+	aspa := s.cache.ASPAs()
+	if len(aspa) == 0 {
 		return true // no ASPA data
 	}
+
+	u := &m.Update
+	tags := pipe.UseTags(m)
+
 	if !u.HasReach() {
 		return true // withdrawal-only, no AS_PATH to validate
 	}
@@ -168,94 +234,74 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) b
 		return true // iBGP or locally-originated
 	}
 
-	// NB: role resolved once per direction on first UPDATE. BGP guarantees OPEN
-	// is exchanged before any UPDATE. If --aspa-role auto and peer didn't
-	// send BGP Role capability, ASPA is permanently skipped for this direction.
-	di := m.Dir & 1 // direction index: 0=R, 1=L
-	s.peer_role_mu[di].Do(func() {
-		if s.aspa_role != "auto" {
-			// NB: validated in Attach()
-			role, _ := parseRoleName(s.aspa_role)
-			s.peer_role[di] = int(role)
-			s.peer_role_ok[di] = true
-			s.peer_down[di] = aspIsDownstream(role)
-			s.Info().Str("role", s.aspa_role).Str("dir", m.Dir.String()).Msg("ASPA: peer role set via --aspa-role")
-		} else {
-			role, ok := aspPeerRole(s.P, m.Dir)
-			if !ok {
-				s.Warn().Str("dir", m.Dir.String()).Msg("ASPA: peer did not send BGP Role capability, skipping (use --aspa-role to override)")
-				s.peer_role[di] = -1
-				return
-			}
-			s.peer_role[di] = int(role)
-			s.peer_role_ok[di] = true
-			s.peer_down[di] = aspIsDownstream(role)
-			s.Info().Int("role", int(role)).Bool("downstream", s.peer_down[di]).Str("dir", m.Dir.String()).Msg("ASPA: peer role detected")
-		}
-	})
-	if !s.peer_role_ok[di] {
+	// resolve peer role and ASN for this direction
+	peer := s.resolvePeer(m.Dir)
+	if !peer.ok {
 		return true
+	}
+
+	// peer ASN from a message tag? (multi-peer feeds, eg. ris-live)
+	asn := peer.asn
+	if s.peer_tag != "" {
+		asn = 0
+		if v, err := strconv.ParseUint(tags[s.peer_tag], 10, 32); err == nil {
+			asn = uint32(v)
+		}
 	}
 
 	// verify path
 	flat := aspath.Unique()
 	var result int
-	if flat == nil {
-		result = aspa_invalid // AS_SET present → invalid per ASPA spec §3
-	} else if len(flat) > 1 {
-		// NB: per draft §5.4/5.5 step 2, path[0] must equal neighbor AS.
+	var failCAS, failPAS uint32
+	switch {
+	case flat == nil:
+		result = rpki.ASPA_INVALID // AS_SET present → invalid per ASPA spec §3
+	case len(flat) == 1:
+		result = rpki.ASPA_VALID // single-hop
+	case !peer.rs && asn != 0 && flat[0] != asn:
+		// NB: per draft §5.4/5.5 step 2, path[0] must equal the neighbor AS.
 		// RS peers don't prepend their ASN (RFC 7947).
-		if s.peer_role[di] != int(caps.ROLE_RS) {
-			peerASN := aspPeerASN(s.P, m.Dir)
-			if peerASN == 0 {
-				s.Warn().Msg("ASPA: peer ASN unknown, first-hop check skipped")
-			}
-			if peerASN != 0 && flat[0] != peerASN {
-				result = aspa_invalid
-			} else {
-				result = aspVerify(*aspa, flat, s.peer_down[di])
-			}
-		} else {
-			result = aspVerify(*aspa, flat, s.peer_down[di])
-		}
-	} else {
-		result = aspa_valid // single-hop
+		result = rpki.ASPA_INVALID
+	default:
+		result, failCAS, failPAS = rpki.VerifyPath(aspa, flat, peer.down)
 	}
 
-	// metrics
+	// metrics and tags
 	switch result {
-	case aspa_valid:
-		s.cnt_aspa_valid.Inc()
-	case aspa_unknown:
-		s.cnt_aspa_unk.Inc()
-	case aspa_invalid:
-		s.cnt_aspa_inv.Inc()
-	}
-
-	// tag
-	if s.aspa_tag {
-		switch result {
-		case aspa_valid:
+	case rpki.ASPA_VALID:
+		s.cnt_valid.Inc()
+		if s.tag {
 			tags["aspa/status"] = "VALID"
-		case aspa_unknown:
-			tags["aspa/status"] = "UNKNOWN"
-		case aspa_invalid:
-			tags["aspa/status"] = "INVALID"
 		}
+	case rpki.ASPA_UNKNOWN:
+		s.cnt_unk.Inc()
+		if s.tag {
+			tags["aspa/status"] = "UNKNOWN"
+		}
+	case rpki.ASPA_INVALID:
+		s.cnt_inv.Inc()
+		if s.tag {
+			tags["aspa/status"] = "INVALID"
+			if failCAS != 0 {
+				tags["aspa/invalid-hop"] = fmt.Sprintf("%d %d", failCAS, failPAS)
+			}
+		}
+	}
+	if s.tag {
 		m.Edit()
 	}
 
-	if result != aspa_invalid {
+	if result != rpki.ASPA_INVALID {
 		return true
 	}
 
 	// event
-	if s.aspa_ev != "" {
-		s.Event(s.aspa_ev, m)
+	if s.event != "" {
+		s.Event(s.event, m)
 	}
 
 	// action: ASPA condemns the entire path, not individual prefixes
-	switch s.aspa_act {
+	switch s.act {
 	case act_drop:
 		return false
 	case act_withdraw:
@@ -277,4 +323,23 @@ func (s *Rpki) validateAspa(m *msg.Msg, u *msg.Update, tags map[string]string) b
 	}
 
 	return true
+}
+
+func (s *Aspa) RouteHTTP(r chi.Router) error {
+	r.Get("/", func(w http.ResponseWriter, req *http.Request) {
+		_, _, aspas := s.cache.Sizes()
+		resp := map[string]any{
+			"aspa_entries": aspas,
+			"metrics": map[string]uint64{
+				"messages": s.cnt_msg.Get(),
+				"valid":    s.cnt_valid.Get(),
+				"unknown":  s.cnt_unk.Get(),
+				"invalid":  s.cnt_inv.Get(),
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	})
+	return nil
 }
