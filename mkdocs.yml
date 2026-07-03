@@ -30,6 +30,7 @@ nav:
     - Message format: json-format.md
     - Flowspec: flowspec.md
   - Filtering: filters.md
+  - HTTP API: http-api.md
   - Docker: docker.md
 
 site_name: "bgpipe: BGP pipeline processor"

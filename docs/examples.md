@@ -46,6 +46,21 @@ bgpipe -o \
   -- connect --wait listen --md5 solarwinds123 1.2.3.4
 ```
 
+## Transparent (TPROXY) proxy
+
+Stages: [listen](stages/listen.md), [connect](stages/connect.md)
+
+Insert bgpipe on the wire between two routers without touching either router's BGP configuration. Unlike the port-forwarding setup above, both `listen` and `connect` run with `--transparent` (Linux `IP_TRANSPARENT`/TPROXY), so the router captured by `listen` sees the far router's real IP, and vice versa -- bgpipe is invisible at the IP layer. The router only needs its traffic to TCP/179 redirected to the bgpipe host (via TPROXY, policy routing, or an inline bridge); no BGP reconfiguration needed. This is the recommended way to insert bgpipe as an RPKI/ASPA firewall in an existing eBGP session.
+
+```bash
+bgpipe \
+  -- listen --transparent --md5 "solarwinds123" :179 \
+  -- rov \
+  -- connect --transparent --md5 "solarwinds123" --ttl 255 --wait listen 0.0.0.0
+```
+
+See [connect's transparent mode](stages/connect.md#transparent-mode) for how the captured TCP tuple is propagated between the two stages.
+
 ## Stream MRT files to BGP routers
 
 Stages: [speaker](stages/speaker.md), [read](stages/read.md), [listen](stages/listen.md)
@@ -145,12 +160,12 @@ bgpipe -g \
 
 Stages: [listen](stages/listen.md), [rov](stages/rov.md), [connect](stages/connect.md)
 
-Add RPKI validation to a BGP proxy between two routers. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can point the global `--rpki` option at another server or a local ROA cache file).
+Add RPKI validation to a BGP proxy between two routers: one dials into bgpipe's `listen` stage, and bgpipe forwards the now-validated session onward to `5.6.7.8` via `connect`. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can point the global `--rpki` option at another server or a local ROA cache file).
 
 ```bash
-# Secure 5.6.7.8 by filtering RPKI-invalid prefixes coming from 1.2.3.4
+# Secure 5.6.7.8 by validating routes from the router that dials in on :179
 bgpipe \
-  -- listen 1.2.3.4 \
+  -- listen :179 \
   -- rov \
   -- connect 5.6.7.8
 ```
@@ -159,14 +174,28 @@ bgpipe \
 
 Stages: [listen](stages/listen.md), [rov](stages/rov.md), [connect](stages/connect.md)
 
-Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only allows messages from `1.2.3.4` clients forwarded to `5.6.7.8` where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.
+Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only forwards messages to `5.6.7.8` where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.
 
 ```bash
 # Drop messages announcing INVALID and/or NOT_FOUND prefixes
 bgpipe --events rov/dropped \
-  -- listen 1.2.3.4 \
+  -- listen :179 \
   -- rov --strict --invalid=drop --event dropped \
   -- connect 5.6.7.8
+```
+
+## Detect route leaks with ASPA
+
+Stages: [listen](stages/listen.md), [rov](stages/rov.md), [aspa](stages/aspa.md), [connect](stages/connect.md)
+
+While `rov` validates that the origin AS is authorized to announce a prefix, it can't catch a route leak where a valid prefix arrives over an AS_PATH that violates provider-customer relationships. Add the `aspa` stage on top of `rov` to verify the whole AS_PATH is valley-free using ASPA records. Tell it the relationship with `--role`: here the router connecting to `listen` is our customer, so `aspa` applies the customer-to-provider ("upstream") verification procedure to its announcements -- see the [role table](stages/aspa.md#multi-peer-feeds) for what each `--role` value means and which procedure it selects.
+
+```bash
+bgpipe \
+  -- listen :179 \
+  -- rov \
+  -- aspa --role customer \
+  -- connect 192.0.2.1
 ```
 
 ## Real-time invalid-route quarantine
@@ -199,7 +228,7 @@ bgpipe -g \
 
 # Rate limit updates from 5.6.7.8 to 50 msg/sec (smooths bursts)
 bgpipe \
-  -- listen 1.2.3.4 \
+  -- listen :179 \
   -- connect --rate-limit 50 5.6.7.8
 ```
 
@@ -212,7 +241,7 @@ Use the `--format=exa` flag to read and write [ExaBGP](https://github.com/Exa-Ne
 ```bash
 # Process BGP messages with an ExaBGP-compatible script
 bgpipe \
-  -- listen 1.2.3.4 \
+  -- listen :179 \
   -- exec --format=exa -LR --args /path/to/script.py \
   -- connect 5.6.7.8
 

@@ -155,6 +155,7 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 - **TCP-MD5 handling** - add or drop TCP-MD5 independently on each side of a session
 - **Live data feeds** - stream from [RIPE RIS Live](https://ris-live.ripe.net/) or [RouteViews](https://www.routeviews.org/) in real time
 - **Message tagging** - attach metadata to messages for downstream filtering and routing decisions
+- **HTTP API** - live dashboard, Prometheus metrics, Kubernetes-style health checks, and optional pprof profiling, with HTTP Basic Auth ([details](http-api.md))
 - **20 pipeline stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
 
 ## Project
