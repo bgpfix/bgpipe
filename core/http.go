@@ -225,9 +225,15 @@ func (b *Bgpipe) attachHTTPStages() {
 			continue
 		}
 
-		base := s.HTTPSlug()
-		if _, exists := used[base]; exists {
-			base = fmt.Sprintf("%s-%d", base, s.Index)
+		// disambiguate colliding slugs by suffixing, incrementing until free
+		// (a suffixed slug can itself collide with an explicitly-named stage)
+		slug := s.HTTPSlug()
+		base := slug
+		for suffix := s.Index; ; suffix++ {
+			if _, exists := used[base]; !exists {
+				break
+			}
+			base = fmt.Sprintf("%s-%d", slug, suffix)
 		}
 		used[base] = struct{}{}
 
