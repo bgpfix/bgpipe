@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://bgpipe.org/stages/update/">
+        <link rel="canonical" href="https://bgpipe.org/http-api/">
       
       
-        <link rel="prev" href="../tag/">
+        <link rel="prev" href="../filters/">
       
       
-        <link rel="next" href="../websocket/">
+        <link rel="next" href="../docker/">
       
       
         
       
       
-      <link rel="icon" href="../../img/favicon.png">
+      <link rel="icon" href="../img/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>update - bgpipe: BGP pipeline processor</title>
+        <title>HTTP API - bgpipe: BGP pipeline processor</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,9 +53,9 @@
       
     
     
-      <link rel="stylesheet" href="../../css/extra.css">
+      <link rel="stylesheet" href="../css/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#update" class="md-skip">
+        <a href="#http-api" class="md-skip">
           Skip to content
         </a>
       
@@ -100,9 +100,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="bgpipe: BGP pipeline processor" class="md-header__button md-logo" aria-label="bgpipe: BGP pipeline processor" data-md-component="logo">
+    <a href=".." title="bgpipe: BGP pipeline processor" class="md-header__button md-logo" aria-label="bgpipe: BGP pipeline processor" data-md-component="logo">
       
-  <img src="../../img/logo-w.png" alt="logo">
+  <img src="../img/logo-w.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              update
+              HTTP API
             
           </span>
         </div>
@@ -237,9 +237,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="bgpipe: BGP pipeline processor" class="md-nav__button md-logo" aria-label="bgpipe: BGP pipeline processor" data-md-component="logo">
+    <a href=".." title="bgpipe: BGP pipeline processor" class="md-nav__button md-logo" aria-label="bgpipe: BGP pipeline processor" data-md-component="logo">
       
-  <img src="../../img/logo-w.png" alt="logo">
+  <img src="../img/logo-w.png" alt="logo">
 
     </a>
     bgpipe: BGP pipeline processor
@@ -266,7 +266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -293,7 +293,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../intro/" class="md-nav__link">
+      <a href="../intro/" class="md-nav__link">
         
   
   
@@ -320,7 +320,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../quickstart/" class="md-nav__link">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -347,7 +347,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/" class="md-nav__link">
+      <a href="../examples/" class="md-nav__link">
         
   
   
@@ -371,20 +371,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -405,7 +403,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -423,7 +421,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../stages/" class="md-nav__link">
         
   
   
@@ -451,7 +449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../aspa/" class="md-nav__link">
+      <a href="../stages/aspa/" class="md-nav__link">
         
   
   
@@ -479,7 +477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../connect/" class="md-nav__link">
+      <a href="../stages/connect/" class="md-nav__link">
         
   
   
@@ -507,7 +505,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../grep/" class="md-nav__link">
+      <a href="../stages/grep/" class="md-nav__link">
         
   
   
@@ -535,7 +533,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../exec/" class="md-nav__link">
+      <a href="../stages/exec/" class="md-nav__link">
         
   
   
@@ -563,7 +561,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../grep/" class="md-nav__link">
+      <a href="../stages/grep/" class="md-nav__link">
         
   
   
@@ -591,7 +589,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../head/" class="md-nav__link">
+      <a href="../stages/head/" class="md-nav__link">
         
   
   
@@ -619,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../limit/" class="md-nav__link">
+      <a href="../stages/limit/" class="md-nav__link">
         
   
   
@@ -647,7 +645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../listen/" class="md-nav__link">
+      <a href="../stages/listen/" class="md-nav__link">
         
   
   
@@ -675,7 +673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../metrics/" class="md-nav__link">
+      <a href="../stages/metrics/" class="md-nav__link">
         
   
   
@@ -703,7 +701,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../pipe/" class="md-nav__link">
+      <a href="../stages/pipe/" class="md-nav__link">
         
   
   
@@ -731,7 +729,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../read/" class="md-nav__link">
+      <a href="../stages/read/" class="md-nav__link">
         
   
   
@@ -759,7 +757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ris-live/" class="md-nav__link">
+      <a href="../stages/ris-live/" class="md-nav__link">
         
   
   
@@ -787,7 +785,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rov/" class="md-nav__link">
+      <a href="../stages/rov/" class="md-nav__link">
         
   
   
@@ -815,7 +813,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rv-live/" class="md-nav__link">
+      <a href="../stages/rv-live/" class="md-nav__link">
         
   
   
@@ -843,7 +841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../speaker/" class="md-nav__link">
+      <a href="../stages/speaker/" class="md-nav__link">
         
   
   
@@ -871,7 +869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../stdin/" class="md-nav__link">
+      <a href="../stages/stdin/" class="md-nav__link">
         
   
   
@@ -899,7 +897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../stdout/" class="md-nav__link">
+      <a href="../stages/stdout/" class="md-nav__link">
         
   
   
@@ -927,7 +925,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tag/" class="md-nav__link">
+      <a href="../stages/tag/" class="md-nav__link">
         
   
   
@@ -952,37 +950,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    update
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../stages/update/" class="md-nav__link">
         
   
   
@@ -998,109 +969,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Synopsis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Description
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Options
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#next-hop" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next-hop
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#communities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Communities
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1113,7 +981,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../websocket/" class="md-nav__link">
+      <a href="../stages/websocket/" class="md-nav__link">
         
   
   
@@ -1141,7 +1009,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../write/" class="md-nav__link">
+      <a href="../stages/write/" class="md-nav__link">
         
   
   
@@ -1223,7 +1091,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../json-format/" class="md-nav__link">
+      <a href="../json-format/" class="md-nav__link">
         
   
   
@@ -1251,7 +1119,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../flowspec/" class="md-nav__link">
+      <a href="../flowspec/" class="md-nav__link">
         
   
   
@@ -1286,7 +1154,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../filters/" class="md-nav__link">
+      <a href="../filters/" class="md-nav__link">
         
   
   
@@ -1310,10 +1178,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../http-api/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP API
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1329,6 +1224,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enabling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enabling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-stage-routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-stage routes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1340,7 +1332,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../docker/" class="md-nav__link">
+      <a href="../docker/" class="md-nav__link">
         
   
   
@@ -1387,10 +1379,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
+  <a href="#enabling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Synopsis
+        Enabling
       
     </span>
   </a>
@@ -1398,10 +1390,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
+  <a href="#endpoints" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Description
+        Endpoints
       
     </span>
   </a>
@@ -1409,41 +1401,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
+  <a href="#authentication" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Options
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#next-hop" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next-hop
+        Authentication
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#communities" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#per-stage-routes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Communities
+        Per-stage routes
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiling
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1489,20 +1475,17 @@
   
 
 
-<h1 id="update">update<a class="headerlink" href="#update" title="Permanent link">&para;</a></h1>
-<p>Modify UPDATE message attributes.</p>
-<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [...] -- update [OPTIONS]
+<h1 id="http-api">HTTP API<a class="headerlink" href="#http-api" title="Permanent link">&para;</a></h1>
+<p>bgpipe can expose an HTTP API alongside the pipeline: a live dashboard, Prometheus metrics,
+a health check endpoint, per-stage JSON summaries, and optional Go profiling. This is a
+global feature, independent of any particular stage.</p>
+<h2 id="enabling">Enabling<a class="headerlink" href="#enabling" title="Permanent link">&para;</a></h2>
+<p>Set the global <code>--http</code> option to a bind address:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-open<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
-<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>The <strong>update</strong> stage modifies BGP UPDATE messages in-flight. It can rewrite
-next-hop addresses and manipulate community attributes. Non-UPDATE messages
-pass through unchanged.</p>
-<p>This stage supports bidirectional operation with <code>-LR</code>. Without <code>-LR</code>, it
-applies only to messages in the stage direction. Combine with <code>--if</code> to apply
-modifications only to messages matching a <a href="../../filters/">filter</a>.</p>
-<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
-<h3 id="next-hop">Next-hop<a class="headerlink" href="#next-hop" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1514,110 +1497,141 @@ modifications only to messages matching a <a href="../../filters/">filter</a>.</
 </thead>
 <tbody>
 <tr>
-<td><code>--nexthop4</code></td>
+<td><code>--http</code></td>
 <td>string</td>
 <td></td>
-<td>Set next-hop for IPv4 prefixes to this address</td>
+<td>Bind address for the HTTP API (e.g. <code>:8080</code>, <code>127.0.0.1:8080</code>)</td>
 </tr>
 <tr>
-<td><code>--nexthop6</code></td>
+<td><code>--http-auth</code></td>
 <td>string</td>
 <td></td>
-<td>Set next-hop for IPv6 prefixes to this address</td>
+<td>HTTP Basic Auth credentials: <code>user:pass</code>, <code>$ENV_VAR</code>, or <code>/path/to/file</code></td>
 </tr>
 <tr>
-<td><code>--nexthop-self</code></td>
+<td><code>--http-open</code></td>
 <td>bool</td>
 <td><code>false</code></td>
-<td>Set next-hop to our own IP address (when available)</td>
+<td>Disable authentication entirely (dangerous -- see <a href="#authentication">Authentication</a>)</td>
+</tr>
+<tr>
+<td><code>--pprof</code></td>
+<td>string</td>
+<td></td>
+<td>Enable Go profiling: <code>http</code> to mount under <code>--http</code>, or a separate <code>addr</code> for its own server</td>
 </tr>
 </tbody>
 </table>
-<h3 id="communities">Communities<a class="headerlink" href="#communities" title="Permanent link">&para;</a></h3>
+<p><code>--http</code> only binds the listener; it does not attach a stage. Use the <a href="../stages/metrics/">metrics</a>
+stage if you also want labeled, filter-based Prometheus counters.</p>
+<h2 id="endpoints">Endpoints<a class="headerlink" href="#endpoints" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Option</th>
-<th>Type</th>
-<th>Default</th>
+<th>Endpoint</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>--add-com</code></td>
-<td>string</td>
-<td></td>
-<td>Add a standard BGP community (<code>ASN:value</code>)</td>
+<td><code>/</code></td>
+<td>Web dashboard: version, uptime, stage list, and links to the endpoints below</td>
 </tr>
 <tr>
-<td><code>--add-com-ext</code></td>
-<td>string</td>
-<td></td>
-<td>Add an extended BGP community</td>
+<td><code>/metrics</code></td>
+<td>Prometheus text format, covering all stages and the Go runtime</td>
 </tr>
 <tr>
-<td><code>--add-com-large</code></td>
-<td>string</td>
-<td></td>
-<td>Add a large BGP community (<code>G:L1:L2</code>)</td>
+<td><code>/hc</code></td>
+<td>JSON health check (<code>status</code>, <code>version</code>, <code>stages</code>, <code>uptime</code>) -- suitable for Kubernetes liveness/readiness probes</td>
 </tr>
 <tr>
-<td><code>--drop-com</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Remove the COMMUNITY attribute entirely</td>
+<td><code>/stage/&lt;name&gt;/</code></td>
+<td>Per-stage JSON summary, for stages that implement one (see <a href="#per-stage-routes">Per-stage routes</a>)</td>
 </tr>
 <tr>
-<td><code>--drop-com-ext</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Remove the EXT_COMMUNITY attribute entirely</td>
-</tr>
-<tr>
-<td><code>--drop-com-large</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Remove the LARGE_COMMUNITY attribute entirely</td>
+<td><code>/debug/pprof/</code></td>
+<td>Go pprof profiles, only mounted when <code>--pprof</code> is set</td>
 </tr>
 </tbody>
 </table>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h2>
+<p>Because <code>/debug/pprof/</code> and per-stage routes can expose internal state, <code>--http</code> refuses to
+start unless you pick one of:</p>
+<ul>
+<li><code>--http-auth user:pass</code> (or <code>--http-auth $ENV_VAR</code> / <code>--http-auth /path/to/file</code>) --
+  requires HTTP Basic Auth on every request, compared in constant time.</li>
+<li><code>--http-open</code> -- disables authentication. Only use this when <code>--http</code> is bound to
+  <code>127.0.0.1</code> or an otherwise trusted network.</li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># credentials from an environment variable</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BGPIPE_HTTP_AUTH</span><span class="o">=</span><span class="s2">&quot;admin:s3cret&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-auth<span class="w"> </span><span class="s1">&#39;$BGPIPE_HTTP_AUTH&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>rov<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span></code></pre></div>
+<p>NB: when <code>--pprof</code> is given a separate address (not <code>http</code>), that dedicated pprof server
+runs without authentication, since it is expected to be bound to a private interface.</p>
+<h2 id="per-stage-routes">Per-stage routes<a class="headerlink" href="#per-stage-routes" title="Permanent link">&para;</a></h2>
+<p>A stage can register its own routes under <code>/stage/&lt;name&gt;/</code>, where <code>&lt;name&gt;</code> is the stage's
+name (or command, for unnamed stages; use <code>@name</code> on the stage to set it explicitly). Stages
+that currently expose a JSON summary:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Path</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../stages/rov/">rov</a></td>
+<td><code>/stage/rov/</code></td>
+<td>Loaded VRP counts, messages/valid/invalid/not_found counters</td>
+</tr>
+<tr>
+<td><a href="../stages/aspa/">aspa</a></td>
+<td><code>/stage/aspa/</code></td>
+<td>Loaded ASPA record count, messages/valid/unknown/invalid counters</td>
+</tr>
+<tr>
+<td><a href="../stages/metrics/">metrics</a></td>
+<td><code>/stage/metrics/</code></td>
+<td>Total message count and per-rule filter counters</td>
+</tr>
+</tbody>
+</table>
+<p>If two stages resolve to the same slug, the second is suffixed with its pipeline index
+(e.g. <code>/stage/rov-3/</code>).</p>
+<h2 id="profiling">Profiling<a class="headerlink" href="#profiling" title="Permanent link">&para;</a></h2>
+<p><code>--pprof http</code> mounts the standard <code>net/http/pprof</code> handlers under <code>/debug/pprof/</code> on the
+same <code>--http</code> listener (subject to the same auth). <code>--pprof :6060</code> instead starts a
+dedicated, unauthenticated pprof server on that address -- convenient for a quick
+<code>go tool pprof</code> session on a host you already trust:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-open<span class="w"> </span>--pprof<span class="w"> </span>http<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>updates.mrt.gz<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>output.json
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># then: go tool pprof http://localhost:8080/debug/pprof/profile</span>
+</span></code></pre></div>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<p>Rewrite next-hop for all updates:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--nexthop4<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+<p>Dashboard and health check for a live proxy, bound to localhost only:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span><span class="m">127</span>.0.0.1:8080<span class="w"> </span>--http-open<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># open http://127.0.0.1:8080/ for the dashboard</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># curl http://127.0.0.1:8080/hc for a health check</span>
 </span></code></pre></div>
-<p>Add a community to tag traffic from a specific peer:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:100<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
-</span></code></pre></div>
-<p>Strip all communities before forwarding:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--drop-com<span class="w"> </span>--drop-com-ext<span class="w"> </span>--drop-com-large<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
-</span></code></pre></div>
-<p>Conditionally modify: add a community only to RPKI-invalid updates:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+<p>Prometheus scraping with authentication, plus labeled filter counters via <code>metrics</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:9090<span class="w"> </span>--http-auth<span class="w"> </span>/etc/bgpipe/http-auth<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
-</span></code></pre></div>
-<p>Set next-hop to self (useful when proxying):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--nexthop-self<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">&#39;bogon: as_origin &gt; 64512&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<p><a href="../grep/">grep</a>,
-<a href="../rov/">rov</a>,
-<a href="../">Stages overview</a></p>
+<p><a href="../stages/metrics/">metrics</a>,
+<a href="../stages/rov/">rov</a>,
+<a href="../stages/aspa/">aspa</a>,
+<a href="../quickstart/">Quick Start</a></p>
 
 
 
@@ -1670,10 +1684,10 @@ modifications only to messages matching a <a href="../../filters/">filter</a>.</
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

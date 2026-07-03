@@ -1375,6 +1375,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../http-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../docker/" class="md-nav__link">
         
   
@@ -1590,8 +1617,8 @@
 <p>Flowspec (Flow Specification, <a href="https://datatracker.ietf.org/doc/html/rfc8955">RFC 8955</a>) carries traffic filtering policies over BGP.
 A Flowspec UPDATE message consists of two parts:</p>
 <ul>
-<li><strong>Rules</strong> — traffic match conditions, carried in <code>MP_REACH</code> (or <code>MP_UNREACH</code> for withdrawals)</li>
-<li><strong>Actions</strong> — what to do with matched traffic, carried in <code>EXT_COMMUNITY</code></li>
+<li><strong>Rules</strong> - traffic match conditions, carried in <code>MP_REACH</code> (or <code>MP_UNREACH</code> for withdrawals)</li>
+<li><strong>Actions</strong> - what to do with matched traffic, carried in <code>EXT_COMMUNITY</code></li>
 </ul>
 <h2 id="complete-example">Complete Example<a class="headerlink" href="#complete-example" title="Permanent link">&para;</a></h2>
 <p>Block all TCP port 80 traffic to 192.0.2.0/24:</p>
@@ -1763,7 +1790,7 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
 </tr>
 </tbody>
 </table>
-<p>Multiple conditions in the array are combined with <strong>OR</strong> by default. Set <code>"and": true</code> on a condition to <strong>AND</strong> it with the preceding condition instead, per <a href="https://datatracker.ietf.org/doc/html/rfc8955#section-4.2.1.1">RFC 8955 §4.2.1.1</a>.</p>
+<p>Multiple conditions in the array are combined with <strong>OR</strong> by default. Set <code>"and": true</code> on a condition to <strong>AND</strong> it with the preceding condition instead, per <a href="https://datatracker.ietf.org/doc/html/rfc8955#section-4.2.1.1">RFC 8955 section 4.2.1.1</a>.</p>
 <h3 id="numeric-operator-values">Numeric Operator Values<a class="headerlink" href="#numeric-operator-values" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1952,9 +1979,9 @@ When offset is 0, the ordinary <code>address/length</code> format is used instea
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../json-format/">JSON Format</a> — General BGP message JSON format</li>
-<li><a href="../filters/">Message Filters</a> — Filter BGP messages</li>
-<li><a href="https://github.com/bgpfix/bgpfix">bgpfix library</a> — The underlying Go library</li>
+<li><a href="../json-format/">JSON Format</a> - General BGP message JSON format</li>
+<li><a href="../filters/">Message Filters</a> - Filter BGP messages</li>
+<li><a href="https://github.com/bgpfix/bgpfix">bgpfix library</a> - The underlying Go library</li>
 </ul>
 
 

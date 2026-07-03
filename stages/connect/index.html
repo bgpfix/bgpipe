@@ -1302,6 +1302,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../http-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../docker/" class="md-nav__link">
         
   
@@ -1467,14 +1494,14 @@ which lets it bind to (spoof) a non-local source address. Paired with a
 transparent <a href="../listen/">listen</a> stage, this builds a fully transparent
 man-in-the-middle proxy: neither BGP speaker sees the bgpipe host at the IP
 layer. The router only needs to redirect TCP/179 to the bgpipe host (TPROXY,
-PBR, or an inline bridge) — no BGP reconfiguration.</p>
+PBR, or an inline bridge) - no BGP reconfiguration.</p>
 <p>In transparent mode the endpoints default to the captured TCP tuple published
 by the listen side (<code>L_LOCAL</code> as the target, <code>L_REMOTE</code> as the spoofed source).
 Pass <code>0.0.0.0</code> as <em>ADDR</em> to ask for the captured target, and leave <code>--bind</code>
 unset to spoof the captured source. Use <code>-W</code>/<code>--wait</code> so <strong>connect</strong> dials
 only after the listen side has accepted and published the tuple; otherwise an
 explicit <em>ADDR</em> and <code>--bind</code> (which you know in advance as the administrator)
-are used as-is. The MD5 password is the same on both legs — the key the two
+are used as-is. The MD5 password is the same on both legs - the key the two
 routers already share for the pair.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>

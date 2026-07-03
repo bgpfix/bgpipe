@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="bgpipe is an open-source BGP reverse proxy and pipeline processor — filter, transform, and monitor live BGP sessions with RPKI validation, JSON translation, MRT processing, and many composable stages.">
+        <meta name="description" content="bgpipe is an open-source BGP reverse proxy and pipeline processor - filter, transform, and monitor live BGP sessions with RPKI validation, JSON translation, MRT processing, and many composable stages.">
       
       
       
@@ -1281,6 +1281,33 @@
   
   
     <li class="md-nav__item">
+      <a href="http-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="docker/" class="md-nav__link">
         
   
@@ -1404,7 +1431,7 @@
 
 <h1 id="bgpipe-bgp-pipeline-processor">bgpipe: BGP pipeline processor<a class="headerlink" href="#bgpipe-bgp-pipeline-processor" title="Permanent link">&para;</a></h1>
 <p><strong>bgpipe</strong> is an open-source tool that processes <a href="https://en.wikipedia.org/wiki/Border_Gateway_Protocol">BGP</a> messages
-through a pipeline of composable stages — <a href="https://www.youtube.com/watch?v=Y-YCYXGF_UY"><em>bridging the gaps</em></a> between monitoring and control.</p>
+through a pipeline of composable stages - <a href="https://www.youtube.com/watch?v=Y-YCYXGF_UY"><em>bridging the gaps</em></a> between monitoring and control.</p>
 <p>Usually, bgpipe sits between routers as a transparent proxy, auditing, filtering, and transforming BGP sessions on the fly.
 Built on the <a href="https://bgpfix.org/">bgpfix</a> library, written in <a href="https://go.dev/">Go</a>, and distributed under the MIT license.
 Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.3657000">research project</a> at the <a href="https://www.iitis.pl/en">Polish Academy of Sciences</a>.</p>
@@ -1491,7 +1518,7 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 </div>
 </div>
 </div>
-<p>A single static binary, no dependencies — see the <a href="quickstart/">Quick Start</a> for details and other platforms.</p>
+<p>A single static binary, no dependencies - see the <a href="quickstart/">Quick Start</a> for details and other platforms.</p>
 <h2 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h2>
 <div class="grid cards">
 <ul>
@@ -1501,7 +1528,7 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 </li>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 3h2v2H5v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5h2v2H5c-1.07-.27-2-.9-2-2v-4a2 2 0 0 0-2-2H0v-2h1a2 2 0 0 0 2-2V5a2 2 0 0 1 2-2m14 0a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1v2h-1a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-2v-2h2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5h-2V3zm-7 12a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m-4 0a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m8 0a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1"/></svg></span> <strong>Full JSON Translation</strong></p>
-<p>Bidirectional BGP ↔ JSON including Flowspec — pipe through jq, Python, anything</p>
+<p>Bidirectional BGP &lt;-&gt; JSON including Flowspec - pipe through jq, Python, anything</p>
 </li>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4M4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4s-8-1.79-8-4m0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4"/></svg></span> <strong>MRT Processing</strong></p>
@@ -1523,22 +1550,23 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 </div>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Transparent proxy</strong> — sits between two BGP speakers; with <a href="stages/connect/#transparent-mode">TPROXY mode</a>, invisible even at the IP layer — no router reconfiguration</li>
-<li><strong>Full JSON translation</strong> — bidirectional BGP ↔ JSON for every message type, including <a href="flowspec/">Flowspec</a></li>
-<li><strong>Built-in filters</strong> — match on prefixes, AS paths, communities, attributes, and <a href="stages/tag/">tags</a> with a concise <a href="filters/">filter language</a></li>
-<li><strong>RPKI origin validation</strong> — <a href="stages/rov/">rov</a> stage implements RFC 6811, fed over RTR (e.g. Cloudflare, Routinator), HTTP(S), or files</li>
-<li><strong>ASPA path verification</strong> — <a href="stages/aspa/">aspa</a> stage detects route leaks per the IETF draft — available today, before router vendors ship it</li>
-<li><strong>Prefix and rate limits</strong> — enforce prefix count/length thresholds and message rate limits per session</li>
-<li><strong>UPDATE rewriting</strong> — add, remove, or modify path attributes on the fly</li>
-<li><strong>Multiple data formats</strong> — read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format</li>
-<li><strong>Compression support</strong> — transparent gzip/bzip2/zstd for MRT and other file formats</li>
-<li><strong>HTTP/HTTPS sources</strong> — read directly from URLs (e.g. RouteViews or RIS MRT archives)</li>
-<li><strong>External program integration</strong> — pipe messages through any process (<code>exec</code>, <code>pipe</code> stages)</li>
-<li><strong>WebSocket transport</strong> — exchange messages over encrypted WebSockets for remote processing</li>
-<li><strong>TCP-MD5 handling</strong> — add or drop TCP-MD5 independently on each side of a session</li>
-<li><strong>Live data feeds</strong> — stream from <a href="https://ris-live.ripe.net/">RIPE RIS Live</a> or <a href="https://www.routeviews.org/">RouteViews</a> in real time</li>
-<li><strong>Message tagging</strong> — attach metadata to messages for downstream filtering and routing decisions</li>
-<li><strong>20 pipeline stages</strong> — composable building blocks, each doing one thing well (<a href="stages/">full list</a>)</li>
+<li><strong>Transparent proxy</strong> - sits between two BGP speakers; with <a href="stages/connect/#transparent-mode">TPROXY mode</a>, invisible even at the IP layer - no router reconfiguration</li>
+<li><strong>Full JSON translation</strong> - bidirectional BGP &lt;-&gt; JSON for every message type, including <a href="flowspec/">Flowspec</a></li>
+<li><strong>Built-in filters</strong> - match on prefixes, AS paths, communities, attributes, and <a href="stages/tag/">tags</a> with a concise <a href="filters/">filter language</a></li>
+<li><strong>RPKI origin validation</strong> - <a href="stages/rov/">rov</a> stage implements RFC 6811, fed over RTR (e.g. Cloudflare, Routinator), HTTP(S), or files</li>
+<li><strong>ASPA path verification</strong> - <a href="stages/aspa/">aspa</a> stage detects route leaks per the IETF draft - available today, before router vendors ship it</li>
+<li><strong>Prefix and rate limits</strong> - enforce prefix count/length thresholds and message rate limits per session</li>
+<li><strong>UPDATE rewriting</strong> - add, remove, or modify path attributes on the fly</li>
+<li><strong>Multiple data formats</strong> - read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format</li>
+<li><strong>Compression support</strong> - transparent gzip/bzip2/zstd for MRT and other file formats</li>
+<li><strong>HTTP/HTTPS sources</strong> - read directly from URLs (e.g. RouteViews or RIS MRT archives)</li>
+<li><strong>External program integration</strong> - pipe messages through any process (<code>exec</code>, <code>pipe</code> stages)</li>
+<li><strong>WebSocket transport</strong> - exchange messages over encrypted WebSockets for remote processing</li>
+<li><strong>TCP-MD5 handling</strong> - add or drop TCP-MD5 independently on each side of a session</li>
+<li><strong>Live data feeds</strong> - stream from <a href="https://ris-live.ripe.net/">RIPE RIS Live</a> or <a href="https://www.routeviews.org/">RouteViews</a> in real time</li>
+<li><strong>Message tagging</strong> - attach metadata to messages for downstream filtering and routing decisions</li>
+<li><strong>HTTP API</strong> - live dashboard, Prometheus metrics, Kubernetes-style health checks, and optional pprof profiling, with HTTP Basic Auth (<a href="http-api/">details</a>)</li>
+<li><strong>20 pipeline stages</strong> - composable building blocks, each doing one thing well (<a href="stages/">full list</a>)</li>
 </ul>
 <h2 id="project">Project<a class="headerlink" href="#project" title="Permanent link">&para;</a></h2>
 <p>bgpipe is hosted on <a href="https://github.com/bgpfix/bgpipe">GitHub</a> under the MIT license,

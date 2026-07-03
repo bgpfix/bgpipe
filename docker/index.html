@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://bgpipe.org/docker/">
       
       
-        <link rel="prev" href="../filters/">
+        <link rel="prev" href="../http-api/">
       
       
       
@@ -1176,6 +1176,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -1509,13 +1536,16 @@
 </span></code></pre></div>
 <h2 id="bgp-sessions-port-forwarding">BGP Sessions (Port Forwarding)<a class="headerlink" href="#bgp-sessions-port-forwarding" title="Permanent link">&para;</a></h2>
 <p>To run bgpipe as a proxy accessible from the host or other containers, expose port 179:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># transparent proxy: host:1790 -&gt; bgpipe -&gt; 192.0.2.1:179</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># BGP proxy: host:1790 -&gt; bgpipe -&gt; 192.0.2.1:179</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>-p<span class="w"> </span><span class="m">1790</span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span><span class="s2">&quot;listen&quot;</span><span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
+<p>NB: this is ordinary port forwarding, not bgpipe's <a href="../stages/connect/#transparent-mode">transparent (TPROXY) mode</a> --
+both peers dial bgpipe explicitly. For a proxy that is invisible at the IP layer, see <code>--transparent</code> on the
+<a href="../stages/connect/">connect</a> and <a href="../stages/listen/">listen</a> stages.</p>
 <p><code>--wait listen</code> tells the <code>connect</code> stage to wait until <code>listen</code> has accepted a connection before dialling out. This ensures the two halves of the proxy session are always synchronized.</p>
 <h2 id="docker-compose-examples">Docker Compose Examples<a class="headerlink" href="#docker-compose-examples" title="Permanent link">&para;</a></h2>
 <p><a href="https://docs.docker.com/compose/">Docker Compose</a> lets you define multi-container setups in a
@@ -1570,7 +1600,7 @@ single YAML file. To run any example below, save it as <code>compose.yml</code> 
 </span></code></pre></div>
 <p>Replace <code>192.0.2.1</code> with the address of your downstream router. bgpipe listens on port 1790 on the host, accepts one BGP connection, and proxies it through RPKI validation before forwarding to the real router.</p>
 <h2 id="building-locally">Building Locally<a class="headerlink" href="#building-locally" title="Permanent link">&para;</a></h2>
-<p>The Dockerfile auto-detects the target platform, so a plain <code>docker build</code> produces the right image for your machine — no flags needed:</p>
+<p>The Dockerfile auto-detects the target platform, so a plain <code>docker build</code> produces the right image for your machine - no flags needed:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bgpfix/bgpipe
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">cd</span><span class="w"> </span>bgpipe
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>bgpipe<span class="w"> </span>.

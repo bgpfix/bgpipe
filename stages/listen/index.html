@@ -1285,6 +1285,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../http-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../docker/" class="md-nav__link">
         
   
@@ -1473,7 +1500,7 @@ accepted.</p>
 accepts connections destined to a <em>foreign</em> address (redirected to this host
 via TPROXY, PBR, or an inline bridge), recovering the original destination. It
 publishes the captured tuple for a transparent <a href="../connect/">connect</a> stage to
-re-originate — see <a href="../connect/#transparent-mode">connect</a> for the full setup.</p>
+re-originate - see <a href="../connect/#transparent-mode">connect</a> for the full setup.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Listen on the default BGP port and proxy to an upstream router:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>:179

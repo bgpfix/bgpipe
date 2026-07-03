@@ -1335,6 +1335,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../http-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../docker/" class="md-nav__link">
         
   
@@ -1524,7 +1551,7 @@ summary at <code>/stage/metrics/</code>.</p>
 If no <code>:</code> (colon-space) separator is present, the argument text is used as
 both label and filter expression. Labels are sanitized to <code>[a-z0-9_]</code> for
 Prometheus compatibility.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-open<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span>ipv4<span class="w"> </span><span class="se">\</span>
@@ -1600,7 +1627,7 @@ a scraper can read <code>/metrics</code>.</p>
 <td>KEEPALIVE messages flowing right</td>
 </tr>
 <tr>
-<td><em>(all dir × type combinations)</em></td>
+<td><em>(all dir x type combinations)</em></td>
 <td>One series per direction+type pair</td>
 </tr>
 </tbody>
@@ -1609,7 +1636,9 @@ a scraper can read <code>/metrics</code>.</p>
 aggregations like <code>sum by (dir)</code>, <code>sum by (type)</code>, or filtering on
 <code>{dir="right",type="update"}</code>.</p>
 <h2 id="http-endpoints">HTTP endpoints<a class="headerlink" href="#http-endpoints" title="Permanent link">&para;</a></h2>
-<p>When <code>--http</code> is set:</p>
+<p><code>--http</code> is a global bgpipe option, not specific to this stage -- see the
+<a href="../../http-api/">HTTP API</a> reference for the full endpoint list, authentication
+(<code>--http-auth</code> / <code>--http-open</code>), and pprof profiling. In short, when <code>--http</code> is set:</p>
 <table>
 <thead>
 <tr>
@@ -1642,7 +1671,7 @@ aggregations like <code>sum by (dir)</code>, <code>sum by (type)</code>, or filt
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Monitor a live BGP session with Prometheus scraping:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:9090<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:9090<span class="w"> </span>--http-open<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">&#39;bogon: as_origin &gt; 64512&#39;</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
@@ -1655,7 +1684,7 @@ aggregations like <code>sum by (dir)</code>, <code>sum by (type)</code>, or filt
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>updates.20230301.json
 </span></code></pre></div>
 <p>Named stage with custom metric prefix:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-open<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span>@my_counters<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
