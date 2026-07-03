@@ -37,7 +37,7 @@ With `--transparent` (Linux only), the listener sets `IP_TRANSPARENT` and
 accepts connections destined to a *foreign* address (redirected to this host
 via TPROXY, PBR, or an inline bridge), recovering the original destination. It
 publishes the captured tuple for a transparent [connect](connect.md) stage to
-re-originate — see [connect](connect.md#transparent-mode) for the full setup.
+re-originate - see [connect](connect.md#transparent-mode) for the full setup.
 
 ## Examples
 

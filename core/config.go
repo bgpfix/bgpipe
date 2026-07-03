@@ -182,6 +182,9 @@ func (b *Bgpipe) parseArgs(args []string) error {
 			args = args[1:]
 			continue
 		}
+		if len(args[0]) == 0 {
+			return fmt.Errorf("[%d] %w: empty argument", idx, ErrStageCmd)
+		}
 
 		// has a name prefix?
 		name := ""

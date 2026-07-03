@@ -1,11 +1,11 @@
 ---
-description: "bgpipe is an open-source BGP reverse proxy and pipeline processor — filter, transform, and monitor live BGP sessions with RPKI validation, JSON translation, MRT processing, and many composable stages."
+description: "bgpipe is an open-source BGP reverse proxy and pipeline processor - filter, transform, and monitor live BGP sessions with RPKI validation, JSON translation, MRT processing, and many composable stages."
 ---
 
 # bgpipe: BGP pipeline processor
 
 **bgpipe** is an open-source tool that processes [BGP](https://en.wikipedia.org/wiki/Border_Gateway_Protocol) messages
-through a pipeline of composable stages — [*bridging the gaps*](https://www.youtube.com/watch?v=Y-YCYXGF_UY) between monitoring and control.
+through a pipeline of composable stages - [*bridging the gaps*](https://www.youtube.com/watch?v=Y-YCYXGF_UY) between monitoring and control.
 
 Usually, bgpipe sits between routers as a transparent proxy, auditing, filtering, and transforming BGP sessions on the fly.
 Built on the [bgpfix](https://bgpfix.org/) library, written in [Go](https://go.dev/), and distributed under the MIT license.
@@ -106,7 +106,7 @@ $ bgpipe -o -- listen :179 -- rov -- connect --wait listen 192.0.2.1
     go install github.com/bgpfix/bgpipe@latest
     ```
 
-A single static binary, no dependencies — see the [Quick Start](quickstart.md) for details and other platforms.
+A single static binary, no dependencies - see the [Quick Start](quickstart.md) for details and other platforms.
 
 ## Use Cases
 
@@ -118,7 +118,7 @@ A single static binary, no dependencies — see the [Quick Start](quickstart.md)
 
 -   :material-code-json:{ .lg } **Full JSON Translation**
 
-    Bidirectional BGP ↔ JSON including Flowspec — pipe through jq, Python, anything
+    Bidirectional BGP <-> JSON including Flowspec - pipe through jq, Python, anything
 
 -   :material-database:{ .lg } **MRT Processing**
 
@@ -140,22 +140,23 @@ A single static binary, no dependencies — see the [Quick Start](quickstart.md)
 
 ## Features
 
-- **Transparent proxy** — sits between two BGP speakers; with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer — no router reconfiguration
-- **Full JSON translation** — bidirectional BGP ↔ JSON for every message type, including [Flowspec](flowspec.md)
-- **Built-in filters** — match on prefixes, AS paths, communities, attributes, and [tags](stages/tag.md) with a concise [filter language](filters.md)
-- **RPKI origin validation** — [rov](stages/rov.md) stage implements RFC 6811, fed over RTR (e.g. Cloudflare, Routinator), HTTP(S), or files
-- **ASPA path verification** — [aspa](stages/aspa.md) stage detects route leaks per the IETF draft — available today, before router vendors ship it
-- **Prefix and rate limits** — enforce prefix count/length thresholds and message rate limits per session
-- **UPDATE rewriting** — add, remove, or modify path attributes on the fly
-- **Multiple data formats** — read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format
-- **Compression support** — transparent gzip/bzip2/zstd for MRT and other file formats
-- **HTTP/HTTPS sources** — read directly from URLs (e.g. RouteViews or RIS MRT archives)
-- **External program integration** — pipe messages through any process (`exec`, `pipe` stages)
-- **WebSocket transport** — exchange messages over encrypted WebSockets for remote processing
-- **TCP-MD5 handling** — add or drop TCP-MD5 independently on each side of a session
-- **Live data feeds** — stream from [RIPE RIS Live](https://ris-live.ripe.net/) or [RouteViews](https://www.routeviews.org/) in real time
-- **Message tagging** — attach metadata to messages for downstream filtering and routing decisions
-- **20 pipeline stages** — composable building blocks, each doing one thing well ([full list](stages/index.md))
+- **Transparent proxy** - sits between two BGP speakers; with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer - no router reconfiguration
+- **Full JSON translation** - bidirectional BGP <-> JSON for every message type, including [Flowspec](flowspec.md)
+- **Built-in filters** - match on prefixes, AS paths, communities, attributes, and [tags](stages/tag.md) with a concise [filter language](filters.md)
+- **RPKI origin validation** - [rov](stages/rov.md) stage implements RFC 6811, fed over RTR (e.g. Cloudflare, Routinator), HTTP(S), or files
+- **ASPA path verification** - [aspa](stages/aspa.md) stage detects route leaks per the IETF draft - available today, before router vendors ship it
+- **Prefix and rate limits** - enforce prefix count/length thresholds and message rate limits per session
+- **UPDATE rewriting** - add, remove, or modify path attributes on the fly
+- **Multiple data formats** - read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format
+- **Compression support** - transparent gzip/bzip2/zstd for MRT and other file formats
+- **HTTP/HTTPS sources** - read directly from URLs (e.g. RouteViews or RIS MRT archives)
+- **External program integration** - pipe messages through any process (`exec`, `pipe` stages)
+- **WebSocket transport** - exchange messages over encrypted WebSockets for remote processing
+- **TCP-MD5 handling** - add or drop TCP-MD5 independently on each side of a session
+- **Live data feeds** - stream from [RIPE RIS Live](https://ris-live.ripe.net/) or [RouteViews](https://www.routeviews.org/) in real time
+- **Message tagging** - attach metadata to messages for downstream filtering and routing decisions
+- **HTTP API** - live dashboard, Prometheus metrics, Kubernetes-style health checks, and optional pprof profiling, with HTTP Basic Auth ([details](http-api.md))
+- **20 pipeline stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
 
 ## Project
 

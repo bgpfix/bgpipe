@@ -27,7 +27,7 @@ both label and filter expression. Labels are sanitized to `[a-z0-9_]` for
 Prometheus compatibility.
 
 ```bash
-bgpipe --http :8080 \
+bgpipe --http :8080 --http-open \
   -- connect 192.0.2.1 \
   -- metrics -LR -A \
       ipv4 \
@@ -79,7 +79,7 @@ These are always created (prefix derived from stage name):
 | `bgpipe_metrics_messages_total{dir="right",type="update"}` | UPDATE messages flowing right |
 | `bgpipe_metrics_messages_total{dir="left",type="open"}` | OPEN messages flowing left |
 | `bgpipe_metrics_messages_total{dir="right",type="keepalive"}` | KEEPALIVE messages flowing right |
-| *(all dir × type combinations)* | One series per direction+type pair |
+| *(all dir x type combinations)* | One series per direction+type pair |
 
 Each `(dir, type)` combination is a separate Prometheus series, enabling PromQL
 aggregations like `sum by (dir)`, `sum by (type)`, or filtering on
@@ -87,7 +87,9 @@ aggregations like `sum by (dir)`, `sum by (type)`, or filtering on
 
 ## HTTP endpoints
 
-When `--http` is set:
+`--http` is a global bgpipe option, not specific to this stage -- see the
+[HTTP API](../http-api.md) reference for the full endpoint list, authentication
+(`--http-auth` / `--http-open`), and pprof profiling. In short, when `--http` is set:
 
 | Endpoint | Description |
 |----------|-------------|
@@ -102,7 +104,7 @@ When `--http` is set:
 Monitor a live BGP session with Prometheus scraping:
 
 ```bash
-bgpipe --http :9090 \
+bgpipe --http :9090 --http-open \
     -- connect 192.0.2.1 \
     -- metrics -LR -A ipv4 ipv6 'bogon: as_origin > 64512' \
     -- connect 10.0.0.1
@@ -121,7 +123,7 @@ bgpipe \
 Named stage with custom metric prefix:
 
 ```bash
-bgpipe --http :8080 \
+bgpipe --http :8080 --http-open \
     -- connect 192.0.2.1 \
     -- @my_counters metrics -LR -A ipv4 ipv6 \
     -- connect 10.0.0.1

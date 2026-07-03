@@ -37,7 +37,9 @@ message, ASPA validation is skipped for the session and a warning is logged.
 The stage also verifies that the first AS in the path matches the neighbor's
 ASN (per draft-ietf-sidrops-aspa-verification, Section 5). This check is
 skipped for Route Server peers (`--role rs`), as RSes do not prepend their ASN
-([RFC 7947](https://datatracker.ietf.org/doc/html/rfc7947)).
+([RFC 7947](https://datatracker.ietf.org/doc/html/rfc7947)), and can be
+disabled entirely with `--first-hop=false` -- see
+[Multi-peer feeds](#multi-peer-feeds).
 
 ### Actions for INVALID paths
 
@@ -66,6 +68,7 @@ For INVALID paths, the failing hop is reported in `aspa/invalid-hop` as
 | `--event` | string | | Emit named event on INVALID paths |
 | `--role` | string | `auto` | Peer's BGP role: `auto`, `provider`, `customer`, `peer`, `rs`, `rs-client` |
 | `--peer-tag` | string | | Read the peer ASN from given message tag (eg. `PEER_AS`) instead of OPEN |
+| `--first-hop` | bool | `true` | Check that `path[0]` equals the neighbor ASN; disable for collector feeds ([RFC 7947](https://datatracker.ietf.org/doc/html/rfc7947)) |
 | `--no-wait` | bool | `false` | Start before the RPKI cache is ready |
 
 ### Multi-peer feeds
@@ -78,6 +81,14 @@ that these stages attach, which enables the first-hop check for every peer
 individually. `--peer-tag` requires an explicit `--role`, which then applies
 to all peers in the stream. If a message lacks the tag, the first-hop check
 is skipped for that message.
+
+On a collector feed the first-hop check is often more noise than signal: the
+collector's `PEER_AS` is not a real routing adjacency, and IXP route servers
+in the feed do not prepend their ASN ([RFC 7947](https://datatracker.ietf.org/doc/html/rfc7947)),
+so a legitimate path whose `path[0]` is the route server's client is flagged
+INVALID. Pass `--first-hop=false` to drop the check entirely and validate paths
+only on their merits (the valley-free / attestation checks), which is the
+appropriate posture for passive monitoring of a multiplexed collector feed.
 
 The `--role` option specifies the peer's BGP role (from the peer's
 perspective, per [RFC 9234](https://datatracker.ietf.org/doc/html/rfc9234)):

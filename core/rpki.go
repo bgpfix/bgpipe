@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -200,6 +201,11 @@ func (r *Rpki) rtrRun(addr string, usetls bool) {
 		}
 		if b.Ctx.Err() != nil {
 			return
+		}
+
+		// version negotiation: reconnect immediately with the lower version
+		if errors.Is(err, rtr.ErrDowngrade) {
+			continue
 		}
 
 		if sleep := time.Until(retry); sleep > time.Second {

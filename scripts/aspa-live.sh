@@ -1,5 +1,5 @@
 #!/bin/bash
-# aspa-live.sh — real-world ASPA validation against RIPE RIS Live.
+# aspa-live.sh - real-world ASPA validation against RIPE RIS Live.
 #
 # Usage:
 #   aspa-live.sh <rpki.json> [duration]
@@ -12,8 +12,8 @@
 # peer's OPEN, so auto-detection can't read the BGP Role capability.
 # RIS peers typically announce their full Internet view to the collector,
 # which from the collector's perspective is a "received from provider"
-# relationship — downstream validation with valley-free up-ramp/down-ramp
-# pattern (draft-ietf-sidrops-aspa-verification §5.5). Using "customer"
+# relationship - downstream validation with valley-free up-ramp/down-ramp
+# pattern (draft-ietf-sidrops-aspa-verification section 5.5). Using "customer"
 # would force strict upstream validation and flag every path that
 # traverses a Tier-1 whose ASPA declares "no providers" ([0]).
 # --peer-tag PEER_AS reads the peer ASN from ris-live tags, enabling
@@ -25,7 +25,7 @@ DURATION="${2:-30s}"
 
 BGPIPE="${BGPIPE:-$(dirname "$0")/../bgpipe}"
 if [[ ! -x "$BGPIPE" ]]; then
-	echo "bgpipe binary not found at $BGPIPE — set BGPIPE=/path/to/bgpipe" >&2
+	echo "bgpipe binary not found at $BGPIPE - set BGPIPE=/path/to/bgpipe" >&2
 	exit 2
 fi
 

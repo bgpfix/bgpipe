@@ -39,13 +39,17 @@ docker run --rm \
 To run bgpipe as a proxy accessible from the host or other containers, expose port 179:
 
 ```bash
-# transparent proxy: host:1790 -> bgpipe -> 192.0.2.1:179
+# BGP proxy: host:1790 -> bgpipe -> 192.0.2.1:179
 docker run --rm \
     -p 1790:179 \
     ghcr.io/bgpfix/bgpipe:latest \
     -- listen :179 \
     -- connect --wait "listen" 192.0.2.1
 ```
+
+NB: this is ordinary port forwarding, not bgpipe's [transparent (TPROXY) mode](stages/connect.md#transparent-mode) --
+both peers dial bgpipe explicitly. For a proxy that is invisible at the IP layer, see `--transparent` on the
+[connect](stages/connect.md) and [listen](stages/listen.md) stages.
 
 `--wait listen` tells the `connect` stage to wait until `listen` has accepted a connection before dialling out. This ensures the two halves of the proxy session are always synchronized.
 
@@ -122,7 +126,7 @@ Replace `192.0.2.1` with the address of your downstream router. bgpipe listens o
 
 ## Building Locally
 
-The Dockerfile auto-detects the target platform, so a plain `docker build` produces the right image for your machine — no flags needed:
+The Dockerfile auto-detects the target platform, so a plain `docker build` produces the right image for your machine - no flags needed:
 
 ```bash
 git clone https://github.com/bgpfix/bgpipe

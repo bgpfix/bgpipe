@@ -1,6 +1,7 @@
 package stages
 
 import (
+	"fmt"
 	"net/netip"
 
 	"github.com/bgpfix/bgpfix/speaker"
@@ -46,7 +47,11 @@ func (s *Speaker) Attach() error {
 
 	lid := k.String("id")
 	if len(lid) > 0 {
-		so.LocalId = netip.MustParseAddr(lid)
+		id, err := netip.ParseAddr(lid)
+		if err != nil {
+			return fmt.Errorf("invalid --id: %w", err)
+		}
+		so.LocalId = id
 	} else if so.Passive {
 		so.LocalId = netip.Addr{}
 	} else {

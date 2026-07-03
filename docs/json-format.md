@@ -34,7 +34,7 @@ Unknown or unparsed types produce a hex string like `"0x1234abcd"`.
 
 ### Example
 
-KEEPALIVE — the simplest message:
+KEEPALIVE - the simplest message:
 ```json
 ["R", 2, "2025-07-11T08:47:22.659", "KEEPALIVE", null, null]
 ```
@@ -215,19 +215,19 @@ hex representation.
 
 ### Communities
 
-**Standard** (`COMMUNITY`) — array of `"ASN:VALUE"` strings (both uint16):
+**Standard** (`COMMUNITY`) - array of `"ASN:VALUE"` strings (both uint16):
 
 ```json
 "COMMUNITY": {"flags": "OT", "value": ["64515:100", "8218:20000"]}
 ```
 
-**Large** (`LARGE_COMMUNITY`) — array of `"ASN:VALUE1:VALUE2"` strings (all uint32):
+**Large** (`LARGE_COMMUNITY`) - array of `"ASN:VALUE1:VALUE2"` strings (all uint32):
 
 ```json
 "LARGE_COMMUNITY": {"flags": "OT", "value": ["20473:300:15169"]}
 ```
 
-**Extended** (`EXT_COMMUNITY`) — array of objects with `type`, `value`, and optional `nontransitive`:
+**Extended** (`EXT_COMMUNITY`) - array of objects with `type`, `value`, and optional `nontransitive`:
 
 ```json
 "EXT_COMMUNITY": {
@@ -280,7 +280,7 @@ For IPv6 and other multi-protocol reachable NLRI:
 | `link-local`| string        | IPv6 link-local next-hop (optional, IPv6 only)  |
 | `prefixes`  | array         | Prefix strings in CIDR notation                 |
 
-For Flowspec address families, the format uses `rules` instead of `prefixes` — see [Flowspec](flowspec.md).
+For Flowspec address families, the format uses `rules` instead of `prefixes` - see [Flowspec](flowspec.md).
 
 When the NLRI is not parsed (unsupported address family), the value falls back to:
 
@@ -331,7 +331,7 @@ Same structure without `nexthop`:
 
 ## See Also
 
-- [Flowspec Format](flowspec.md) — Flowspec rules and actions in JSON
-- [Message Filters](filters.md) — Filter BGP messages using `grep` and `drop` stages
-- [Examples](examples.md) — Practical bgpipe command-line examples
-- [bgpfix library](https://github.com/bgpfix/bgpfix) — The underlying Go library
+- [Flowspec Format](flowspec.md) - Flowspec rules and actions in JSON
+- [Message Filters](filters.md) - Filter BGP messages using `grep` and `drop` stages
+- [Examples](examples.md) - Practical bgpipe command-line examples
+- [bgpfix library](https://github.com/bgpfix/bgpfix) - The underlying Go library

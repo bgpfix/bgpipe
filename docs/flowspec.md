@@ -3,8 +3,8 @@
 Flowspec (Flow Specification, [RFC 8955](https://datatracker.ietf.org/doc/html/rfc8955)) carries traffic filtering policies over BGP.
 A Flowspec UPDATE message consists of two parts:
 
-- **Rules** — traffic match conditions, carried in `MP_REACH` (or `MP_UNREACH` for withdrawals)
-- **Actions** — what to do with matched traffic, carried in `EXT_COMMUNITY`
+- **Rules** - traffic match conditions, carried in `MP_REACH` (or `MP_UNREACH` for withdrawals)
+- **Actions** - what to do with matched traffic, carried in `EXT_COMMUNITY`
 
 ## Complete Example
 
@@ -118,7 +118,7 @@ This matches destination ports 8000-9000: the second condition (<= 9000) is ANDe
 | `val` | integer | Value to compare against                                      |
 | `and` | boolean | If `true`, AND this condition with the *preceding* one. Default: OR. |
 
-Multiple conditions in the array are combined with **OR** by default. Set `"and": true` on a condition to **AND** it with the preceding condition instead, per [RFC 8955 §4.2.1.1](https://datatracker.ietf.org/doc/html/rfc8955#section-4.2.1.1).
+Multiple conditions in the array are combined with **OR** by default. Set `"and": true` on a condition to **AND** it with the preceding condition instead, per [RFC 8955 section 4.2.1.1](https://datatracker.ietf.org/doc/html/rfc8955#section-4.2.1.1).
 
 ### Numeric Operator Values
 
@@ -193,6 +193,6 @@ Rate-limit UDP traffic from 198.51.100.0/24 to 10 Mbps and redirect to VRF:
 
 ## See Also
 
-- [JSON Format](json-format.md) — General BGP message JSON format
-- [Message Filters](filters.md) — Filter BGP messages
-- [bgpfix library](https://github.com/bgpfix/bgpfix) — The underlying Go library
+- [JSON Format](json-format.md) - General BGP message JSON format
+- [Message Filters](filters.md) - Filter BGP messages
+- [bgpfix library](https://github.com/bgpfix/bgpfix) - The underlying Go library

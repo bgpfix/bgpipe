@@ -48,7 +48,7 @@ jobs:
             fi
           }
 
-          # NB: pure Go — anything else can always `go build`
+          # NB: pure Go - anything else can always `go build`
           build linux amd64
           build linux arm64
           build darwin arm64

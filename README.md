@@ -13,11 +13,11 @@ bgpipe sits between routers as a transparent proxy, auditing, filtering, and tra
 
 **Use cases:**
 - BGP firewall with RPKI validation, prefix limits, and rate limiting
-- Bidirectional BGP to JSON translation including Flowspec — pipe through jq, Python, anything
+- Bidirectional BGP to JSON translation including Flowspec - pipe through jq, Python, anything
 - MRT file processing and conversion at scale
-- Scriptable pipeline — chain stages or pipe through external programs
+- Scriptable pipeline - chain stages or pipe through external programs
 - Live BGP monitoring from RIPE RIS Live or RouteViews with real-time filters
-- Secure transport — add TCP-MD5 to sessions, proxy over encrypted WebSockets
+- Secure transport - add TCP-MD5 to sessions, proxy over encrypted WebSockets
 
 See the [RIPE 88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/) for background.
 

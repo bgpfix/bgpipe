@@ -63,7 +63,7 @@ func TestAspa_ResolvePeerAutoNoCapability(t *testing.T) {
 	s := newTestAspa()
 	s.role_auto = true
 
-	// no OPEN message stored → role unknown → ASPA skipped
+	// no OPEN message stored -> role unknown -> ASPA skipped
 	p := s.resolvePeer(dir.DIR_R)
 	require.False(t, p.ok)
 }
@@ -114,6 +114,24 @@ func TestAspa_RouteServerSkipsFirstHopCheck(t *testing.T) {
 	require.True(t, s.validateMsg(m))
 }
 
+func TestAspa_FirstHopDisabledSkipsCheck(t *testing.T) {
+	s := newTestAspa()
+	s.role, _ = parseRoleName("customer")
+	s.act = act_drop
+	s.first_hop = false // collector-feed config
+
+	s.cache.AddASPA(true, 65020, []uint32{65010})
+	s.cache.Apply()
+	storeOpenASN(s.P, dir.DIR_R, 65099) // peer ASN differs from path[0]
+
+	// path[0]=65010 != neighbor 65099, but the check is off, so the path is
+	// verified on its merits (65010 -> 65020 attested) and kept
+	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	setAsPathSeq(m, 65010, 65020)
+
+	require.True(t, s.validateMsg(m))
+}
+
 func TestAspa_PeerTagFirstHopCheck(t *testing.T) {
 	s := newTestAspa()
 	s.role, _ = parseRoleName("peer")
@@ -123,19 +141,19 @@ func TestAspa_PeerTagFirstHopCheck(t *testing.T) {
 	s.cache.AddASPA(true, 65020, []uint32{65010})
 	s.cache.Apply()
 
-	// matching tag → first-hop OK, path attested → kept
+	// matching tag -> first-hop OK, path attested -> kept
 	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
 	pipe.UseTags(m)["PEER_AS"] = "65010"
 	require.True(t, s.validateMsg(m))
 
-	// mismatching tag → first-hop check fails → dropped
+	// mismatching tag -> first-hop check fails -> dropped
 	m2 := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m2, 65010, 65020)
 	pipe.UseTags(m2)["PEER_AS"] = "65099"
 	require.False(t, s.validateMsg(m2))
 
-	// missing tag → first-hop check disabled → kept
+	// missing tag -> first-hop check disabled -> kept
 	m3 := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m3, 65010, 65020)
 	require.True(t, s.validateMsg(m3))
@@ -150,7 +168,7 @@ func TestAspa_PeerASNCachedPerDirection(t *testing.T) {
 	s.cache.Apply()
 	storeOpenASN(s.P, dir.DIR_R, 65010)
 
-	// first UPDATE resolves peer ASN 65010 → first-hop check passes
+	// first UPDATE resolves peer ASN 65010 -> first-hop check passes
 	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
 	require.True(t, s.validateMsg(m))
