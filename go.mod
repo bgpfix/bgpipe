@@ -5,20 +5,20 @@ go 1.25.0
 toolchain go1.26.0
 
 require (
-	github.com/VictoriaMetrics/metrics v1.43.2
+	github.com/VictoriaMetrics/metrics v1.44.0
 	github.com/bgpfix/bgpfix v0.20.1
 	github.com/buger/jsonparser v1.2.0
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/klauspost/compress v1.18.6
+	github.com/klauspost/compress v1.19.0
 	github.com/knadh/koanf/providers/posflag v1.0.1
 	github.com/knadh/koanf/v2 v2.3.5
 	github.com/puzpuzpuz/xsync/v4 v4.5.0
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	github.com/twmb/franz-go v1.21.3
+	github.com/twmb/franz-go v1.21.5
 	github.com/twmb/franz-go/pkg/kadm v1.18.0
 	github.com/valyala/bytebufferpool v1.0.0
 	golang.org/x/sys v0.46.0
@@ -44,4 +44,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-//replace github.com/bgpfix/bgpfix => ../bgpfix
+replace github.com/bgpfix/bgpfix => ../bgpfix
