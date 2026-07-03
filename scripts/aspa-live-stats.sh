@@ -1,5 +1,5 @@
 #!/bin/bash
-# aspa-live-stats.sh — run aspa-live with metrics exposed; print final counts.
+# aspa-live-stats.sh - run aspa-live with metrics exposed; print final counts.
 #
 # Usage:
 #   aspa-live-stats.sh <rpki.json> [duration]   (default 60s)

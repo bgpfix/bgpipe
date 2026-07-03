@@ -79,7 +79,7 @@ These are always created (prefix derived from stage name):
 | `bgpipe_metrics_messages_total{dir="right",type="update"}` | UPDATE messages flowing right |
 | `bgpipe_metrics_messages_total{dir="left",type="open"}` | OPEN messages flowing left |
 | `bgpipe_metrics_messages_total{dir="right",type="keepalive"}` | KEEPALIVE messages flowing right |
-| *(all dir × type combinations)* | One series per direction+type pair |
+| *(all dir x type combinations)* | One series per direction+type pair |
 
 Each `(dir, type)` combination is a separate Prometheus series, enabling PromQL
 aggregations like `sum by (dir)`, `sum by (type)`, or filtering on

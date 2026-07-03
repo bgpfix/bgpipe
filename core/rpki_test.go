@@ -31,7 +31,7 @@ func TestRpkiFileLoadAndReload(t *testing.T) {
 	require.Equal(t, 1, vrps4)
 	require.Equal(t, 0, aspas)
 
-	// no change → no-op
+	// no change -> no-op
 	require.NoError(t, b.Rpki.fileLoad())
 
 	newData := `{
@@ -79,7 +79,7 @@ func TestRpkiRtrSource(t *testing.T) {
 			1, 24, 24, 0,
 			192, 0, 2, 0,
 			0, 0, 0xfd, 0xe9})
-		// ASPA: announce CAS 65010 → provider 65001 (flags in header byte 2)
+		// ASPA: announce CAS 65010 -> provider 65001 (flags in header byte 2)
 		conn.Write([]byte{2, 11, 1, 0, 0, 0, 0, 16,
 			0, 0, 0xfd, 0xf2,
 			0, 0, 0xfd, 0xe9})

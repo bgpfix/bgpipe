@@ -39,7 +39,7 @@ which lets it bind to (spoof) a non-local source address. Paired with a
 transparent [listen](listen.md) stage, this builds a fully transparent
 man-in-the-middle proxy: neither BGP speaker sees the bgpipe host at the IP
 layer. The router only needs to redirect TCP/179 to the bgpipe host (TPROXY,
-PBR, or an inline bridge) — no BGP reconfiguration.
+PBR, or an inline bridge) - no BGP reconfiguration.
 
 In transparent mode the endpoints default to the captured TCP tuple published
 by the listen side (`L_LOCAL` as the target, `L_REMOTE` as the spoofed source).
@@ -47,7 +47,7 @@ Pass `0.0.0.0` as *ADDR* to ask for the captured target, and leave `--bind`
 unset to spoof the captured source. Use `-W`/`--wait` so **connect** dials
 only after the listen side has accepted and published the tuple; otherwise an
 explicit *ADDR* and `--bind` (which you know in advance as the administrator)
-are used as-is. The MD5 password is the same on both legs — the key the two
+are used as-is. The MD5 password is the same on both legs - the key the two
 routers already share for the pair.
 
 ## Options

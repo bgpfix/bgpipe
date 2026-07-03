@@ -32,6 +32,7 @@ type Aspa struct {
 	role      byte   // parsed --role (valid iff !role_auto)
 	role_auto bool   // --role auto: detect from the OPEN message
 	peer_tag  string // --peer-tag flag value
+	first_hop bool   // run the first-hop check (path[0] == neighbor AS)?
 
 	// resolved peer state, set once per direction on first UPDATE
 	peer [2]aspaPeer
@@ -65,6 +66,7 @@ func NewAspa(parent *core.StageBase) core.Stage {
 	f.String("event", "", "emit event on INVALID paths")
 	f.String("role", "auto", "peer BGP role: auto|provider|customer|peer|rs|rs-client")
 	f.String("peer-tag", "", "read peer ASN from given message tag (eg. PEER_AS) instead of OPEN")
+	f.Bool("first-hop", true, "check path[0] == neighbor AS; disable for collector feeds (RFC 7947)")
 	f.Bool("no-wait", false, "start before the RPKI cache is ready")
 
 	return s
@@ -86,6 +88,7 @@ func (s *Aspa) Attach() error {
 
 	s.tag = k.Bool("tag")
 	s.event = k.String("event")
+	s.first_hop = k.Bool("first-hop")
 
 	if role := k.String("role"); strings.EqualFold(role, "auto") {
 		s.role_auto = true
@@ -196,9 +199,9 @@ func (s *Aspa) resolvePeer(d dir.Dir) *aspaPeer {
 
 		p.ok = true
 
-		// NB: per draft-ietf-sidrops-aspa-verification-24 §5.5, the downstream
+		// NB: per draft-ietf-sidrops-aspa-verification-24 section 5.5, the downstream
 		// procedure applies only when the route is received from a Provider;
-		// RS-client receiving from RS uses upstream per §5.4.
+		// RS-client receiving from RS uses upstream per section 5.4.
 		p.down = role == caps.ROLE_PROVIDER
 		p.rs = role == caps.ROLE_RS
 
@@ -255,12 +258,13 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	var failCAS, failPAS uint32
 	switch {
 	case flat == nil:
-		result = rpki.ASPA_INVALID // AS_SET present → invalid per ASPA spec §3
+		result = rpki.ASPA_INVALID // AS_SET present -> invalid per ASPA spec section 3
 	case len(flat) == 1:
 		result = rpki.ASPA_VALID // single-hop
-	case !peer.rs && asn != 0 && flat[0] != asn:
-		// NB: per draft §5.4/5.5 step 2, path[0] must equal the neighbor AS.
-		// RS peers don't prepend their ASN (RFC 7947).
+	case s.first_hop && !peer.rs && asn != 0 && flat[0] != asn:
+		// NB: per draft section 5.4/5.5 step 2, path[0] must equal the neighbor AS.
+		// RS peers don't prepend their ASN (RFC 7947); --first-hop=false
+		// disables this check entirely for multiplexed collector feeds.
 		result = rpki.ASPA_INVALID
 	default:
 		result, failCAS, failPAS = rpki.VerifyPath(aspa, flat, peer.down)
@@ -315,7 +319,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 		if len(reach) > 0 {
 			u.AddUnreach(reach...)
 		}
-		// NB: pure withdrawal must not carry path attributes (RFC 4271 §4.3)
+		// NB: pure withdrawal must not carry path attributes (RFC 4271 section 4.3)
 		if !u.HasReach() {
 			u.Attrs.Filter(attrs.ATTR_MP_UNREACH)
 		}

@@ -122,7 +122,7 @@ Replace `192.0.2.1` with the address of your downstream router. bgpipe listens o
 
 ## Building Locally
 
-The Dockerfile auto-detects the target platform, so a plain `docker build` produces the right image for your machine — no flags needed:
+The Dockerfile auto-detects the target platform, so a plain `docker build` produces the right image for your machine - no flags needed:
 
 ```bash
 git clone https://github.com/bgpfix/bgpipe

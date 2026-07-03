@@ -47,6 +47,7 @@ func newTestAspa() *Aspa {
 	s := &Aspa{
 		StageBase: newTestBase(),
 		cache:     rpki.NewCache(nil),
+		first_hop: true, // matches the --first-hop default
 	}
 	s.cnt_msg = metrics.GetOrCreateCounter("test_bgpipe_aspa_messages_total")
 	s.cnt_valid = metrics.GetOrCreateCounter("test_bgpipe_aspa_valid_total")

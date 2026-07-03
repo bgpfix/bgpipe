@@ -17,8 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// NB: end-to-end coverage for: cache load → pipe callback wiring →
-// UPDATE validation → ROV/ASPA actions. Unit tests in rov_test.go and
+// NB: end-to-end coverage for: cache load -> pipe callback wiring ->
+// UPDATE validation -> ROV/ASPA actions. Unit tests in rov_test.go and
 // aspa_test.go call validateMsg directly and do not exercise actual
 // pipe flow or rov+aspa chaining.
 
@@ -139,7 +139,7 @@ func TestIntegration_ASPA_ValidPathPassesThrough(t *testing.T) {
 	storeOpenASN(s.P, dir.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
-	// path [65010, 65020]: peer matches path[0]; 65020→{65010} is attested
+	// path [65010, 65020]: peer matches path[0]; 65020->{65010} is attested
 	m := newReachUpdate(dir.DIR_R, "203.0.113.0/24")
 	setAsPathSeq(m, 65010, 65020)
 
@@ -158,7 +158,7 @@ func TestIntegration_ASPA_InvalidPath_WithdrawStripsReach(t *testing.T) {
 	storeOpenASN(s.P, dir.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
-	// path [65010, 65099]: 65099 has ASPA={65030}, 65010 not listed → INVALID
+	// path [65010, 65099]: 65099 has ASPA={65030}, 65010 not listed -> INVALID
 	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65099)
 
@@ -167,7 +167,7 @@ func TestIntegration_ASPA_InvalidPath_WithdrawStripsReach(t *testing.T) {
 	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
 	require.False(t, got.Update.HasReach())
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllUnreach()))
-	// NB: RFC 4271 §4.3 - pure withdrawal must not carry path attributes
+	// NB: RFC 4271 section 4.3 - pure withdrawal must not carry path attributes
 	require.False(t, got.Update.Attrs.Has(attrs.ATTR_MP_REACH))
 }
 
@@ -214,7 +214,7 @@ func TestIntegration_ASPA_UnknownPathPassesThrough(t *testing.T) {
 	storeOpenASN(s.P, dir.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
-	// 65040 has no ASPA record → every hop is "no attestation" → UNKNOWN
+	// 65040 has no ASPA record -> every hop is "no attestation" -> UNKNOWN
 	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65040)
 
@@ -233,7 +233,7 @@ func TestIntegration_ASPA_FirstHopMismatchIsInvalid(t *testing.T) {
 	storeOpenASN(s.P, dir.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
-	// path[0]=65099 != peer 65010 → INVALID regardless of ASPA content
+	// path[0]=65099 != peer 65010 -> INVALID regardless of ASPA content
 	m := newReachUpdate(dir.DIR_R, "203.0.113.0/24")
 	setAsPathSeq(m, 65099, 65020)
 
@@ -256,7 +256,7 @@ func TestIntegration_ROVValid_ASPAInvalid_BothActionsFire(t *testing.T) {
 	storeOpenASN(rov.P, dir.DIR_R, 65010)
 	startPipe(t, rov.P, rov.validateMsg, aspa.validateMsg)
 
-	// 192.0.2.0/24 origin 65001 → ROV VALID; path breaks ASPA at 65099
+	// 192.0.2.0/24 origin 65001 -> ROV VALID; path breaks ASPA at 65099
 	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65099, 65001)
 

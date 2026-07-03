@@ -72,7 +72,7 @@ func TestRov_KeepTagsOnly(t *testing.T) {
 	s.cache.Apply()
 
 	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
-	setAsPathSeq(m, 65001) // wrong origin → INVALID
+	setAsPathSeq(m, 65001) // wrong origin -> INVALID
 
 	require.True(t, s.validateMsg(m))
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(m.Update.AllReach()))
