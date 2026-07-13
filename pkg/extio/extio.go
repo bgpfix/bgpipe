@@ -722,6 +722,7 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 	}
 	if err != nil {
 		eio.Warn().Err(err).Msg("extio write error")
+		eio.Pool.Put(bb)
 		return keep
 	}
 

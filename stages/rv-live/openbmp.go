@@ -102,14 +102,8 @@ func (s *RvLive) fixPath(m *msg.Msg, peer_as uint32) {
 		return
 	}
 
-	// remove the first ASN from the first segment
-	if len(seg.List) > 1 {
-		seg.List = seg.List[1:]
-	} else if len(asp.Segments) > 1 {
-		asp.Segments = asp.Segments[1:]
-	} else {
-		return // AS_PATH would become empty, leave it as is
-	}
+	// remove the first ASN from the first segment (NB: len >= 2 checked above)
+	seg.List = seg.List[1:]
 
 	// update the message
 	m.Update.Attrs.Set(attrs.ATTR_ASPATH, asp)

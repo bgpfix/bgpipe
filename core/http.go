@@ -25,7 +25,7 @@ func (b *Bgpipe) configureHTTP() error {
 	if addr == "" {
 		b.HTTP = nil
 		b.httpmux = nil
-		return nil
+		return b.configurePprof(nil) // NB: --pprof <addr> works without --http
 	}
 
 	m := chi.NewRouter()
@@ -133,6 +133,9 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 	pprofVal := strings.TrimSpace(b.K.String("pprof"))
 	if pprofVal == "" {
 		return nil
+	}
+	if pprofVal == "http" && m == nil {
+		return fmt.Errorf("--pprof http requires --http")
 	}
 
 	// separate pprof server? overwrite m with a fresh mux
