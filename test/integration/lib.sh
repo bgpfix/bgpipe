@@ -49,7 +49,7 @@ cleanup() {
 	docker ps -aq -f "label=$RUN_ID" 2>/dev/null | while read -r c; do
 		docker rm -f "$c" >/dev/null 2>&1 || true
 	done
-	rm -rf "$WORK"
+	if [ $rc -ne 0 ] && [ -n "${KEEP_WORK:-}" ]; then msg "work dir kept: $WORK"; else rm -rf "$WORK"; fi
 	exit $rc
 }
 trap cleanup EXIT
@@ -92,7 +92,7 @@ wait_tcp() {
 # run_bgpipe <args...> - background bgpipe, JSON output to $WORK/out.json
 run_bgpipe() {
 	msg "bgpipe $*"
-	"$BGPIPE" --log warn "$@" >"$WORK/out.json" 2>"$WORK/bgpipe.log" &
+	"$BGPIPE" --log "${BGPIPE_LOG:-warn}" "$@" >"$WORK/out.json" 2>"$WORK/bgpipe.log" &
 	BGPIPE_PID=$!
 	PIDS="$PIDS $BGPIPE_PID"
 }
@@ -113,16 +113,28 @@ wait_prefix() {
 	wait_json "$1" ".[3]==\"UPDATE\" and (tostring|contains(\"$2\"))"
 }
 
-# wait_exec <timeout-seconds> <cmd...> - wait until cmd succeeds inside $DAEMON
+# wait_exec <container> <timeout-seconds> <cmd...> - wait until cmd succeeds in container
 wait_exec() {
-	local t="$1" i=0
-	shift
-	while ! docker exec "$DAEMON" "$@" >/dev/null 2>&1; do
+	local c="$1" t="$2" i=0
+	shift 2
+	while ! docker exec "$c" "$@" >/dev/null 2>&1; do
 		i=$((i + 1))
-		[ $i -ge $((t * 5)) ] && fail "timeout waiting for: docker exec $*"
+		[ $i -ge $((t * 5)) ] && fail "timeout waiting for: docker exec $c $*"
 		sleep 0.2
 	done
 	msg "daemon ready: $*"
+}
+
+# wait_cmd <timeout-seconds> <shell-command> - wait until the command succeeds
+# (runs on the host, so pipes work; use for shell-less containers)
+wait_cmd() {
+	local t="$1" cmd="$2" i=0
+	while ! eval "$cmd" >/dev/null 2>&1; do
+		i=$((i + 1))
+		[ $i -ge $((t * 5)) ] && fail "timeout waiting for: $cmd"
+		sleep 0.2
+	done
+	msg "ready: $cmd"
 }
 
 # host_ip - sets $HOSTIP to the address containers can reach the host at

@@ -12,7 +12,7 @@ run_daemon frr 179 \
 	quay.io/frrouting/frr:10.2.1
 # NB: the mapped host port is not a reliable readiness probe (docker/colima
 # forwarders accept or refuse on their own); wait for bgpd's listener itself
-wait_exec 60 sh -c "netstat -tln | grep -q :179"
+wait_exec "$DAEMON" 60 sh -c "netstat -tln | grep -q :179"
 wait_tcp 127.0.0.1 "$PORT" 30
 
 run_bgpipe --stdout -- speaker --active --asn 65000 --id 10.0.0.5 -- connect "127.0.0.1:$PORT"
