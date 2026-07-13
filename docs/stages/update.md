@@ -47,6 +47,10 @@ For each attribute, drop takes precedence: when both `--drop-com*` and the
 matching `--add-com*` are given, the attribute is dropped and the add is
 ignored.
 
+Messages without reachable prefixes (pure withdrawals) are passed through
+unmodified: per RFC 4271 section 4.3, a withdrawal must not carry path
+attributes.
+
 ## Examples
 
 Rewrite next-hop for all updates:

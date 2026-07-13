@@ -132,6 +132,11 @@ func (s *Update) Attach() error {
 func (s *Update) modify(m *msg.Msg) (keep_message bool) {
 	u := &m.Update
 
+	// NB: pure withdrawals must not carry path attributes (RFC 4271 section 4.3)
+	if !u.HasReach() {
+		return true
+	}
+
 	// modify next-hop?
 	if s.run_nexthop {
 		m.Edit(s.modifyNexthop(u))
