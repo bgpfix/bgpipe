@@ -10,7 +10,12 @@ run_daemon stayrtr 8282 \
 wait_tcp 127.0.0.1 "$PORT"
 
 # rov waits for the RTR cache before processing (see rov --no-wait)
-run_bgpipe --stdout --rpki "127.0.0.1:$PORT" -- read "$TESTDATA/updates.json" -- rov
+# NB: read from a FIFO held open until the output is asserted, to keep the
+# shutdown-at-EOF race (see TODO-0713.md) out of this test's scope
+mkfifo "$WORK/in.json"
+run_bgpipe --stdout --rpki "127.0.0.1:$PORT" -- read "$WORK/in.json" -- rov
+exec 9>"$WORK/in.json"
+cat "$TESTDATA/updates.json" >&9
 
 # 192.0.2.0/24 from AS65001 has a matching ROA; 198.51.100.0/24 from AS65099
 # does not (and gets withdrawn by rov); 10.99.0.0/16 has no ROA at all
