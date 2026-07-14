@@ -36,6 +36,7 @@ type Bgpipe struct {
 	K         *koanf.Koanf   // global config
 	Pipe      *pipe.Pipe     // bgpfix pipe
 	Stages    []*StageBase   // pipe stages
+	Autos     []*StageBase   // auto-added stages (--stdin/--stdout), not in Stages
 	Rpki      *Rpki          // optional shared RPKI cache (see UseRpki)
 	HTTP      *http.Server   // optional shared HTTP server
 	StartTime time.Time      // when the pipeline started
@@ -132,9 +133,7 @@ func (b *Bgpipe) Run() error {
 
 	// wait for all stages to finish
 	b.Cancel(ErrPipeFinished)
-	for _, s := range b.Stages {
-		s.runStop(nil) // may block 1s
-	}
+	b.stopStages()
 
 	// any errors on the global context?
 	err := context.Cause(b.Ctx)
@@ -148,6 +147,18 @@ func (b *Bgpipe) Run() error {
 	}
 
 	return err
+}
+
+// stopStages stops all stages, waiting for each to finish cleanly
+// (see StageOptions.StopTimeout). Auto-added stages go last, so that
+// eg. the --stdout output buffer is fully drained before process exit.
+func (b *Bgpipe) stopStages() {
+	for _, s := range b.Stages {
+		s.runStop(nil)
+	}
+	for _, s := range b.Autos {
+		s.runStop(nil)
+	}
 }
 
 // handleSignals listens for OS signals

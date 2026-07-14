@@ -52,7 +52,6 @@ in CI (env CI set) missing docker is a failure instead.
 - The 80-replay test asserts FRR's per-neighbor message stats: every one of
   the 500 re-marshaled real-world UPDATEs must be accepted with the session
   still established and no NOTIFICATION sent.
-- Known bgpipe issue (see ../../../TODO-0713.md): the last message of a
-  read-from-file pipeline can be lost at shutdown under load; tests avoid
-  the race by feeding input via a FIFO held open until output is asserted.
+- Tests 65 and 80 feed input via a FIFO held open on purpose: they need the
+  BGP/RTR session to stay alive while the test asserts live behavior.
 - ExaBGP interop (exec --format=exa) is a possible later addition.

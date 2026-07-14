@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 )
 
@@ -378,6 +379,82 @@ func TestStage_DoubleStartStop(t *testing.T) {
 
 	if c := runCount.Load(); c != 1 {
 		t.Fatalf("expected Run called 1 time, got %d", c)
+	}
+}
+
+// TestBgpipe_AutoStdoutDrained is a regression test for silent loss of the
+// last message(s) at read-EOF shutdown: the auto-added --stdout stage was not
+// in b.Stages, so stopStages() never stopped it and the process could exit
+// before its output buffer was drained.
+func TestBgpipe_AutoStdoutDrained(t *testing.T) {
+	const N = 5
+	var written atomic.Int32
+	queue := make(chan struct{}, 100)
+
+	repo := map[string]NewStage{
+		// a producer that writes N messages and quits (like the read stage)
+		"test": func(base *StageBase) Stage {
+			d := &dummyStage{StageBase: base}
+			base.Options.IsProducer = true
+			d.runFn = func() error {
+				for range N {
+					m := d.P.GetMsg().Switch(msg.KEEPALIVE)
+					if err := d.inputs[0].WriteMsg(m); err != nil {
+						return err
+					}
+				}
+				return nil
+			}
+			return d
+		},
+		// a slow-draining stdout stage (like extio WriteStream)
+		"stdout": func(base *StageBase) Stage {
+			base.Options.IsStdout = true
+			base.Options.Bidir = true
+			d := &dummyStage{StageBase: base}
+			base.P.Options.OnMsg(func(m *msg.Msg) bool {
+				queue <- struct{}{}
+				return true
+			}, 0)
+			d.runFn = func() error {
+				for range queue {
+					time.Sleep(2 * time.Millisecond)
+					written.Add(1)
+				}
+				return nil
+			}
+			d.stopFn = func() error {
+				close(queue)
+				return nil
+			}
+			return d
+		},
+	}
+
+	b := newTestBgpipe(repo)
+	if _, err := b.AddStage(1, "test"); err != nil {
+		t.Fatal(err)
+	}
+
+	// NB: single stage without I/O makes AttachStages auto-add --stdout
+	if err := b.AttachStages(); err != nil {
+		t.Fatal(err)
+	}
+	if len(b.Autos) != 1 {
+		t.Fatalf("expected 1 auto-added stage, got %d", len(b.Autos))
+	}
+
+	// emulate Bgpipe.Run()
+	b.Pipe.Options.OnStart(b.onStart)
+	b.Pipe.Start()
+	drainPipe(b.Pipe)
+	b.Pipe.Wait()
+	b.Cancel(ErrPipeFinished)
+	b.stopStages()
+
+	// all N messages must be written before stopStages returns
+	if w := written.Load(); w != N {
+		t.Fatalf("expected %d messages written before exit, got %d", N, w)
 	}
 }
 

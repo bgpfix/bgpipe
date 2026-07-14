@@ -74,6 +74,7 @@ func (b *Bgpipe) AttachStages() error {
 		} else if err := s.attach(); err != nil {
 			return fmt.Errorf("--stdout: %w", err)
 		}
+		b.Autos = append(b.Autos, s)
 	}
 
 	// add stdin?
@@ -92,6 +93,7 @@ func (b *Bgpipe) AttachStages() error {
 		} else if err := s.attach(); err != nil {
 			return fmt.Errorf("--stdin: %w", err)
 		}
+		b.Autos = append(b.Autos, s)
 	}
 
 	// force 2-byte ASNs?

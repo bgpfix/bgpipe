@@ -53,6 +53,12 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 
 		// block on Run if context still valid
 		err := context.Cause(s.Ctx)
+		if err == ErrPipeFinished {
+			// NB: normal pipe completion may beat a late Run() start; still run it,
+			// so that write-side stages (eg. --stdout) drain their buffered output
+			// before runStop() lets the process exit
+			err = nil
+		}
 		if err == nil {
 			s.Trace().Msg("Run() starting")
 			s.Event("START")
