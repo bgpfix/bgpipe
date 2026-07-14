@@ -64,16 +64,16 @@ func (r *Rpki) Start() error {
 		return fmt.Errorf("RPKI cache in use but --rpki is empty")
 	}
 
-	// cache metrics
-	vmmetrics.NewGauge("bgpipe_rpki_vrps_ipv4", func() float64 {
+	// cache metrics; NB: GetOrCreate to stay idempotent (eg. tests)
+	vmmetrics.GetOrCreateGauge("bgpipe_rpki_vrps_ipv4", func() float64 {
 		v4, _, _ := r.Cache.Sizes()
 		return float64(v4)
 	})
-	vmmetrics.NewGauge("bgpipe_rpki_vrps_ipv6", func() float64 {
+	vmmetrics.GetOrCreateGauge("bgpipe_rpki_vrps_ipv6", func() float64 {
 		_, v6, _ := r.Cache.Sizes()
 		return float64(v6)
 	})
-	vmmetrics.NewGauge("bgpipe_rpki_aspa_entries", func() float64 {
+	vmmetrics.GetOrCreateGauge("bgpipe_rpki_aspa_entries", func() float64 {
 		_, _, aspas := r.Cache.Sizes()
 		return float64(aspas)
 	})
