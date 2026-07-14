@@ -728,6 +728,7 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 
 	// try writing, don't panic on channel closed [1]
 	if !util.Send(eio.Output, bb) {
+		eio.Pool.Put(bb)
 		pipe.UseContext(m).Callback.Blackhole()
 		return keep
 	}

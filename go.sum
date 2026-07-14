@@ -1,5 +1,7 @@
 github.com/VictoriaMetrics/metrics v1.44.0 h1:Fr8yqQSV+ZfYaDD/anqk1E8e9YPgfleSleJmAI0M0Tw=
 github.com/VictoriaMetrics/metrics v1.44.0/go.mod h1:xDM82ULLYCYdFRgQ2JBxi8Uf1+8En1So9YUwlGTOqTc=
+github.com/bgpfix/bgpfix v0.20.3-0.20260714173231-07465853df6c h1:PVgzon4p/SIGqKYiwdLJOu6R5MWEzNi6so1IHFCxZa4=
+github.com/bgpfix/bgpfix v0.20.3-0.20260714173231-07465853df6c/go.mod h1:3mmcFA+tYsS6caPBWNXSdJj5nj+Gz/GW7fW2UgZz/Hc=
 github.com/buger/jsonparser v1.2.0 h1:4EFcvK1kD4jyj6YqNK6skK6w+y7FHHBR+XBCtxwu/6g=
 github.com/buger/jsonparser v1.2.0/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
