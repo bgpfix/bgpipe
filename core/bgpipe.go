@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/go-chi/chi/v5"
@@ -101,9 +101,9 @@ func (b *Bgpipe) Run() error {
 	// print the pipeline and quit?
 	if b.K.Bool("explain") {
 		fmt.Printf("--> MESSAGES FLOWING RIGHT -->\n")
-		b.StageDump(dir.DIR_R, os.Stdout)
+		b.StageDump(meta.DIR_R, os.Stdout)
 		fmt.Printf("\n<-- MESSAGES FLOWING LEFT <--\n")
-		b.StageDump(dir.DIR_L, os.Stdout)
+		b.StageDump(meta.DIR_L, os.Stdout)
 		return nil
 	}
 
@@ -297,7 +297,7 @@ func (b *Bgpipe) StageCount() int {
 }
 
 // StageDump prints all stages in dir direction in textual form to w (by default stdout)
-func (b *Bgpipe) StageDump(d dir.Dir, w io.Writer) (total int) {
+func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 	// use default w?
 	if w == nil {
 		w = os.Stdout
@@ -320,7 +320,7 @@ func (b *Bgpipe) StageDump(d dir.Dir, w io.Writer) (total int) {
 			indices = append(indices, i)
 		}
 	}
-	if d == dir.DIR_L {
+	if d == meta.DIR_L {
 		slices.Reverse(indices)
 	}
 

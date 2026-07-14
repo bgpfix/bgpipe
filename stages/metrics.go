@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/VictoriaMetrics/metrics"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -18,7 +18,7 @@ import (
 
 // msgKey identifies a (direction, type) pair for per-combination counters
 type msgKey struct {
-	d dir.Dir
+	d meta.Dir
 	t msg.Type
 }
 
@@ -61,9 +61,9 @@ func (s *Metrics) Attach() error {
 	// total (no labels) + per-(dir,type) labeled counters
 	s.cTotal = metrics.GetOrCreateCounter(prefix + "messages_total")
 
-	dirNames := map[dir.Dir]string{
-		dir.DIR_L: "left",
-		dir.DIR_R: "right",
+	dirNames := map[meta.Dir]string{
+		meta.DIR_L: "left",
+		meta.DIR_R: "right",
 	}
 	s.cDirType = make(map[msgKey]*metrics.Counter, len(dirNames)*len(msg.TypeValues()))
 	for d, dname := range dirNames {

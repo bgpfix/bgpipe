@@ -3,7 +3,7 @@ package rpki
 import (
 	"testing"
 
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/stretchr/testify/require"
 )
@@ -51,7 +51,7 @@ func TestAspa_ResolvePeerRoles(t *testing.T) {
 			var ok bool
 			s.role, ok = parseRoleName(tc.role)
 			require.True(t, ok)
-			p := s.resolvePeer(dir.DIR_R)
+			p := s.resolvePeer(meta.DIR_R)
 			require.True(t, p.ok)
 			require.Equal(t, tc.down, p.down)
 			require.Equal(t, tc.rs, p.rs)
@@ -64,7 +64,7 @@ func TestAspa_ResolvePeerAutoNoCapability(t *testing.T) {
 	s.role_auto = true
 
 	// no OPEN message stored -> role unknown -> ASPA skipped
-	p := s.resolvePeer(dir.DIR_R)
+	p := s.resolvePeer(meta.DIR_R)
 	require.False(t, p.ok)
 }
 
@@ -76,7 +76,7 @@ func TestAspa_EmptyASPathIsSkipped(t *testing.T) {
 	s.cache.AddASPA(true, 65020, []uint32{65010})
 	s.cache.Apply()
 
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setEmptyAsPath(m)
 
 	require.NotPanics(t, func() {
@@ -91,9 +91,9 @@ func TestAspa_FirstHopMismatchDrops(t *testing.T) {
 
 	s.cache.AddASPA(true, 65020, []uint32{65010})
 	s.cache.Apply()
-	storeOpenASN(s.P, dir.DIR_R, 65099)
+	storeOpenASN(s.P, meta.DIR_R, 65099)
 
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
 
 	require.False(t, s.validateMsg(m))
@@ -106,9 +106,9 @@ func TestAspa_RouteServerSkipsFirstHopCheck(t *testing.T) {
 
 	s.cache.AddASPA(true, 65020, []uint32{65010})
 	s.cache.Apply()
-	storeOpenASN(s.P, dir.DIR_R, 65099)
+	storeOpenASN(s.P, meta.DIR_R, 65099)
 
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
 
 	require.True(t, s.validateMsg(m))
@@ -122,11 +122,11 @@ func TestAspa_FirstHopDisabledSkipsCheck(t *testing.T) {
 
 	s.cache.AddASPA(true, 65020, []uint32{65010})
 	s.cache.Apply()
-	storeOpenASN(s.P, dir.DIR_R, 65099) // peer ASN differs from path[0]
+	storeOpenASN(s.P, meta.DIR_R, 65099) // peer ASN differs from path[0]
 
 	// path[0]=65010 != neighbor 65099, but the check is off, so the path is
 	// verified on its merits (65010 -> 65020 attested) and kept
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
 
 	require.True(t, s.validateMsg(m))
@@ -142,19 +142,19 @@ func TestAspa_PeerTagFirstHopCheck(t *testing.T) {
 	s.cache.Apply()
 
 	// matching tag -> first-hop OK, path attested -> kept
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
 	pipe.UseTags(m)["PEER_AS"] = "65010"
 	require.True(t, s.validateMsg(m))
 
 	// mismatching tag -> first-hop check fails -> dropped
-	m2 := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m2 := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m2, 65010, 65020)
 	pipe.UseTags(m2)["PEER_AS"] = "65099"
 	require.False(t, s.validateMsg(m2))
 
 	// missing tag -> first-hop check disabled -> kept
-	m3 := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m3 := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m3, 65010, 65020)
 	require.True(t, s.validateMsg(m3))
 }
@@ -166,16 +166,16 @@ func TestAspa_PeerASNCachedPerDirection(t *testing.T) {
 
 	s.cache.AddASPA(true, 65020, []uint32{65010})
 	s.cache.Apply()
-	storeOpenASN(s.P, dir.DIR_R, 65010)
+	storeOpenASN(s.P, meta.DIR_R, 65010)
 
 	// first UPDATE resolves peer ASN 65010 -> first-hop check passes
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
 	require.True(t, s.validateMsg(m))
 
 	// NB: peer state is resolved once; a changed OPEN is ignored
-	storeOpenASN(s.P, dir.DIR_R, 65099)
-	m2 := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	storeOpenASN(s.P, meta.DIR_R, 65099)
+	m2 := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m2, 65010, 65020)
 	require.True(t, s.validateMsg(m2))
 }

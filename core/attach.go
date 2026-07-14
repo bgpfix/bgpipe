@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bgpfix/bgpfix/caps"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/rs/zerolog"
 	"golang.org/x/time/rate"
@@ -136,7 +136,7 @@ func (b *Bgpipe) AttachStages() error {
 // in which no stage produces messages, which usually means a -L/-R mistake.
 func (b *Bgpipe) checkDeadCallbacks() {
 	// directions that have producers
-	var prod dir.Dir
+	var prod meta.Dir
 	for _, s := range b.Stages {
 		if s == nil {
 			continue
@@ -154,7 +154,7 @@ func (b *Bgpipe) checkDeadCallbacks() {
 		for _, cb := range s.callbacks {
 			d := cb.Dir
 			if d == 0 {
-				d = dir.DIR_LR // zero means no direction limit
+				d = meta.DIR_LR // zero means no direction limit
 			}
 			if d&prod == 0 {
 				s.Warn().Msgf("listens in direction %s, but no stage produces %s messages (missing -L/-R/-LR somewhere?)", d, d)
@@ -201,11 +201,11 @@ func (s *StageBase) attach() error {
 
 	// set s.Dir
 	if s.IsBidir {
-		s.Dir = dir.DIR_LR
+		s.Dir = meta.DIR_LR
 	} else if s.IsLeft {
-		s.Dir = dir.DIR_L
+		s.Dir = meta.DIR_L
 	} else {
-		s.Dir = dir.DIR_R
+		s.Dir = meta.DIR_R
 	}
 
 	// call child attach, collect what was attached to
@@ -328,7 +328,7 @@ func (s *StageBase) attach() error {
 		li.LimitRate = rl
 		li.LimitSkip = limit_skip
 
-		if li.Dir == dir.DIR_L {
+		if li.Dir == meta.DIR_L {
 			li.Reverse = true // CLI gives L stages in reverse
 			li.CbFilter = frev
 		} else {

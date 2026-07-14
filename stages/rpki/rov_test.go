@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/bgpfix/bgpfix/attrs"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestRov_WithdrawsOnlyInvalidPrefixes(t *testing.T) {
 	s.cache.AddVRP(true, netip.MustParsePrefix("198.51.100.0/24"), 24, 65002)
 	s.cache.Apply()
 
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24", "198.51.100.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24", "198.51.100.0/24")
 	setAsPathSeq(m, 65001)
 
 	require.True(t, s.validateMsg(m))
@@ -35,7 +35,7 @@ func TestRov_PureIPv6WithdrawalDropsPathAttrs(t *testing.T) {
 	s.cache.AddVRP(true, netip.MustParsePrefix("2001:db8::/48"), 48, 65002)
 	s.cache.Apply()
 
-	m := newReachUpdate(dir.DIR_R, "2001:db8::/48")
+	m := newReachUpdate(meta.DIR_R, "2001:db8::/48")
 	setAsPathSeq(m, 65001)
 
 	require.True(t, s.validateMsg(m))
@@ -55,7 +55,7 @@ func TestRov_StrictTreatsNotFoundAsInvalid(t *testing.T) {
 	s.cache.AddVRP(true, netip.MustParsePrefix("192.0.2.0/24"), 24, 65001)
 	s.cache.Apply()
 
-	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
+	m := newReachUpdate(meta.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65001)
 
 	require.True(t, s.validateMsg(m))
@@ -71,7 +71,7 @@ func TestRov_KeepTagsOnly(t *testing.T) {
 	s.cache.AddVRP(true, netip.MustParsePrefix("192.0.2.0/24"), 24, 65002)
 	s.cache.Apply()
 
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65001) // wrong origin -> INVALID
 
 	require.True(t, s.validateMsg(m))

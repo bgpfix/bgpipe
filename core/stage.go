@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/go-chi/chi/v5"
@@ -102,7 +102,7 @@ type StageBase struct {
 	IsRight bool    // write L->R msgs + capture L->R msgs?
 	IsLeft  bool    // write R->L msgs + capture R->L msgs?
 	IsBidir bool    // true iff IsRight && IsLeft
-	Dir     dir.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
+	Dir     meta.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
