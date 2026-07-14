@@ -32,7 +32,7 @@ fi
 cleanup() {
 	rc=$?
 	if [ $rc -ne 0 ] && [ $rc -ne 77 ]; then
-		for c in $(docker ps -aq -f "label=$RUN_ID" 2>/dev/null); do
+		for c in $(docker ps -aq -f "label=$RUN_ID" 2>/dev/null || true); do
 			msg "--- docker logs $c (tail) ---"
 			docker logs "$c" 2>&1 | tail -30 >&2 || true
 		done
@@ -46,9 +46,10 @@ cleanup() {
 		fi
 	fi
 	if [ -n "$PIDS" ]; then kill $PIDS 2>/dev/null || true; fi
+	# NB: || true keeps cleanup going when docker is missing or its daemon is down
 	docker ps -aq -f "label=$RUN_ID" 2>/dev/null | while read -r c; do
 		docker rm -f "$c" >/dev/null 2>&1 || true
-	done
+	done || true
 	if [ $rc -ne 0 ] && [ -n "${KEEP_WORK:-}" ]; then msg "work dir kept: $WORK"; else rm -rf "$WORK"; fi
 	exit $rc
 }
