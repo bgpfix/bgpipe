@@ -648,7 +648,7 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 		mr.Reset().Switch(mrt.BGP4MP_ET)
 
 		// marshal BGP into BGP4MP
-		err = mr.Bgp4.FromMsg(m)
+		err = mr.Bgp4.FromMsg(m, eio.P.Caps)
 		if err != nil {
 			break
 		}
