@@ -83,7 +83,8 @@ func (s *RvLive) processRecord(record *kgo.Record) error {
 	return s.in.WriteMsg(m)
 }
 
-// fixPath removes the first (collector) ASN from AS_PATH, if peer_as is the second AS in path.
+// fixPath removes the first (collector) ASN from the first AS_PATH segment,
+// iff it is directly followed by peer_as in the same segment.
 func (s *RvLive) fixPath(m *msg.Msg, peer_as uint32) {
 	// need to parse as UPDATE first
 	if m.Type != msg.UPDATE || s.P.ParseMsg(m) != nil {
