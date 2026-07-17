@@ -22,9 +22,10 @@ import (
 // It is created on the first UseRpki call, and maintained by the bgpipe core:
 // fed either from an RTR server, a URL, or a local file, as given in --rpki.
 type Rpki struct {
-	b      *Bgpipe
-	Cache  *rpki.Cache // the shared RPKI cache
-	source string      // --rpki flag value
+	b        *Bgpipe
+	Cache    *rpki.Cache // the shared RPKI cache
+	source   string      // --rpki flag value
+	WantASPA bool        // an aspa stage is attached (warn if the source cannot provide ASPA data)
 
 	// RTR session state (accessed only from the RTR client goroutine)
 	serial uint32 // last applied serial
@@ -145,7 +146,10 @@ func (r *Rpki) rtrRun(addr string, usetls bool) {
 	b := r.b
 	cache := r.Cache
 
-	client := rtr.NewClient(&rtr.Options{
+	var client *rtr.Client
+	aspa_warned := false // warn once per connection
+
+	client = rtr.NewClient(&rtr.Options{
 		Logger:  &b.Logger,
 		Version: rtr.VersionAuto,
 
@@ -157,6 +161,12 @@ func (r *Rpki) rtrRun(addr string, usetls bool) {
 			r.serial, r.sessid, r.has = serial, sessid, true
 			if changed {
 				cache.Apply()
+			}
+
+			// NB: pre-v2 servers can not provide ASPA data at all
+			if v := client.Version(); r.WantASPA && !aspa_warned && v < rtr.VersionV2 {
+				aspa_warned = true
+				b.Warn().Str("rpki", addr).Msgf("ASPA validation enabled, but the RTR server negotiated protocol v%d (ASPA needs v2): no ASPA data", v)
 			}
 		},
 
@@ -197,6 +207,7 @@ func (r *Rpki) rtrRun(addr string, usetls bool) {
 		if err == nil {
 			cache.Flush()
 			r.has = false
+			aspa_warned = false
 			err = client.Run(b.Ctx, conn) // NB: Run always closes conn
 		}
 		if b.Ctx.Err() != nil {

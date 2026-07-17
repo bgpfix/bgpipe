@@ -44,6 +44,7 @@ type Bgpipe struct {
 	repo      map[string]NewStage // maps cmd to new stage func
 	httpmux   *chi.Mux            // shared HTTP routes
 	httppprof bool                // true if pprof mounted on --http
+	pprofsrv  *http.Server        // standalone --pprof <addr> server
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L
@@ -86,6 +87,9 @@ func NewBgpipe(version string, repo ...map[string]NewStage) *Bgpipe {
 
 // Run configures and runs the bgpipe
 func (b *Bgpipe) Run() error {
+	// NB: covers the standalone --pprof server, started already in Configure
+	defer b.stopHTTP()
+
 	// configure bgpipe and its stages
 	if err := b.Configure(); err != nil {
 		b.Error().Err(err).Msg("configuration error")
@@ -122,7 +126,6 @@ func (b *Bgpipe) Run() error {
 		b.Error().Err(err).Msg("could not start HTTP API")
 		return err
 	}
-	defer b.stopHTTP()
 
 	// handle signals
 	go b.handleSignals()

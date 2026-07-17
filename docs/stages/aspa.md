@@ -127,6 +127,11 @@ bgpipe \
     -- connect 192.0.2.1
 ```
 
+Note that messages dropped by an earlier stage never reach later stages: with
+`rov --invalid drop` placed before `aspa`, dropped messages are not ASPA
+validated at all. Put `aspa` first if you want its tags and metrics to cover
+every UPDATE.
+
 ASPA route-leak monitoring on a live route collector feed, with current RPKI
 data fetched from the rpki-client console (tag everything, enforce nothing):
 

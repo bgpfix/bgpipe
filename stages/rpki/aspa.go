@@ -112,6 +112,7 @@ func (s *Aspa) Attach() error {
 
 	// use the shared RPKI cache, maintained by the bgpipe core
 	s.cache = s.B.UseRpki()
+	s.B.Rpki.WantASPA = true
 
 	// prometheus metrics
 	prefix := s.MetricPrefix()
