@@ -339,10 +339,10 @@ func (eio *Extio) Attach() error {
 		}
 
 		eio.mrt = mrt.NewReader(p, eio.InputD)
-		eio.mrt.NoCtx = eio.opt_notags
+		eio.mrt.NoTags = eio.opt_notags
 
 		eio.bmp = bmp.NewReader(p, eio.InputD)
-		eio.bmp.NoCtx = eio.opt_notags
+		eio.bmp.NoTags = eio.opt_notags
 		eio.bmp.OpenBMP = eio.opt_obmp
 	} else {
 		eio.Options.IsProducer = false
