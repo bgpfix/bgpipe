@@ -21,11 +21,11 @@ contents. Supported formats include JSON (one message per line), MRT,
 raw BGP wire format, ExaBGP line format, BMP (BGP Monitoring Protocol),
 and OpenBMP.
 
-For MRT, both BGP4MP update dumps and TABLE_DUMP / TABLE_DUMP_V2 RIB
-snapshots (RouteViews `rib.*`, RIPE RIS `bview.*`) are supported. RIB
-snapshots are converted into synthetic BGP UPDATE messages: every peer's
-routes are streamed, tagged with `PEER_AS` and `PEER_IP`, and consecutive
-prefixes sharing the same attributes are bundled into one UPDATE.
+For MRT, both BGP4MP update dumps (`updates.*`) and TABLE_DUMP /
+TABLE_DUMP_V2 RIB snapshots (RouteViews `rib.*`, RIPE RIS `bview.*`) are
+supported. RIB snapshots are converted into synthetic BGP UPDATE messages,
+tagged with `PEER_AS` and `PEER_IP`. See [MRT files](../mrt.md) for details
+and use cases.
 
 Compressed files are decompressed automatically when `--decompress` is set
 to `auto` (the default). The compression format is detected from the file
@@ -73,6 +73,13 @@ Stream a RouteViews RIB snapshot as BGP UPDATEs:
 bgpipe -- read rib.20240301.0000.bz2 -- write rib.json
 ```
 
+Read a RIB snapshot under a non-standard name (content sampling cannot detect
+table dumps, so the format must be given explicitly):
+
+```bash
+bgpipe -- read --format mrt my-snapshot.dat -- write rib.json
+```
+
 Replay an MRT file into a live BGP session after establishment:
 
 ```bash
@@ -86,4 +93,5 @@ bgpipe \
 
 [write](write.md),
 [stdin](stdin.md),
+[MRT files](../mrt.md),
 [Stages overview](index.md)

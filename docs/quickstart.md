@@ -173,6 +173,27 @@ $ bgpipe -o \
 ...
 ```
 
+### Reading RIB snapshots
+
+Collectors publish two kinds of MRT files: the *update dumps* used above, and *table dumps* -- full snapshots of every route each peer had at a given moment. `bgpipe` reads both. A table dump has no BGP messages in it, so each RIB entry is converted into a synthetic UPDATE tagged with the peer it came from:
+
+```json
+$ bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-bview.gz
+["L",106,"2026-07-24T16:00:00.000","UPDATE",{"reach":["21.0.0.0/8","22.0.0.0/8","26.0.0.0/8","28.0.0.0/8","29.0.0.0/8","30.0.0.0/8","33.0.0.0/8"],"attrs":{"ORIGIN":{"flags":"T","value":"IGP"},"ASPATH":{"flags":"T","value":[917,60068,3356,749]},"NEXTHOP":{"flags":"T","value":"5.57.81.231"},"COMMUNITY":{"flags":"OT","value":["917:56020","3356:3","3356:22","3356:70","3356:123","3356:575","3356:2013","3356:9999","57695:13000","60068:203","60068:2000","60068:2340","60068:7040"]}}},{"PEER_AS":"917","PEER_IP":"5.57.81.231"}]
+// ...
+```
+
+Note how the seven prefixes above share one UPDATE: they were adjacent in the snapshot and had identical attributes, so `bgpipe` bundled them just like a real router would.
+
+Since a snapshot holds every peer's table at once, you will usually want to narrow it down -- for instance to a single peer, using a [tag filter](filters.md#tags):
+
+```bash
+bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-bview.gz \
+    -- grep 'tag[PEER_AS] == "8218"'
+```
+
+See [MRT files](mrt.md) for the full picture, including RPKI-validating an entire routing table.
+
 ## Connecting to a BGP speaker
 
 Now that you know how to read MRT files, let's connect to a BGP speaker and process messages in real-time. You can use the [connect](stages/connect.md) stage to establish the TCP connection, and the [speaker](stages/speaker.md) stage to open and maintain a BGP session.

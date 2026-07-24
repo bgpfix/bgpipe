@@ -80,6 +80,10 @@ More one-liners:
 # convert an MRT archive to JSON, straight from RIPE RIS (or RouteViews) URL
 $ bgpipe read https://data.ris.ripe.net/rrc01/latest-update.gz | head
 
+# stream a full RIB snapshot as BGP updates, keeping one peer's view
+$ bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-bview.gz \
+    -- grep 'tag[PEER_AS] == "8218"'
+
 # proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes
 $ bgpipe -o -- listen :179 -- rov -- connect --wait listen 192.0.2.1
 ```
@@ -122,7 +126,7 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 
 -   :material-database:{ .lg } **MRT Processing**
 
-    Read, convert, and filter compressed MRT archives at scale
+    Read, convert, and filter compressed MRT archives at scale - update dumps and full RIB snapshots alike
 
 -   :material-console:{ .lg } **Scriptable Pipeline**
 

@@ -34,7 +34,7 @@ MRT archive  -->  [ read -- grep -- tag ]  -->  JSON on stdout
 
 Because bgpipe speaks native BGP itself, it can also stand in wherever you'd otherwise reach for a speaker library like ExaBGP - originating routes, replaying an MRT dump onto a session, or scripting a one-off announcement from the command line.
 Because every message has a full [JSON representation](json-format.md) (including [Flowspec](flowspec.md)), you can pipe BGP through `jq`, Python, or any tool that handles JSON.
-Because it supports [MRT](https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit), [BMP](https://datatracker.ietf.org/doc/html/rfc7854), and [ExaBGP](https://github.com/Exa-Networks/exabgp/) formats, it integrates with existing infrastructure.
+Because it supports [MRT](mrt.md) (both update dumps and full RIB snapshots), [BMP](https://datatracker.ietf.org/doc/html/rfc7854), and [ExaBGP](https://github.com/Exa-Networks/exabgp/) formats, it integrates with existing infrastructure.
 
 The result is a single tool that covers speaker duties, transparent proxying, offline analysis, format translation, and security enforcement -- all from the command line, all composable, all scriptable.
 

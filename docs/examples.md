@@ -34,6 +34,47 @@ bgpipe \
   -- write output.json
 ```
 
+## Stream a RIB snapshot as BGP UPDATEs
+
+Stages: [read](stages/read.md), [write](stages/write.md)
+
+Read a full routing table snapshot from a collector and convert it to JSON. Unlike update dumps, a [table dump](mrt.md#table-dumps) is a point-in-time snapshot of every route each peer had; bgpipe turns each RIB entry into a synthetic UPDATE tagged with `PEER_AS` and `PEER_IP`, bundling prefixes that share attributes.
+
+```bash
+bgpipe \
+  -- read https://archive.routeviews.org/bgpdata/2026.07/RIBS/rib.20260723.0600.bz2 \
+  -- write rib.json.gz
+```
+
+## Find RPKI-invalid routes in a full table
+
+Stages: [read](stages/read.md), [rov](stages/rov.md), [grep](stages/grep.md), [write](stages/write.md)
+
+Validate an entire RIB snapshot against RPKI and keep only what failed, per peer. `--invalid keep` leaves invalid routes in the stream (instead of withdrawing them) so they can be tagged and collected. This answers "what was RPKI-invalid in the DFZ at snapshot time".
+
+```bash
+bgpipe --rpki https://rpki.example.net/rpki.json \
+  -- read rib.20260723.0600.bz2 \
+  -- rov --invalid keep \
+  -- grep 'tag[rov/status] == INVALID' \
+  -- write invalid-routes.json
+```
+
+Swap [rov](stages/rov.md) for [aspa](stages/aspa.md) to look for route leaks instead.
+
+## Extract one peer's table from a collector RIB
+
+Stages: [read](stages/read.md), [grep](stages/grep.md), [write](stages/write.md)
+
+A collector RIB contains every peer's view (typically 20-50 peers). Filter on the peer tag to recover exactly the routes a single peer advertised.
+
+```bash
+bgpipe \
+  -- read rib.20260723.0600.bz2 \
+  -- grep 'tag[PEER_AS] == "6939"' \
+  -- write as6939-table.json
+```
+
 ## Adding TCP-MD5
 
 Stages: [listen](stages/listen.md), [connect](stages/connect.md), [stdout](stages/stdout.md)
@@ -71,6 +112,16 @@ Listen for new connections on TCP port 179. Configure an active BGP speaker for 
 bgpipe \
   -- speaker --active --asn 65055 \
   -- read --wait ESTABLISHED updates.20230301.0000.bz2 \
+  -- listen :179
+```
+
+The same works with a [RIB snapshot](mrt.md#table-dumps) instead of an update dump, which fills a lab router with a realistic full table. Add a `grep` on `tag[PEER_AS]` to load a single peer's view rather than every peer's copy:
+
+```bash
+bgpipe \
+  -- speaker --active --asn 65055 \
+  -- read --wait ESTABLISHED rib.20260723.0600.bz2 \
+  -- grep 'tag[PEER_AS] == "6939"' \
   -- listen :179
 ```
 
