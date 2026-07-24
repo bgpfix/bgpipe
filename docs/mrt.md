@@ -222,12 +222,9 @@ you need.
 
 - Table dumps are **read-only**; bgpipe writes update dumps (`BGP4MP_ET`) only.
 - `RIB_GENERIC`, multicast RIBs, and ADD-PATH RIB subtypes are skipped.
-- Synthetic UPDATEs carry no withdrawals -- a snapshot only states what was
-  present, so [update](stages/update.md)-style before/after comparisons need two
-  snapshots diffed downstream.
+- Synthetic UPDATEs carry no withdrawals -- a snapshot only states what was present.
 - Timestamps come from the MRT record header, so every message from one snapshot
-  shares the snapshot time; the per-route "originated" time in RIB entries is not
-  exposed as a tag.
+  shares the snapshot time.
 
 ## See Also
 

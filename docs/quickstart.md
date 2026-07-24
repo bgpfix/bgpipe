@@ -173,7 +173,7 @@ $ bgpipe -o \
 ...
 ```
 
-### Reading RIB snapshots
+## Reading RIB snapshots
 
 Collectors publish two kinds of MRT files: the *update dumps* used above, and *table dumps* -- full snapshots of every route each peer had at a given moment. `bgpipe` reads both. A table dump has no BGP messages in it, so each RIB entry is converted into a synthetic UPDATE tagged with the peer it came from:
 
