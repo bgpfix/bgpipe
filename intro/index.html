@@ -1234,6 +1234,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../mrt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRT files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filters/" class="md-nav__link">
         
   
@@ -1411,7 +1438,7 @@ all of these - only the input and output stages change.</p>
 </span></code></pre></div>
 <p>Because bgpipe speaks native BGP itself, it can also stand in wherever you'd otherwise reach for a speaker library like ExaBGP - originating routes, replaying an MRT dump onto a session, or scripting a one-off announcement from the command line.
 Because every message has a full <a href="../json-format/">JSON representation</a> (including <a href="../flowspec/">Flowspec</a>), you can pipe BGP through <code>jq</code>, Python, or any tool that handles JSON.
-Because it supports <a href="https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit">MRT</a>, <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a>, and <a href="https://github.com/Exa-Networks/exabgp/">ExaBGP</a> formats, it integrates with existing infrastructure.</p>
+Because it supports <a href="../mrt/">MRT</a> (both update dumps and full RIB snapshots), <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a>, and <a href="https://github.com/Exa-Networks/exabgp/">ExaBGP</a> formats, it integrates with existing infrastructure.</p>
 <p>The result is a single tool that covers speaker duties, transparent proxying, offline analysis, format translation, and security enforcement -- all from the command line, all composable, all scriptable.</p>
 <h2 id="watch-the-talk">Watch the talk<a class="headerlink" href="#watch-the-talk" title="Permanent link">&para;</a></h2>
 <p>See the <a href="../quickstart/">quickstart guide</a> for a practical introduction. You can also watch the <a href="https://ripe88.ripe.net/archives/video/1365/">RIPE 88 bgpipe talk</a> below.</p>

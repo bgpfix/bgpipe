@@ -1258,6 +1258,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../mrt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRT files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../filters/" class="md-nav__link">
         
   
@@ -1445,9 +1472,14 @@ with <code>-LR</code> and uses the data to set each message direction. Without <
 messages are injected in the stage direction.</p>
 <p>The input format is auto-detected by default. Detection first tries the file
 extension (e.g., <code>.mrt</code> or <code>.json</code>), then falls back to sampling the file
-contents. Supported formats include JSON (one message per line), MRT (BGP4MP),
+contents. Supported formats include JSON (one message per line), MRT,
 raw BGP wire format, ExaBGP line format, BMP (BGP Monitoring Protocol),
 and OpenBMP.</p>
+<p>For MRT, both BGP4MP update dumps (<code>updates.*</code>) and TABLE_DUMP /
+TABLE_DUMP_V2 RIB snapshots (RouteViews <code>rib.*</code>, RIPE RIS <code>bview.*</code>) are
+supported. RIB snapshots are converted into synthetic BGP UPDATE messages,
+tagged with <code>PEER_AS</code> and <code>PEER_IP</code>. See <a href="../../mrt/">MRT files</a> for details
+and use cases.</p>
 <p>Compressed files are decompressed automatically when <code>--decompress</code> is set
 to <code>auto</code> (the default). The compression format is detected from the file
 extension: <code>.gz</code> (gzip), <code>.bz2</code> (bzip2), <code>.zst</code> / <code>.zstd</code> (Zstandard).</p>
@@ -1524,15 +1556,23 @@ entire file first, making it suitable for large MRT archives.</p>
 <p>Convert MRT to JSON:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>updates.mrt.gz<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>output.json
 </span></code></pre></div>
+<p>Stream a RouteViews RIB snapshot as BGP UPDATEs:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>rib.20240301.0000.bz2<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>rib.json
+</span></code></pre></div>
+<p>Read a RIB snapshot under a non-standard name (content sampling cannot detect
+table dumps, so the format must be given explicitly):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--format<span class="w"> </span>mrt<span class="w"> </span>my-snapshot.dat<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>rib.json
+</span></code></pre></div>
 <p>Replay an MRT file into a live BGP session after establishment:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>speaker<span class="w"> </span>--active<span class="w"> </span>--asn<span class="w"> </span><span class="m">65001</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--wait<span class="w"> </span>ESTABLISHED<span class="w"> </span>updates.mrt.zst<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--<span class="w"> </span>speaker<span class="w"> </span>--active<span class="w"> </span>--asn<span class="w"> </span><span class="m">65001</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--wait<span class="w"> </span>ESTABLISHED<span class="w"> </span>updates.mrt.zst<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../write/">write</a>,
 <a href="../stdin/">stdin</a>,
+<a href="../../mrt/">MRT files</a>,
 <a href="../">Stages overview</a></p>
 
 
