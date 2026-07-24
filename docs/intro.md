@@ -1,43 +1,42 @@
 # Introduction
 
-## The gap
+## Why bgpipe
 
-The tools available today for working with BGP fall into two camps.
-On the monitoring side, [BMP](https://datatracker.ietf.org/doc/html/rfc7854) streams a copy of the RIB to a collector, [MRT](https://datatracker.ietf.org/doc/html/rfc6396) dumps give you a snapshot to analyze after the fact, and CLI scraping lets you poll a router's state -- all observation, no control.
-On the active side, software speakers like [ExaBGP](https://github.com/Exa-Networks/exabgp) and [GoBGP](https://github.com/osrg/gobgp) let you originate and process routes programmatically -- but they are session *endpoints* with a BGP stack of their own: your router peers *with* the tool, not *through* it.
+BGP work tends to end up scattered across a pile of single-purpose tools: a speaker library
+like [ExaBGP](https://github.com/Exa-Networks/exabgp) or [GoBGP](https://github.com/osrg/gobgp)
+to originate and receive routes, ad-hoc scripts to chew through [MRT](https://datatracker.ietf.org/doc/html/rfc6396)
+archives or a [BMP](https://datatracker.ietf.org/doc/html/rfc7854) feed, and one-off glue code
+whenever two systems need to exchange routes in different formats.
+Each of these is its own project, with its own quirks, and none of them compose with the others.
 
-When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s -- the response is mostly manual, expressed in whatever filtering syntax each vendor provides.
-What has been missing is the middle ground: a drop-in, programmable layer *inside* an existing BGP session, where you can inspect, filter, and transform messages in real time -- while the routers on both ends keep talking to each other as before.
+**bgpipe** collapses that pile into one tool: a UNIX-style pipeline of composable stages that
+speaks BGP natively. Point it at a live session and it behaves like a scriptable speaker or an
+inline proxy; point it at a file or a streaming feed and it becomes a batch/streaming processor;
+chain it with `jq`, Python, or another process and it becomes translation glue between BGP and
+whatever format that process expects. The same stages and the same command-line syntax cover
+all of these - only the input and output stages change.
 
-## A UNIX pipeline for BGP
+## Pipeline of stages
 
-**bgpipe** fills that gap. It operates as a transparent proxy sitting on the BGP wire between two speakers. Every message flowing in either direction passes through a pipeline of composable stages - each doing one thing well, chained together like UNIX pipes:
+A bgpipe command line assembles a pipeline of stages, each doing one thing well, chained together like UNIX pipes. Stages can originate or terminate a session (`listen`, `connect`), filter messages (`grep`, `drop`, `head`), enforce policy (`limit`, `rov`, `aspa`), transform data (`update`, `tag`), measure traffic (`metrics`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
+
+Wire two speaker-facing stages on the ends and the pipeline runs inline between two routers, invisibly proxying and rewriting a live session:
 
 ```
 router A  -->  [ listen -- grep -- rov -- limit -- connect ]  -->  router B
 ```
 
-Stages can filter messages (`grep`, `drop`, `head`), enforce policy (`limit`, `rov`, `aspa`), transform data (`update`, `tag`), measure traffic (`metrics`), bridge formats (`read`, `write`, `stdin`, `stdout`), connect to external systems (`exec`, `pipe`, `websocket`), or tap into live data feeds (`ris-live`, `rv-live`).
+Swap the ends for `read`/`write` or a live feed instead, and the exact same middle stages become an offline or streaming processor - no routers, no proxy, just messages in and messages out:
 
-The same stages work without any routers involved: point `read` at an
-[MRT](https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit) archive or
-`ris-live` at the RIPE RIS firehose, and bgpipe becomes an offline research tool -
-the pipeline doesn't care whether messages come from a live session or a file.
+```
+MRT archive  -->  [ read -- grep -- tag ]  -->  JSON on stdout
+```
 
-Because bgpipe speaks native BGP on both sides, routers see a normal peer -- no protocol changes, no vendor lock-in.
+Because bgpipe speaks native BGP itself, it can also stand in wherever you'd otherwise reach for a speaker library like ExaBGP - originating routes, replaying an MRT dump onto a session, or scripting a one-off announcement from the command line.
 Because every message has a full [JSON representation](json-format.md) (including [Flowspec](flowspec.md)), you can pipe BGP through `jq`, Python, or any tool that handles JSON.
 Because it supports [MRT](https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit), [BMP](https://datatracker.ietf.org/doc/html/rfc7854), and [ExaBGP](https://github.com/Exa-Networks/exabgp/) formats, it integrates with existing infrastructure.
 
-The result is a single tool that handles monitoring, filtering, security enforcement, format conversion, and session manipulation -- all from the command line, all composable, all scriptable.
-
-## Under the hood
-
-Internally, bgpipe runs two message pipelines - one per direction - and stages
-attach callbacks that can inspect, modify, drop, or inject messages, coordinated
-through shared state and an event queue. Each stage implements a small Go
-interface shown on the right:
-
-![bgpipe architecture: two directional pipelines with stage callbacks, shared state, and an event queue; the Stage interface on the right](img/architecture.svg)
+The result is a single tool that covers speaker duties, transparent proxying, offline analysis, format translation, and security enforcement -- all from the command line, all composable, all scriptable.
 
 ## Watch the talk
 
