@@ -583,7 +583,13 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 		case err == io.EOF:
 			// emit pending aggregated messages (MRT table dumps)
 			if eio.opt_mrt {
-				return eio.mrt.Flush()
+				check := eio.checkMsg
+				if cb != nil {
+					check = func(m *msg.Msg) bool {
+						return eio.checkMsg(m) && cb(m)
+					}
+				}
+				return eio.mrt.Flush(check)
 			}
 			return nil
 		case err != nil:
