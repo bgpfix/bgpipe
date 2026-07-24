@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -353,10 +353,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-gap" class="md-nav__link">
+  <a href="#why-bgpipe" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The gap
+        Why bgpipe
       
     </span>
   </a>
@@ -364,21 +364,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-unix-pipeline-for-bgp" class="md-nav__link">
+  <a href="#pipeline-of-stages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A UNIX pipeline for BGP
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#under-the-hood" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Under the hood
+        Pipeline of stages
       
     </span>
   </a>
@@ -1346,10 +1335,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-gap" class="md-nav__link">
+  <a href="#why-bgpipe" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The gap
+        Why bgpipe
       
     </span>
   </a>
@@ -1357,21 +1346,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-unix-pipeline-for-bgp" class="md-nav__link">
+  <a href="#pipeline-of-stages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A UNIX pipeline for BGP
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#under-the-hood" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Under the hood
+        Pipeline of stages
       
     </span>
   </a>
@@ -1410,31 +1388,31 @@
 
 
 <h1 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h1>
-<h2 id="the-gap">The gap<a class="headerlink" href="#the-gap" title="Permanent link">&para;</a></h2>
-<p>The tools available today for working with BGP fall into two camps.
-On the monitoring side, <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a> streams a copy of the RIB to a collector, <a href="https://datatracker.ietf.org/doc/html/rfc6396">MRT</a> dumps give you a snapshot to analyze after the fact, and CLI scraping lets you poll a router's state -- all observation, no control.
-On the active side, software speakers like <a href="https://github.com/Exa-Networks/exabgp">ExaBGP</a> and <a href="https://github.com/osrg/gobgp">GoBGP</a> let you originate and process routes programmatically -- but they are session <em>endpoints</em> with a BGP stack of their own: your router peers <em>with</em> the tool, not <em>through</em> it.</p>
-<p>When a route leak propagates, when a hijacked prefix slips through filters, when a peer floods you with deaggregated /48s -- the response is mostly manual, expressed in whatever filtering syntax each vendor provides.
-What has been missing is the middle ground: a drop-in, programmable layer <em>inside</em> an existing BGP session, where you can inspect, filter, and transform messages in real time -- while the routers on both ends keep talking to each other as before.</p>
-<h2 id="a-unix-pipeline-for-bgp">A UNIX pipeline for BGP<a class="headerlink" href="#a-unix-pipeline-for-bgp" title="Permanent link">&para;</a></h2>
-<p><strong>bgpipe</strong> fills that gap. It operates as a transparent proxy sitting on the BGP wire between two speakers. Every message flowing in either direction passes through a pipeline of composable stages - each doing one thing well, chained together like UNIX pipes:</p>
+<h2 id="why-bgpipe">Why bgpipe<a class="headerlink" href="#why-bgpipe" title="Permanent link">&para;</a></h2>
+<p>BGP work tends to end up scattered across a pile of single-purpose tools: a speaker library
+like <a href="https://github.com/Exa-Networks/exabgp">ExaBGP</a> or <a href="https://github.com/osrg/gobgp">GoBGP</a>
+to originate and receive routes, ad-hoc scripts to chew through <a href="https://datatracker.ietf.org/doc/html/rfc6396">MRT</a>
+archives or a <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a> feed, and one-off glue code
+whenever two systems need to exchange routes in different formats.
+Each of these is its own project, with its own quirks, and none of them compose with the others.</p>
+<p><strong>bgpipe</strong> collapses that pile into one tool: a UNIX-style pipeline of composable stages that
+speaks BGP natively. Point it at a live session and it behaves like a scriptable speaker or an
+inline proxy; point it at a file or a streaming feed and it becomes a batch/streaming processor;
+chain it with <code>jq</code>, Python, or another process and it becomes translation glue between BGP and
+whatever format that process expects. The same stages and the same command-line syntax cover
+all of these - only the input and output stages change.</p>
+<h2 id="pipeline-of-stages">Pipeline of stages<a class="headerlink" href="#pipeline-of-stages" title="Permanent link">&para;</a></h2>
+<p>A bgpipe command line assembles a pipeline of stages, each doing one thing well, chained together like UNIX pipes. Stages can originate or terminate a session (<code>listen</code>, <code>connect</code>), filter messages (<code>grep</code>, <code>drop</code>, <code>head</code>), enforce policy (<code>limit</code>, <code>rov</code>, <code>aspa</code>), transform data (<code>update</code>, <code>tag</code>), measure traffic (<code>metrics</code>), bridge formats (<code>read</code>, <code>write</code>, <code>stdin</code>, <code>stdout</code>), connect to external systems (<code>exec</code>, <code>pipe</code>, <code>websocket</code>), or tap into live data feeds (<code>ris-live</code>, <code>rv-live</code>).</p>
+<p>Wire two speaker-facing stages on the ends and the pipeline runs inline between two routers, invisibly proxying and rewriting a live session:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>router A  --&gt;  [ listen -- grep -- rov -- limit -- connect ]  --&gt;  router B
 </span></code></pre></div>
-<p>Stages can filter messages (<code>grep</code>, <code>drop</code>, <code>head</code>), enforce policy (<code>limit</code>, <code>rov</code>, <code>aspa</code>), transform data (<code>update</code>, <code>tag</code>), measure traffic (<code>metrics</code>), bridge formats (<code>read</code>, <code>write</code>, <code>stdin</code>, <code>stdout</code>), connect to external systems (<code>exec</code>, <code>pipe</code>, <code>websocket</code>), or tap into live data feeds (<code>ris-live</code>, <code>rv-live</code>).</p>
-<p>The same stages work without any routers involved: point <code>read</code> at an
-<a href="https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit">MRT</a> archive or
-<code>ris-live</code> at the RIPE RIS firehose, and bgpipe becomes an offline research tool -
-the pipeline doesn't care whether messages come from a live session or a file.</p>
-<p>Because bgpipe speaks native BGP on both sides, routers see a normal peer -- no protocol changes, no vendor lock-in.
+<p>Swap the ends for <code>read</code>/<code>write</code> or a live feed instead, and the exact same middle stages become an offline or streaming processor - no routers, no proxy, just messages in and messages out:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>MRT archive  --&gt;  [ read -- grep -- tag ]  --&gt;  JSON on stdout
+</span></code></pre></div>
+<p>Because bgpipe speaks native BGP itself, it can also stand in wherever you'd otherwise reach for a speaker library like ExaBGP - originating routes, replaying an MRT dump onto a session, or scripting a one-off announcement from the command line.
 Because every message has a full <a href="../json-format/">JSON representation</a> (including <a href="../flowspec/">Flowspec</a>), you can pipe BGP through <code>jq</code>, Python, or any tool that handles JSON.
 Because it supports <a href="https://en.wikipedia.org/wiki/Multi-threaded_Routing_Toolkit">MRT</a>, <a href="https://datatracker.ietf.org/doc/html/rfc7854">BMP</a>, and <a href="https://github.com/Exa-Networks/exabgp/">ExaBGP</a> formats, it integrates with existing infrastructure.</p>
-<p>The result is a single tool that handles monitoring, filtering, security enforcement, format conversion, and session manipulation -- all from the command line, all composable, all scriptable.</p>
-<h2 id="under-the-hood">Under the hood<a class="headerlink" href="#under-the-hood" title="Permanent link">&para;</a></h2>
-<p>Internally, bgpipe runs two message pipelines - one per direction - and stages
-attach callbacks that can inspect, modify, drop, or inject messages, coordinated
-through shared state and an event queue. Each stage implements a small Go
-interface shown on the right:</p>
-<p><img alt="bgpipe architecture: two directional pipelines with stage callbacks, shared state, and an event queue; the Stage interface on the right" src="../img/architecture.svg" /></p>
+<p>The result is a single tool that covers speaker duties, transparent proxying, offline analysis, format translation, and security enforcement -- all from the command line, all composable, all scriptable.</p>
 <h2 id="watch-the-talk">Watch the talk<a class="headerlink" href="#watch-the-talk" title="Permanent link">&para;</a></h2>
 <p>See the <a href="../quickstart/">quickstart guide</a> for a practical introduction. You can also watch the <a href="https://ripe88.ripe.net/archives/video/1365/">RIPE 88 bgpipe talk</a> below.</p>
 <video preload="metadata" style="width: 100%;" controls poster="https://ripe88.ripe.net/wp-content/themes/fluida-plus/images/webcast.jpg">
@@ -1505,7 +1483,7 @@ interface shown on the right:</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

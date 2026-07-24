@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1487,7 +1487,8 @@ writing <code>connect</code> explicitly:</p>
 </span></code></pre></div>
 <p>With <code>--ttl</code>, the outgoing TTL / hop limit is set explicitly. Use <code>--ttl 255</code>
 to satisfy a peer enforcing GTSM (<a href="https://datatracker.ietf.org/doc/html/rfc5082">RFC 5082</a>),
-or a higher value for multihop eBGP.</p>
+or a higher value for multihop eBGP. Note that <code>--ttl</code> and <code>--md5</code> require
+Linux or OpenBSD; on other platforms these options fail at socket setup.</p>
 <h3 id="transparent-mode">Transparent mode<a class="headerlink" href="#transparent-mode" title="Permanent link">&para;</a></h3>
 <p>With <code>--transparent</code> (Linux only), <strong>connect</strong> enables <code>IP_TRANSPARENT</code>,
 which lets it bind to (spoof) a non-local source address. Paired with a
@@ -1665,7 +1666,7 @@ routers already share for the pair.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

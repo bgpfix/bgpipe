@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1554,7 +1554,7 @@ modifications only to messages matching a <a href="../../filters/">filter</a>.</
 <td><code>--add-com-ext</code></td>
 <td>string</td>
 <td></td>
-<td>Add an extended BGP community</td>
+<td>Add an extended BGP community (JSON, see below)</td>
 </tr>
 <tr>
 <td><code>--add-com-large</code></td>
@@ -1582,6 +1582,15 @@ modifications only to messages matching a <a href="../../filters/">filter</a>.</
 </tr>
 </tbody>
 </table>
+<p>Unlike its siblings, <code>--add-com-ext</code> takes the JSON object format used in the
+EXT_COMMUNITY attribute output, e.g. <code>'{"type": "TARGET", "value": "65000:100"}'</code>
+(or a JSON array of such objects).</p>
+<p>For each attribute, drop takes precedence: when both <code>--drop-com*</code> and the
+matching <code>--add-com*</code> are given, the attribute is dropped and the add is
+ignored.</p>
+<p>Messages without reachable prefixes (pure withdrawals) are passed through
+unmodified: per RFC 4271 section 4.3, a withdrawal must not carry path
+attributes.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Rewrite next-hop for all updates:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
@@ -1673,7 +1682,7 @@ modifications only to messages matching a <a href="../../filters/">filter</a>.</
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
