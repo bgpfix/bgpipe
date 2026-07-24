@@ -73,6 +73,7 @@ func (s *Listen) Prepare() error {
 	if err != nil {
 		return err
 	}
+	defer l.Close() // NB: also stop listening after the first connection
 
 	// add a listen timeout?
 	if t := k.Duration("timeout"); t > 0 {
@@ -90,9 +91,6 @@ func (s *Listen) Prepare() error {
 		return err
 	}
 	s.conn = conn
-
-	// don't listen for any more connections
-	l.Close()
 
 	// publish connection details
 	util.ConnPublish(s.StageBase, conn)

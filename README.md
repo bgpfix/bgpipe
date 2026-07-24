@@ -62,6 +62,7 @@ Visit **[bgpipe.org](https://bgpipe.org)** for:
 
 - Report bugs and request features on [GitHub Issues](https://github.com/bgpfix/bgpipe/issues)
 - For collaboration inquiries, contact [bgpipe@bgpipe.org](mailto:bgpipe@bgpipe.org)
+- Integration tests against real BGP daemons (GoBGP, BIRD, FRR, StayRTR, rtrtr) live in [test/integration](test/integration/)
 
 ## Author
 

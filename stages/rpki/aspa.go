@@ -12,7 +12,7 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/caps"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpfix/rpki"
@@ -112,6 +112,7 @@ func (s *Aspa) Attach() error {
 
 	// use the shared RPKI cache, maintained by the bgpipe core
 	s.cache = s.B.UseRpki()
+	s.B.Rpki.WantASPA = true
 
 	// prometheus metrics
 	prefix := s.MetricPrefix()
@@ -152,7 +153,7 @@ func parseRoleName(name string) (byte, bool) {
 }
 
 // peerASN returns the peer's ASN from its OPEN message, or 0 if unavailable.
-func peerASN(p *pipe.Pipe, d dir.Dir) uint32 {
+func peerASN(p *pipe.Pipe, d meta.Dir) uint32 {
 	om := p.LineFor(d).Open.Load()
 	if om == nil {
 		return 0
@@ -161,7 +162,7 @@ func peerASN(p *pipe.Pipe, d dir.Dir) uint32 {
 }
 
 // peerRole reads the BGP Role capability from the peer's OPEN message.
-func peerRole(p *pipe.Pipe, d dir.Dir) (byte, bool) {
+func peerRole(p *pipe.Pipe, d meta.Dir) (byte, bool) {
 	om := p.LineFor(d).Open.Load()
 	if om == nil {
 		return 0, false
@@ -181,7 +182,7 @@ func peerRole(p *pipe.Pipe, d dir.Dir) (byte, bool) {
 // is permanently skipped for this direction.
 // NB: in -LR mode only --role auto is allowed (checked in Attach), as a
 // single role cannot describe two different peers.
-func (s *Aspa) resolvePeer(d dir.Dir) *aspaPeer {
+func (s *Aspa) resolvePeer(d meta.Dir) *aspaPeer {
 	p := &s.peer[d&1] // direction index: 0=R, 1=L
 	p.once.Do(func() {
 		role := s.role

@@ -20,9 +20,12 @@ an OPEN message first, then responds with its own OPEN. In **active** mode
 (`--active`), it sends its OPEN immediately.
 
 The speaker automatically negotiates BGP capabilities (MP-BGP, 4-byte ASN,
-Route Refresh, Extended Messages) with the remote peer. When `--asn` is set
-to -1, the speaker mirrors the remote peer's ASN. When `--id` is empty, it
-derives a router ID from the remote peer's ID.
+Route Refresh, Extended Messages) with the remote peer. In passive mode,
+when `--asn` is set to -1, the speaker mirrors the remote peer's ASN, and
+when `--id` is empty, it derives a router ID from the remote peer's ID.
+In active mode the OPEN message is sent before the remote peer identifies
+itself, so there is nothing to mirror: set `--asn` explicitly (otherwise
+ASN 0 is sent), and `--id` (otherwise it defaults to 0.0.0.1).
 
 A **speaker** stage is not needed when bgpipe operates as a transparent proxy
 between two BGP speakers that negotiate with each other directly.

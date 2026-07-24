@@ -1,0 +1,44 @@
+{
+ "metadata": {
+  "buildtime": "2026-07-13T00:00:00Z",
+  "vrps": 3,
+  "serial": 1
+ },
+ "roas": [
+  {
+   "prefix": "192.0.2.0/24",
+   "maxLength": 24,
+   "asn": 65001
+  },
+  {
+   "prefix": "198.51.100.0/24",
+   "maxLength": 24,
+   "asn": 65002
+  },
+  {
+   "prefix": "203.0.113.0/24",
+   "maxLength": 24,
+   "asn": 65020
+  }
+ ],
+ "aspas": [
+  {
+   "customer_asid": 65010,
+   "providers": [
+    65001
+   ]
+  },
+  {
+   "customer_asid": 65020,
+   "providers": [
+    65010
+   ]
+  },
+  {
+   "customer_asid": 65099,
+   "providers": [
+    65030
+   ]
+  }
+ ]
+}

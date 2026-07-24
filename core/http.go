@@ -25,7 +25,7 @@ func (b *Bgpipe) configureHTTP() error {
 	if addr == "" {
 		b.HTTP = nil
 		b.httpmux = nil
-		return nil
+		return b.configurePprof(nil) // NB: --pprof <addr> works without --http
 	}
 
 	m := chi.NewRouter()
@@ -134,6 +134,9 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 	if pprofVal == "" {
 		return nil
 	}
+	if pprofVal == "http" && m == nil {
+		return fmt.Errorf("--pprof http requires --http")
+	}
 
 	// separate pprof server? overwrite m with a fresh mux
 	if pprofVal != "http" {
@@ -157,8 +160,9 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 		return fmt.Errorf("could not bind --pprof %s: %w", pprofVal, err)
 	}
 
+	srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second}
+	b.pprofsrv = srv
 	go func() {
-		srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second}
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			b.Warn().Err(err).Msg("pprof server error")
 		}
@@ -191,14 +195,21 @@ func (b *Bgpipe) startHTTP() error {
 }
 
 func (b *Bgpipe) stopHTTP() {
-	if b.HTTP == nil {
+	if b.HTTP == nil && b.pprofsrv == nil {
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	if err := b.HTTP.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		b.Warn().Err(err).Msg("HTTP API shutdown error")
+	if b.HTTP != nil {
+		if err := b.HTTP.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			b.Warn().Err(err).Msg("HTTP API shutdown error")
+		}
+	}
+	if b.pprofsrv != nil {
+		if err := b.pprofsrv.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			b.Warn().Err(err).Msg("pprof server shutdown error")
+		}
 	}
 }
 

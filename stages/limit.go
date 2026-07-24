@@ -110,7 +110,7 @@ func (s *Limit) Attach() error {
 
 	s.minlen = k.Int("min-length")
 	if s.minlen < 0 || s.minlen >= 128 {
-		return fmt.Errorf("invalid minimum IP prefix length %d", s.maxlen)
+		return fmt.Errorf("invalid minimum IP prefix length %d", s.minlen)
 	}
 	s.maxlen = k.Int("max-length")
 	if s.maxlen < 0 || s.maxlen >= 128 {
@@ -151,6 +151,13 @@ func (s *Limit) onMsg(m *msg.Msg) bool {
 	// process unreachable prefixes
 	if !s.permanent {
 		ubefore, uafter = s.checkUnreach(u)
+	} else {
+		// NB: withdrawals pass through untouched, but the drop decision below
+		// must still know they exist, so they can't be discarded with the message
+		uafter = len(u.Unreach)
+		if mp := u.UnreachMP().Prefixes(); mp != nil {
+			uafter += len(mp.Prefixes)
+		}
 	}
 
 	// need to drop the whole message?

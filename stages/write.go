@@ -16,6 +16,7 @@ import (
 	"github.com/bgpfix/bgpipe/pkg/extio"
 	"github.com/dsnet/compress/bzip2"
 	"github.com/klauspost/compress/zstd"
+	"github.com/valyala/bytebufferpool"
 )
 
 type Write struct {
@@ -274,25 +275,32 @@ func (s *Write) Run() error {
 		reload = time.After(time.Until(t))
 	}
 
+	// writeBuf writes one output buffer to the target file
+	writeBuf := func(bb *bytebufferpool.ByteBuffer) error {
+		// open the target file if needed
+		if err := s.openFile(); err != nil {
+			return err
+		}
+
+		// write to file
+		n, err := bb.WriteTo(s.wr)
+		s.n += n
+		if err != nil {
+			return err
+		}
+		eio.Put(bb)
+		return nil
+	}
+
 	for {
 		select {
 		case bb, ok := <-eio.Output:
 			if !ok {
 				return nil // output channel closed
 			}
-
-			// open the target file if needed
-			if err := s.openFile(); err != nil {
+			if err := writeBuf(bb); err != nil {
 				return err
 			}
-
-			// write to file
-			n, err := bb.WriteTo(s.wr)
-			s.n += n
-			if err != nil {
-				return err
-			}
-			eio.Put(bb)
 
 		case <-reload:
 			// close the current file
@@ -308,7 +316,21 @@ func (s *Write) Run() error {
 			}
 
 		case <-s.Ctx.Done():
-			return context.Cause(s.Ctx)
+			// NB: on normal pipe completion, the context is cancelled after
+			// all messages have been queued on eio.Output - drain them first
+			for {
+				select {
+				case bb, ok := <-eio.Output:
+					if !ok {
+						return context.Cause(s.Ctx)
+					}
+					if err := writeBuf(bb); err != nil {
+						return err
+					}
+				default:
+					return context.Cause(s.Ctx)
+				}
+			}
 		}
 	}
 }

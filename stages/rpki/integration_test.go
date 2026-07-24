@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/attrs"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/stretchr/testify/require"
@@ -57,7 +57,7 @@ func addIntegrationAspa(rov *Rov) *Aspa {
 func startPipe(t *testing.T, p *pipe.Pipe, cbs ...pipe.CallbackFunc) {
 	t.Helper()
 	for _, cb := range cbs {
-		p.Options.OnMsg(cb, dir.DIR_R, msg.UPDATE)
+		p.Options.OnMsg(cb, meta.DIR_R, msg.UPDATE)
 	}
 	require.NoError(t, p.Start())
 	t.Cleanup(func() { p.Stop() })
@@ -93,7 +93,7 @@ func TestIntegration_ROV_WithdrawMovesInvalidToUnreach(t *testing.T) {
 
 	// 192.0.2.0/24 VALID (origin 65001 matches VRP), 198.51.100.0/24
 	// INVALID (origin 65001 but VRP wants 65002)
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24", "198.51.100.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24", "198.51.100.0/24")
 	setAsPathSeq(m, 65001)
 
 	got := sendUpdate(t, s.P, m, time.Second)
@@ -109,7 +109,7 @@ func TestIntegration_ROV_DropDiscardsMessage(t *testing.T) {
 	s.tag = true
 	startPipe(t, s.P, s.validateMsg)
 
-	m := newReachUpdate(dir.DIR_R, "198.51.100.0/24")
+	m := newReachUpdate(meta.DIR_R, "198.51.100.0/24")
 	setAsPathSeq(m, 65099) // no VRP with origin 65099
 
 	require.Nil(t, sendUpdate(t, s.P, m, 200*time.Millisecond))
@@ -121,7 +121,7 @@ func TestIntegration_ROV_NotFoundPassesThrough(t *testing.T) {
 	s.tag = true
 	startPipe(t, s.P, s.validateMsg)
 
-	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
+	m := newReachUpdate(meta.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65001)
 
 	got := sendUpdate(t, s.P, m, time.Second)
@@ -136,11 +136,11 @@ func TestIntegration_ASPA_ValidPathPassesThrough(t *testing.T) {
 	s.role, _ = parseRoleName("customer")
 	s.act = act_withdraw
 	s.tag = true
-	storeOpenASN(s.P, dir.DIR_R, 65010)
+	storeOpenASN(s.P, meta.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
 	// path [65010, 65020]: peer matches path[0]; 65020->{65010} is attested
-	m := newReachUpdate(dir.DIR_R, "203.0.113.0/24")
+	m := newReachUpdate(meta.DIR_R, "203.0.113.0/24")
 	setAsPathSeq(m, 65010, 65020)
 
 	got := sendUpdate(t, s.P, m, time.Second)
@@ -155,11 +155,11 @@ func TestIntegration_ASPA_InvalidPath_WithdrawStripsReach(t *testing.T) {
 	s.role, _ = parseRoleName("customer")
 	s.act = act_withdraw
 	s.tag = true
-	storeOpenASN(s.P, dir.DIR_R, 65010)
+	storeOpenASN(s.P, meta.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
 	// path [65010, 65099]: 65099 has ASPA={65030}, 65010 not listed -> INVALID
-	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
+	m := newReachUpdate(meta.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65099)
 
 	got := sendUpdate(t, s.P, m, time.Second)
@@ -177,10 +177,10 @@ func TestIntegration_ASPA_InvalidPath_DropDiscardsMessage(t *testing.T) {
 	s.role, _ = parseRoleName("customer")
 	s.act = act_drop
 	s.tag = true
-	storeOpenASN(s.P, dir.DIR_R, 65010)
+	storeOpenASN(s.P, meta.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
-	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
+	m := newReachUpdate(meta.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65099)
 
 	require.Nil(t, sendUpdate(t, s.P, m, 200*time.Millisecond))
@@ -192,10 +192,10 @@ func TestIntegration_ASPA_InvalidPath_KeepTagsOnly(t *testing.T) {
 	s.role, _ = parseRoleName("customer")
 	s.act = act_keep
 	s.tag = true
-	storeOpenASN(s.P, dir.DIR_R, 65010)
+	storeOpenASN(s.P, meta.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
-	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
+	m := newReachUpdate(meta.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65099)
 
 	got := sendUpdate(t, s.P, m, time.Second)
@@ -211,11 +211,11 @@ func TestIntegration_ASPA_UnknownPathPassesThrough(t *testing.T) {
 	s.role, _ = parseRoleName("customer")
 	s.act = act_withdraw
 	s.tag = true
-	storeOpenASN(s.P, dir.DIR_R, 65010)
+	storeOpenASN(s.P, meta.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
 	// 65040 has no ASPA record -> every hop is "no attestation" -> UNKNOWN
-	m := newReachUpdate(dir.DIR_R, "10.0.0.0/8")
+	m := newReachUpdate(meta.DIR_R, "10.0.0.0/8")
 	setAsPathSeq(m, 65010, 65040)
 
 	got := sendUpdate(t, s.P, m, time.Second)
@@ -230,11 +230,11 @@ func TestIntegration_ASPA_FirstHopMismatchIsInvalid(t *testing.T) {
 	s.role, _ = parseRoleName("customer")
 	s.act = act_withdraw
 	s.tag = true
-	storeOpenASN(s.P, dir.DIR_R, 65010)
+	storeOpenASN(s.P, meta.DIR_R, 65010)
 	startPipe(t, s.P, s.validateMsg)
 
 	// path[0]=65099 != peer 65010 -> INVALID regardless of ASPA content
-	m := newReachUpdate(dir.DIR_R, "203.0.113.0/24")
+	m := newReachUpdate(meta.DIR_R, "203.0.113.0/24")
 	setAsPathSeq(m, 65099, 65020)
 
 	got := sendUpdate(t, s.P, m, time.Second)
@@ -253,11 +253,11 @@ func TestIntegration_ROVValid_ASPAInvalid_BothActionsFire(t *testing.T) {
 	aspa.act = act_withdraw
 	aspa.tag = true
 
-	storeOpenASN(rov.P, dir.DIR_R, 65010)
+	storeOpenASN(rov.P, meta.DIR_R, 65010)
 	startPipe(t, rov.P, rov.validateMsg, aspa.validateMsg)
 
 	// 192.0.2.0/24 origin 65001 -> ROV VALID; path breaks ASPA at 65099
-	m := newReachUpdate(dir.DIR_R, "192.0.2.0/24")
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65099, 65001)
 
 	got := sendUpdate(t, rov.P, m, time.Second)

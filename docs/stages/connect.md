@@ -30,7 +30,8 @@ bgpipe -o speaker -- connect 1.2.3.4
 
 With `--ttl`, the outgoing TTL / hop limit is set explicitly. Use `--ttl 255`
 to satisfy a peer enforcing GTSM ([RFC 5082](https://datatracker.ietf.org/doc/html/rfc5082)),
-or a higher value for multihop eBGP.
+or a higher value for multihop eBGP. Note that `--ttl` and `--md5` require
+Linux or OpenBSD; on other platforms these options fail at socket setup.
 
 ### Transparent mode
 

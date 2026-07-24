@@ -7,7 +7,7 @@ import (
 
 	"github.com/VictoriaMetrics/metrics"
 	"github.com/bgpfix/bgpfix/attrs"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -25,7 +25,7 @@ func newTestBase() *core.StageBase {
 	s.P = pipe.NewPipe(context.Background())
 	s.P.Options.Logger = nil
 	s.P.Options.Caps = false
-	s.Dir = dir.DIR_R
+	s.Dir = meta.DIR_R
 	return s
 }
 
@@ -56,7 +56,7 @@ func newTestAspa() *Aspa {
 	return s
 }
 
-func newReachUpdate(dst dir.Dir, prefixes ...string) *msg.Msg {
+func newReachUpdate(dst meta.Dir, prefixes ...string) *msg.Msg {
 	m := msg.NewMsg()
 	m.Switch(msg.UPDATE)
 	m.Dir = dst
@@ -76,7 +76,7 @@ func setEmptyAsPath(m *msg.Msg) {
 	ap.Segments = ap.Segments[:0]
 }
 
-func storeOpenASN(p *pipe.Pipe, d dir.Dir, asn int) {
+func storeOpenASN(p *pipe.Pipe, d meta.Dir, asn int) {
 	om := &msg.Open{}
 	om.Caps.Init()
 	om.SetASN(asn)

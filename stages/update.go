@@ -5,7 +5,7 @@ import (
 	"net/netip"
 
 	"github.com/bgpfix/bgpfix/attrs"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpipe/core"
 )
@@ -132,6 +132,11 @@ func (s *Update) Attach() error {
 func (s *Update) modify(m *msg.Msg) (keep_message bool) {
 	u := &m.Update
 
+	// NB: pure withdrawals must not carry path attributes (RFC 4271 section 4.3)
+	if !u.HasReach() {
+		return true
+	}
+
 	// modify next-hop?
 	if s.run_nexthop {
 		m.Edit(s.modifyNexthop(u))
@@ -170,7 +175,7 @@ func (s *Update) modifyNexthop(u *msg.Update) (modified bool) {
 	// attempt nexthop-self?
 	if s.opt_nexthop_self == 2 {
 		var selfip netip.Addr
-		if u.Msg.Dir == dir.DIR_L {
+		if u.Msg.Dir == meta.DIR_L {
 			selfip = s.l_addr
 		} else {
 			selfip = s.r_addr

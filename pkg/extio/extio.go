@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/bmp"
-	"github.com/bgpfix/bgpfix/dir"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/exa"
 	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
@@ -135,7 +135,11 @@ func (eio *Extio) DetectPath(path string) (success bool) {
 	fname := strings.ToLower(filepath.Base(path))
 
 	// looks like RouteViews / RIPE RIS MRT dumps?
-	if strings.HasPrefix(fname, "updates.2") || fname == "latest-update.gz" {
+	switch {
+	case strings.HasPrefix(fname, "updates.2") || fname == "latest-update.gz":
+		eio.opt_mrt = true
+		return true
+	case strings.HasPrefix(fname, "rib.2") || strings.HasPrefix(fname, "bview.2") || fname == "latest-bview.gz":
 		eio.opt_mrt = true
 		return true
 	}
@@ -321,19 +325,19 @@ func (eio *Extio) Attach() error {
 	// not write-only? produce input to bgpipe
 	if !opt_write {
 		if eio.IsBidir {
-			eio.InputL = p.AddInput(dir.DIR_L)
-			eio.InputR = p.AddInput(dir.DIR_R)
+			eio.InputL = p.AddInput(meta.DIR_L)
+			eio.InputR = p.AddInput(meta.DIR_R)
 			if eio.IsLast {
 				eio.InputD = eio.InputL
 			} else {
 				eio.InputD = eio.InputR
 			}
 		} else if eio.IsLeft {
-			eio.InputL = p.AddInput(dir.DIR_L)
+			eio.InputL = p.AddInput(meta.DIR_L)
 			eio.InputR = eio.InputL // redirect R messages to L
 			eio.InputD = eio.InputL
 		} else {
-			eio.InputR = p.AddInput(dir.DIR_R)
+			eio.InputR = p.AddInput(meta.DIR_R)
 			eio.InputL = eio.InputR // redirect L messages to R
 			eio.InputD = eio.InputR
 		}
@@ -355,9 +359,9 @@ func (eio *Extio) Attach() error {
 		// override capture direction?
 		cb := eio.Callback
 		if eio.IsLast {
-			cb.Dir = dir.DIR_R
+			cb.Dir = meta.DIR_R
 		} else if eio.IsFirst {
-			cb.Dir = dir.DIR_L
+			cb.Dir = meta.DIR_L
 		}
 
 		// override message types?
@@ -482,9 +486,9 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 	// sail!
 	m.CopyData()
 	switch m.Dir {
-	case dir.DIR_L:
+	case meta.DIR_L:
 		return eio.InputL.WriteMsg(m)
-	case dir.DIR_R:
+	case meta.DIR_R:
 		return eio.InputR.WriteMsg(m)
 	default:
 		return eio.InputD.WriteMsg(m)
@@ -577,6 +581,16 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 		case read_err != nil:
 			return read_err
 		case err == io.EOF:
+			// emit pending aggregated messages (MRT table dumps)
+			if eio.opt_mrt {
+				check := eio.checkMsg
+				if cb != nil {
+					check = func(m *msg.Msg) bool {
+						return eio.checkMsg(m) && cb(m)
+					}
+				}
+				return eio.mrt.Flush(check)
+			}
 			return nil
 		case err != nil:
 			return err
@@ -648,7 +662,7 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 		mr.Reset().Switch(mrt.BGP4MP_ET)
 
 		// marshal BGP into BGP4MP
-		err = mr.Bgp4.FromMsg(m)
+		err = mr.Bgp4.FromMsg(m, eio.P.Caps)
 		if err != nil {
 			break
 		}
@@ -722,11 +736,13 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 	}
 	if err != nil {
 		eio.Warn().Err(err).Msg("extio write error")
+		eio.Pool.Put(bb)
 		return keep
 	}
 
 	// try writing, don't panic on channel closed [1]
 	if !util.Send(eio.Output, bb) {
+		eio.Pool.Put(bb)
 		pipe.UseContext(m).Callback.Blackhole()
 		return keep
 	}

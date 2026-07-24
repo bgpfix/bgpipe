@@ -1,0 +1,18 @@
+# BIRD dialing out to bgpipe listen at @HOSTIP@:@PORT@ (template, see lib.sh)
+router id 10.0.0.40;
+log stderr all;
+
+protocol device { }
+
+protocol static statics {
+  ipv4;
+  route 10.40.0.0/24 blackhole;
+  route 10.41.0.0/24 blackhole;
+}
+
+protocol bgp b1 {
+  local as 65000;
+  neighbor @HOSTIP@ port @PORT@ as 65000;
+  hold time 90;
+  ipv4 { import all; export where source = RTS_STATIC; next hop self; };
+}

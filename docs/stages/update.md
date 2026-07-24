@@ -33,11 +33,23 @@ modifications only to messages matching a [filter](../filters.md).
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--add-com` | string | | Add a standard BGP community (`ASN:value`) |
-| `--add-com-ext` | string | | Add an extended BGP community |
+| `--add-com-ext` | string | | Add an extended BGP community (JSON, see below) |
 | `--add-com-large` | string | | Add a large BGP community (`G:L1:L2`) |
 | `--drop-com` | bool | `false` | Remove the COMMUNITY attribute entirely |
 | `--drop-com-ext` | bool | `false` | Remove the EXT_COMMUNITY attribute entirely |
 | `--drop-com-large` | bool | `false` | Remove the LARGE_COMMUNITY attribute entirely |
+
+Unlike its siblings, `--add-com-ext` takes the JSON object format used in the
+EXT_COMMUNITY attribute output, e.g. `'{"type": "TARGET", "value": "65000:100"}'`
+(or a JSON array of such objects).
+
+For each attribute, drop takes precedence: when both `--drop-com*` and the
+matching `--add-com*` are given, the attribute is dropped and the add is
+ignored.
+
+Messages without reachable prefixes (pure withdrawals) are passed through
+unmodified: per RFC 4271 section 4.3, a withdrawal must not carry path
+attributes.
 
 ## Examples
 

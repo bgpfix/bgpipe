@@ -39,7 +39,8 @@ A filter is one or more expressions chained with `&&` (AND) and `||` (OR):
 - `!` - negate an expression
 - `attribute` - what to test (e.g., `prefix`, `aspath`, `community`)
 - `[index]` - optional selector within the attribute
-- `operator value` - comparison; when omitted, tests for attribute existence
+- `operator value` - comparison; some attributes can be tested for existence
+  by omitting it (see the per-attribute sections below); `prefix` cannot
 
 ### Operators
 

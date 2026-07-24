@@ -23,8 +23,8 @@ pipeline with peer metadata as tags:
 |-----|-------------|
 | `PEER_IP` | IP address of the BGP peer |
 | `PEER_AS` | AS number of the BGP peer |
-| `COLLECTOR` | RouteViews collector name (e.g., `linx`) |
-| `ROUTER` | Router IP address |
+| `COLLECTOR` | RouteViews BGP collector name (e.g., `linx`) |
+| `RV_COLLECTOR` | RouteViews internal BMP machine name (e.g., `bmp1`) |
 
 These tags can be used in downstream [filters](../filters.md), for example:
 `tag[COLLECTOR] ~ "linx"` or `tag[PEER_AS] == 13335`.

@@ -64,10 +64,14 @@ JSON format (Routinator and rpki-client compatible):
     {"prefix": "2001:db8::/32", "maxLength": 48, "asn": 65002}
   ],
   "aspas": [
-    {"customer_asid": 65001, "provider_asids": [65002, 65003]}
+    {"customer_asid": 65001, "provider_asids": [65002, 65003]},
+    {"customer_asid": 65004, "providers": [65005]}
   ]
 }
 ```
+
+The ASPA provider list accepts both key spellings: `provider_asids`
+(Routinator) and `providers` (rpki-client).
 
 CSV format (VRPs only; one entry per line, `#` comments, optional header):
 
@@ -88,6 +92,10 @@ The `--invalid` option controls handling, per-prefix:
 | `drop` | Drop the entire UPDATE message |
 | `split` | Split invalid prefixes to a separate UPDATE with withdrawals |
 | `keep` | Keep unchanged (tag only) |
+
+Note that `drop` discards the whole message, which then skips all later
+pipeline stages -- including [aspa](aspa.md), so dropped messages will not
+be counted in its metrics nor tagged.
 
 ### Tags
 
