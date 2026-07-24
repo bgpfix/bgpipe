@@ -17,9 +17,15 @@ messages are injected in the stage direction.
 
 The input format is auto-detected by default. Detection first tries the file
 extension (e.g., `.mrt` or `.json`), then falls back to sampling the file
-contents. Supported formats include JSON (one message per line), MRT (BGP4MP),
+contents. Supported formats include JSON (one message per line), MRT,
 raw BGP wire format, ExaBGP line format, BMP (BGP Monitoring Protocol),
 and OpenBMP.
+
+For MRT, both BGP4MP update dumps and TABLE_DUMP / TABLE_DUMP_V2 RIB
+snapshots (RouteViews `rib.*`, RIPE RIS `bview.*`) are supported. RIB
+snapshots are converted into synthetic BGP UPDATE messages: every peer's
+routes are streamed, tagged with `PEER_AS` and `PEER_IP`, and consecutive
+prefixes sharing the same attributes are bundled into one UPDATE.
 
 Compressed files are decompressed automatically when `--decompress` is set
 to `auto` (the default). The compression format is detected from the file
@@ -59,6 +65,12 @@ Convert MRT to JSON:
 
 ```bash
 bgpipe -- read updates.mrt.gz -- write output.json
+```
+
+Stream a RouteViews RIB snapshot as BGP UPDATEs:
+
+```bash
+bgpipe -- read rib.20240301.0000.bz2 -- write rib.json
 ```
 
 Replay an MRT file into a live BGP session after establishment:

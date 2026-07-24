@@ -135,7 +135,11 @@ func (eio *Extio) DetectPath(path string) (success bool) {
 	fname := strings.ToLower(filepath.Base(path))
 
 	// looks like RouteViews / RIPE RIS MRT dumps?
-	if strings.HasPrefix(fname, "updates.2") || fname == "latest-update.gz" {
+	switch {
+	case strings.HasPrefix(fname, "updates.2") || fname == "latest-update.gz":
+		eio.opt_mrt = true
+		return true
+	case strings.HasPrefix(fname, "rib.2") || strings.HasPrefix(fname, "bview.2") || fname == "latest-bview.gz":
 		eio.opt_mrt = true
 		return true
 	}
@@ -577,6 +581,10 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 		case read_err != nil:
 			return read_err
 		case err == io.EOF:
+			// emit pending aggregated messages (MRT table dumps)
+			if eio.opt_mrt {
+				return eio.mrt.Flush()
+			}
 			return nil
 		case err != nil:
 			return err
