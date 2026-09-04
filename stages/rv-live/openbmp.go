@@ -45,6 +45,13 @@ func (s *RvLive) processRecord(record *kgo.Record) error {
 		return fmt.Errorf("dangling bytes after BGP message: %d/%d", n, len(bm.BgpData))
 	}
 
+	// the peer A flag announces the legacy 2-byte AS_PATH encoding (RFC 7854/4.2)
+	// NB: trust it only when set; routeviews never sets it, and assuming 4-byte
+	// ASNs on a clear flag would defeat --guess-asn
+	if bm.Peer.Is2ByteAS() {
+		m.ParseAS4 = -1
+	}
+
 	// set time
 	if !bm.Peer.Time.IsZero() {
 		m.Time = bm.Peer.Time
