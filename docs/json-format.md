@@ -27,7 +27,7 @@ Each BGP message is a JSON array with 6 elements:
 | `OPEN`      | BGP session parameters and capabilities (object)    |
 | `UPDATE`    | Prefixes and path attributes (object)               |
 | `KEEPALIVE` | `null`                                              |
-| `NOTIFY`    | Notification payload after the code/subcode bytes, as an ASCII-escaped string |
+| `NOTIFY`    | Error code, subcode and data (object, see [NOTIFY Messages](#notify-messages)) |
 | `REFRESH`   | Raw message body as a hex string                    |
 
 Unknown or unparsed types produce a hex string like `"0x1234abcd"`.
@@ -38,6 +38,25 @@ KEEPALIVE - the simplest message:
 ```json
 ["R", 2, "2025-07-11T08:47:22.659", "KEEPALIVE", null, null]
 ```
+
+## NOTIFY Messages
+
+The `data` field contains the error code, subcode, and attached data:
+
+```json
+["R", 5, "2025-07-11T08:47:22.659", "NOTIFY",
+ {"code": 6, "subcode": 2, "name": "Cease/Administrative Shutdown", "data": "0x03627965", "text": "bye"}, null]
+```
+
+| Field     | Type    | Description                                                        |
+|-----------|---------|--------------------------------------------------------------------|
+| `code`    | integer | Error code                                                         |
+| `subcode` | integer | Error subcode                                                      |
+| `name`    | string  | Human-readable name, e.g. `"OPEN Message Error/Bad Peer AS"` (output only) |
+| `data`    | string  | Raw data after code/subcode, as hex (`"0x..."`), or `""` if empty |
+| `text`    | string  | Shutdown communication (RFC 9003), only for Cease/Administrative Shutdown and Reset (output only) |
+
+Unknown codes and subcodes are named by their numbers, e.g. `"99/7"`.
 
 ## OPEN Messages
 

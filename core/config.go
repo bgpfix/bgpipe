@@ -68,7 +68,7 @@ func (b *Bgpipe) addFlags() {
 	f.String("http-auth", "", "HTTP Basic Auth credentials (user:pass, $ENV, or /path)")
 	f.Bool("http-open", false, "disable HTTP authentication (dangerous)")
 	f.String("pprof", "", "enable pprof: 'http' to add to --http, or addr for separate server")
-	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
+	f.StringSliceP("events", "e", []string{"PARSE", "NOTIFY", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
 	f.StringSliceP("kill", "k", nil, "kill session on any of these events")
 	f.BoolP("stdin", "i", false, "read JSON from stdin")
 	f.BoolP("stdout", "o", false, "write JSON to stdout")

@@ -46,7 +46,7 @@ Options:
       --http-auth string        HTTP Basic Auth credentials (user:pass, $ENV, or /path)
       --http-open               disable HTTP authentication (dangerous)
       --pprof string            enable pprof: 'http' to add to --http, or addr for separate server
-  -e, --events strings          log given events ("all" means all events) (default [PARSE,ESTABLISHED,EOR])
+  -e, --events strings          log given events ("all" means all events) (default [PARSE,NOTIFY,ESTABLISHED,EOR])
   -k, --kill strings            kill session on any of these events
   -i, --stdin                   read JSON from stdin
   -o, --stdout                  write JSON to stdout
