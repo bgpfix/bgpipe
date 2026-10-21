@@ -751,16 +751,21 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 }
 
 // WriteStream rewrites eio.Output to w.
+// NB: writes are buffered and flushed when eio.Output is empty, saving a syscall per message
 func (eio *Extio) WriteStream(w io.Writer) error {
+	bw := bufio.NewWriterSize(w, 64*1024)
 	for bb := range eio.Output {
-		_, err := bb.WriteTo(w)
+		_, err := bw.Write(bb.B)
 		eio.Pool.Put(bb)
+		if err == nil && len(eio.Output) == 0 {
+			err = bw.Flush()
+		}
 		if err != nil {
 			eio.OutputClose()
 			return err
 		}
 	}
-	return nil
+	return bw.Flush()
 }
 
 // Put puts a byte buffer back to pool

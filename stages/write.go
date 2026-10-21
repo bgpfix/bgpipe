@@ -1,6 +1,7 @@
 package stages
 
 import (
+	"bufio"
 	"compress/gzip"
 	"context"
 	"errors"
@@ -264,7 +265,12 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
 }
 
 func (s *Write) Run() error {
-	defer func() { s.closeFile(s.wr, s.fh, s.n) }()
+	// NB: writes are buffered and flushed when eio.Output is empty, saving a syscall per message
+	bw := bufio.NewWriterSize(s.wr, 64*1024) // NB: s.wr opened in Prepare()
+	defer func() {
+		bw.Flush()
+		s.closeFile(s.wr, s.fh, s.n)
+	}()
 
 	eio := s.eio
 
@@ -278,18 +284,21 @@ func (s *Write) Run() error {
 	// writeBuf writes one output buffer to the target file
 	writeBuf := func(bb *bytebufferpool.ByteBuffer) error {
 		// open the target file if needed
-		if err := s.openFile(); err != nil {
-			return err
+		if s.fh == nil {
+			if err := s.openFile(); err != nil {
+				return err
+			}
+			bw.Reset(s.wr)
 		}
 
 		// write to file
-		n, err := bb.WriteTo(s.wr)
-		s.n += n
-		if err != nil {
-			return err
-		}
+		n, err := bw.Write(bb.B)
+		s.n += int64(n)
 		eio.Put(bb)
-		return nil
+		if err == nil && len(eio.Output) == 0 {
+			err = bw.Flush()
+		}
+		return err
 	}
 
 	for {
@@ -304,6 +313,9 @@ func (s *Write) Run() error {
 
 		case <-reload:
 			// close the current file
+			if err := bw.Flush(); err != nil {
+				return err
+			}
 			go s.closeFile(s.wr, s.fh, s.n)
 
 			// signal that we need to open a new file
