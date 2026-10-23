@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
@@ -100,7 +101,14 @@ func (s *Read) Attach() error {
 func (s *Read) Prepare() error {
 	if s.url != nil {
 		s.Info().Msgf("streaming %s", s.url.String())
-		resp, err := http.Get(s.url.String())
+		req, err := http.NewRequestWithContext(s.Ctx, "GET", s.url.String(), nil)
+		if err != nil {
+			return err
+		}
+		// NB: the body is a stream (no total timeout), but don't hang on a dead server
+		tr := http.DefaultTransport.(*http.Transport).Clone()
+		tr.ResponseHeaderTimeout = 30 * time.Second
+		resp, err := (&http.Client{Transport: tr}).Do(req)
 		if err != nil {
 			return err
 		} else if resp.StatusCode != 200 {
