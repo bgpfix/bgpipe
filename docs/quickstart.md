@@ -41,6 +41,7 @@ Usage: bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGUMENTS] [--] STAGE2...
 Options:
   -v, --version                 print detailed version info and quit
   -n, --explain                 print the pipeline as configured and quit
+  -f, --config string           read options and stages from given file (in place of -f)
   -l, --log string              log level (debug/info/warn/error/disabled) (default "info")
       --http string             bind HTTP API + Prometheus /metrics to given address
       --http-auth string        HTTP Basic Auth credentials (user:pass, $ENV, or /path)
@@ -125,6 +126,35 @@ As you can see, the `connect` stage has its own set of options, such as `--timeo
 By default, all stages operate in the *right* (`-R`) direction, meaning that they process BGP messages flowing from left to right. The direction controls which messages to capture for processing in a stage, and where to send new messages. However, if the last stage connects to a BGP endpoint, by default it will operate in the *left* (`-L`) direction, meaning it will send new messages to the left of the pipeline. Usually, the left-most and/or right-most stage is the one that connects to a BGP endpoint, while the other stages process messages in between. If you want bidirectional processing, use the `-L` and `-R` options together, ie. `-LR`.
 
 For writing BGP message filters used by the `grep` and `drop` stages, see the dedicated [filter reference](filters.md) with attributes, operators, and examples.
+
+### Config files
+
+Long pipelines are easier to read, diff, and keep secrets out of, in a file:
+`bgpipe -f pipeline.conf`. The file uses the same syntax as the command line,
+and its contents replace `-f FILE` in place, so you can still add options
+before and stages after it. On top of shell-like quoting:
+
+- `#` starts a comment, and empty lines are ignored,
+- a line that starts with a word (not indented, not an option) starts a new stage,
+- indented lines continue the current stage, eg. to group its options,
+- `\` at the end of a line continues it, and `--` works as on the command line,
+  so CLI examples (even with the leading `bgpipe`) can be pasted as-is.
+
+As on the command line, global options go before the first stage, and stage
+options go before stage arguments.
+
+```bash
+# /etc/bgpipe/edge.conf
+--rpki tls://rtr.example.net:8283
+--http 127.0.0.1:8080 --http-open
+
+listen --peer 192.0.2.1 --md5 /etc/bgpipe/md5.secret :179
+rov --invalid withdraw
+aspa --role customer
+update --del-com '65000:*'
+       --strip-private
+connect --md5 /etc/bgpipe/md5.secret 10.0.0.1
+```
 
 ### Exit codes
 

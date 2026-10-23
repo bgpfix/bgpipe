@@ -15,8 +15,11 @@ import (
 
 // Configure configures bgpipe
 func (b *Bgpipe) Configure() error {
-	// parse CLI args
-	err := b.parseArgs(os.Args[1:])
+	// parse CLI args, possibly read from a --config file
+	args, err := spliceConfig(os.Args[1:])
+	if err == nil {
+		err = b.parseArgs(args)
+	}
 	if err != nil {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
 	}
@@ -63,6 +66,7 @@ func (b *Bgpipe) addFlags() {
 	f.SetInterspersed(false)
 	f.BoolP("version", "v", false, "print detailed version info and quit")
 	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
+	f.StringP("config", "f", "", "read options and stages from given file (in place of -f)")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.String("http", "", "bind HTTP API + Prometheus /metrics to given address")
 	f.String("http-auth", "", "HTTP Basic Auth credentials (user:pass, $ENV, or /path)")
