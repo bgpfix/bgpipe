@@ -293,7 +293,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 		}
 	}
 	if s.tag {
-		m.Edit()
+		m.DropJSON() // NB: tags only, keep the wire as-is
 	}
 
 	if result != rpki.ASPA_INVALID {

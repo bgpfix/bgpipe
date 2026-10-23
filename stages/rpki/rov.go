@@ -155,8 +155,10 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 
 	// act on ROV results
 	if len(invalid) > 0 {
-		if s.tag || s.act != act_keep {
+		if s.act != act_keep {
 			m.Edit()
+		} else if s.tag {
+			m.DropJSON() // NB: tags only, keep the wire as-is
 		}
 
 		// split invalid prefixes into separate UPDATE?
@@ -217,10 +219,10 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 		switch {
 		case len(not_found) > 0:
 			tags["rov/status"] = "NOT_FOUND"
-			m.Edit()
+			m.DropJSON()
 		case len(valid) > 0:
 			tags["rov/status"] = "VALID"
-			m.Edit()
+			m.DropJSON()
 		}
 	}
 

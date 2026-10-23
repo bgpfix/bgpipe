@@ -95,6 +95,8 @@ func (s *Tag) onmsg(m *msg.Msg) bool {
 		maps.Copy(tags, s.add)
 	}
 
-	m.Edit(mod)
+	if mod {
+		m.DropJSON() // NB: tags only, keep the wire as-is
+	}
 	return true
 }
