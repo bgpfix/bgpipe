@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -45,6 +46,7 @@ type Bgpipe struct {
 	httpmux   *chi.Mux            // shared HTTP routes
 	httppprof bool                // true if pprof mounted on --http
 	pprofsrv  *http.Server        // standalone --pprof <addr> server
+	pprofln   net.Listener        // its listener
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L

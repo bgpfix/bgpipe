@@ -12,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
-	"os"
 	"strings"
 	"time"
 
@@ -99,34 +98,13 @@ func (b *Bgpipe) httpAuthMiddleware() (func(http.Handler) http.Handler, error) {
 	}, nil
 }
 
-// readCredential reads a credential from a string, $ENV variable, or /path.
-// The resolved value must be non-empty and contain a colon (user:pass).
+// readCredential reads user:pass via ReadSecret
 func (b *Bgpipe) readCredential(v string) ([]byte, error) {
-	var cred []byte
-	switch {
-	case len(v) > 1 && v[0] == '$':
-		val := os.Getenv(v[1:])
-		if val == "" {
-			return nil, fmt.Errorf("environment variable %s is empty or unset", v)
-		}
-		cred = bytes.TrimSpace([]byte(val))
-	case len(v) > 0 && v[0] == '/':
-		buf, err := os.ReadFile(v)
-		if err != nil {
-			return nil, fmt.Errorf("file %s: %w", v, err)
-		}
-		line, _, _ := bytes.Cut(buf, []byte{'\n'})
-		cred = bytes.TrimSpace(line)
-	default:
-		cred = []byte(v)
+	cred, err := ReadSecret(v)
+	if err == nil && !bytes.Contains(cred, []byte{':'}) {
+		err = fmt.Errorf("credential must be in user:pass format")
 	}
-	if len(cred) == 0 {
-		return nil, fmt.Errorf("credential is empty")
-	}
-	if !bytes.Contains(cred, []byte{':'}) {
-		return nil, fmt.Errorf("credential must be in user:pass format")
-	}
-	return cred, nil
+	return cred, err
 }
 
 func (b *Bgpipe) configurePprof(m *chi.Mux) error {
@@ -161,7 +139,7 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 	}
 
 	srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second}
-	b.pprofsrv = srv
+	b.pprofsrv, b.pprofln = srv, ln
 	go func() {
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			b.Warn().Err(err).Msg("pprof server error")
@@ -210,6 +188,8 @@ func (b *Bgpipe) stopHTTP() {
 		if err := b.pprofsrv.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			b.Warn().Err(err).Msg("pprof server shutdown error")
 		}
+		b.pprofln.Close() // NB: Serve() may not have started yet
+
 	}
 }
 
