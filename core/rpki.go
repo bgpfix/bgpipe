@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/netip"
 	"os"
 	"strings"
 	"time"
@@ -79,6 +80,14 @@ func (r *Rpki) Start() error {
 		return float64(aspas)
 	})
 
+	// NB: unencrypted RPKI data over the Internet can be forged by anyone on-path
+	if host := plainHost(r.source); host != "" {
+		if ip, err := netip.ParseAddr(host); host != "localhost" &&
+			(err != nil || !(ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast())) {
+			b.Warn().Str("rpki", r.source).Msg("RPKI data over an unencrypted channel, consider https:// or tls://")
+		}
+	}
+
 	// an RTR server, a URL, or a local file?
 	switch {
 	case strings.HasPrefix(r.source, "tls://"):
@@ -104,6 +113,22 @@ func (r *Rpki) Start() error {
 	}
 
 	return nil
+}
+
+// plainHost returns the host of a plaintext network RPKI source, or ""
+func plainHost(src string) string {
+	if u, ok := strings.CutPrefix(src, "http://"); ok {
+		src, _, _ = strings.Cut(u, "/")
+		if h, _, err := net.SplitHostPort(src); err == nil {
+			return h
+		}
+		return strings.Trim(src, "[]")
+	} else if strings.Contains(src, "://") {
+		return "" // tls:// or https://
+	} else if h, _, err := net.SplitHostPort(src); err == nil {
+		return h // plain RTR
+	}
+	return "" // a file
 }
 
 // poll re-runs load every interval, until the bgpipe context is done.
@@ -288,7 +313,7 @@ func (r *Rpki) urlFetch() error {
 		return fmt.Errorf("HTTP status %s", resp.Status)
 	}
 
-	data, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<30))
 	if err != nil {
 		return err
 	}

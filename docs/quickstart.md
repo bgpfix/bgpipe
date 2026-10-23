@@ -55,7 +55,7 @@ Options:
   -2, --short-asn               force 2-byte AS numbers
   -g, --guess-asn               guess AS number byte size
       --caps string             use given BGP capabilities (JSON format)
-      --rpki string             RPKI cache source: RTR host:port, tls://host:port, URL, or a local file path (default "rtr.rpki.cloudflare.com:8282")
+      --rpki string             RPKI cache source: URL, RTR host:port, tls://host:port, or a local file path (default "https://rpki.cloudflare.com/rpki.json")
       --rpki-refresh duration   RPKI RTR/URL refresh interval (default 1h0m0s)
       --rpki-retry duration     RPKI RTR reconnect interval (default 10m0s)
       --rpki-insecure           do not validate the RPKI RTR server TLS certificate
