@@ -64,7 +64,7 @@ func NewAspa(parent *core.StageBase) core.Stage {
 	f.String("invalid", "withdraw", "action for INVALID paths: withdraw|drop|keep")
 	f.Bool("tag", true, "add aspa/ validation status to message tags")
 	f.String("event", "", "emit event on INVALID paths")
-	f.String("role", "auto", "peer BGP role: auto|provider|customer|peer|rs|rs-client")
+	f.String("role", "", "peer BGP role (required): provider|customer|peer|rs|rs-client|auto")
 	f.String("peer-tag", "", "read peer ASN from given message tag (eg. PEER_AS) instead of OPEN")
 	f.Bool("first-hop", true, "check path[0] == neighbor AS; disable for collector feeds (RFC 7947)")
 	f.Bool("no-wait", false, "start before the RPKI cache is ready")
@@ -95,7 +95,7 @@ func (s *Aspa) Attach() error {
 	} else if r, ok := parseRoleName(role); ok {
 		s.role = r
 	} else {
-		return fmt.Errorf("--role must be auto, provider, customer, peer, rs or rs-client")
+		return fmt.Errorf("--role must be provider, customer, peer, rs, rs-client or auto")
 	}
 
 	// NB: a single --role cannot describe two different peers
