@@ -105,9 +105,10 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		tcp.CloseWrite()
 		wch <- retval{n, err}
 
-		// NB: we're done writing: a clean stop, unlike the peer closing on us
+		// NB: we're done writing: give the peer time to read it all and close its
+		// side (closing first would make its next packet RST away unread data)
 		if closed_timeout > 0 {
-			time.Sleep(closed_timeout)
+			time.Sleep(max(closed_timeout, 30*time.Second))
 			s.Cancel(core.ErrStageStopped)
 		}
 	}()
