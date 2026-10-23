@@ -12,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
-	"os"
 	"strings"
 	"time"
 
@@ -53,6 +52,24 @@ func (b *Bgpipe) configureHTTP() error {
 			"uptime":  time.Since(b.StartTime).Truncate(time.Second).String(),
 		})
 	})
+	m.Get("/ready", func(w http.ResponseWriter, r *http.Request) {
+		// established = KEEPALIVE seen in both directions, and still running
+		// NB: one session per process: when it ends, the pipe stops and bgpipe exits
+		est := b.Pipe.R.LastAlive.Load() != 0 && b.Pipe.L.LastAlive.Load() != 0 && b.Pipe.Ctx.Err() == nil
+		rpki := true
+		if b.Rpki != nil {
+			select {
+			case <-b.Rpki.Cache.Ready():
+			default:
+				rpki = false
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if !est || !rpki {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		json.NewEncoder(w).Encode(map[string]any{"ready": est && rpki, "established": est, "rpki": rpki})
+	})
 	m.Get("/", b.httpDashboard)
 
 	// pprof
@@ -82,7 +99,7 @@ func (b *Bgpipe) httpAuthMiddleware() (func(http.Handler) http.Handler, error) {
 		return nil, fmt.Errorf("--http requires --http-auth (or --http-open to disable auth)")
 	}
 
-	cred, err := b.readCredential(authStr)
+	cred, err := ReadCredential(authStr)
 	if err != nil {
 		return nil, fmt.Errorf("--http-auth: %w", err)
 	}
@@ -97,36 +114,6 @@ func (b *Bgpipe) httpAuthMiddleware() (func(http.Handler) http.Handler, error) {
 			next.ServeHTTP(w, r)
 		})
 	}, nil
-}
-
-// readCredential reads a credential from a string, $ENV variable, or /path.
-// The resolved value must be non-empty and contain a colon (user:pass).
-func (b *Bgpipe) readCredential(v string) ([]byte, error) {
-	var cred []byte
-	switch {
-	case len(v) > 1 && v[0] == '$':
-		val := os.Getenv(v[1:])
-		if val == "" {
-			return nil, fmt.Errorf("environment variable %s is empty or unset", v)
-		}
-		cred = bytes.TrimSpace([]byte(val))
-	case len(v) > 0 && v[0] == '/':
-		buf, err := os.ReadFile(v)
-		if err != nil {
-			return nil, fmt.Errorf("file %s: %w", v, err)
-		}
-		line, _, _ := bytes.Cut(buf, []byte{'\n'})
-		cred = bytes.TrimSpace(line)
-	default:
-		cred = []byte(v)
-	}
-	if len(cred) == 0 {
-		return nil, fmt.Errorf("credential is empty")
-	}
-	if !bytes.Contains(cred, []byte{':'}) {
-		return nil, fmt.Errorf("credential must be in user:pass format")
-	}
-	return cred, nil
 }
 
 func (b *Bgpipe) configurePprof(m *chi.Mux) error {
@@ -161,7 +148,7 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 	}
 
 	srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second}
-	b.pprofsrv = srv
+	b.pprofsrv, b.pprofln = srv, ln
 	go func() {
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			b.Warn().Err(err).Msg("pprof server error")
@@ -210,6 +197,8 @@ func (b *Bgpipe) stopHTTP() {
 		if err := b.pprofsrv.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			b.Warn().Err(err).Msg("pprof server shutdown error")
 		}
+		b.pprofln.Close() // NB: Serve() may not have started yet
+
 	}
 }
 
@@ -251,7 +240,7 @@ func (b *Bgpipe) attachHTTPStages() {
 		s.HTTPPath = "/stage/" + base
 		m.Mount(s.HTTPPath, r)
 
-		s.Info().Str("http", s.HTTPPath).Msg("stage HTTP API mounted")
+		s.Debug().Str("http", s.HTTPPath).Msg("stage HTTP API mounted")
 	}
 }
 

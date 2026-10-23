@@ -34,7 +34,7 @@ func NewConnect(parent *core.StageBase) core.Stage {
 
 	o.Args = []string{"addr"}
 	f.String("bind", "", "local address to bind to (IP or IP:port)")
-	f.String("md5", "", "TCP MD5 password")
+	f.String("md5", "", "TCP MD5 password ($ENV_VAR, /file path, or literal)")
 	f.Bool("transparent", false, "transparent proxy mode (Linux TPROXY; spoof source, derive endpoints from the listen side)")
 	f.Int("ttl", 0, "outgoing IP TTL / hop limit (0 means default)")
 	f.Duration("timeout", 15*time.Second, "TCP connect timeout (0 means off)")
@@ -75,7 +75,11 @@ func (s *Connect) Prepare() error {
 
 	// dialer
 	var dialer net.Dialer
-	dialer.Control = util.Chain(util.TcpMd5(k.String("md5")), util.Ttl(k.Int("ttl")))
+	md5, err := readMd5(k.String("md5"))
+	if err != nil {
+		return err
+	}
+	dialer.Control = util.Chain(util.TcpMd5(md5), util.Ttl(k.Int("ttl")))
 
 	// transparent proxy: spoof source and derive endpoints from the pipe KV
 	// populated by the inbound (listen) side, unless given explicitly

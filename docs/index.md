@@ -85,7 +85,7 @@ $ bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-bview.gz \
     -- grep 'tag[PEER_AS] == "8218"'
 
 # proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes
-$ bgpipe -o -- listen :179 -- rov -- connect --wait listen 192.0.2.1
+$ bgpipe -o -- listen --peer 198.51.100.7 :179 -- rov -- connect --wait listen 192.0.2.1
 ```
 
 ## Install
@@ -140,17 +140,23 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 
     Add TCP-MD5 to sessions, proxy over encrypted WebSockets
 
+-   :material-speedometer:{ .lg } **Fast & Hardened**
+
+    ~1M messages/s, zero-allocation parsing, fuzzed parsers, and safe defaults
+
 </div>
 
 ## Features
 
+- **High performance** - UPDATE parsing in ~175 ns with zero allocations, ~1M messages/s from MRT to JSON on one box
+- **Hardened** - all parsers are fuzzed, malformed input from a peer or a public feed can't crash the process, and capability negotiation is race-free
 - **Transparent proxy** - sits between two BGP speakers; with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer - no router reconfiguration
 - **Full JSON translation** - bidirectional BGP <-> JSON for every message type, including [Flowspec](flowspec.md)
 - **Built-in filters** - match on prefixes, AS paths, communities, attributes, and [tags](stages/tag.md) with a concise [filter language](filters.md)
-- **RPKI origin validation** - [rov](stages/rov.md) stage implements RFC 6811, fed over RTR (e.g. Cloudflare, Routinator), HTTP(S), or files
-- **ASPA path verification** - [aspa](stages/aspa.md) stage detects route leaks per the IETF draft - available today, before router vendors ship it
+- **RPKI origin validation** - [rov](stages/rov.md) stage implements RFC 6811, fed over HTTPS by default (Cloudflare's rpki-client export), RTR (also over TLS), or local files
+- **ASPA path verification** - [aspa](stages/aspa.md) stage detects route leaks per the IETF draft (-29, tested against its published examples) - available today, before router vendors ship it
 - **Prefix and rate limits** - enforce prefix count/length thresholds and message rate limits per session
-- **UPDATE rewriting** - add, remove, or modify path attributes on the fly
+- **Route policy** - [update](stages/update.md) prepends and cleans AS_PATHs, scrubs communities by pattern, sets MED / LOCAL_PREF / ORIGIN, and drops attributes on the fly
 - **Multiple data formats** - read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format
 - **Compression support** - transparent gzip/bzip2/zstd for MRT and other file formats
 - **HTTP/HTTPS sources** - read directly from URLs (e.g. RouteViews or RIS MRT archives)
@@ -159,8 +165,10 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 - **TCP-MD5 handling** - add or drop TCP-MD5 independently on each side of a session
 - **Live data feeds** - stream from [RIPE RIS Live](https://ris-live.ripe.net/) or [RouteViews](https://www.routeviews.org/) in real time
 - **Message tagging** - attach metadata to messages for downstream filtering and routing decisions
-- **HTTP API** - live dashboard, Prometheus metrics, Kubernetes-style health checks, and optional pprof profiling, with HTTP Basic Auth ([details](http-api.md))
-- **20 pipeline stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
+- **HTTP API** - live dashboard, Prometheus metrics, Kubernetes-style liveness (`/hc`) and readiness (`/ready`) checks, and optional pprof profiling, with HTTP Basic Auth ([details](http-api.md))
+- **Config files** - keep long pipelines in a file with comments, one stage per line: `bgpipe -f edge.conf` ([details](quickstart.md#config-files))
+- **Safe by default** - peer allow-lists on `listen`, authenticated WebSocket servers, slow monitoring clients can never stall a session, and a warning for unencrypted RPKI sources
+- **21 pipeline stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
 
 ## Project
 

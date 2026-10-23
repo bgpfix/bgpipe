@@ -64,7 +64,7 @@ func NewAspa(parent *core.StageBase) core.Stage {
 	f.String("invalid", "withdraw", "action for INVALID paths: withdraw|drop|keep")
 	f.Bool("tag", true, "add aspa/ validation status to message tags")
 	f.String("event", "", "emit event on INVALID paths")
-	f.String("role", "auto", "peer BGP role: auto|provider|customer|peer|rs|rs-client")
+	f.String("role", "", "peer BGP role (required): provider|customer|peer|rs|rs-client|auto")
 	f.String("peer-tag", "", "read peer ASN from given message tag (eg. PEER_AS) instead of OPEN")
 	f.Bool("first-hop", true, "check path[0] == neighbor AS; disable for collector feeds (RFC 7947)")
 	f.Bool("no-wait", false, "start before the RPKI cache is ready")
@@ -95,7 +95,7 @@ func (s *Aspa) Attach() error {
 	} else if r, ok := parseRoleName(role); ok {
 		s.role = r
 	} else {
-		return fmt.Errorf("--role must be auto, provider, customer, peer, rs or rs-client")
+		return fmt.Errorf("--role must be provider, customer, peer, rs, rs-client or auto")
 	}
 
 	// NB: a single --role cannot describe two different peers
@@ -233,10 +233,6 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	if !u.HasReach() {
 		return true // withdrawal-only, no AS_PATH to validate
 	}
-	aspath := u.AsPath()
-	if aspath == nil || aspath.Len() == 0 {
-		return true // iBGP or locally-originated
-	}
 
 	// resolve peer role and ASN for this direction
 	peer := s.resolvePeer(m.Dir)
@@ -254,12 +250,15 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	}
 
 	// verify path
-	flat := aspath.Unique()
+	var flat []uint32
+	if aspath := u.AsPath(); aspath != nil {
+		flat = aspath.Unique()
+	}
 	var result int
 	var failCAS, failPAS uint32
 	switch {
 	case flat == nil:
-		result = rpki.ASPA_INVALID // AS_SET present -> invalid per ASPA spec section 3
+		result = rpki.ASPA_INVALID // empty path or AS_SET (draft-29 sections 5.5/5.6, steps 1 and 3)
 	case len(flat) == 1:
 		result = rpki.ASPA_VALID // single-hop
 	case s.first_hop && !peer.rs && asn != 0 && flat[0] != asn:
@@ -293,7 +292,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 		}
 	}
 	if s.tag {
-		m.Edit()
+		m.DropJSON() // NB: tags only, keep the wire as-is
 	}
 
 	if result != rpki.ASPA_INVALID {

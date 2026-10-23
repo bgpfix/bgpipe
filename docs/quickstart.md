@@ -41,12 +41,13 @@ Usage: bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGUMENTS] [--] STAGE2...
 Options:
   -v, --version                 print detailed version info and quit
   -n, --explain                 print the pipeline as configured and quit
+  -f, --config string           read options and stages from given file (in place of -f)
   -l, --log string              log level (debug/info/warn/error/disabled) (default "info")
       --http string             bind HTTP API + Prometheus /metrics to given address
-      --http-auth string        HTTP Basic Auth credentials (user:pass, $ENV, or /path)
+      --http-auth string        HTTP Basic Auth: user:pass, $ENV_VAR, or a file path
       --http-open               disable HTTP authentication (dangerous)
       --pprof string            enable pprof: 'http' to add to --http, or addr for separate server
-  -e, --events strings          log given events ("all" means all events) (default [PARSE,ESTABLISHED,EOR])
+  -e, --events strings          log given events ("all" means all events) (default [PARSE,NOTIFY,ESTABLISHED,EOR])
   -k, --kill strings            kill session on any of these events
   -i, --stdin                   read JSON from stdin
   -o, --stdout                  write JSON to stdout
@@ -55,7 +56,7 @@ Options:
   -2, --short-asn               force 2-byte AS numbers
   -g, --guess-asn               guess AS number byte size
       --caps string             use given BGP capabilities (JSON format)
-      --rpki string             RPKI cache source: RTR host:port, tls://host:port, URL, or a local file path (default "rtr.rpki.cloudflare.com:8282")
+      --rpki string             RPKI cache source: URL, RTR host:port, tls://host:port, or a local file path (default "https://rpki.cloudflare.com/rpki.json")
       --rpki-refresh duration   RPKI RTR/URL refresh interval (default 1h0m0s)
       --rpki-retry duration     RPKI RTR reconnect interval (default 10m0s)
       --rpki-insecure           do not validate the RPKI RTR server TLS certificate
@@ -96,7 +97,7 @@ Description: connect to a BGP endpoint over TCP
 
 Options:
       --bind string               local address to bind to (IP or IP:port)
-      --md5 string                TCP MD5 password
+      --md5 string                TCP MD5 password ($ENV_VAR, /file path, or literal)
       --transparent               transparent proxy mode (Linux TPROXY; spoof source, derive endpoints from the listen side)
       --ttl int                   outgoing IP TTL / hop limit (0 means default)
       --timeout duration          TCP connect timeout (0 means off) (default 15s)
@@ -125,6 +126,48 @@ As you can see, the `connect` stage has its own set of options, such as `--timeo
 By default, all stages operate in the *right* (`-R`) direction, meaning that they process BGP messages flowing from left to right. The direction controls which messages to capture for processing in a stage, and where to send new messages. However, if the last stage connects to a BGP endpoint, by default it will operate in the *left* (`-L`) direction, meaning it will send new messages to the left of the pipeline. Usually, the left-most and/or right-most stage is the one that connects to a BGP endpoint, while the other stages process messages in between. If you want bidirectional processing, use the `-L` and `-R` options together, ie. `-LR`.
 
 For writing BGP message filters used by the `grep` and `drop` stages, see the dedicated [filter reference](filters.md) with attributes, operators, and examples.
+
+### Config files
+
+Long pipelines are easier to read, diff, and keep secrets out of, in a file:
+`bgpipe -f pipeline.conf`. The file uses the same syntax as the command line,
+and its contents replace `-f FILE` in place, so you can still add options
+before and stages after it. On top of shell-like quoting:
+
+- `#` starts a comment, and empty lines are ignored,
+- a line that starts with a word (not indented, not an option) starts a new stage,
+- indented lines continue the current stage, eg. to group its options,
+- `\` at the end of a line continues it, and `--` works as on the command line,
+  so CLI examples (even with the leading `bgpipe`) can be pasted as-is.
+
+As on the command line, global options go before the first stage, and stage
+options go before stage arguments.
+
+```bash
+# /etc/bgpipe/edge.conf
+--rpki tls://rtr.example.net:8283
+--http 127.0.0.1:8080 --http-open
+
+listen --peer 192.0.2.1 --md5 /etc/bgpipe/md5.secret :179
+rov --invalid withdraw
+aspa --role customer
+update --del-com '65000:*'
+       --strip-private
+connect --md5 /etc/bgpipe/md5.secret 10.0.0.1
+```
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success: input fully processed, or stopped by a signal (SIGINT/SIGTERM) |
+| `1` | Runtime error, eg. connection refused or closed by the peer, or an input file that could not be opened |
+| `2` | Configuration error: invalid options or stages, or an RPKI / HTTP setup that failed at startup |
+| `3` | Session killed by a `--kill` event |
+
+Supervisors like systemd can use these to decide whether a restart makes sense (eg. `RestartPreventExitStatus=2`).
+
+Logs go to stderr, with ANSI colors only when it is a terminal (the same for `--explain` on stdout); set [`NO_COLOR=1`](https://no-color.org/) to disable colors entirely.
 
 ## Reading MRT files
 
@@ -156,13 +199,18 @@ $ bgpipe -n \
   [1] read https://data.ris.ripe.net/rrc01/latest-update.gz
       writes messages to pipeline inputs=1
   [2] grep prefix ~ 8.0.0.0/8
-      reads messages from pipeline callbacks=1 types=[ALL]
+      reads messages from pipeline callbacks=1 types=[ALL] parse=1
   [3] stdout
-      reads messages from pipeline callbacks=1 types=[ALL]
+      reads messages from pipeline callbacks=1 types=[ALL] parse=1
 
 <-- MESSAGES FLOWING LEFT <--
   (none)
 ```
+
+Each stage shows whether it reads and/or writes messages, which message `types`
+its callbacks see, how many callbacks need to `parse` messages (which costs CPU,
+and depends on the BGP capabilities negotiated at runtime, eg. ADD-PATH, so
+`--explain` cannot show them), and whether it only mirrors messages (`copy`).
 
 Last but not least, instead of putting the `stdout` stage explicitly in the pipeline, you can use the `--stdout` (short `-o`) option to `bgpipe`, in order to print BGP messages to stdout automatically. It will print all messages that make it to the very end of the left-hand side *or* right-hand side of the pipeline, ie. all messages that are not dropped by any stage.
 

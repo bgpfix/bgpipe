@@ -15,8 +15,11 @@ import (
 
 // Configure configures bgpipe
 func (b *Bgpipe) Configure() error {
-	// parse CLI args
-	err := b.parseArgs(os.Args[1:])
+	// parse CLI args, possibly read from a --config file
+	args, err := b.spliceConfig(os.Args[1:])
+	if err == nil {
+		err = b.parseArgs(args)
+	}
 	if err != nil {
 		return fmt.Errorf("could not parse CLI flags: %w", err)
 	}
@@ -63,12 +66,13 @@ func (b *Bgpipe) addFlags() {
 	f.SetInterspersed(false)
 	f.BoolP("version", "v", false, "print detailed version info and quit")
 	f.BoolP("explain", "n", false, "print the pipeline as configured and quit")
+	f.StringP("config", "f", "", "read options and stages from given file (in place of -f)")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.String("http", "", "bind HTTP API + Prometheus /metrics to given address")
-	f.String("http-auth", "", "HTTP Basic Auth credentials (user:pass, $ENV, or /path)")
+	f.String("http-auth", "", "HTTP Basic Auth: user:pass, $ENV_VAR, or a file path")
 	f.Bool("http-open", false, "disable HTTP authentication (dangerous)")
 	f.String("pprof", "", "enable pprof: 'http' to add to --http, or addr for separate server")
-	f.StringSliceP("events", "e", []string{"PARSE", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
+	f.StringSliceP("events", "e", []string{"PARSE", "NOTIFY", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")
 	f.StringSliceP("kill", "k", nil, "kill session on any of these events")
 	f.BoolP("stdin", "i", false, "read JSON from stdin")
 	f.BoolP("stdout", "o", false, "write JSON to stdout")
@@ -77,7 +81,7 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("short-asn", "2", false, "force 2-byte AS numbers")
 	f.BoolP("guess-asn", "g", false, "guess AS number byte size")
 	f.String("caps", "", "use given BGP capabilities (JSON format)")
-	f.String("rpki", "rtr.rpki.cloudflare.com:8282", "RPKI cache source: RTR host:port, tls://host:port, URL, or a local file path")
+	f.String("rpki", "https://rpki.cloudflare.com/rpki.json", "RPKI cache source: URL, RTR host:port, tls://host:port, or a local file path")
 	f.Duration("rpki-refresh", time.Hour, "RPKI RTR/URL refresh interval")
 	f.Duration("rpki-retry", 10*time.Minute, "RPKI RTR reconnect interval")
 	f.Bool("rpki-insecure", false, "do not validate the RPKI RTR server TLS certificate")

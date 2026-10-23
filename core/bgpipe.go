@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -45,6 +46,7 @@ type Bgpipe struct {
 	httpmux   *chi.Mux            // shared HTTP routes
 	httppprof bool                // true if pprof mounted on --http
 	pprofsrv  *http.Server        // standalone --pprof <addr> server
+	pprofln   net.Listener        // its listener
 
 	wg_lwrite sync.WaitGroup // stages that write to pipe L
 	wg_lread  sync.WaitGroup // stages that read from pipe L
@@ -61,6 +63,7 @@ func NewBgpipe(version string, repo ...map[string]NewStage) *Bgpipe {
 	// default logger
 	b.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
+		NoColor:    !IsColor(os.Stderr),
 		TimeFormat: time.DateTime,
 	})
 
@@ -93,13 +96,13 @@ func (b *Bgpipe) Run() error {
 	// configure bgpipe and its stages
 	if err := b.Configure(); err != nil {
 		b.Error().Err(err).Msg("configuration error")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// attach stages to pipe
 	if err := b.AttachStages(); err != nil {
 		b.Error().Err(err).Msg("could not attach stages to the pipe")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// print the pipeline and quit?
@@ -114,7 +117,7 @@ func (b *Bgpipe) Run() error {
 	// start the shared RPKI cache, if in use by any stage
 	if err := b.Rpki.Start(); err != nil {
 		b.Error().Err(err).Msg("could not start the RPKI cache")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// attach our b.Start
@@ -124,7 +127,7 @@ func (b *Bgpipe) Run() error {
 	b.StartTime = time.Now()
 	if err := b.startHTTP(); err != nil {
 		b.Error().Err(err).Msg("could not start HTTP API")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// handle signals
@@ -248,7 +251,7 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 func (b *Bgpipe) KillEvent(ev *pipe.Event) bool {
 	b.LogEvent(ev)
 	b.Warn().Stringer("ev", ev).Msg("session killed by event")
-	os.Exit(1)
+	os.Exit(3)
 	return false
 }
 
@@ -305,7 +308,7 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 	if w == nil {
 		w = os.Stdout
 	}
-	colors := w == os.Stdout
+	colors := w == os.Stdout && IsColor(os.Stdout)
 
 	// print function shortcut
 	pr := func(style string, format string, a ...any) {
@@ -332,7 +335,7 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 		s := b.Stages[idx]
 
 		// analyze callbacks
-		var cb_count int
+		var cb_count, cb_parse int
 		var cb_all bool
 		var cb_types []msg.Type
 		for _, cb := range s.callbacks {
@@ -340,6 +343,9 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 				continue
 			}
 			cb_count++
+			if !cb.Raw || len(cb.Filter) > 0 {
+				cb_parse++
+			}
 			if len(cb.Types) == 0 {
 				cb_all = true
 			} else {
@@ -410,6 +416,13 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 				pr(StyleMagenta, " types=%v", slices.Compact(cb_types))
 			} else {
 				pr(StyleMagenta, " types=[ALL]")
+			}
+			// NB: parsing needs the session caps, negotiated only at runtime
+			if cb_parse > 0 {
+				pr(StyleMagenta, " parse=%d", cb_parse)
+			}
+			if s.K.Bool("copy") {
+				pr(StyleMagenta, " copy")
 			}
 			pr(StyleNone, "\n")
 		}

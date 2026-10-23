@@ -85,7 +85,7 @@ bgpipe \
 Use `--if` on a stage instead of a separate grep:
 
 ```bash
-bgpipe -o -- read updates.mrt.gz -- stdout --if 'as_origin == 15169'
+bgpipe -- read updates.mrt.gz -- stdout --if 'as_origin == 15169'
 ```
 
 ## See Also

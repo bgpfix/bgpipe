@@ -13,7 +13,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -38,6 +37,7 @@ type Websocket struct {
 	srv         *http.Server         // http server (may be nil)
 	client_conn *websocket.Conn      // websocket client conn
 	server_conn chan *websocket.Conn // websocket server conns
+	dead_conn   chan *websocket.Conn // server conns with a failed writer
 
 	eio *extio.Extio
 }
@@ -54,7 +54,8 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 
 	f := o.Flags
 	f.Bool("listen", false, "listen on the URL instead of connecting to it")
-	f.String("auth", "", "use HTTP basic auth ($ENV_VARIABLE or file path with user:pass)")
+	f.String("auth", "", "HTTP basic auth: user:pass, $ENV_VAR, or a file path")
+	f.Bool("open", false, "allow --listen without --auth (anyone can read AND inject messages)")
 	f.String("cert", "", "SSL certificate path")
 	f.String("key", "", "SSL private key path")
 	f.Bool("insecure", false, "do not verify the SSL certificate")
@@ -132,29 +133,17 @@ func (s *Websocket) Attach() error {
 
 	// HTTP auth
 	if v := k.String("auth"); len(v) > 0 {
-		// read credentials from env or file
-		var cred []byte
-		if v[0] == '$' && len(v) >= 2 {
-			cred = []byte(os.Getenv(v[1:]))
-		} else {
-			cred, err = os.ReadFile(v)
-			if err != nil {
-				return fmt.Errorf("--auth: file %s: %w", v, err)
-			}
-			cred, _, _ = bytes.Cut(cred, []byte{'\n'})
+		cred, err := core.ReadCredential(v)
+		if err != nil {
+			return fmt.Errorf("--auth: %w", err)
 		}
-
-		// sanity check
-		if bytes.IndexByte(cred, ':') < 0 {
-			return fmt.Errorf("--auth: invalid format, need user:pass")
-		}
-
-		// add HTTP header
-		auth := "Basic " + base64.StdEncoding.EncodeToString(cred)
-		s.headers.Set("Authorization", auth)
+		s.headers.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString(cred))
+	} else if k.Bool("listen") && !k.Bool("open") {
+		return fmt.Errorf("--listen requires --auth (or --open to allow anyone)")
 	}
 
 	s.server_conn = make(chan *websocket.Conn, 10)
+	s.dead_conn = make(chan *websocket.Conn, 100)
 	return s.eio.Attach()
 }
 
@@ -383,50 +372,91 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 }
 
 func (s *Websocket) connWriter(done chan error) {
+	// conns maps connections to their send queues (nil for the critical client conn)
+	conns := make(map[*websocket.Conn]chan []byte)
 	defer func() {
 		util.Close(s.server_conn)
 		util.Close(s.eio.Output)
 		util.Close(done)
+		for _, q := range conns {
+			if q != nil {
+				close(q)
+			}
+		}
 	}()
 
-	// a map of connections, the value is true iff the connection is critical
-	conns := make(map[*websocket.Conn]bool)
 	if s.client_conn != nil {
-		conns[s.client_conn] = true
+		conns[s.client_conn] = nil
 	}
-	for len(s.server_conn) > 0 {
-		conns[<-s.server_conn] = false
+	accept := func() {
+		for len(s.server_conn) > 0 {
+			conn := <-s.server_conn
+			q := make(chan []byte, 1000)
+			conns[conn] = q
+			go s.queueWriter(conn, q)
+		}
 	}
+	accept()
 
 	for bb := range s.eio.Output {
 		// signal to reload the server conns?
 		if bb == nil {
-			for len(s.server_conn) > 0 {
-				conns[<-s.server_conn] = false
-			}
+			accept()
 			continue
+		}
+
+		// forget server conns whose writer failed
+		for len(s.dead_conn) > 0 {
+			conn := <-s.dead_conn
+			if q := conns[conn]; q != nil {
+				close(q)
+				delete(conns, conn)
+			}
 		}
 
 		// broadcast buf to all conns
 		buf := bytes.TrimSpace(bb.B)
-		for conn, critical := range conns {
-			if conn == nil {
-				continue
-			}
-			err := conn.WriteMessage(websocket.BinaryMessage, buf)
-			if err != nil {
-				if critical {
+		var cp []byte // buf copy for queues
+		for conn, q := range conns {
+			if q == nil { // the critical client conn
+				if err := conn.WriteMessage(websocket.BinaryMessage, buf); err != nil {
 					util.Send(done, err)
 					return
-				} else {
-					s.Warn().Err(err).Msgf("%s: write error", conn.RemoteAddr())
-					conn.Close()
-					delete(conns, conn)
 				}
+				continue
+			}
+
+			// NB: never block the pipeline on (untrusted) server clients
+			if cp == nil {
+				cp = bytes.Clone(buf)
+			}
+			select {
+			case q <- cp:
+			default:
+				s.Warn().Msgf("%s: client too slow, disconnecting", conn.RemoteAddr())
+				close(q)
+				conn.Close()
+				delete(conns, conn)
 			}
 		}
 
 		// re-use bb
 		s.eio.Put(bb)
+	}
+}
+
+// queueWriter writes q to a server client conn, with a write deadline
+func (s *Websocket) queueWriter(conn *websocket.Conn, q chan []byte) {
+	defer conn.Close()
+	for buf := range q {
+		conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		if err := conn.WriteMessage(websocket.BinaryMessage, buf); err != nil {
+			s.Warn().Err(err).Msgf("%s: write error", conn.RemoteAddr())
+			select {
+			case s.dead_conn <- conn: // NB: connWriter owns the conns map
+			default:
+			}
+			return
+		}
 	}
 }

@@ -3,6 +3,7 @@ package core
 import "errors"
 
 var (
+	ErrConfig       = errors.New("configuration error") // exit code 2
 	ErrStageCmd     = errors.New("invalid stage command")
 	ErrStageDiff    = errors.New("already defined but different")
 	ErrPipeFinished = errors.New("pipe stopped")

@@ -95,7 +95,8 @@ aggregations like `sum by (dir)`, `sum by (type)`, or filtering on
 |----------|-------------|
 | `/` | Web dashboard with pipeline info, stages, uptime, and links |
 | `/metrics` | Global Prometheus metrics (all stages, all Go runtime) |
-| `/hc` | Health check (JSON, k8s-compatible) |
+| `/hc` | Health check (JSON, k8s liveness) |
+| `/ready` | Readiness check: 200 once the session is established (JSON, k8s readiness) |
 | `/stage/metrics/` | JSON summary of this stage's counters |
 | `/debug/pprof/` | Go pprof (when `--pprof` is enabled) |
 

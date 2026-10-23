@@ -2,6 +2,7 @@ package stages
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -164,12 +165,22 @@ func (s *Exec) stdoutReader(done chan error) {
 }
 
 func (s *Exec) stderrReader(done chan error) {
-	in := bufio.NewScanner(s.cmd_err)
-	for in.Scan() {
-		s.Info().Msg(in.Text())
+	// NB: log long lines in chunks, never stop reading (would block the child)
+	in := bufio.NewReaderSize(s.cmd_err, 64*1024)
+	for {
+		line, err := in.ReadSlice('\n')
+		if len(line) > 0 {
+			s.Info().Msg(string(bytes.TrimRight(line, "\r\n")))
+		}
+		if err != nil && err != bufio.ErrBufferFull {
+			if err == io.EOF {
+				err = nil
+			}
+			done <- err
+			close(done)
+			return
+		}
 	}
-	done <- in.Err()
-	close(done)
 }
 
 func (s *Exec) stdinWriter(done chan error) {

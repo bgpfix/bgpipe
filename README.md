@@ -12,21 +12,27 @@ An open-source tool that processes BGP messages through a pipeline of composable
 bgpipe sits between routers as a transparent proxy, auditing, filtering, and transforming BGP sessions on the fly. Think of it as a scriptable BGP firewall and traffic processor.
 
 **Use cases:**
-- BGP firewall with RPKI validation, prefix limits, and rate limiting
+- BGP firewall with RPKI ROV and ASPA route-leak detection, prefix limits, and rate limiting
+- Route policy on the wire - prepend, strip private ASNs, scrub communities, set MED / LOCAL_PREF
 - Bidirectional BGP to JSON translation including Flowspec - pipe through jq, Python, anything
 - MRT file processing and conversion at scale, incl. RIB snapshots (table dumps)
-- Scriptable pipeline - chain stages or pipe through external programs
+- Scriptable pipeline - chain stages or pipe through external programs, keep it in a config file
 - Live BGP monitoring from RIPE RIS Live or RouteViews with real-time filters
 - Secure transport - add TCP-MD5 to sessions, proxy over encrypted WebSockets
+
+**Fast and hardened:**
+- ~1M BGP messages/s from MRT to JSON on one box; UPDATE parsing takes ~175 ns with zero allocations ([bgpfix](https://github.com/bgpfix/bgpfix) v0.23)
+- all parsers are fuzzed, and malformed input from a peer or a public feed can't crash the process
+- safe defaults: `listen --peer` allow-lists, authenticated WebSocket servers, slow clients can't stall a session, RPKI data over HTTPS
 
 See the [RIPE 88 bgpipe talk](https://ripe88.ripe.net/archives/video/1365/) for background.
 
 ## Quick Example
 
 ```bash
-# Reverse proxy: expose internal BGP router, log all traffic to JSON
+# Reverse proxy: expose internal BGP router to one peer, log all traffic to JSON
 bgpipe --stdout \
-  -- listen :179 \
+  -- listen --peer 198.51.100.7 :179 \
   -- connect --wait listen 192.0.2.1
 
 # Stream MRT file, filter by matching IP prefix, and store as JSON file

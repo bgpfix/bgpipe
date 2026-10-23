@@ -58,7 +58,7 @@ routers already share for the pair.
 | `--timeout` | duration | `15s` | TCP connect timeout; 0 disables |
 | `--closed-timeout` | duration | `1s` | TCP half-closed timeout; 0 disables |
 | `--keepalive` | duration | `15s` | TCP keepalive period; -1 disables |
-| `--md5` | string | | TCP MD5 password ([RFC 2385](https://datatracker.ietf.org/doc/html/rfc2385)) |
+| `--md5` | string | | TCP MD5 password ([RFC 2385](https://datatracker.ietf.org/doc/html/rfc2385)): `$ENV_VAR`, file path (`/...` or `./...`), or literal |
 | `--bind` | string | | Local address to bind to (`IP` or `IP:port`) |
 | `--transparent` | bool | `false` | Transparent proxy mode (Linux TPROXY); see below |
 | `--ttl` | int | `0` | Outgoing IP TTL / hop limit; 0 leaves the kernel default |

@@ -10,13 +10,13 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bgpfix/bgpfix/json"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
-	"github.com/buger/jsonparser"
 )
 
 // RisLive reads BGP updates from RIPE RIS Live streaming endpoint
@@ -70,12 +70,10 @@ func (s *RisLive) Attach() error {
 
 	// ensure --sub includes includeRaw=true
 	if sl := len(s.sub); sl > 0 {
-		val, err := jsonparser.GetBoolean(json.B(s.sub), "includeRaw")
-		if err != nil && s.sub[0] == '{' && s.sub[sl-1] == '}' {
+		if json.Get(json.B(s.sub), "includeRaw") == nil && s.sub[0] == '{' && s.sub[sl-1] == '}' {
 			s.sub = s.sub[:sl-1] + `, "includeRaw": true }` // best-effort add includeRaw
-			val, err = jsonparser.GetBoolean(json.B(s.sub), "includeRaw")
 		}
-		if err != nil || !val {
+		if !json.GetBool(json.B(s.sub), "includeRaw") {
 			return fmt.Errorf("invalid --sub: must be JSON object with includeRaw=true")
 		}
 	}
@@ -253,7 +251,7 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 		case 0: // type
 			ris_type = json.S(val) // NB: do not store
 		case 1: // data.timestamp
-			v, err := jsonparser.ParseFloat(val)
+			v, err := strconv.ParseFloat(json.S(val), 64)
 			if err != nil {
 				return fmt.Errorf("invalid timestamp: %w", err)
 			}

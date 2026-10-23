@@ -36,7 +36,7 @@ before the first stage:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--rpki` | string | `rtr.rpki.cloudflare.com:8282` | RPKI cache source: RTR `host:port`, `tls://host:port`, an HTTP(S) URL, or a local file path |
+| `--rpki` | string | `https://rpki.cloudflare.com/rpki.json` | RPKI cache source: an HTTP(S) URL, RTR `host:port`, `tls://host:port`, or a local file path |
 | `--rpki-refresh` | duration | `1h` | RTR refresh interval (periodic Serial Query), or URL re-fetch interval |
 | `--rpki-retry` | duration | `10m` | RTR reconnect interval after failure |
 | `--rpki-insecure` | bool | `false` | Do not validate the RTR server TLS certificate |
@@ -46,10 +46,21 @@ negotiation and fallback. ASPA records require an RTR v2 server
 ([draft-ietf-sidrops-8210bis](https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/)).
 
 If `--rpki` is an `http://` or `https://` URL, the JSON/CSV data is fetched
-from it and re-fetched every `--rpki-refresh`. For example,
-`--rpki https://console.rpki-client.org/vrps.json` uses the public
-[rpki-client console](https://console.rpki-client.org/) export, which
-includes both VRPs and ASPAs.
+from it and re-fetched every `--rpki-refresh` (conditional GET, so unchanged
+data is not downloaded again). The default is Cloudflare's public
+[rpki-client](https://www.rpki-client.org/) export over HTTPS, served from
+their CDN, which includes both VRPs and ASPAs; the
+[rpki-client console](https://console.rpki-client.org/) export
+(`https://console.rpki-client.org/vrps.json`) is an equivalent alternative.
+
+!!! warning "Use an encrypted or local RPKI source"
+    Plain RTR (`host:port`) and `http://` are neither authenticated nor
+    encrypted: anyone on the path can forge VRPs and ASPAs, eg. to make a
+    hijack VALID or to have `--invalid withdraw` blackhole chosen prefixes.
+    bgpipe warns about it unless the server is `localhost` or a loopback,
+    private, or link-local IP address. For RTR across the Internet use
+    `tls://`, or better run your own validator (eg. rpki-client + StayRTR,
+    or Routinator) next to bgpipe.
 
 If `--rpki` points to an existing local file, it is loaded instead and
 auto-reloaded every 10 seconds. JSON files support VRPs and ASPAs; CSV

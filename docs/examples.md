@@ -87,6 +87,8 @@ bgpipe -o \
   -- connect --wait listen --md5 solarwinds123 1.2.3.4
 ```
 
+To keep the password out of `ps` and shell history, use `--md5 '$BGP_MD5'` (an environment variable) or `--md5 /etc/bgpipe/md5.secret` (a file).
+
 ## Transparent (TPROXY) proxy
 
 Stages: [listen](stages/listen.md), [connect](stages/connect.md)
@@ -211,12 +213,12 @@ bgpipe -g \
 
 Stages: [listen](stages/listen.md), [rov](stages/rov.md), [connect](stages/connect.md)
 
-Add RPKI validation to a BGP proxy between two routers: one dials into bgpipe's `listen` stage, and bgpipe forwards the now-validated session onward to `5.6.7.8` via `connect`. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can point the global `--rpki` option at another server or a local ROA cache file).
+Add RPKI validation to a BGP proxy between two routers: one dials into bgpipe's `listen` stage, and bgpipe forwards the now-validated session onward to `5.6.7.8` via `connect`. Invalid prefixes are automatically moved to the withdrawn list (following [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. By default, the RPKI data comes over HTTPS from Cloudflare's public [rpki-client](https://www.rpki-client.org/) export; point the global `--rpki` option at your own validator (RTR, `tls://`, a URL, or a local file) for production. `--peer` makes sure only the expected router can connect.
 
 ```bash
 # Secure 5.6.7.8 by validating routes from the router that dials in on :179
 bgpipe \
-  -- listen :179 \
+  -- listen --peer 192.0.2.1 :179 \
   -- rov \
   -- connect 5.6.7.8
 ```
@@ -230,7 +232,7 @@ Enable strict mode to treat prefixes without any RPKI ROA the same as invalid pr
 ```bash
 # Drop messages announcing INVALID and/or NOT_FOUND prefixes
 bgpipe --events rov/dropped \
-  -- listen :179 \
+  -- listen --peer 192.0.2.1 :179 \
   -- rov --strict --invalid=drop --event dropped \
   -- connect 5.6.7.8
 ```
@@ -243,10 +245,53 @@ While `rov` validates that the origin AS is authorized to announce a prefix, it 
 
 ```bash
 bgpipe \
-  -- listen :179 \
+  -- listen --peer 198.51.100.7 :179 \
   -- rov \
   -- aspa --role customer \
   -- connect 192.0.2.1
+```
+
+## Edge firewall in a config file
+
+Stages: [listen](stages/listen.md), [rov](stages/rov.md), [aspa](stages/aspa.md), [limit](stages/limit.md), [update](stages/update.md), [connect](stages/connect.md)
+
+Put a complete customer-facing firewall in one readable file: RPKI and ASPA validation, prefix limits, and community scrubbing. Lines starting with a stage name start a new stage, indented lines continue it, and `#` starts a comment -- see [config files](quickstart.md#config-files).
+
+```bash
+# /etc/bgpipe/customer1.conf
+--rpki tls://rtr.example.net:8283        # your own validator
+--http 127.0.0.1:8080 --http-open        # metrics, /hc and /ready
+--kill limit/session                     # stop on prefix limit violation
+
+listen --peer 198.51.100.7 --md5 /etc/bgpipe/customer1.md5 :179
+rov --invalid withdraw
+aspa --role customer --invalid withdraw
+limit --ipv4 --max-length 24 --session 1000
+update --del-com '65000:*'               # customers can't set our communities
+       --strip-private
+connect --md5 /etc/bgpipe/customer1.md5 --wait listen 192.0.2.1
+```
+
+```bash
+bgpipe -n -f /etc/bgpipe/customer1.conf   # check what will run
+bgpipe -f /etc/bgpipe/customer1.conf      # run it
+curl -s 127.0.0.1:8080/ready              # 200 once the session is up
+```
+
+Under systemd, `Restart=on-failure` with `RestartPreventExitStatus=2` restarts the session after network errors, but not after a configuration mistake (see [exit codes](quickstart.md#exit-codes)).
+
+## Route policy on the wire
+
+Stages: [connect](stages/connect.md), [update](stages/update.md)
+
+Apply the route policy you'd normally configure on a router, without touching the router: here, prepend twice and set a MED towards an upstream to shift inbound traffic, tag everything with `GRACEFUL_SHUTDOWN` ahead of maintenance, and drop an optional attribute that is known to break old routers.
+
+```bash
+bgpipe \
+  -- connect 192.0.2.1 \
+  -- update --prepend 65000,65000 --set-med 100 \
+  -- update --add-com 65535:0 --drop-attr 28 \
+  -- connect 10.0.0.1
 ```
 
 ## Real-time invalid-route quarantine
@@ -263,6 +308,22 @@ bgpipe -g \
   -- update --add-com 65000:666 \
   -- write invalid-routes.$TIME.json \
   -- websocket --write wss://monitor.example.com/bgp
+```
+
+## Live tap for your NOC over WebSocket
+
+Stages: [connect](stages/connect.md), [websocket](stages/websocket.md)
+
+Mirror a production session to any number of WebSocket clients (dashboards, scripts, `websocat`), read-only and password-protected. Clients that can't keep up are disconnected, so a stuck dashboard can never stall the BGP session.
+
+```bash
+bgpipe \
+  -- connect 192.0.2.1 \
+  -- websocket -LR --listen --write --auth /etc/bgpipe/noc.auth ws://10.0.0.5:8080/bgp \
+  -- connect 10.0.0.1
+
+# from another host (user:pass in noc.auth)
+websocat --basic-auth noc:s3cret ws://10.0.0.5:8080/bgp
 ```
 
 ## Rate limiting and sampling BGP streams

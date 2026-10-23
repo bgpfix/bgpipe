@@ -11,7 +11,9 @@ bgpipe [--rpki SOURCE] [...] -- aspa [OPTIONS]
 ## Description
 
 The **aspa** stage performs ASPA verification
-([draft-ietf-sidrops-aspa-verification](https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/))
+([draft-ietf-sidrops-aspa-verification](https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/),
+as of revision -29, tested against its published
+[examples](https://github.com/ksriram25/IETF/blob/main/ASPA_path_verification_examples.pdf))
 of BGP UPDATE messages: it detects route leaks by verifying that the AS_PATH
 is valley-free, using ASPA records that attest provider-customer relationships
 between ASes. Each path is assigned one of three states:
@@ -28,11 +30,23 @@ records require an RTR v2 server
 ([draft-ietf-sidrops-8210bis](https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/))
 or a JSON file with ASPA data.
 
-ASPA verification also requires knowledge of the peer's BGP role, either
-auto-detected via the [RFC 9234](https://datatracker.ietf.org/doc/html/rfc9234)
-BGP Role capability, or set explicitly with `--role`. If `--role auto` (the
-default) and the peer does not send the BGP Role capability in their OPEN
-message, ASPA validation is skipped for the session and a warning is logged.
+ASPA verification also requires knowledge of the peer's BGP role, so
+`--role` is required. Set it explicitly to the role you configured for the
+peer on your router. With `--role auto`, the role is taken from the
+[RFC 9234](https://datatracker.ietf.org/doc/html/rfc9234) BGP Role capability
+in the peer's OPEN message, and if the peer does not send it, ASPA validation
+is skipped for the session (with a warning).
+
+!!! warning "`--role auto` trusts the peer being validated"
+    With `auto`, the peer itself chooses how it is validated: it can omit the
+    Role capability (ASPA is skipped), claim `provider` (the lenient downstream
+    procedure, which lets route leaks through), or claim `rs` (the first-hop
+    check is skipped). bgpipe does not compare the peer's role with the role in
+    the other side's OPEN. For security use, always set an explicit role;
+    `auto` is meant for trusted peers, labs, and `-LR` monitoring.
+
+ASPA applies to eBGP sessions: an announcement with an empty AS_PATH, or with
+an AS_SET, is INVALID. Withdrawals are not checked.
 
 The stage also verifies that the first AS in the path matches the neighbor's
 ASN (per draft-ietf-sidrops-aspa-verification, Section 5). This check is
@@ -66,7 +80,7 @@ For INVALID paths, the failing hop is reported in `aspa/invalid-hop` as
 | `--invalid` | string | `withdraw` | Action for INVALID paths: `withdraw`, `drop`, `keep` |
 | `--tag` | bool | `true` | Add `aspa/status` and `aspa/invalid-hop` tags |
 | `--event` | string | | Emit named event on INVALID paths |
-| `--role` | string | `auto` | Peer's BGP role: `auto`, `provider`, `customer`, `peer`, `rs`, `rs-client` |
+| `--role` | string | (required) | Peer's BGP role: `provider`, `customer`, `peer`, `rs`, `rs-client`, or `auto` (see above) |
 | `--peer-tag` | string | | Read the peer ASN from given message tag (eg. `PEER_AS`) instead of OPEN |
 | `--first-hop` | bool | `true` | Check that `path[0]` equals the neighbor ASN; disable for collector feeds ([RFC 7947](https://datatracker.ietf.org/doc/html/rfc7947)) |
 | `--no-wait` | bool | `false` | Start before the RPKI cache is ready |
@@ -100,7 +114,7 @@ perspective, per [RFC 9234](https://datatracker.ietf.org/doc/html/rfc9234)):
 | `customer` | Peer is our customer | Upstream (route came from below) |
 | `rs-client` | Peer is an RS client | Upstream |
 | `peer` | Peer is a lateral peer | Upstream |
-| `auto` | Auto-detect from BGP Role capability | Depends on detected role |
+| `auto` | Take from the peer's BGP Role capability (trusts the peer) | Depends on the claimed role |
 
 In bidirectional (`-LR`) mode only `--role auto` is allowed: a single explicit
 role cannot describe two different peers.

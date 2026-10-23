@@ -321,6 +321,9 @@ func (eio *Extio) Attach() error {
 			eio.opt_copy = true // read/write-only doesn't make sense without --copy
 		}
 	}
+	if eio.opt_copy {
+		k.Set("copy", true) // NB: for --explain
+	}
 
 	// not write-only? produce input to bgpipe
 	if !opt_write {
@@ -350,6 +353,8 @@ func (eio *Extio) Attach() error {
 		eio.bmp.OpenBMP = eio.opt_obmp
 	} else {
 		eio.Options.IsProducer = false
+		eio.Options.FilterOut = false // NB: no inputs to filter
+		eio.drop_input.Store(true)    // NB: ignore anything the other side sends
 	}
 
 	// not read-only? capture bgpipe output to eio.Output
@@ -368,6 +373,8 @@ func (eio *Extio) Attach() error {
 		for t := range eio.opt_type {
 			cb.Types = append(cb.Types, t)
 		}
+	} else {
+		eio.Options.FilterIn = false // NB: no callbacks to filter
 	}
 
 	return nil
@@ -582,7 +589,7 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 			return read_err
 		case err == io.EOF:
 			// emit pending aggregated messages (MRT table dumps)
-			if eio.opt_mrt {
+			if eio.opt_mrt && eio.mrt != nil {
 				check := eio.checkMsg
 				if cb != nil {
 					check = func(m *msg.Msg) bool {
@@ -751,16 +758,21 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 }
 
 // WriteStream rewrites eio.Output to w.
+// NB: writes are buffered and flushed when eio.Output is empty, saving a syscall per message
 func (eio *Extio) WriteStream(w io.Writer) error {
+	bw := bufio.NewWriterSize(w, 64*1024)
 	for bb := range eio.Output {
-		_, err := bb.WriteTo(w)
+		_, err := bw.Write(bb.B)
 		eio.Pool.Put(bb)
+		if err == nil && len(eio.Output) == 0 {
+			err = bw.Flush()
+		}
 		if err != nil {
 			eio.OutputClose()
 			return err
 		}
 	}
-	return nil
+	return bw.Flush()
 }
 
 // Put puts a byte buffer back to pool
