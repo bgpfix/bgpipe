@@ -52,6 +52,23 @@ func (b *Bgpipe) configureHTTP() error {
 			"uptime":  time.Since(b.StartTime).Truncate(time.Second).String(),
 		})
 	})
+	m.Get("/ready", func(w http.ResponseWriter, r *http.Request) {
+		// established = KEEPALIVE seen in both directions
+		est := b.Pipe.R.LastAlive.Load() != 0 && b.Pipe.L.LastAlive.Load() != 0
+		rpki := true
+		if b.Rpki != nil {
+			select {
+			case <-b.Rpki.Cache.Ready():
+			default:
+				rpki = false
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if !est || !rpki {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		json.NewEncoder(w).Encode(map[string]any{"ready": est && rpki, "established": est, "rpki": rpki})
+	})
 	m.Get("/", b.httpDashboard)
 
 	// pprof

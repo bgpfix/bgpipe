@@ -31,7 +31,8 @@ stage if you also want labeled, filter-based Prometheus counters.
 |----------|-------------|
 | `/` | Web dashboard: version, uptime, stage list, and links to the endpoints below |
 | `/metrics` | Prometheus text format, covering all stages and the Go runtime |
-| `/hc` | JSON health check (`status`, `version`, `stages`, `uptime`) -- suitable for Kubernetes liveness/readiness probes |
+| `/hc` | JSON health check (`status`, `version`, `stages`, `uptime`) -- a liveness probe: always 200 while bgpipe runs |
+| `/ready` | JSON readiness check: 200 once the BGP session is established (KEEPALIVE seen in both directions) and the RPKI cache, if used, has data; 503 otherwise -- a readiness probe for pipelines with a BGP session |
 | `/stage/<name>/` | Per-stage JSON summary, for stages that implement one (see [Per-stage routes](#per-stage-routes)) |
 | `/debug/pprof/` | Go pprof profiles, only mounted when `--pprof` is set |
 
@@ -40,7 +41,7 @@ stage if you also want labeled, filter-based Prometheus counters.
 Because `/debug/pprof/` and per-stage routes can expose internal state, `--http` refuses to
 start unless you pick one of:
 
-- `--http-auth user:pass` (or `--http-auth $ENV_VAR` / `--http-auth /path/to/file`) --
+- `--http-auth user:pass` (or `--http-auth $ENV_VAR` / `--http-auth /path/to/file` / `./file`) --
   requires HTTP Basic Auth on every request, compared in constant time.
 - `--http-open` -- disables authentication. Only use this when `--http` is bound to
   `127.0.0.1` or an otherwise trusted network.
