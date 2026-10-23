@@ -1518,13 +1518,13 @@ applies only to messages in the stage direction.</p>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>Strip all tags before writing:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>tagged-data.json<span class="w"> </span>--<span class="w"> </span>tag<span class="w"> </span>--drop<span class="w"> </span><span class="s1">&#39;*&#39;</span><span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>clean.json
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>tagged-data.json<span class="w"> </span>--<span class="w"> </span>tag<span class="w"> </span>--drop<span class="w"> </span><span class="s1">'*'</span><span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>clean.json
 </span></code></pre></div>
 <p>Tag and filter: add environment tag, then filter on it downstream:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>updates.mrt.gz<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>tag<span class="w"> </span>--add<span class="w"> </span><span class="nv">env</span><span class="o">=</span>prod<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[env] == prod&#39;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[env] == prod'</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../grep/">grep</a>,

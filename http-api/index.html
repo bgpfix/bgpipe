@@ -1533,7 +1533,7 @@ global feature, independent of any particular stage.</p>
 <td><code>--http-auth</code></td>
 <td>string</td>
 <td></td>
-<td>HTTP Basic Auth credentials: <code>user:pass</code>, <code>$ENV_VAR</code>, or <code>/path/to/file</code></td>
+<td>HTTP Basic Auth: <code>user:pass</code> (has a colon), <code>$ENV_VAR</code>, or else a file path holding <code>user:pass</code></td>
 </tr>
 <tr>
 <td><code>--http-open</code></td>
@@ -1570,7 +1570,11 @@ stage if you also want labeled, filter-based Prometheus counters.</p>
 </tr>
 <tr>
 <td><code>/hc</code></td>
-<td>JSON health check (<code>status</code>, <code>version</code>, <code>stages</code>, <code>uptime</code>) -- suitable for Kubernetes liveness/readiness probes</td>
+<td>JSON health check (<code>status</code>, <code>version</code>, <code>stages</code>, <code>uptime</code>) -- a liveness probe: always 200 while bgpipe runs</td>
+</tr>
+<tr>
+<td><code>/ready</code></td>
+<td>JSON readiness check: 200 once the BGP session is established (KEEPALIVE seen in both directions) and the RPKI cache, if used, has data; 503 otherwise -- a readiness probe for pipelines with a BGP session</td>
 </tr>
 <tr>
 <td><code>/stage/&lt;name&gt;/</code></td>
@@ -1586,14 +1590,14 @@ stage if you also want labeled, filter-based Prometheus counters.</p>
 <p>Because <code>/debug/pprof/</code> and per-stage routes can expose internal state, <code>--http</code> refuses to
 start unless you pick one of:</p>
 <ul>
-<li><code>--http-auth user:pass</code> (or <code>--http-auth $ENV_VAR</code> / <code>--http-auth /path/to/file</code>) --
+<li><code>--http-auth user:pass</code> (or <code>--http-auth '$ENV_VAR'</code>, or a file path like <code>--http-auth /etc/bgpipe/http.auth</code>) --
   requires HTTP Basic Auth on every request, compared in constant time.</li>
 <li><code>--http-open</code> -- disables authentication. Only use this when <code>--http</code> is bound to
   <code>127.0.0.1</code> or an otherwise trusted network.</li>
 </ul>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># credentials from an environment variable</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BGPIPE_HTTP_AUTH</span><span class="o">=</span><span class="s2">&quot;admin:s3cret&quot;</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-auth<span class="w"> </span><span class="s1">&#39;$BGPIPE_HTTP_AUTH&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BGPIPE_HTTP_AUTH</span><span class="o">=</span><span class="s2">"admin:s3cret"</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-auth<span class="w"> </span><span class="s1">'$BGPIPE_HTTP_AUTH'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>rov<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>NB: when <code>--pprof</code> is given a separate address (not <code>http</code>), that dedicated pprof server
@@ -1651,7 +1655,7 @@ dedicated, unauthenticated pprof server on that address -- convenient for a quic
 <p>Prometheus scraping with authentication, plus labeled filter counters via <code>metrics</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:9090<span class="w"> </span>--http-auth<span class="w"> </span>/etc/bgpipe/http-auth<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">&#39;bogon: as_origin &gt; 64512&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">'bogon: as_origin &gt; 64512'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>

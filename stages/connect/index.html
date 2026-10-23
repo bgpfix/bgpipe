@@ -1564,7 +1564,7 @@ routers already share for the pair.</p>
 <td><code>--md5</code></td>
 <td>string</td>
 <td></td>
-<td>TCP MD5 password (<a href="https://datatracker.ietf.org/doc/html/rfc2385">RFC 2385</a>)</td>
+<td>TCP MD5 password (<a href="https://datatracker.ietf.org/doc/html/rfc2385">RFC 2385</a>): <code>$ENV_VAR</code>, file path (<code>/...</code> or <code>./...</code>), or literal</td>
 </tr>
 <tr>
 <td><code>--bind</code></td>
@@ -1621,7 +1621,7 @@ routers already share for the pair.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>speaker<span class="w"> </span>--active<span class="w"> </span>--asn<span class="w"> </span><span class="m">65001</span><span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
 <p>Connect with TCP-MD5 authentication:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>speaker<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--md5<span class="w"> </span><span class="s2">&quot;s3cret&quot;</span><span class="w"> </span><span class="m">192</span>.0.2.1
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>speaker<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--md5<span class="w"> </span><span class="s2">"s3cret"</span><span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
 <p>Connect over TLS with retry:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>speaker<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--tls<span class="w"> </span>--retry<span class="w"> </span><span class="m">192</span>.0.2.1:1179
@@ -1631,8 +1631,8 @@ routers already share for the pair.</p>
 </span></code></pre></div>
 <p>Transparent man-in-the-middle proxy (router redirects TCP/179 to this host):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w">  </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">&quot;s3cret&quot;</span><span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">&quot;s3cret&quot;</span><span class="w"> </span>--ttl<span class="w"> </span><span class="m">255</span><span class="w"> </span>-W<span class="w"> </span>listen<span class="w"> </span><span class="m">0</span>.0.0.0
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w">  </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">"s3cret"</span><span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">"s3cret"</span><span class="w"> </span>--ttl<span class="w"> </span><span class="m">255</span><span class="w"> </span>-W<span class="w"> </span>listen<span class="w"> </span><span class="m">0</span>.0.0.0
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../listen/">listen</a>,

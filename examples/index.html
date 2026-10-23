@@ -601,10 +601,43 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#edge-firewall-in-a-config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edge firewall in a config file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#route-policy-on-the-wire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route policy on the wire
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#real-time-invalid-route-quarantine" class="md-nav__link">
     <span class="md-ellipsis">
       
         Real-time invalid-route quarantine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-tap-for-your-noc-over-websocket" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live tap for your NOC over WebSocket
       
     </span>
   </a>
@@ -1752,10 +1785,43 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#edge-firewall-in-a-config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edge firewall in a config file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#route-policy-on-the-wire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route policy on the wire
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#real-time-invalid-route-quarantine" class="md-nav__link">
     <span class="md-ellipsis">
       
         Real-time invalid-route quarantine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-tap-for-your-noc-over-websocket" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live tap for your NOC over WebSocket
       
     </span>
   </a>
@@ -1839,7 +1905,7 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--rpki<span class="w"> </span>https://rpki.example.net/rpki.json<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>rib.20260723.0600.bz2<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>invalid-routes.json
 </span></code></pre></div>
 <p>Swap <a href="../stages/rov/">rov</a> for <a href="../stages/aspa/">aspa</a> to look for route leaks instead.</p>
@@ -1848,7 +1914,7 @@
 <p>A collector RIB contains every peer's view (typically 20-50 peers). Filter on the peer tag to recover exactly the routes a single peer advertised.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>rib.20260723.0600.bz2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[PEER_AS] == &quot;6939&quot;&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[PEER_AS] == "6939"'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>as6939-table.json
 </span></code></pre></div>
 <h2 id="adding-tcp-md5">Adding TCP-MD5<a class="headerlink" href="#adding-tcp-md5" title="Permanent link">&para;</a></h2>
@@ -1858,13 +1924,14 @@
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span>--md5<span class="w"> </span>solarwinds123<span class="w"> </span><span class="m">1</span>.2.3.4
 </span></code></pre></div>
+<p>To keep the password out of <code>ps</code> and shell history, use <code>--md5 '$BGP_MD5'</code> (an environment variable) or <code>--md5 /etc/bgpipe/md5.secret</code> (a file).</p>
 <h2 id="transparent-tproxy-proxy">Transparent (TPROXY) proxy<a class="headerlink" href="#transparent-tproxy-proxy" title="Permanent link">&para;</a></h2>
 <p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/connect/">connect</a></p>
 <p>Insert bgpipe on the wire between two routers without touching either router's BGP configuration. Unlike the port-forwarding setup above, both <code>listen</code> and <code>connect</code> run with <code>--transparent</code> (Linux <code>IP_TRANSPARENT</code>/TPROXY), so the router captured by <code>listen</code> sees the far router's real IP, and vice versa -- bgpipe is invisible at the IP layer. The router only needs its traffic to TCP/179 redirected to the bgpipe host (via TPROXY, policy routing, or an inline bridge); no BGP reconfiguration needed. This is the recommended way to insert bgpipe as an RPKI/ASPA firewall in an existing eBGP session.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">&quot;solarwinds123&quot;</span><span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">"solarwinds123"</span><span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">&quot;solarwinds123&quot;</span><span class="w"> </span>--ttl<span class="w"> </span><span class="m">255</span><span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">0</span>.0.0.0
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--transparent<span class="w"> </span>--md5<span class="w"> </span><span class="s2">"solarwinds123"</span><span class="w"> </span>--ttl<span class="w"> </span><span class="m">255</span><span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">0</span>.0.0.0
 </span></code></pre></div>
 <p>See <a href="../stages/connect/#transparent-mode">connect's transparent mode</a> for how the captured TCP tuple is propagated between the two stages.</p>
 <h2 id="stream-mrt-files-to-bgp-routers">Stream MRT files to BGP routers<a class="headerlink" href="#stream-mrt-files-to-bgp-routers" title="Permanent link">&para;</a></h2>
@@ -1879,7 +1946,7 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>--<span class="w"> </span>speaker<span class="w"> </span>--active<span class="w"> </span>--asn<span class="w"> </span><span class="m">65055</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--wait<span class="w"> </span>ESTABLISHED<span class="w"> </span>rib.20260723.0600.bz2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[PEER_AS] == &quot;6939&quot;&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[PEER_AS] == "6939"'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179
 </span></code></pre></div>
 <h2 id="bgp-sed-in-the-middle-proxy">BGP sed-in-the-middle proxy<a class="headerlink" href="#bgp-sed-in-the-middle-proxy" title="Permanent link">&para;</a></h2>
@@ -1887,7 +1954,7 @@
 <p>Create a BGP proxy that connects <code>1.2.3.4</code> with <a href="https://lukasz.bromirski.net/post/bgp-w-labie-3/">85.232.240.179</a>, but rewrites ASNs in their OPEN messages using <a href="https://en.wikipedia.org/wiki/Sed">sed</a>. This is useful for quickly testing and modifying BGP sessions on the fly, allowing you to simulate different network scenarios.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>sed<span class="w"> </span>-ure<span class="w"> </span><span class="s1">&#39;/&quot;OPEN&quot;/{ s/65055/65001/g; s/57355/65055/g }&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>sed<span class="w"> </span>-ure<span class="w"> </span><span class="s1">'/"OPEN"/{ s/65055/65001/g; s/57355/65055/g }'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
 </span></code></pre></div>
 <h2 id="applying-prefix-limits">Applying prefix limits<a class="headerlink" href="#applying-prefix-limits" title="Permanent link">&para;</a></h2>
@@ -1912,7 +1979,7 @@
 <p>Proxy a connection between two BGP peers, allowing only IPv6 updates from origin AS <code>12345</code>. This is useful for environments that wish to only accept IPv6 prefixes from a specific ASN. The <code>grep</code> stage allows for <a href="../filters/">complex filtering</a> based on various criteria such as message type, prefix, AS_PATH, and more.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">1</span>.2.3.4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;ipv6 &amp;&amp; as_origin = 12345&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'ipv6 &amp;&amp; as_origin = 12345'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">85</span>.232.240.179
 </span></code></pre></div>
 <h2 id="monitor-bgp-prefixes-in-real-time">Monitor BGP prefixes in real-time<a class="headerlink" href="#monitor-bgp-prefixes-in-real-time" title="Permanent link">&para;</a></h2>
@@ -1921,7 +1988,7 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Monitor all announcements for your network prefix</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;prefix ~ 1.1.1.0/24&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'prefix ~ 1.1.1.0/24'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span>--<span class="w"> </span>stdout
 </span></code></pre></div>
 <h2 id="stream-live-bgp-with-rpki-filtering">Stream live BGP with RPKI filtering<a class="headerlink" href="#stream-live-bgp-with-rpki-filtering" title="Permanent link">&para;</a></h2>
@@ -1931,15 +1998,15 @@
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rov/status] = INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">123</span>:456<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">'tag[rov/status] = INVALID'</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">123</span>:456<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>ris-rpki-updates.json
 </span></code></pre></div>
 <h2 id="secure-your-bgp-sessions-with-rpki">Secure your BGP sessions with RPKI<a class="headerlink" href="#secure-your-bgp-sessions-with-rpki" title="Permanent link">&para;</a></h2>
 <p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/connect/">connect</a></p>
-<p>Add RPKI validation to a BGP proxy between two routers: one dials into bgpipe's <code>listen</code> stage, and bgpipe forwards the now-validated session onward to <code>5.6.7.8</code> via <code>connect</code>. Invalid prefixes are automatically moved to the withdrawn list (following <a href="https://datatracker.ietf.org/doc/html/rfc7606">RFC 7606</a>), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. The validator connects to Cloudflare's public RTR server by default (or you can point the global <code>--rpki</code> option at another server or a local ROA cache file).</p>
+<p>Add RPKI validation to a BGP proxy between two routers: one dials into bgpipe's <code>listen</code> stage, and bgpipe forwards the now-validated session onward to <code>5.6.7.8</code> via <code>connect</code>. Invalid prefixes are automatically moved to the withdrawn list (following <a href="https://datatracker.ietf.org/doc/html/rfc7606">RFC 7606</a>), preventing propagation of unauthorized route announcements. RPKI uses cryptographic signatures to verify that an AS is authorized to originate a prefix - this protects against both malicious hijacks and configuration errors. By default, the RPKI data comes over HTTPS from Cloudflare's public <a href="https://www.rpki-client.org/">rpki-client</a> export; point the global <code>--rpki</code> option at your own validator (RTR, <code>tls://</code>, a URL, or a local file) for production. <code>--peer</code> makes sure only the expected router can connect.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Secure 5.6.7.8 by validating routes from the router that dials in on :179</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
 </span></code></pre></div>
@@ -1948,7 +2015,7 @@
 <p>Enable strict mode to treat prefixes without any RPKI ROA the same as invalid prefixes. This aggressive stance only forwards messages to <code>5.6.7.8</code> where all announced prefixes have explicit RPKI authorization, dropping and logging any violations.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Drop messages announcing INVALID and/or NOT_FOUND prefixes</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rov/dropped<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--strict<span class="w"> </span>--invalid<span class="o">=</span>drop<span class="w"> </span>--event<span class="w"> </span>dropped<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
 </span></code></pre></div>
@@ -1956,46 +2023,87 @@
 <p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/aspa/">aspa</a>, <a href="../stages/connect/">connect</a></p>
 <p>While <code>rov</code> validates that the origin AS is authorized to announce a prefix, it can't catch a route leak where a valid prefix arrives over an AS_PATH that violates provider-customer relationships. Add the <code>aspa</code> stage on top of <code>rov</code> to verify the whole AS_PATH is valley-free using ASPA records. Tell it the relationship with <code>--role</code>: here the router connecting to <code>listen</code> is our customer, so <code>aspa</code> applies the customer-to-provider ("upstream") verification procedure to its announcements -- see the <a href="../stages/aspa/#multi-peer-feeds">role table</a> for what each <code>--role</code> value means and which procedure it selects.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">198</span>.51.100.7<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span>--<span class="w"> </span>aspa<span class="w"> </span>--role<span class="w"> </span>customer<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
 </span></code></pre></div>
+<h2 id="edge-firewall-in-a-config-file">Edge firewall in a config file<a class="headerlink" href="#edge-firewall-in-a-config-file" title="Permanent link">&para;</a></h2>
+<p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/aspa/">aspa</a>, <a href="../stages/limit/">limit</a>, <a href="../stages/update/">update</a>, <a href="../stages/connect/">connect</a></p>
+<p>Put a complete customer-facing firewall in one readable file: RPKI and ASPA validation, prefix limits, and community scrubbing. Lines starting with a stage name start a new stage, indented lines continue it, and <code>#</code> starts a comment -- see <a href="../quickstart/#config-files">config files</a>.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># /etc/bgpipe/customer1.conf</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>--rpki<span class="w"> </span>tls://rtr.example.net:8283<span class="w">        </span><span class="c1"># your own validator</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>--http<span class="w"> </span><span class="m">127</span>.0.0.1:8080<span class="w"> </span>--http-open<span class="w">        </span><span class="c1"># metrics, /hc and /ready</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>--kill<span class="w"> </span>limit/session<span class="w">                     </span><span class="c1"># stop on prefix limit violation</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">198</span>.51.100.7<span class="w"> </span>--md5<span class="w"> </span>/etc/bgpipe/customer1.md5<span class="w"> </span>:179
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>rov<span class="w"> </span>--invalid<span class="w"> </span>withdraw
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>aspa<span class="w"> </span>--role<span class="w"> </span>customer<span class="w"> </span>--invalid<span class="w"> </span>withdraw
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>limit<span class="w"> </span>--ipv4<span class="w"> </span>--max-length<span class="w"> </span><span class="m">24</span><span class="w"> </span>--session<span class="w"> </span><span class="m">1000</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>update<span class="w"> </span>--del-com<span class="w"> </span><span class="s1">'65000:*'</span><span class="w">               </span><span class="c1"># customers can't set our communities</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">       </span>--strip-private
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>connect<span class="w"> </span>--md5<span class="w"> </span>/etc/bgpipe/customer1.md5<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>bgpipe<span class="w"> </span>-n<span class="w"> </span>-f<span class="w"> </span>/etc/bgpipe/customer1.conf<span class="w">   </span><span class="c1"># check what will run</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>bgpipe<span class="w"> </span>-f<span class="w"> </span>/etc/bgpipe/customer1.conf<span class="w">      </span><span class="c1"># run it</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>curl<span class="w"> </span>-s<span class="w"> </span><span class="m">127</span>.0.0.1:8080/ready<span class="w">              </span><span class="c1"># 200 once the session is up</span>
+</span></code></pre></div>
+<p>Under systemd, <code>Restart=on-failure</code> with <code>RestartPreventExitStatus=2</code> restarts the session after network errors, but not after a configuration mistake (see <a href="../quickstart/#exit-codes">exit codes</a>).</p>
+<h2 id="route-policy-on-the-wire">Route policy on the wire<a class="headerlink" href="#route-policy-on-the-wire" title="Permanent link">&para;</a></h2>
+<p>Stages: <a href="../stages/connect/">connect</a>, <a href="../stages/update/">update</a></p>
+<p>Apply the route policy you'd normally configure on a router, without touching the router: here, prepend twice and set a MED towards an upstream to shift inbound traffic, tag everything with <code>GRACEFUL_SHUTDOWN</code> ahead of maintenance, and drop an optional attribute that is known to break old routers.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--prepend<span class="w"> </span><span class="m">65000</span>,65000<span class="w"> </span>--set-med<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--add-com<span class="w"> </span><span class="m">65535</span>:0<span class="w"> </span>--drop-attr<span class="w"> </span><span class="m">28</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span></code></pre></div>
 <h2 id="real-time-invalid-route-quarantine">Real-time invalid-route quarantine<a class="headerlink" href="#real-time-invalid-route-quarantine" title="Permanent link">&para;</a></h2>
 <p>Stages: <a href="../stages/ris-live/">ris-live</a>, <a href="../stages/rov/">rov</a>, <a href="../stages/grep/">grep</a>, <a href="../stages/update/">update</a>, <a href="../stages/write/">write</a>, <a href="../stages/websocket/">websocket</a></p>
 <p>Tag, quarantine, and mirror only RPKI-invalid announcements in real time. This keeps a clean audit trail for responders while streaming live alerts to a remote monitor.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>invalid-routes.<span class="nv">$TIME</span>.json<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">  </span>--<span class="w"> </span>websocket<span class="w"> </span>--write<span class="w"> </span>wss://monitor.example.com/bgp
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="w">  </span>--<span class="w"> </span>update<span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>invalid-routes.<span class="nv">$TIME</span>.json<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="w">  </span>--<span class="w"> </span>websocket<span class="w"> </span>--write<span class="w"> </span>wss://monitor.example.com/bgp
+</span></code></pre></div>
+<h2 id="live-tap-for-your-noc-over-websocket">Live tap for your NOC over WebSocket<a class="headerlink" href="#live-tap-for-your-noc-over-websocket" title="Permanent link">&para;</a></h2>
+<p>Stages: <a href="../stages/connect/">connect</a>, <a href="../stages/websocket/">websocket</a></p>
+<p>Mirror a production session to any number of WebSocket clients (dashboards, scripts, <code>websocat</code>), read-only and password-protected. Clients that can't keep up are disconnected, so a stuck dashboard can never stall the BGP session.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--listen<span class="w"> </span>--write<span class="w"> </span>--auth<span class="w"> </span>/etc/bgpipe/noc.auth<span class="w"> </span>ws://10.0.0.5:8080/bgp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="c1"># from another host (user:pass in noc.auth)</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>websocat<span class="w"> </span>--basic-auth<span class="w"> </span>noc:s3cret<span class="w"> </span>ws://10.0.0.5:8080/bgp
 </span></code></pre></div>
 <h2 id="rate-limiting-and-sampling-bgp-streams">Rate limiting and sampling BGP streams<a class="headerlink" href="#rate-limiting-and-sampling-bgp-streams" title="Permanent link">&para;</a></h2>
 <p>Stages: <a href="../stages/ris-live/">ris-live</a>, <a href="../stages/write/">write</a>, <a href="../stages/listen/">listen</a>, <a href="../stages/connect/">connect</a></p>
 <p>Protect downstream systems from <a href="https://www.cidr-report.org/as2.0/#Leak-Statistics">BGP update storms</a> by rate limiting message flow, or sample high-volume feeds for statistical analysis. The <code>--rate-limit</code> flag delays messages to maintain a maximum rate (messages per second), while <code>--rate-sample</code> randomly samples messages when over the rate threshold, discarding excess messages. This is particularly useful when processing RIS Live feeds or during BGP convergence events.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Sample RIS Live at max 100 updates/sec to avoid overwhelming storage</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span>--rate-sample<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>sampled-updates.json
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="c1"># Rate limit updates from 5.6.7.8 to 50 msg/sec (smooths bursts)</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--rate-limit<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="m">5</span>.6.7.8
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Sample RIS Live at max 100 updates/sec to avoid overwhelming storage</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">  </span>--<span class="w"> </span>ris-live<span class="w"> </span>--rate-sample<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">  </span>--<span class="w"> </span>write<span class="w"> </span>sampled-updates.json
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="c1"># Rate limit updates from 5.6.7.8 to 50 msg/sec (smooths bursts)</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span>--rate-limit<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="m">5</span>.6.7.8
 </span></code></pre></div>
 <h2 id="exabgp-compatibility">ExaBGP compatibility<a class="headerlink" href="#exabgp-compatibility" title="Permanent link">&para;</a></h2>
 <p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/exec/">exec</a>, <a href="../stages/connect/">connect</a>, <a href="../stages/stdin/">stdin</a>, <a href="../stages/stdout/">stdout</a></p>
 <p>Use the <code>--format=exa</code> flag to read and write <a href="https://github.com/Exa-Networks/exabgp">ExaBGP</a> line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Process BGP messages with an ExaBGP-compatible script</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--format<span class="o">=</span>exa<span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>/path/to/script.py<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
-</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="c1"># Convert JSON to ExaBGP format</span>
-</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>cat<span class="w"> </span>session.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>bgpipe<span class="w"> </span>stdin<span class="w"> </span>--<span class="w"> </span>stdout<span class="w"> </span>--format<span class="o">=</span>exa
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Process BGP messages with an ExaBGP-compatible script</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">  </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--format<span class="o">=</span>exa<span class="w"> </span>-LR<span class="w"> </span>--args<span class="w"> </span>/path/to/script.py<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">5</span>.6.7.8
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="c1"># Convert JSON to ExaBGP format</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>cat<span class="w"> </span>session.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>bgpipe<span class="w"> </span>stdin<span class="w"> </span>--<span class="w"> </span>stdout<span class="w"> </span>--format<span class="o">=</span>exa
 </span></code></pre></div>
 
 

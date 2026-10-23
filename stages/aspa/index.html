@@ -1613,7 +1613,9 @@
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
 <p>The <strong>aspa</strong> stage performs ASPA verification
-(<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/">draft-ietf-sidrops-aspa-verification</a>)
+(<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/">draft-ietf-sidrops-aspa-verification</a>,
+as of revision -29, tested against its published
+<a href="https://github.com/ksriram25/IETF/blob/main/ASPA_path_verification_examples.pdf">examples</a>)
 of BGP UPDATE messages: it detects route leaks by verifying that the AS_PATH
 is valley-free, using ASPA records that attest provider-customer relationships
 between ASes. Each path is assigned one of three states:</p>
@@ -1629,11 +1631,23 @@ and configured with the global <code>--rpki</code> options -- see
 records require an RTR v2 server
 (<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/">draft-ietf-sidrops-8210bis</a>)
 or a JSON file with ASPA data.</p>
-<p>ASPA verification also requires knowledge of the peer's BGP role, either
-auto-detected via the <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a>
-BGP Role capability, or set explicitly with <code>--role</code>. If <code>--role auto</code> (the
-default) and the peer does not send the BGP Role capability in their OPEN
-message, ASPA validation is skipped for the session and a warning is logged.</p>
+<p>ASPA verification also requires knowledge of the peer's BGP role, so
+<code>--role</code> is required. Set it explicitly to the role you configured for the
+peer on your router. With <code>--role auto</code>, the role is taken from the
+<a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 9234</a> BGP Role capability
+in the peer's OPEN message, and if the peer does not send it, ASPA validation
+is skipped for the session (with a warning).</p>
+<div class="admonition warning">
+<p class="admonition-title"><code>--role auto</code> trusts the peer being validated</p>
+<p>With <code>auto</code>, the peer itself chooses how it is validated: it can omit the
+Role capability (ASPA is skipped), claim <code>provider</code> (the lenient downstream
+procedure, which lets route leaks through), or claim <code>rs</code> (the first-hop
+check is skipped). bgpipe does not compare the peer's role with the role in
+the other side's OPEN. For security use, always set an explicit role;
+<code>auto</code> is meant for trusted peers, labs, and <code>-LR</code> monitoring.</p>
+</div>
+<p>ASPA applies to eBGP sessions: an announcement with an empty AS_PATH, or with
+an AS_SET, is INVALID. Withdrawals are not checked.</p>
 <p>The stage also verifies that the first AS in the path matches the neighbor's
 ASN (per draft-ietf-sidrops-aspa-verification, Section 5). This check is
 skipped for Route Server peers (<code>--role rs</code>), as RSes do not prepend their ASN
@@ -1702,8 +1716,8 @@ For INVALID paths, the failing hop is reported in <code>aspa/invalid-hop</code> 
 <tr>
 <td><code>--role</code></td>
 <td>string</td>
-<td><code>auto</code></td>
-<td>Peer's BGP role: <code>auto</code>, <code>provider</code>, <code>customer</code>, <code>peer</code>, <code>rs</code>, <code>rs-client</code></td>
+<td>(required)</td>
+<td>Peer's BGP role: <code>provider</code>, <code>customer</code>, <code>peer</code>, <code>rs</code>, <code>rs-client</code>, or <code>auto</code> (see above)</td>
 </tr>
 <tr>
 <td><code>--peer-tag</code></td>
@@ -1779,8 +1793,8 @@ perspective, per <a href="https://datatracker.ietf.org/doc/html/rfc9234">RFC 923
 </tr>
 <tr>
 <td><code>auto</code></td>
-<td>Auto-detect from BGP Role capability</td>
-<td>Depends on detected role</td>
+<td>Take from the peer's BGP Role capability (trusts the peer)</td>
+<td>Depends on the claimed role</td>
 </tr>
 </tbody>
 </table>
@@ -1840,7 +1854,7 @@ data fetched from the rpki-client console (tag everything, enforce nothing):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span>--rpki<span class="w"> </span>https://console.rpki-client.org/vrps.json<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>aspa<span class="w"> </span>--role<span class="w"> </span>provider<span class="w"> </span>--peer-tag<span class="w"> </span>PEER_AS<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[aspa/status] == INVALID&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[aspa/status] == INVALID'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>invalid-paths.json
 </span></code></pre></div>
 <p>Use a local JSON file with ASPA records:</p>

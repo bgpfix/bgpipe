@@ -1553,8 +1553,15 @@ authentication.</p>
 converted to <code>ws://</code> and <code>wss://</code> respectively.</p>
 <p>In <strong>server mode</strong> (<code>--listen</code>), the stage accepts multiple concurrent
 WebSocket clients and broadcasts messages to all connected clients.
-If a non-critical client disconnects, the stage continues operating.
+Every client can also send messages <em>into</em> the pipeline, so server mode
+requires <code>--auth</code>, or an explicit <code>--open</code> to allow anyone to connect.
+Use <code>--write</code> to make the server output-only. Prefer <code>wss://</code> with <code>--auth</code>,
+since basic auth over plain <code>ws://</code> sends the credentials in the clear.
 In server mode with <code>wss://</code>, both <code>--cert</code> and <code>--key</code> are required.</p>
+<p>Server clients never block the pipeline: each client has its own send
+queue (1000 messages) and a 10s write deadline, and a client that falls
+behind is disconnected. In client mode, the single remote server is
+assumed trusted, and a slow server slows down the pipeline (backpressure).</p>
 <p>In <strong>client mode</strong> (default), the stage connects to a single remote server.
 Use <code>--retry</code> to automatically reconnect on connection failures.</p>
 <p>Incoming messages from WebSocket peers are tagged with <code>websocket/remote</code>
@@ -1578,7 +1585,13 @@ operation with <code>-LR</code>.</p>
 <td><code>--listen</code></td>
 <td>bool</td>
 <td><code>false</code></td>
-<td>Run as WebSocket server instead of client</td>
+<td>Run as WebSocket server instead of client; requires <code>--auth</code> or <code>--open</code></td>
+</tr>
+<tr>
+<td><code>--open</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Allow <code>--listen</code> without <code>--auth</code>: anyone can read and inject messages</td>
 </tr>
 <tr>
 <td><code>--timeout</code></td>
@@ -1615,7 +1628,7 @@ operation with <code>-LR</code>.</p>
 <td><code>--auth</code></td>
 <td>string</td>
 <td></td>
-<td>HTTP basic auth; <code>$ENV_VAR</code> or file path containing <code>user:pass</code></td>
+<td>HTTP basic auth: <code>user:pass</code> (has a colon), <code>$ENV_VAR</code>, or else a file path holding <code>user:pass</code></td>
 </tr>
 <tr>
 <td><code>--cert</code></td>
@@ -1724,23 +1737,30 @@ operation with <code>-LR</code>.</p>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>Connect with authentication from an environment variable:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BGP_AUTH</span><span class="o">=</span><span class="s2">&quot;user:s3cret&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BGP_AUTH</span><span class="o">=</span><span class="s2">"user:s3cret"</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>websocket<span class="w"> </span>--write<span class="w"> </span>-LR<span class="w"> </span>--auth<span class="w"> </span><span class="s1">&#39;$BGP_AUTH&#39;</span><span class="w"> </span>wss://monitor.example.com/bgp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>websocket<span class="w"> </span>--write<span class="w"> </span>-LR<span class="w"> </span>--auth<span class="w"> </span><span class="s1">'$BGP_AUTH'</span><span class="w"> </span>wss://monitor.example.com/bgp<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
-<p>Run a WebSocket server for remote clients:</p>
+<p>Run an authenticated WebSocket server for remote clients:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--listen<span class="w"> </span>--cert<span class="w"> </span>server.crt<span class="w"> </span>--key<span class="w"> </span>server.key<span class="w"> </span>wss://0.0.0.0:8443/bgp<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--listen<span class="w"> </span>--auth<span class="w"> </span>/etc/bgpipe/ws.auth<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">         </span>--cert<span class="w"> </span>server.crt<span class="w"> </span>--key<span class="w"> </span>server.key<span class="w"> </span>wss://0.0.0.0:8443/bgp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
-<p>Client with retry (reconnects on disconnection):</p>
+<p>Read-only monitoring tap on localhost, open to anyone who can connect:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--retry<span class="w"> </span>wss://monitor.example.com/bgp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--listen<span class="w"> </span>--open<span class="w"> </span>--write<span class="w"> </span>--copy<span class="w"> </span>ws://127.0.0.1:8080/bgp<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span></code></pre></div>
+<p>Client with retry (reconnects on disconnection):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>websocket<span class="w"> </span>-LR<span class="w"> </span>--retry<span class="w"> </span>wss://monitor.example.com/bgp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../exec/">exec</a>,

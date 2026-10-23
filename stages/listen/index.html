@@ -1472,7 +1472,9 @@ messages from the connected client and writes pipeline messages back to it.</p>
 <p>The optional <em>ADDR</em> argument specifies the listen address as <code>host:port</code>,
 <code>:port</code>, or <code>host</code>. Defaults to <code>:179</code> (all interfaces, standard BGP port).</p>
 <p>Once a client connects, the listener closes and no further connections are
-accepted.</p>
+accepted. By default <em>any</em> source address may connect first, so in production
+always restrict it with <code>--peer</code> (and ideally <code>--md5</code>): connections from other
+addresses are rejected and logged, and the stage keeps listening.</p>
 <p>By default, <strong>listen</strong> messages flow left-to-right (<code>-R</code> direction), but if it is the last stage in the pipeline, it defaults to the left (<code>-L</code>) direction, so that incoming messages flow right-to-left.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
@@ -1504,10 +1506,16 @@ accepted.</p>
 <td>TCP keepalive period; -1 disables</td>
 </tr>
 <tr>
+<td><code>--peer</code></td>
+<td>strings</td>
+<td></td>
+<td>Accept only these peer IPs or prefixes (CSV, repeatable), eg. <code>192.0.2.1,2001:db8::/32</code></td>
+</tr>
+<tr>
 <td><code>--md5</code></td>
 <td>string</td>
 <td></td>
-<td>TCP MD5 password (Linux/OpenBSD)</td>
+<td>TCP MD5 password (Linux/OpenBSD): <code>$ENV_VAR</code>, file path (<code>/...</code> or <code>./...</code>), or literal</td>
 </tr>
 <tr>
 <td><code>--transparent</code></td>
@@ -1529,14 +1537,17 @@ via TPROXY, PBR, or an inline bridge), recovering the original destination. It
 publishes the captured tuple for a transparent <a href="../connect/">connect</a> stage to
 re-originate - see <a href="../connect/#transparent-mode">connect</a> for the full setup.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<p>Listen on the default BGP port and proxy to an upstream router:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>:179
+<p>Listen on the default BGP port and proxy to an upstream router, accepting
+only the expected peer:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">198</span>.51.100.7<span class="w"> </span>:179
 </span></code></pre></div>
 <p>Listen on a non-standard port for local BIRD integration:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span>--md5<span class="w"> </span><span class="s2">&quot;s3cret&quot;</span><span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>localhost:1790
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span>--md5<span class="w"> </span><span class="s2">"s3cret"</span><span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>localhost:1790
 </span></code></pre></div>
-<p>Add TCP-MD5 to a session (listen without, connect with):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--md5<span class="w"> </span><span class="s2">&quot;s3cret&quot;</span><span class="w"> </span><span class="m">10</span>.0.0.1
+<p>Add TCP-MD5 to a session (listen without, connect with), reading the
+password from the environment:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BGP_MD5</span><span class="o">=</span><span class="s2">"s3cret"</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">198</span>.51.100.0/24<span class="w"> </span>:179<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--md5<span class="w"> </span><span class="s1">'$BGP_MD5'</span><span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../connect/">connect</a>,

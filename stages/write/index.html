@@ -1554,7 +1554,7 @@ use <code>--format</code> to override.</p>
 <p>Write compressed MRT with hourly rotation:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>-LR<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">&#39;updates.$TIME.mrt.gz&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>-LR<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">'updates.$TIME.mrt.gz'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>Archive only UPDATE messages:</p>

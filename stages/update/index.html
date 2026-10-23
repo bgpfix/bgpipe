@@ -1070,6 +1070,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#as_path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AS_PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#message-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message size
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1469,6 +1502,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#as_path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AS_PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#message-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message size
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1522,9 +1588,11 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [...] -- update [OPTIONS]
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>The <strong>update</strong> stage modifies BGP UPDATE messages in-flight. It can rewrite
-next-hop addresses and manipulate community attributes. Non-UPDATE messages
-pass through unchanged.</p>
+<p>The <strong>update</strong> stage modifies BGP UPDATE messages in-flight, with the route
+policy actions common in production networks: rewrite next-hops, add, remove
+or scrub communities, prepend or clean the AS_PATH, set MED, LOCAL_PREF and
+ORIGIN, and drop unwanted attributes. Non-UPDATE messages pass through
+unchanged.</p>
 <p>This stage supports bidirectional operation with <code>-LR</code>. Without <code>-LR</code>, it
 applies only to messages in the stage direction. Combine with <code>--if</code> to apply
 modifications only to messages matching a <a href="../../filters/">filter</a>.</p>
@@ -1607,6 +1675,18 @@ modifications only to messages matching a <a href="../../filters/">filter</a>.</
 <td><code>false</code></td>
 <td>Remove the LARGE_COMMUNITY attribute entirely</td>
 </tr>
+<tr>
+<td><code>--del-com</code></td>
+<td>strings</td>
+<td></td>
+<td>Remove matching communities (CSV); <code>*</code> matches any value, eg. <code>65000:*</code></td>
+</tr>
+<tr>
+<td><code>--del-com-large</code></td>
+<td>strings</td>
+<td></td>
+<td>Remove matching large communities (CSV), eg. <code>65000:*:*</code></td>
+</tr>
 </tbody>
 </table>
 <p>Unlike its siblings, <code>--add-com-ext</code> takes the JSON object format used in the
@@ -1614,7 +1694,90 @@ EXT_COMMUNITY attribute output, e.g. <code>'{"type": "TARGET", "value": "65000:1
 (or a JSON array of such objects).</p>
 <p>For each attribute, drop takes precedence: when both <code>--drop-com*</code> and the
 matching <code>--add-com*</code> are given, the attribute is dropped and the add is
-ignored.</p>
+ignored. <code>--del-com*</code> runs after <code>--add-com*</code>.</p>
+<h3 id="as_path">AS_PATH<a class="headerlink" href="#as_path" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--prepend</code></td>
+<td>strings</td>
+<td></td>
+<td>Prepend given ASN(s) to the AS_PATH (CSV, in order), eg. <code>65000,65000</code></td>
+</tr>
+<tr>
+<td><code>--prepend-first</code></td>
+<td>int</td>
+<td><code>0</code></td>
+<td>Prepend the first (neighbor) ASN given number of times (0-32)</td>
+</tr>
+<tr>
+<td><code>--strip-private</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Remove private ASNs (<a href="https://datatracker.ietf.org/doc/html/rfc6996">RFC 6996</a>) from the AS_PATH</td>
+</tr>
+</tbody>
+</table>
+<p><code>--prepend-first</code> is applied before <code>--prepend</code>, eg. <code>--prepend-first 2
+--prepend 65000</code> turns <code>3549 3356</code> into <code>65000 3549 3549 3549 3356</code>. AS_SET
+segments are left as-is. All AS_PATH actions assume 4-byte ASN sessions (the
+norm): on legacy 2-byte sessions, AS4_PATH is not modified.</p>
+<h3 id="other-attributes">Other attributes<a class="headerlink" href="#other-attributes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--set-med</code></td>
+<td>int</td>
+<td></td>
+<td>Set MULTI_EXIT_DISC (MED) to given value</td>
+</tr>
+<tr>
+<td><code>--drop-med</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Remove the MED attribute (takes precedence over <code>--set-med</code>)</td>
+</tr>
+<tr>
+<td><code>--set-localpref</code></td>
+<td>int</td>
+<td></td>
+<td>Set LOCAL_PREF (only meaningful towards iBGP peers)</td>
+</tr>
+<tr>
+<td><code>--set-origin</code></td>
+<td>string</td>
+<td></td>
+<td>Set ORIGIN: <code>igp</code>, <code>egp</code>, or <code>incomplete</code></td>
+</tr>
+<tr>
+<td><code>--drop-attr</code></td>
+<td>strings</td>
+<td></td>
+<td>Remove given attributes (CSV of names or codes), eg. <code>OTC,28</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="message-size">Message size<a class="headerlink" href="#message-size" title="Permanent link">&para;</a></h3>
+<p>An edit can grow an UPDATE past the maximum BGP message size: 4096 bytes, or
+65535 if Extended Message (<a href="https://datatracker.ietf.org/doc/html/rfc8654">RFC 8654</a>)
+was negotiated. Since sending it would reset the session downstream, such an
+UPDATE is converted into a withdrawal of its prefixes instead (with a warning).</p>
 <p>Messages without reachable prefixes (pure withdrawals) are passed through
 unmodified: per RFC 4271 section 4.3, a withdrawal must not carry path
 attributes.</p>
@@ -1641,7 +1804,7 @@ attributes.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>Set next-hop to self (useful when proxying):</p>
@@ -1649,6 +1812,33 @@ attributes.</p>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--nexthop-self<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<p>Scrub your own (eg. informational or action) communities received from
+external peers, and strip private ASNs leaked by a customer:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--del-com<span class="w"> </span><span class="s1">'65000:*'</span><span class="w"> </span>--del-com-large<span class="w"> </span><span class="s1">'65000:*:*'</span><span class="w"> </span>--strip-private<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span></code></pre></div>
+<p>Traffic engineering: make routes towards a peer less attractive by prepending
+our ASN twice, and announce a lower preference via MED:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>-L<span class="w"> </span>--prepend<span class="w"> </span><span class="m">65000</span>,65000<span class="w"> </span>--set-med<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1
+</span></code></pre></div>
+<p>Graceful shutdown before maintenance (<a href="https://datatracker.ietf.org/doc/html/rfc8326">RFC 8326</a>):
+tag all routes with <code>GRACEFUL_SHUTDOWN</code> so that peers depreference them:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--add-com<span class="w"> </span><span class="m">65535</span>:0<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
+</span></code></pre></div>
+<p>Drop optional attributes known to break older routers (eg. attribute 28):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--drop-attr<span class="w"> </span><span class="m">28</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../grep/">grep</a>,

@@ -1582,16 +1582,16 @@ Prometheus compatibility.</p>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span>ipv4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="s1">&#39;v6: ipv6&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="s1">&#39;google: as_origin == 15169&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="s1">&#39;long_path: aspath_len &gt; 5&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="s1">'v6: ipv6'</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="s1">'google: as_origin == 15169'</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="s1">'long_path: aspath_len &gt; 5'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>This creates counters like:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe_metrics_match{filter=&quot;ipv4&quot;} 42
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>bgpipe_metrics_match{filter=&quot;v6&quot;} 18
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>bgpipe_metrics_match{filter=&quot;google&quot;} 5
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>bgpipe_metrics_match{filter=&quot;long_path&quot;} 3
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe_metrics_match{filter="ipv4"} 42
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>bgpipe_metrics_match{filter="v6"} 18
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>bgpipe_metrics_match{filter="google"} 5
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>bgpipe_metrics_match{filter="long_path"} 3
 </span></code></pre></div>
 <h3 id="batch-mode">Batch mode<a class="headerlink" href="#batch-mode" title="Permanent link">&para;</a></h3>
 <p>For offline analysis (e.g., measuring an MRT file), use <code>--output</code> to write
@@ -1684,7 +1684,11 @@ aggregations like <code>sum by (dir)</code>, <code>sum by (type)</code>, or filt
 </tr>
 <tr>
 <td><code>/hc</code></td>
-<td>Health check (JSON, k8s-compatible)</td>
+<td>Health check (JSON, k8s liveness)</td>
+</tr>
+<tr>
+<td><code>/ready</code></td>
+<td>Readiness check: 200 once the session is established (JSON, k8s readiness)</td>
 </tr>
 <tr>
 <td><code>/stage/metrics/</code></td>
@@ -1700,14 +1704,14 @@ aggregations like <code>sum by (dir)</code>, <code>sum by (type)</code>, or filt
 <p>Monitor a live BGP session with Prometheus scraping:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:9090<span class="w"> </span>--http-open<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">&#39;bogon: as_origin &gt; 64512&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">'bogon: as_origin &gt; 64512'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>Measure an MRT dump offline and save results:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>updates.20230301.0000.mrt<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>metrics<span class="w"> </span>--output<span class="w"> </span>stats.prom<span class="w"> </span>-A<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">&#39;google: as_origin == 15169&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="s1">'google: as_origin == 15169'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>updates.20230301.json
 </span></code></pre></div>
 <p>Named stage with custom metric prefix:</p>
@@ -1715,7 +1719,7 @@ aggregations like <code>sum by (dir)</code>, <code>sum by (type)</code>, or filt
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--<span class="w"> </span>@my_counters<span class="w"> </span>metrics<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>ipv4<span class="w"> </span>ipv6<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># produces: bgpipe_my_counters_messages_total, bgpipe_my_counters_match{filter=&quot;ipv4&quot;}, etc.</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># produces: bgpipe_my_counters_messages_total, bgpipe_my_counters_match{filter="ipv4"}, etc.</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../../filters/">Message Filters</a>,

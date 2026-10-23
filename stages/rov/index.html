@@ -1644,8 +1644,8 @@ before the first stage:</p>
 <tr>
 <td><code>--rpki</code></td>
 <td>string</td>
-<td><code>rtr.rpki.cloudflare.com:8282</code></td>
-<td>RPKI cache source: RTR <code>host:port</code>, <code>tls://host:port</code>, an HTTP(S) URL, or a local file path</td>
+<td><code>https://rpki.cloudflare.com/rpki.json</code></td>
+<td>RPKI cache source: an HTTP(S) URL, RTR <code>host:port</code>, <code>tls://host:port</code>, or a local file path</td>
 </tr>
 <tr>
 <td><code>--rpki-refresh</code></td>
@@ -1671,22 +1671,34 @@ before the first stage:</p>
 negotiation and fallback. ASPA records require an RTR v2 server
 (<a href="https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/">draft-ietf-sidrops-8210bis</a>).</p>
 <p>If <code>--rpki</code> is an <code>http://</code> or <code>https://</code> URL, the JSON/CSV data is fetched
-from it and re-fetched every <code>--rpki-refresh</code>. For example,
-<code>--rpki https://console.rpki-client.org/vrps.json</code> uses the public
-<a href="https://console.rpki-client.org/">rpki-client console</a> export, which
-includes both VRPs and ASPAs.</p>
+from it and re-fetched every <code>--rpki-refresh</code> (conditional GET, so unchanged
+data is not downloaded again). The default is Cloudflare's public
+<a href="https://www.rpki-client.org/">rpki-client</a> export over HTTPS, served from
+their CDN, which includes both VRPs and ASPAs; the
+<a href="https://console.rpki-client.org/">rpki-client console</a> export
+(<code>https://console.rpki-client.org/vrps.json</code>) is an equivalent alternative.</p>
+<div class="admonition warning">
+<p class="admonition-title">Use an encrypted or local RPKI source</p>
+<p>Plain RTR (<code>host:port</code>) and <code>http://</code> are neither authenticated nor
+encrypted: anyone on the path can forge VRPs and ASPAs, eg. to make a
+hijack VALID or to have <code>--invalid withdraw</code> blackhole chosen prefixes.
+bgpipe warns about it unless the server is <code>localhost</code> or a loopback,
+private, or link-local IP address. For RTR across the Internet use
+<code>tls://</code>, or better run your own validator (eg. rpki-client + StayRTR,
+or Routinator) next to bgpipe.</p>
+</div>
 <p>If <code>--rpki</code> points to an existing local file, it is loaded instead and
 auto-reloaded every 10 seconds. JSON files support VRPs and ASPAs; CSV
 supports VRPs only.</p>
 <p>JSON format (Routinator and rpki-client compatible):</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;roas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.0.2.0/24&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AS65001&quot;</span><span class="p">},</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2001:db8::/32&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;asn&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65002</span><span class="p">}</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"roas"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="p">{</span><span class="nt">"prefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.0.2.0/24"</span><span class="p">,</span><span class="w"> </span><span class="nt">"maxLength"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="nt">"asn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AS65001"</span><span class="p">},</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p">{</span><span class="nt">"prefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2001:db8::/32"</span><span class="p">,</span><span class="w"> </span><span class="nt">"maxLength"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w"> </span><span class="nt">"asn"</span><span class="p">:</span><span class="w"> </span><span class="mi">65002</span><span class="p">}</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="p">],</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&quot;aspas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;customer_asid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65001</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;provider_asids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">65002</span><span class="p">,</span><span class="w"> </span><span class="mi">65003</span><span class="p">]},</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;customer_asid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65004</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;providers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">65005</span><span class="p">]}</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">"aspas"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="p">{</span><span class="nt">"customer_asid"</span><span class="p">:</span><span class="w"> </span><span class="mi">65001</span><span class="p">,</span><span class="w"> </span><span class="nt">"provider_asids"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">65002</span><span class="p">,</span><span class="w"> </span><span class="mi">65003</span><span class="p">]},</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p">{</span><span class="nt">"customer_asid"</span><span class="p">:</span><span class="w"> </span><span class="mi">65004</span><span class="p">,</span><span class="w"> </span><span class="nt">"providers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">65005</span><span class="p">]}</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="p">]</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">}</span>
 </span></code></pre></div>
@@ -1832,7 +1844,7 @@ These can be used in downstream <a href="../../filters/">filters</a>.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span>
 </span></code></pre></div>
 <p>Strict ROV: drop any prefix without a valid VRP:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span>--events<span class="w"> </span>rov/dropped<span class="w"> </span><span class="se">\</span>
@@ -1850,7 +1862,7 @@ These can be used in downstream <a href="../../filters/">filters</a>.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--<span class="w"> </span>update<span class="w"> </span>--if<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span><span class="w"> </span>--add-com<span class="w"> </span><span class="m">65000</span>:666<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>Connect to a private RTR cache over TLS:</p>

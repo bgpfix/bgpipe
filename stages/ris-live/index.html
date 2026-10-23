@@ -1576,21 +1576,21 @@ as different RIS peers may use 2-byte or 4-byte ASNs.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live
 </span></code></pre></div>
 <p>Monitor a specific prefix in real-time:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;prefix ~ 1.1.1.0/24&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'prefix ~ 1.1.1.0/24'</span>
 </span></code></pre></div>
 <p>Subscribe to a specific collector:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--sub<span class="w"> </span><span class="s1">&#39;{&quot;host&quot;:&quot;rrc01&quot;}&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--sub<span class="w"> </span><span class="s1">'{"host":"rrc01"}'</span>
 </span></code></pre></div>
 <p>Stream with RPKI validation, show only invalid:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;tag[rov/status] == INVALID&#39;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span>
 </span></code></pre></div>
 <p>Archive RIS Live to compressed files with hourly rotation:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">&#39;ris-live.$TIME.mrt.gz&#39;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">'ris-live.$TIME.mrt.gz'</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../rv-live/">rv-live</a>,
