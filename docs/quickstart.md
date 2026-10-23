@@ -96,7 +96,7 @@ Description: connect to a BGP endpoint over TCP
 
 Options:
       --bind string               local address to bind to (IP or IP:port)
-      --md5 string                TCP MD5 password
+      --md5 string                TCP MD5 password ($ENV_VAR, /file path, or literal)
       --transparent               transparent proxy mode (Linux TPROXY; spoof source, derive endpoints from the listen side)
       --ttl int                   outgoing IP TTL / hop limit (0 means default)
       --timeout duration          TCP connect timeout (0 means off) (default 15s)

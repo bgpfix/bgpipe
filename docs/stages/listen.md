@@ -18,7 +18,9 @@ The optional *ADDR* argument specifies the listen address as `host:port`,
 `:port`, or `host`. Defaults to `:179` (all interfaces, standard BGP port).
 
 Once a client connects, the listener closes and no further connections are
-accepted.
+accepted. By default *any* source address may connect first, so in production
+always restrict it with `--peer` (and ideally `--md5`): connections from other
+addresses are rejected and logged, and the stage keeps listening.
 
 By default, **listen** messages flow left-to-right (`-R` direction), but if it is the last stage in the pipeline, it defaults to the left (`-L`) direction, so that incoming messages flow right-to-left.
 
@@ -29,7 +31,8 @@ By default, **listen** messages flow left-to-right (`-R` direction), but if it i
 | `--timeout` | duration | `0` | Accept timeout; 0 means wait indefinitely |
 | `--closed-timeout` | duration | `1s` | TCP half-closed timeout; 0 disables |
 | `--keepalive` | duration | `15s` | TCP keepalive period; -1 disables |
-| `--md5` | string | | TCP MD5 password (Linux/OpenBSD) |
+| `--peer` | strings | | Accept only these peer IPs or prefixes (CSV, repeatable), eg. `192.0.2.1,2001:db8::/32` |
+| `--md5` | string | | TCP MD5 password (Linux/OpenBSD): `$ENV_VAR`, file path (`/...` or `./...`), or literal |
 | `--transparent` | bool | `false` | Transparent proxy mode (Linux TPROXY); see below |
 | `--ttl` | int | `0` | Outgoing IP TTL / hop limit; 0 leaves the kernel default |
 
@@ -41,10 +44,11 @@ re-originate - see [connect](connect.md#transparent-mode) for the full setup.
 
 ## Examples
 
-Listen on the default BGP port and proxy to an upstream router:
+Listen on the default BGP port and proxy to an upstream router, accepting
+only the expected peer:
 
 ```bash
-bgpipe -- connect --wait listen 192.0.2.1 -- listen :179
+bgpipe -- connect --wait listen 192.0.2.1 -- listen --peer 198.51.100.7 :179
 ```
 
 Listen on a non-standard port for local BIRD integration:
@@ -53,10 +57,12 @@ Listen on a non-standard port for local BIRD integration:
 bgpipe -- connect --wait listen --md5 "s3cret" 192.0.2.1 -- listen localhost:1790
 ```
 
-Add TCP-MD5 to a session (listen without, connect with):
+Add TCP-MD5 to a session (listen without, connect with), reading the
+password from the environment:
 
 ```bash
-bgpipe -o -- listen :179 -- connect --md5 "s3cret" 10.0.0.1
+export BGP_MD5="s3cret"
+bgpipe -o -- listen --peer 198.51.100.0/24 :179 -- connect --md5 '$BGP_MD5' 10.0.0.1
 ```
 
 ## See Also
