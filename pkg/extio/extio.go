@@ -354,6 +354,7 @@ func (eio *Extio) Attach() error {
 	} else {
 		eio.Options.IsProducer = false
 		eio.Options.FilterOut = false // NB: no inputs to filter
+		eio.drop_input.Store(true)    // NB: ignore anything the other side sends
 	}
 
 	// not read-only? capture bgpipe output to eio.Output
@@ -588,7 +589,7 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 			return read_err
 		case err == io.EOF:
 			// emit pending aggregated messages (MRT table dumps)
-			if eio.opt_mrt {
+			if eio.opt_mrt && eio.mrt != nil {
 				check := eio.checkMsg
 				if cb != nil {
 					check = func(m *msg.Msg) bool {

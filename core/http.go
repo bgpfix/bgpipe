@@ -53,8 +53,9 @@ func (b *Bgpipe) configureHTTP() error {
 		})
 	})
 	m.Get("/ready", func(w http.ResponseWriter, r *http.Request) {
-		// established = KEEPALIVE seen in both directions
-		est := b.Pipe.R.LastAlive.Load() != 0 && b.Pipe.L.LastAlive.Load() != 0
+		// established = KEEPALIVE seen in both directions, and still running
+		// NB: one session per process: when it ends, the pipe stops and bgpipe exits
+		est := b.Pipe.R.LastAlive.Load() != 0 && b.Pipe.L.LastAlive.Load() != 0 && b.Pipe.Ctx.Err() == nil
 		rpki := true
 		if b.Rpki != nil {
 			select {
