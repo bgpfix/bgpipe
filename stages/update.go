@@ -462,6 +462,17 @@ func (s *Update) modifyCom(u *msg.Update) (modified bool) {
 		}
 	}
 
+	if s.opt_drop_com_large {
+		u.Attrs.Drop(attrs.ATTR_LARGE_COMMUNITY)
+		modified = true
+	} else if todo := s.opt_add_com_large; todo.Len() > 0 {
+		com := u.Attrs.Use(attrs.ATTR_LARGE_COMMUNITY).(*attrs.LargeCom)
+		for i := range todo.Len() {
+			com.Add(todo.ASN[i], todo.Value1[i], todo.Value2[i])
+		}
+		modified = true
+	}
+
 	if c, ok := u.Attrs.Get(attrs.ATTR_LARGE_COMMUNITY).(*attrs.LargeCom); ok && len(s.opt_del_com_large) > 0 {
 		j := 0
 		for i := range c.ASN {
@@ -479,17 +490,6 @@ func (s *Update) modifyCom(u *msg.Update) (modified bool) {
 			}
 			modified = true
 		}
-	}
-
-	if s.opt_drop_com_large {
-		u.Attrs.Drop(attrs.ATTR_LARGE_COMMUNITY)
-		modified = true
-	} else if todo := s.opt_add_com_large; todo.Len() > 0 {
-		com := u.Attrs.Use(attrs.ATTR_LARGE_COMMUNITY).(*attrs.LargeCom)
-		for i := range todo.Len() {
-			com.Add(todo.ASN[i], todo.Value1[i], todo.Value2[i])
-		}
-		modified = true
 	}
 
 	return modified

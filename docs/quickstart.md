@@ -161,8 +161,8 @@ connect --md5 /etc/bgpipe/md5.secret 10.0.0.1
 | Code | Meaning |
 |------|---------|
 | `0` | Success: input fully processed, or stopped by a signal (SIGINT/SIGTERM) |
-| `1` | Runtime error, eg. connection refused or closed by the peer |
-| `2` | Configuration error: invalid options, stages, or a source that could not be opened at startup |
+| `1` | Runtime error, eg. connection refused or closed by the peer, or an input file that could not be opened |
+| `2` | Configuration error: invalid options or stages, or an RPKI / HTTP setup that failed at startup |
 | `3` | Session killed by a `--kill` event |
 
 Supervisors like systemd can use these to decide whether a restart makes sense (eg. `RestartPreventExitStatus=2`).

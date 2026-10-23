@@ -26,8 +26,19 @@ grep "prefix ~ 8.0.0.0/8" 'a "b"' c\ d
 		"--", "grep", "prefix ~ 8.0.0.0/8", `a "b"`, "c d",
 		"--", "connect", "10.0.0.1"}, args)
 
-	args, err = spliceConfig([]string{"-n", "-f", path, "--", "stdout"})
+	b := NewBgpipe("test")
+	args, err = b.spliceConfig([]string{"-n", "-l", "debug", "-f", path, "--", "stdout"})
 	require.NoError(t, err)
 	require.Equal(t, "-n", args[0])
+	require.Equal(t, "connect", args[6])
 	require.Equal(t, "stdout", args[len(args)-1])
+
+	// -f of a stage (here: awk) must stay as-is
+	args, err = b.spliceConfig([]string{"exec", "-A", "awk", "-f", "x.awk"})
+	require.NoError(t, err)
+	require.Equal(t, []string{"exec", "-A", "awk", "-f", "x.awk"}, args)
+
+	words, err := splitWords(`'' "a \"b\" \\" c`)
+	require.NoError(t, err)
+	require.Equal(t, []string{"", `a "b" \`, "c"}, words)
 }

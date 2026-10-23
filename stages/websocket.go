@@ -37,6 +37,7 @@ type Websocket struct {
 	srv         *http.Server         // http server (may be nil)
 	client_conn *websocket.Conn      // websocket client conn
 	server_conn chan *websocket.Conn // websocket server conns
+	dead_conn   chan *websocket.Conn // server conns with a failed writer
 
 	eio *extio.Extio
 }
@@ -144,6 +145,7 @@ func (s *Websocket) Attach() error {
 	}
 
 	s.server_conn = make(chan *websocket.Conn, 10)
+	s.dead_conn = make(chan *websocket.Conn, 100)
 	return s.eio.Attach()
 }
 
@@ -405,6 +407,15 @@ func (s *Websocket) connWriter(done chan error) {
 			continue
 		}
 
+		// forget server conns whose writer failed
+		for len(s.dead_conn) > 0 {
+			conn := <-s.dead_conn
+			if q := conns[conn]; q != nil {
+				close(q)
+				delete(conns, conn)
+			}
+		}
+
 		// broadcast buf to all conns
 		buf := bytes.TrimSpace(bb.B)
 		var cp []byte // buf copy for queues
@@ -443,6 +454,10 @@ func (s *Websocket) queueWriter(conn *websocket.Conn, q chan []byte) {
 		conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		if err := conn.WriteMessage(websocket.BinaryMessage, buf); err != nil {
 			s.Warn().Err(err).Msgf("%s: write error", conn.RemoteAddr())
+			select {
+			case s.dead_conn <- conn: // NB: connWriter owns the conns map
+			default:
+			}
 			return
 		}
 	}

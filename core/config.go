@@ -16,7 +16,7 @@ import (
 // Configure configures bgpipe
 func (b *Bgpipe) Configure() error {
 	// parse CLI args, possibly read from a --config file
-	args, err := spliceConfig(os.Args[1:])
+	args, err := b.spliceConfig(os.Args[1:])
 	if err == nil {
 		err = b.parseArgs(args)
 	}

@@ -60,8 +60,9 @@ ignored. `--del-com*` runs after `--add-com*`.
 | `--strip-private` | bool | `false` | Remove private ASNs ([RFC 6996](https://datatracker.ietf.org/doc/html/rfc6996)) from the AS_PATH |
 
 `--prepend-first` is applied before `--prepend`, eg. `--prepend-first 2
---prepend 65000` turns `3549 3356` into `65000 3549 3549 3549 3356`. Prepending
-assumes 4-byte ASN sessions (the norm); AS_SET segments are left as-is.
+--prepend 65000` turns `3549 3356` into `65000 3549 3549 3549 3356`. AS_SET
+segments are left as-is. All AS_PATH actions assume 4-byte ASN sessions (the
+norm): on legacy 2-byte sessions, AS4_PATH is not modified.
 
 ### Other attributes
 
