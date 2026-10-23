@@ -199,13 +199,18 @@ $ bgpipe -n \
   [1] read https://data.ris.ripe.net/rrc01/latest-update.gz
       writes messages to pipeline inputs=1
   [2] grep prefix ~ 8.0.0.0/8
-      reads messages from pipeline callbacks=1 types=[ALL]
+      reads messages from pipeline callbacks=1 types=[ALL] parse=1
   [3] stdout
-      reads messages from pipeline callbacks=1 types=[ALL]
+      reads messages from pipeline callbacks=1 types=[ALL] parse=1
 
 <-- MESSAGES FLOWING LEFT <--
   (none)
 ```
+
+Each stage shows whether it reads and/or writes messages, which message `types`
+its callbacks see, how many callbacks need to `parse` messages (which costs CPU,
+and depends on the BGP capabilities negotiated at runtime, eg. ADD-PATH, so
+`--explain` cannot show them), and whether it only mirrors messages (`copy`).
 
 Last but not least, instead of putting the `stdout` stage explicitly in the pipeline, you can use the `--stdout` (short `-o`) option to `bgpipe`, in order to print BGP messages to stdout automatically. It will print all messages that make it to the very end of the left-hand side *or* right-hand side of the pipeline, ie. all messages that are not dropped by any stage.
 

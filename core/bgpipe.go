@@ -335,7 +335,7 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 		s := b.Stages[idx]
 
 		// analyze callbacks
-		var cb_count int
+		var cb_count, cb_parse int
 		var cb_all bool
 		var cb_types []msg.Type
 		for _, cb := range s.callbacks {
@@ -343,6 +343,9 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 				continue
 			}
 			cb_count++
+			if !cb.Raw || len(cb.Filter) > 0 {
+				cb_parse++
+			}
 			if len(cb.Types) == 0 {
 				cb_all = true
 			} else {
@@ -413,6 +416,13 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 				pr(StyleMagenta, " types=%v", slices.Compact(cb_types))
 			} else {
 				pr(StyleMagenta, " types=[ALL]")
+			}
+			// NB: parsing needs the session caps, negotiated only at runtime
+			if cb_parse > 0 {
+				pr(StyleMagenta, " parse=%d", cb_parse)
+			}
+			if s.K.Bool("copy") {
+				pr(StyleMagenta, " copy")
 			}
 			pr(StyleNone, "\n")
 		}
