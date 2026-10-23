@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/VictoriaMetrics/metrics v1.44.1
-	github.com/bgpfix/bgpfix v0.22.2-0.20261023105023-44baf15d04b4
+	github.com/bgpfix/bgpfix v0.22.2-0.20261023113021-15749e99fe9c
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/gorilla/websocket v1.5.3
