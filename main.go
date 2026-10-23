@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -22,7 +23,10 @@ func main() {
 		stages.Repo, // standard stage commands
 	)
 
-	if bp.Run() != nil {
+	// exit codes: 0 ok, 1 runtime error, 2 config error, 3 killed by --kill event
+	if err := bp.Run(); errors.Is(err, bgpipe.ErrConfig) {
+		os.Exit(2)
+	} else if err != nil {
 		os.Exit(1)
 	}
 }

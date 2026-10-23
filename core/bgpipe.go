@@ -95,13 +95,13 @@ func (b *Bgpipe) Run() error {
 	// configure bgpipe and its stages
 	if err := b.Configure(); err != nil {
 		b.Error().Err(err).Msg("configuration error")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// attach stages to pipe
 	if err := b.AttachStages(); err != nil {
 		b.Error().Err(err).Msg("could not attach stages to the pipe")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// print the pipeline and quit?
@@ -116,7 +116,7 @@ func (b *Bgpipe) Run() error {
 	// start the shared RPKI cache, if in use by any stage
 	if err := b.Rpki.Start(); err != nil {
 		b.Error().Err(err).Msg("could not start the RPKI cache")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// attach our b.Start
@@ -126,7 +126,7 @@ func (b *Bgpipe) Run() error {
 	b.StartTime = time.Now()
 	if err := b.startHTTP(); err != nil {
 		b.Error().Err(err).Msg("could not start HTTP API")
-		return err
+		return errors.Join(ErrConfig, err)
 	}
 
 	// handle signals
@@ -250,7 +250,7 @@ func (b *Bgpipe) LogEvent(ev *pipe.Event) bool {
 func (b *Bgpipe) KillEvent(ev *pipe.Event) bool {
 	b.LogEvent(ev)
 	b.Warn().Stringer("ev", ev).Msg("session killed by event")
-	os.Exit(1)
+	os.Exit(3)
 	return false
 }
 

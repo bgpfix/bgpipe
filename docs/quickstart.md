@@ -126,6 +126,17 @@ By default, all stages operate in the *right* (`-R`) direction, meaning that the
 
 For writing BGP message filters used by the `grep` and `drop` stages, see the dedicated [filter reference](filters.md) with attributes, operators, and examples.
 
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success: input fully processed, or stopped by a signal (SIGINT/SIGTERM) |
+| `1` | Runtime error, eg. connection refused or closed by the peer |
+| `2` | Configuration error: invalid options, stages, or a source that could not be opened at startup |
+| `3` | Session killed by a `--kill` event |
+
+Supervisors like systemd can use these to decide whether a restart makes sense (eg. `RestartPreventExitStatus=2`).
+
 ## Reading MRT files
 
 Let's demonstrate basic message processing by reading MRT files. MRT files are a standard format for storing BGP messages, and `bgpipe` can read them from a file or a URL. You can even stream MRT files directly from the [RIPE NCC RIS](https://ris.ripe.net/docs/mrt/) or [RouteViews](https://archive.routeviews.org/) archives.
