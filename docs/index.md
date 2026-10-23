@@ -85,7 +85,7 @@ $ bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-bview.gz \
     -- grep 'tag[PEER_AS] == "8218"'
 
 # proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes
-$ bgpipe -o -- listen :179 -- rov -- connect --wait listen 192.0.2.1
+$ bgpipe -o -- listen --peer 198.51.100.7 :179 -- rov -- connect --wait listen 192.0.2.1
 ```
 
 ## Install
@@ -140,10 +140,16 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 
     Add TCP-MD5 to sessions, proxy over encrypted WebSockets
 
+-   :material-speedometer:{ .lg } **Fast & Hardened**
+
+    ~1M messages/s, zero-allocation parsing, fuzzed parsers, and safe defaults
+
 </div>
 
 ## Features
 
+- **High performance** - UPDATE parsing in ~175 ns with zero allocations, ~1M messages/s from MRT to JSON on one box
+- **Hardened** - all parsers are fuzzed, malformed input from a peer or a public feed can't crash the process, and capability negotiation is race-free
 - **Transparent proxy** - sits between two BGP speakers; with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer - no router reconfiguration
 - **Full JSON translation** - bidirectional BGP <-> JSON for every message type, including [Flowspec](flowspec.md)
 - **Built-in filters** - match on prefixes, AS paths, communities, attributes, and [tags](stages/tag.md) with a concise [filter language](filters.md)
@@ -162,7 +168,7 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 - **HTTP API** - live dashboard, Prometheus metrics, Kubernetes-style liveness (`/hc`) and readiness (`/ready`) checks, and optional pprof profiling, with HTTP Basic Auth ([details](http-api.md))
 - **Config files** - keep long pipelines in a file with comments, one stage per line: `bgpipe -f edge.conf` ([details](quickstart.md#config-files))
 - **Safe by default** - peer allow-lists on `listen`, authenticated WebSocket servers, slow monitoring clients can never stall a session, and a warning for unencrypted RPKI sources
-- **20 pipeline stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
+- **21 pipeline stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
 
 ## Project
 
