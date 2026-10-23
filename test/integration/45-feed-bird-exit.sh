@@ -38,5 +38,14 @@ wait "$BGPIPE_PID" || rc=$?
 msg "bgpipe exited cleanly"
 
 # NB: with "debug { routes }", BIRD logs every route it got (wording differs in BIRD 2 and 3)
-docker logs "$DAEMON" 2>&1 | grep -qF " $last " || fail "BIRD did not receive $last"
+docker logs "$DAEMON" >"$WORK/bird.log" 2>&1
+if ! grep -qF " $last " "$WORK/bird.log"; then
+	"$BGPIPE" --log disabled -- read "$TESTDATA/sample.mrt" -- stdout |
+		jq -r 'select(.[3]=="UPDATE") | .[4].reach // empty | .[]' | awk '!seen[$0]++' >"$WORK/want.txt"
+	missing=$(while read -r p; do grep -qF " $p " "$WORK/bird.log" || echo "$p"; done <"$WORK/want.txt")
+	msg "BIRD log: $(wc -l <"$WORK/bird.log") lines, missing $(echo "$missing" | grep -c .) of $(wc -l <"$WORK/want.txt") prefixes:"
+	echo "$missing" | head -20 | tr '\n' ' ' >&2
+	grep -m5 -E "feed.ipv4 [<>] (added|ignored|filtered|rejected)" "$WORK/bird.log" >&2 || true
+	fail "BIRD did not receive $last"
+fi
 msg "BIRD received the whole file"
