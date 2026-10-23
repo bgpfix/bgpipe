@@ -239,7 +239,7 @@ func (b *Bgpipe) attachHTTPStages() {
 		s.HTTPPath = "/stage/" + base
 		m.Mount(s.HTTPPath, r)
 
-		s.Info().Str("http", s.HTTPPath).Msg("stage HTTP API mounted")
+		s.Debug().Str("http", s.HTTPPath).Msg("stage HTTP API mounted")
 	}
 }
 
