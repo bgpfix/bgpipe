@@ -167,6 +167,8 @@ connect --md5 /etc/bgpipe/md5.secret 10.0.0.1
 
 Supervisors like systemd can use these to decide whether a restart makes sense (eg. `RestartPreventExitStatus=2`).
 
+Logs go to stderr, with ANSI colors only when it is a terminal (the same for `--explain` on stdout); set [`NO_COLOR=1`](https://no-color.org/) to disable colors entirely.
+
 ## Reading MRT files
 
 Let's demonstrate basic message processing by reading MRT files. MRT files are a standard format for storing BGP messages, and `bgpipe` can read them from a file or a URL. You can even stream MRT files directly from the [RIPE NCC RIS](https://ris.ripe.net/docs/mrt/) or [RouteViews](https://archive.routeviews.org/) archives.

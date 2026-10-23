@@ -63,6 +63,7 @@ func NewBgpipe(version string, repo ...map[string]NewStage) *Bgpipe {
 	// default logger
 	b.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
+		NoColor:    !IsColor(os.Stderr),
 		TimeFormat: time.DateTime,
 	})
 
@@ -307,7 +308,7 @@ func (b *Bgpipe) StageDump(d meta.Dir, w io.Writer) (total int) {
 	if w == nil {
 		w = os.Stdout
 	}
-	colors := w == os.Stdout
+	colors := w == os.Stdout && IsColor(os.Stdout)
 
 	// print function shortcut
 	pr := func(style string, format string, a ...any) {

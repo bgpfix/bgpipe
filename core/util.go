@@ -11,6 +11,15 @@ import (
 	"github.com/bgpfix/bgpfix/msg"
 )
 
+// IsColor returns true iff f is a terminal and NO_COLOR is not set (no-color.org)
+func IsColor(f *os.File) bool {
+	if os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+	fi, err := f.Stat()
+	return err == nil && fi.Mode()&os.ModeCharDevice != 0
+}
+
 const (
 	StyleNone      = ""
 	StyleBlack     = "\033[30m"
