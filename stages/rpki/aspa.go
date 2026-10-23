@@ -233,10 +233,6 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	if !u.HasReach() {
 		return true // withdrawal-only, no AS_PATH to validate
 	}
-	aspath := u.AsPath()
-	if aspath == nil || aspath.Len() == 0 {
-		return true // iBGP or locally-originated
-	}
 
 	// resolve peer role and ASN for this direction
 	peer := s.resolvePeer(m.Dir)
@@ -254,12 +250,15 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	}
 
 	// verify path
-	flat := aspath.Unique()
+	var flat []uint32
+	if aspath := u.AsPath(); aspath != nil {
+		flat = aspath.Unique()
+	}
 	var result int
 	var failCAS, failPAS uint32
 	switch {
 	case flat == nil:
-		result = rpki.ASPA_INVALID // AS_SET present -> invalid per ASPA spec section 3
+		result = rpki.ASPA_INVALID // empty path or AS_SET (draft-29 sections 5.5/5.6, steps 1 and 3)
 	case len(flat) == 1:
 		result = rpki.ASPA_VALID // single-hop
 	case s.first_hop && !peer.rs && asn != 0 && flat[0] != asn:

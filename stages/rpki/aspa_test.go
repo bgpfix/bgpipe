@@ -68,7 +68,8 @@ func TestAspa_ResolvePeerAutoNoCapability(t *testing.T) {
 	require.False(t, p.ok)
 }
 
-func TestAspa_EmptyASPathIsSkipped(t *testing.T) {
+// an announcement with an empty AS_PATH is Invalid (draft-29 sections 5.5/5.6)
+func TestAspa_EmptyASPathIsInvalid(t *testing.T) {
 	s := newTestAspa()
 	s.role, _ = parseRoleName("customer")
 	s.act = act_drop
@@ -80,7 +81,7 @@ func TestAspa_EmptyASPathIsSkipped(t *testing.T) {
 	setEmptyAsPath(m)
 
 	require.NotPanics(t, func() {
-		require.True(t, s.validateMsg(m))
+		require.False(t, s.validateMsg(m))
 	})
 }
 

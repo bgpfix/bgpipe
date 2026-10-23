@@ -11,7 +11,9 @@ bgpipe [--rpki SOURCE] [...] -- aspa [OPTIONS]
 ## Description
 
 The **aspa** stage performs ASPA verification
-([draft-ietf-sidrops-aspa-verification](https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/))
+([draft-ietf-sidrops-aspa-verification](https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/),
+as of revision -29, tested against its published
+[examples](https://github.com/ksriram25/IETF/blob/main/ASPA_path_verification_examples.pdf))
 of BGP UPDATE messages: it detects route leaks by verifying that the AS_PATH
 is valley-free, using ASPA records that attest provider-customer relationships
 between ASes. Each path is assigned one of three states:
@@ -42,6 +44,9 @@ is skipped for the session (with a warning).
     check is skipped). bgpipe does not compare the peer's role with the role in
     the other side's OPEN. For security use, always set an explicit role;
     `auto` is meant for trusted peers, labs, and `-LR` monitoring.
+
+ASPA applies to eBGP sessions: an announcement with an empty AS_PATH, or with
+an AS_SET, is INVALID. Withdrawals are not checked.
 
 The stage also verifies that the first AS in the path matches the neighbor's
 ASN (per draft-ietf-sidrops-aspa-verification, Section 5). This check is
