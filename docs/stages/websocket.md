@@ -21,8 +21,16 @@ converted to `ws://` and `wss://` respectively.
 
 In **server mode** (`--listen`), the stage accepts multiple concurrent
 WebSocket clients and broadcasts messages to all connected clients.
-If a non-critical client disconnects, the stage continues operating.
+Every client can also send messages *into* the pipeline, so server mode
+requires `--auth`, or an explicit `--open` to allow anyone to connect.
+Use `--write` to make the server output-only. Prefer `wss://` with `--auth`,
+since basic auth over plain `ws://` sends the credentials in the clear.
 In server mode with `wss://`, both `--cert` and `--key` are required.
+
+Server clients never block the pipeline: each client has its own send
+queue (1000 messages) and a 10s write deadline, and a client that falls
+behind is disconnected. In client mode, the single remote server is
+assumed trusted, and a slow server slows down the pipeline (backpressure).
 
 In **client mode** (default), the stage connects to a single remote server.
 Use `--retry` to automatically reconnect on connection failures.
@@ -40,7 +48,8 @@ operation with `-LR`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--listen` | bool | `false` | Run as WebSocket server instead of client |
+| `--listen` | bool | `false` | Run as WebSocket server instead of client; requires `--auth` or `--open` |
+| `--open` | bool | `false` | Allow `--listen` without `--auth`: anyone can read and inject messages |
 | `--timeout` | duration | `10s` | Connect/handshake timeout; 0 disables |
 | `--retry` | bool | `false` | Retry client connection on errors |
 | `--retry-max` | int | `0` | Max retry attempts; 0 means unlimited |
@@ -49,7 +58,7 @@ operation with `-LR`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--auth` | string | | HTTP basic auth; `$ENV_VAR` or file path containing `user:pass` |
+| `--auth` | string | | HTTP basic auth `user:pass`: `$ENV_VAR`, file path (`/...` or `./...`), or literal |
 | `--cert` | string | | TLS certificate file path (required for `wss://` server) |
 | `--key` | string | | TLS private key file path (required for `wss://` server) |
 | `--insecure` | bool | `false` | Skip TLS certificate validation |
@@ -91,12 +100,22 @@ bgpipe \
     -- connect 10.0.0.1
 ```
 
-Run a WebSocket server for remote clients:
+Run an authenticated WebSocket server for remote clients:
 
 ```bash
 bgpipe \
     -- connect 192.0.2.1 \
-    -- websocket -LR --listen --cert server.crt --key server.key wss://0.0.0.0:8443/bgp \
+    -- websocket -LR --listen --auth /etc/bgpipe/ws.auth \
+         --cert server.crt --key server.key wss://0.0.0.0:8443/bgp \
+    -- connect 10.0.0.1
+```
+
+Read-only monitoring tap on localhost, open to anyone who can connect:
+
+```bash
+bgpipe \
+    -- connect 192.0.2.1 \
+    -- websocket -LR --listen --open --write --copy ws://127.0.0.1:8080/bgp \
     -- connect 10.0.0.1
 ```
 
