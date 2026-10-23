@@ -37,5 +37,6 @@ wait "$BGPIPE_PID" || rc=$?
 [ $rc -eq 0 ] || fail "bgpipe exit code $rc"
 msg "bgpipe exited cleanly"
 
-docker logs "$DAEMON" 2>&1 | grep "added" | grep -qF "$last" || fail "BIRD did not receive $last"
+# NB: with "debug { routes }", BIRD logs every route it got (wording differs in BIRD 2 and 3)
+docker logs "$DAEMON" 2>&1 | grep -qF " $last " || fail "BIRD did not receive $last"
 msg "BIRD received the whole file"
