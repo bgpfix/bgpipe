@@ -321,6 +321,9 @@ func (eio *Extio) Attach() error {
 			eio.opt_copy = true // read/write-only doesn't make sense without --copy
 		}
 	}
+	if eio.opt_copy {
+		k.Set("copy", true) // NB: for --explain
+	}
 
 	// not write-only? produce input to bgpipe
 	if !opt_write {
@@ -350,6 +353,7 @@ func (eio *Extio) Attach() error {
 		eio.bmp.OpenBMP = eio.opt_obmp
 	} else {
 		eio.Options.IsProducer = false
+		eio.Options.FilterOut = false // NB: no inputs to filter
 	}
 
 	// not read-only? capture bgpipe output to eio.Output
@@ -368,6 +372,8 @@ func (eio *Extio) Attach() error {
 		for t := range eio.opt_type {
 			cb.Types = append(cb.Types, t)
 		}
+	} else {
+		eio.Options.FilterIn = false // NB: no callbacks to filter
 	}
 
 	return nil
