@@ -54,11 +54,11 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	closed_timeout := s.K.Duration("closed-timeout")
 
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
-	defer conn.Close()
 
 	// get tcp conn
 	tcp, _ := conn.(*net.TCPConn)
 	if tcp == nil {
+		conn.Close()
 		return fmt.Errorf("could not get TCPConn")
 	}
 
@@ -66,6 +66,15 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	if err := tcp.SetLinger(0); err != nil {
 		s.Info().Err(err).Msg("SetLinger failed")
 	}
+
+	// NB: if we wrote everything, let the kernel deliver it (no RST on close)
+	wrote_all := false
+	defer func() {
+		if wrote_all {
+			tcp.SetLinger(-1)
+		}
+		conn.Close()
+	}()
 
 	// variables for reader / writer
 	type retval struct {
@@ -96,9 +105,10 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		tcp.CloseWrite()
 		wch <- retval{n, err}
 
+		// NB: we're done writing: a clean stop, unlike the peer closing on us
 		if closed_timeout > 0 {
 			time.Sleep(closed_timeout)
-			s.Cancel(io.EOF)
+			s.Cancel(core.ErrStageStopped)
 		}
 	}()
 
@@ -123,6 +133,7 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 			if err == io.EOF {
 				err = nil
 			}
+			wrote_all = err == nil
 		}
 	}
 
