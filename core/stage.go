@@ -126,8 +126,10 @@ func (s *StageBase) Run() error {
 	return context.Cause(s.Ctx)
 }
 
-// Stop is the default Stage implementation that does nothing.
+// Stop is the default Stage implementation that cancels the stage context,
+// so that the default Run returns at once (not after StopTimeout)
 func (s *StageBase) Stop() error {
+	s.Cancel(ErrStageStopped)
 	return nil
 }
 
