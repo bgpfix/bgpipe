@@ -39,4 +39,4 @@ require (
 )
 
 // for dev: use the latest code in ../bgpfix
-replace github.com/bgpfix/bgpfix => ../bgpfix
+// replace github.com/bgpfix/bgpfix => ../bgpfix
