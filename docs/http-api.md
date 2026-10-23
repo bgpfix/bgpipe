@@ -18,7 +18,7 @@ bgpipe --http :8080 --http-open \
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--http` | string | | Bind address for the HTTP API (e.g. `:8080`, `127.0.0.1:8080`) |
-| `--http-auth` | string | | HTTP Basic Auth credentials: `user:pass`, `$ENV_VAR`, or `/path/to/file` |
+| `--http-auth` | string | | HTTP Basic Auth: `user:pass` (has a colon), `$ENV_VAR`, or else a file path holding `user:pass` |
 | `--http-open` | bool | `false` | Disable authentication entirely (dangerous -- see [Authentication](#authentication)) |
 | `--pprof` | string | | Enable Go profiling: `http` to mount under `--http`, or a separate `addr` for its own server |
 
@@ -41,7 +41,7 @@ stage if you also want labeled, filter-based Prometheus counters.
 Because `/debug/pprof/` and per-stage routes can expose internal state, `--http` refuses to
 start unless you pick one of:
 
-- `--http-auth user:pass` (or `--http-auth $ENV_VAR` / `--http-auth /path/to/file` / `./file`) --
+- `--http-auth user:pass` (or `--http-auth '$ENV_VAR'`, or a file path like `--http-auth /etc/bgpipe/http.auth`) --
   requires HTTP Basic Auth on every request, compared in constant time.
 - `--http-open` -- disables authentication. Only use this when `--http` is bound to
   `127.0.0.1` or an otherwise trusted network.

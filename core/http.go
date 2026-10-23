@@ -98,7 +98,7 @@ func (b *Bgpipe) httpAuthMiddleware() (func(http.Handler) http.Handler, error) {
 		return nil, fmt.Errorf("--http requires --http-auth (or --http-open to disable auth)")
 	}
 
-	cred, err := b.readCredential(authStr)
+	cred, err := ReadCredential(authStr)
 	if err != nil {
 		return nil, fmt.Errorf("--http-auth: %w", err)
 	}
@@ -113,15 +113,6 @@ func (b *Bgpipe) httpAuthMiddleware() (func(http.Handler) http.Handler, error) {
 			next.ServeHTTP(w, r)
 		})
 	}, nil
-}
-
-// readCredential reads user:pass via ReadSecret
-func (b *Bgpipe) readCredential(v string) ([]byte, error) {
-	cred, err := ReadSecret(v)
-	if err == nil && !bytes.Contains(cred, []byte{':'}) {
-		err = fmt.Errorf("credential must be in user:pass format")
-	}
-	return cred, err
 }
 
 func (b *Bgpipe) configurePprof(m *chi.Mux) error {

@@ -69,7 +69,7 @@ func (b *Bgpipe) addFlags() {
 	f.StringP("config", "f", "", "read options and stages from given file (in place of -f)")
 	f.StringP("log", "l", "info", "log level (debug/info/warn/error/disabled)")
 	f.String("http", "", "bind HTTP API + Prometheus /metrics to given address")
-	f.String("http-auth", "", "HTTP Basic Auth credentials (user:pass, $ENV, or /path)")
+	f.String("http-auth", "", "HTTP Basic Auth: user:pass, $ENV_VAR, or a file path")
 	f.Bool("http-open", false, "disable HTTP authentication (dangerous)")
 	f.String("pprof", "", "enable pprof: 'http' to add to --http, or addr for separate server")
 	f.StringSliceP("events", "e", []string{"PARSE", "NOTIFY", "ESTABLISHED", "EOR"}, "log given events (\"all\" means all events)")

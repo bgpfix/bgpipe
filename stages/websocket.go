@@ -54,7 +54,7 @@ func NewWebsocket(parent *core.StageBase) core.Stage {
 
 	f := o.Flags
 	f.Bool("listen", false, "listen on the URL instead of connecting to it")
-	f.String("auth", "", "HTTP basic auth user:pass ($ENV_VAR, /file path, or literal)")
+	f.String("auth", "", "HTTP basic auth: user:pass, $ENV_VAR, or a file path")
 	f.Bool("open", false, "allow --listen without --auth (anyone can read AND inject messages)")
 	f.String("cert", "", "SSL certificate path")
 	f.String("key", "", "SSL private key path")
@@ -133,11 +133,9 @@ func (s *Websocket) Attach() error {
 
 	// HTTP auth
 	if v := k.String("auth"); len(v) > 0 {
-		cred, err := core.ReadSecret(v)
+		cred, err := core.ReadCredential(v)
 		if err != nil {
 			return fmt.Errorf("--auth: %w", err)
-		} else if bytes.IndexByte(cred, ':') < 0 {
-			return fmt.Errorf("--auth: invalid format, need user:pass")
 		}
 		s.headers.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString(cred))
 	} else if k.Bool("listen") && !k.Bool("open") {

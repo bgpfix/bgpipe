@@ -44,7 +44,7 @@ Options:
   -f, --config string           read options and stages from given file (in place of -f)
   -l, --log string              log level (debug/info/warn/error/disabled) (default "info")
       --http string             bind HTTP API + Prometheus /metrics to given address
-      --http-auth string        HTTP Basic Auth credentials (user:pass, $ENV, or /path)
+      --http-auth string        HTTP Basic Auth: user:pass, $ENV_VAR, or a file path
       --http-open               disable HTTP authentication (dangerous)
       --pprof string            enable pprof: 'http' to add to --http, or addr for separate server
   -e, --events strings          log given events ("all" means all events) (default [PARSE,NOTIFY,ESTABLISHED,EOR])

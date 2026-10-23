@@ -58,7 +58,7 @@ operation with `-LR`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--auth` | string | | HTTP basic auth `user:pass`: `$ENV_VAR`, file path (`/...` or `./...`), or literal |
+| `--auth` | string | | HTTP basic auth: `user:pass` (has a colon), `$ENV_VAR`, or else a file path holding `user:pass` |
 | `--cert` | string | | TLS certificate file path (required for `wss://` server) |
 | `--key` | string | | TLS private key file path (required for `wss://` server) |
 | `--insecure` | bool | `false` | Skip TLS certificate validation |
