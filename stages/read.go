@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bgpfix/bgpipe/core"
@@ -23,11 +24,14 @@ type Read struct {
 	*core.StageBase
 	eio *extio.Extio
 
-	fpath string   // path argument
+	paths []string // all path arguments, read one after another
+
+	fpath string   // current path
 	url   *url.URL // if reading from URL
 
 	decompress string
 
+	mu    sync.Mutex    // guards fh and close (Stop runs concurrently with Run)
 	fh    io.ReadCloser // can be *os.File or http.Response.Body
 	rd    io.Reader
 	close func() // function to close decompressor, if needed
@@ -40,7 +44,7 @@ func NewRead(parent *core.StageBase) core.Stage {
 	o.IsProducer = true
 	o.FilterOut = true
 	o.Bidir = true
-	o.Descr = "read messages from file, URL, or stdin (-)"
+	o.Descr = "read messages from file(s), URL(s), or stdin (-)"
 	o.Args = []string{"path"}
 
 	f := o.Flags
@@ -51,9 +55,32 @@ func NewRead(parent *core.StageBase) core.Stage {
 }
 
 func (s *Read) Attach() error {
+	// NB: more paths with -A, read in the order given, all in the same data format
+	s.paths = append([]string{s.K.String("path")}, s.K.Strings("args")...)
+	if len(s.paths[0]) == 0 {
+		return errors.New("path must be set")
+	}
+
+	// check all paths early, then leave the first one set up
+	for i := len(s.paths) - 1; i >= 0; i-- {
+		if err := s.setup(s.paths[i]); err != nil {
+			return err
+		}
+		// NB: a typo in the 100th path should not surface hours into the run
+		if i > 0 && s.url == nil && s.fpath != "-" {
+			if _, err := os.Stat(s.fpath); err != nil {
+				return err
+			}
+		}
+	}
+	return s.eio.Attach()
+}
+
+// setup parses the path argument p, making it the current path
+func (s *Read) setup(p string) error {
 	k := s.K
 
-	s.fpath = k.String("path")
+	s.fpath, s.url, s.decompress = p, nil, ""
 	if len(s.fpath) == 0 {
 		return errors.New("path must be set")
 	}
@@ -95,10 +122,15 @@ func (s *Read) Attach() error {
 		return fmt.Errorf("--decompress '%s': invalid value", k.String("decompress"))
 	}
 
-	return s.eio.Attach()
+	return nil
 }
 
 func (s *Read) Prepare() error {
+	return s.open()
+}
+
+// open opens the current path, ready to be read from s.rd
+func (s *Read) open() error {
 	if s.url != nil {
 		s.Info().Msgf("streaming %s", s.url.String())
 		req, err := http.NewRequestWithContext(s.Ctx, "GET", s.url.String(), nil)
@@ -115,17 +147,17 @@ func (s *Read) Prepare() error {
 			resp.Body.Close()
 			return fmt.Errorf("%s: %s", s.url.String(), resp.Status)
 		}
-		s.fh = resp.Body
+		s.setFile(resp.Body)
 	} else if s.fpath == "-" {
 		s.Info().Msg("reading stdin")
-		s.fh = io.NopCloser(os.Stdin)
+		s.setFile(io.NopCloser(os.Stdin))
 	} else {
 		s.Info().Msgf("opening file %s", s.fpath)
 		fh, err := os.Open(s.fpath)
 		if err != nil {
 			return err
 		}
-		s.fh = fh
+		s.setFile(fh)
 	}
 
 	// need to uncompress on the fly?
@@ -137,7 +169,7 @@ func (s *Read) Prepare() error {
 			return err
 		}
 		s.rd = r
-		s.close = func() { r.Close() }
+		s.setClose(func() { r.Close() })
 	case ".gz":
 		r, err := gzip.NewReader(s.fh)
 		if err != nil {
@@ -145,7 +177,7 @@ func (s *Read) Prepare() error {
 			return err
 		}
 		s.rd = r
-		s.close = func() { r.Close() }
+		s.setClose(func() { r.Close() })
 	case ".zstd":
 		r, err := zstd.NewReader(s.fh)
 		if err != nil {
@@ -153,7 +185,7 @@ func (s *Read) Prepare() error {
 			return err
 		}
 		s.rd = r
-		s.close = r.Close
+		s.setClose(r.Close)
 	default:
 		s.rd = s.fh // no decompression, just use the file handle
 	}
@@ -174,16 +206,56 @@ func (s *Read) Prepare() error {
 }
 
 func (s *Read) Run() error {
-	return s.eio.ReadStream(s.rd, nil)
+	for i, p := range s.paths {
+		if i > 0 {
+			if s.Ctx.Err() != nil {
+				return nil // stopped
+			}
+			if err := s.setup(p); err != nil {
+				return err
+			}
+			if err := s.open(); err != nil {
+				return err
+			}
+		}
+
+		err := s.eio.ReadStream(s.rd, nil)
+		s.closeFile()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *Read) Stop() error {
 	s.eio.InputClose()
+	s.closeFile()
+	return nil
+}
+
+func (s *Read) setFile(fh io.ReadCloser) {
+	s.mu.Lock()
+	s.fh = fh
+	s.mu.Unlock()
+}
+
+func (s *Read) setClose(f func()) {
+	s.mu.Lock()
+	s.close = f
+	s.mu.Unlock()
+}
+
+// closeFile closes the current decompressor and file, if any
+func (s *Read) closeFile() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.close != nil {
 		s.close()
+		s.close = nil
 	}
 	if s.fh != nil {
 		s.fh.Close()
+		s.fh = nil
 	}
-	return nil
 }
