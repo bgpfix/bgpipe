@@ -59,6 +59,7 @@ jobs:
           build android arm64
 
           ls -lh dist/
+          (cd dist && sha256sum * > SHA256SUMS)
 
       - name: Create release
         uses: softprops/action-gh-release@v2
