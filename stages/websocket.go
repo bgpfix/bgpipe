@@ -209,6 +209,7 @@ func (s *Websocket) prepareServer() error {
 		BaseContext:       func(l net.Listener) context.Context { return s.Ctx },
 		TLSConfig:         s.tls,
 		ReadHeaderTimeout: 5 * time.Second,
+		IdleTimeout:       60 * time.Second, // NB: reap idle keep-alive conns (hijacked websockets are not affected)
 	}
 
 	// ok go!
