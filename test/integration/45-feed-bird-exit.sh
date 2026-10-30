@@ -10,9 +10,10 @@ freeport
 host_ip
 render bird-feed.conf.in bird.conf
 
-# the last IPv4 prefix announced in the file: if BIRD got it, it got everything
+# the last IPv4 prefix announced in the file only once: if BIRD got it, it got (almost) everything
 last=$("$BGPIPE" --log disabled -- read "$TESTDATA/sample.mrt" -- stdout |
-	jq -r 'select(.[3]=="UPDATE") | .[4].reach // empty | .[]' | tail -1)
+	jq -r 'select(.[3]=="UPDATE") | .[4].reach // empty | .[]' |
+	awk '{n[$0]++; p[NR]=$0} END {for (i = NR; i > 0; i--) if (n[p[i]] == 1) {print p[i]; exit}}')
 [ -n "$last" ] || fail "no IPv4 announcements in sample.mrt"
 msg "last announced prefix: $last"
 
