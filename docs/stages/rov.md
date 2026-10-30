@@ -45,7 +45,7 @@ The RTR client supports protocol versions 0/1/2 with automatic version
 negotiation and fallback. ASPA records require an RTR v2 server
 ([draft-ietf-sidrops-8210bis](https://datatracker.ietf.org/doc/draft-ietf-sidrops-8210bis/)).
 
-If `--rpki` is an `http://` or `https://` URL, the JSON/CSV data is fetched
+If `--rpki` is an `http://` or `https://` URL, the JSON, CSV or CCR data is fetched
 from it and re-fetched every `--rpki-refresh` (conditional GET, so unchanged
 data is not downloaded again). The default is Cloudflare's public
 [rpki-client](https://www.rpki-client.org/) export over HTTPS, served from
@@ -63,8 +63,14 @@ their CDN, which includes both VRPs and ASPAs; the
     or Routinator) next to bgpipe.
 
 If `--rpki` points to an existing local file, it is loaded instead and
-auto-reloaded every 10 seconds. JSON files support VRPs and ASPAs; CSV
-supports VRPs only.
+auto-reloaded every 10 seconds. JSON and CCR files support VRPs and ASPAs;
+CSV supports VRPs only. The format is auto-detected, and gzip is undone
+transparently (up to 1 GiB uncompressed).
+
+CCR (Canonical Cache Representation) is the binary snapshot written by
+[rpki-client](https://www.rpki-client.org/) and archived by
+RPKIviews. Its SHA-256 hashes detect corruption, but CCR is not signed, so it
+is no more trustworthy than the way you got it.
 
 JSON format (Routinator and rpki-client compatible):
 
@@ -164,7 +170,7 @@ bgpipe --events rov/dropped \
     -- connect 192.0.2.1
 ```
 
-Use a local JSON or CSV file instead of RTR:
+Use a local JSON, CSV or CCR file instead of RTR:
 
 ```bash
 bgpipe --rpki /var/lib/rpki/export.json \
