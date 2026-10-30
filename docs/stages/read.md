@@ -38,8 +38,10 @@ entire file first, making it suitable for large MRT archives.
 With `-A`, the stage reads several paths (files or URLs, each possibly
 compressed on its own) one after another, in the order given, as one
 continuous stream. The data format is detected once, so all paths must hold
-the same format; each path must be a complete file, and local files are
-checked for existence before anything is read.
+the same format; each path must be a complete file (the tail of a truncated
+one, eg. still being written, garbles the start of the next one and stops the
+stage with an error), and local files are checked for existence before
+anything is read.
 
 ## Options
 
