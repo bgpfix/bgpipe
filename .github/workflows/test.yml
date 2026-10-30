@@ -18,7 +18,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.26"
+          go-version: "1.27"
+
+      # NB: vet also flags std APIs newer than the go.mod go version (1.26)
+      - name: Vet
+        run: go vet ./...
+
+      - name: Unit tests
+        run: go test ./...
 
       - name: Integration tests
         run: ./test/integration/run.sh

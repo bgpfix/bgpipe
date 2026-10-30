@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.26"
+          go-version: "1.27"
 
       - name: Build binaries
         run: |
@@ -59,6 +59,7 @@ jobs:
           build android arm64
 
           ls -lh dist/
+          (cd dist && sha256sum * > SHA256SUMS)
 
       - name: Create release
         uses: softprops/action-gh-release@v2
