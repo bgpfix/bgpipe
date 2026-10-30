@@ -4,7 +4,8 @@
 
 # NB: the second file differs, so that the order of files can be checked,
 # and lacks the final newline, which must not glue its last line to the next file
-sed 's|192\.0\.2\.0/24|203.0.113.0/24|' "$TESTDATA/updates.json" | head -c -1 | gzip -c > "$WORK/second.json.gz"
+# ($(...) strips the trailing newlines, portably)
+printf '%s' "$(sed 's|192\.0\.2\.0/24|203.0.113.0/24|' "$TESTDATA/updates.json")" | gzip -c > "$WORK/second.json.gz"
 
 run_bgpipe -- read -A "$TESTDATA/updates.json" "$WORK/second.json.gz" "$TESTDATA/updates.json" -- stdout
 
