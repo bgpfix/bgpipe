@@ -131,15 +131,18 @@ func (s *Read) Prepare() error {
 
 // open opens the current path, ready to be read from s.rd
 func (s *Read) open() error {
+	var fh io.ReadCloser // NB: Stop may clear s.fh any time, use the local copy
 	if s.url != nil {
 		s.Info().Msgf("streaming %s", s.url.String())
 		req, err := http.NewRequestWithContext(s.Ctx, "GET", s.url.String(), nil)
 		if err != nil {
 			return err
 		}
-		// NB: the body is a stream (no total timeout), but don't hang on a dead server
+		// NB: the body is a stream (no total timeout), but don't hang on a dead server;
+		// one transport per URL, so don't leave its idle connection behind
 		tr := http.DefaultTransport.(*http.Transport).Clone()
 		tr.ResponseHeaderTimeout = 30 * time.Second
+		tr.DisableKeepAlives = true
 		resp, err := (&http.Client{Transport: tr}).Do(req)
 		if err != nil {
 			return err
@@ -147,47 +150,48 @@ func (s *Read) open() error {
 			resp.Body.Close()
 			return fmt.Errorf("%s: %s", s.url.String(), resp.Status)
 		}
-		s.setFile(resp.Body)
+		fh = resp.Body
 	} else if s.fpath == "-" {
 		s.Info().Msg("reading stdin")
-		s.setFile(io.NopCloser(os.Stdin))
+		fh = io.NopCloser(os.Stdin)
 	} else {
 		s.Info().Msgf("opening file %s", s.fpath)
-		fh, err := os.Open(s.fpath)
+		f, err := os.Open(s.fpath)
 		if err != nil {
 			return err
 		}
-		s.setFile(fh)
+		fh = f
 	}
+	s.setFile(fh)
 
 	// need to uncompress on the fly?
 	switch s.decompress {
 	case ".bz2":
-		r, err := bzip2.NewReader(s.fh, nil)
+		r, err := bzip2.NewReader(fh, nil)
 		if err != nil {
-			s.fh.Close()
+			fh.Close()
 			return err
 		}
 		s.rd = r
 		s.setClose(func() { r.Close() })
 	case ".gz":
-		r, err := gzip.NewReader(s.fh)
+		r, err := gzip.NewReader(fh)
 		if err != nil {
-			s.fh.Close()
+			fh.Close()
 			return err
 		}
 		s.rd = r
 		s.setClose(func() { r.Close() })
 	case ".zstd":
-		r, err := zstd.NewReader(s.fh)
+		r, err := zstd.NewReader(fh)
 		if err != nil {
-			s.fh.Close()
+			fh.Close()
 			return err
 		}
 		s.rd = r
 		s.setClose(r.Close)
 	default:
-		s.rd = s.fh // no decompression, just use the file handle
+		s.rd = fh // no decompression, just use the file handle
 	}
 
 	// need to detect data format?
@@ -229,6 +233,7 @@ func (s *Read) Run() error {
 }
 
 func (s *Read) Stop() error {
+	s.Cancel(core.ErrStageStopped) // no more paths, and abort a pending HTTP request
 	s.eio.InputClose()
 	s.closeFile()
 	return nil
