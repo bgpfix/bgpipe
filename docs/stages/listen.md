@@ -29,7 +29,7 @@ By default, **listen** messages flow left-to-right (`-R` direction), but if it i
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--timeout` | duration | `0` | Accept timeout; 0 means wait indefinitely |
-| `--closed-timeout` | duration | `1s` | TCP half-closed timeout; 0 disables |
+| `--closed-timeout` | duration | `1s` | TCP half-closed timeout: how long to wait for the other direction once one has ended (at least 30s after we sent everything, so the peer can read it and close first); 0 disables |
 | `--keepalive` | duration | `15s` | TCP keepalive period; -1 disables |
 | `--peer` | strings | | Accept only these peer IPs or prefixes (CSV, repeatable), eg. `192.0.2.1,2001:db8::/32` |
 | `--md5` | string | | TCP MD5 password (Linux/OpenBSD): `$ENV_VAR`, file path (`/...` or `./...`), or literal |
