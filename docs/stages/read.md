@@ -6,6 +6,7 @@ Read messages from a file, URL, or standard input.
 
 ```
 bgpipe [...] -- read [OPTIONS] PATH
+bgpipe [...] -- read [OPTIONS] -A PATH [PATH...]
 ```
 
 ## Description
@@ -34,6 +35,14 @@ extension: `.gz` (gzip), `.bz2` (bzip2), `.zst` / `.zstd` (Zstandard).
 For remote URLs, the stage streams data directly without downloading the
 entire file first, making it suitable for large MRT archives.
 
+With `-A`, the stage reads several paths (files or URLs, each possibly
+compressed on its own) one after another, in the order given, as one
+continuous stream. The data format is detected once, so all paths must hold
+the same format; each path must be a complete file (the tail of a truncated
+one, eg. still being written, garbles the start of the next one and stops the
+stage with an error), and local files are checked for existence before
+anything is read.
+
 ## Options
 
 | Option | Type | Default | Description |
@@ -53,6 +62,12 @@ Read a compressed MRT file from the RIPE RIS archive:
 
 ```bash
 bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-update.gz
+```
+
+Read a whole day of hourly dumps as one stream:
+
+```bash
+bgpipe -g -- read -A dumps/ris.20261025.*.json.zst -- rov -- aspa --role provider
 ```
 
 Read a local MRT file and filter for a prefix:
