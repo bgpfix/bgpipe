@@ -272,7 +272,8 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 		// check session limit
 		if s.limit_session > 0 && !loaded {
 			// can't add more to session?
-			if size := s.session.Size(); int64(size) >= s.limit_session {
+			// NB: p itself is already in s.session, do not count it
+			if size := s.session.Size() - 1; int64(size) >= s.limit_session {
 				s.Event("session", p.String(), origin, size)
 				return true
 			}
