@@ -2,6 +2,9 @@ module github.com/bgpfix/bgpipe
 
 go 1.26.0
 
+// NB: Go listens with MPTCP by default on Linux, but TCP-MD5, TTL and transparent mode are per-socket TCP options
+godebug multipathtcp=0
+
 require (
 	github.com/VictoriaMetrics/metrics v1.44.1
 	github.com/bgpfix/bgpfix v0.24.0
