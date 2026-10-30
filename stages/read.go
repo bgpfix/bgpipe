@@ -3,6 +3,7 @@ package stages
 import (
 	"bufio"
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -162,7 +163,9 @@ func (s *Read) open() error {
 		}
 		fh = f
 	}
-	s.setFile(fh)
+	if err := s.setFile(fh); err != nil {
+		return err
+	}
 
 	// need to uncompress on the fly?
 	switch s.decompress {
@@ -239,10 +242,17 @@ func (s *Read) Stop() error {
 	return nil
 }
 
-func (s *Read) setFile(fh io.ReadCloser) {
+// setFile makes fh the current file, unless the stage is already stopping
+func (s *Read) setFile(fh io.ReadCloser) error {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	// NB: Stop cancels before closeFile takes the lock, so fh is either closed by it or rejected here
+	if s.Ctx.Err() != nil {
+		fh.Close()
+		return context.Cause(s.Ctx)
+	}
 	s.fh = fh
-	s.mu.Unlock()
+	return nil
 }
 
 func (s *Read) setClose(f func()) {
