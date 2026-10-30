@@ -82,6 +82,7 @@ func (b *Bgpipe) configureHTTP() error {
 		Addr:              addr,
 		Handler:           m,
 		ReadHeaderTimeout: 5 * time.Second,
+		IdleTimeout:       60 * time.Second, // NB: reap idle keep-alive conns (hijacked websockets are not affected)
 	}
 
 	return nil
@@ -147,7 +148,7 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 		return fmt.Errorf("could not bind --pprof %s: %w", pprofVal, err)
 	}
 
-	srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second}
+	srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}
 	b.pprofsrv, b.pprofln = srv, ln
 	go func() {
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {

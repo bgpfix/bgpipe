@@ -109,9 +109,6 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	u := &m.Update
 	tags := pipe.UseTags(m)
 
-	// current VRP snapshots
-	v4, v6 := s.cache.VRPs()
-
 	// origin AS from AS_PATH
 	origin := u.AsPath().Origin()
 
@@ -119,7 +116,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	var valid, invalid, not_found []nlri.Prefix
 	do_delete := s.act == act_withdraw || s.act == act_filter || s.act == act_split
 	check := func(p nlri.Prefix) bool {
-		res := rpki.ValidateOrigin(v4, v6, p.Prefix, origin)
+		res := s.cache.ValidateOrigin(p.Prefix, origin)
 		if res == rpki.ROV_NOT_FOUND && s.strict {
 			res = rpki.ROV_INVALID
 		}
