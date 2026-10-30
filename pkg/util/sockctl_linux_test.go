@@ -36,3 +36,29 @@ func TestTtlControl(t *testing.T) {
 		t.Fatalf("IP_TTL = %d, want 55", got)
 	}
 }
+
+// TestNoMPTCP verifies listeners are plain TCP, not MPTCP (see godebug in go.mod).
+func TestNoMPTCP(t *testing.T) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+
+	rc, err := l.(*net.TCPListener).SyscallConn()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var got int
+	var gerr error
+	rc.Control(func(fd uintptr) {
+		got, gerr = unix.GetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_PROTOCOL)
+	})
+	if gerr != nil {
+		t.Fatal(gerr)
+	}
+	if got != unix.IPPROTO_TCP {
+		t.Fatalf("SO_PROTOCOL = %d, want %d (TCP)", got, unix.IPPROTO_TCP)
+	}
+}
