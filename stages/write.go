@@ -176,13 +176,22 @@ func (s *Write) openFile() error {
 		s.fh = os.Stdout
 	} else {
 		// get target file path
-		fpath := s.fpath + ".tmp"
+		target := s.fpath
 		if strings.Contains(s.fpath, "$") {
 			t := time.Now().UTC()
 			if s.every > 0 {
 				t = t.Truncate(s.every)
 			}
-			fpath = s.pathTime(s.fpath, t) + ".tmp"
+			target = s.pathTime(s.fpath, t)
+		}
+
+		// write to .tmp and rename on close, unless appending, creating,
+		// or the target is not a regular file (eg. /dev/null or a FIFO)
+		fpath := target + ".tmp"
+		if s.flags&(os.O_APPEND|os.O_EXCL) != 0 {
+			fpath = target
+		} else if fi, err := os.Stat(target); err == nil && !fi.Mode().IsRegular() {
+			fpath = target
 		}
 
 		// create parent directories if they don't exist
@@ -240,7 +249,7 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
 	fpath := fh.Name()
 	target, found := strings.CutSuffix(fpath, ".tmp") // remove the .tmp suffix
 
-	if n == 0 {
+	if n == 0 && found { // NB: never remove anything but our own .tmp file
 		s.Debug().Msgf("%s: removing empty file", fpath)
 		os.Remove(fpath)
 	} else {
