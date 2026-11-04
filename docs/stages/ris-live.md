@@ -41,8 +41,8 @@ Use `--sub` to pass a
 to limit the data at the source. The subscription JSON should include
 `"includeRaw": true` (or will be added automatically).
 
-The global `-g` / `--guess-asn` flag is recommended when using this stage,
-as different RIS peers may use 2-byte or 4-byte ASNs.
+Different RIS peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
+encoding automatically (see the global `--guess-asn` option).
 
 ## Options
 
@@ -88,7 +88,7 @@ bgpipe -go \
 Archive RIS Live to compressed files with hourly rotation:
 
 ```bash
-bgpipe -g \
+bgpipe \
     -- ris-live \
     -- write --every 1h 'ris-live.$TIME.mrt.gz'
 ```
