@@ -158,7 +158,7 @@ func peerASN(p *pipe.Pipe, d meta.Dir) uint32 {
 	if om == nil {
 		return 0
 	}
-	return uint32(om.GetASN())
+	return om.GetASN()
 }
 
 // peerRole reads the BGP Role capability from the peer's OPEN message.
