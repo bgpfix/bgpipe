@@ -27,7 +27,7 @@ wait_json 10 '.[3]=="UPDATE" and .[4].attrs.ASPATH.value == [65045,23456] and .[
 
 # the MRT archive must decode without guessing
 kill "$BGPIPE_PID" 2>/dev/null; wait "$BGPIPE_PID" 2>/dev/null
-"$BGPIPE" --guess-asn=false -- read "$WORK/as2.mrt" -- stdout >"$WORK/back.json" 2>"$WORK/back.log" ||
+"$BGPIPE" --as4=on -- read "$WORK/as2.mrt" -- stdout >"$WORK/back.json" 2>"$WORK/back.log" ||
 	fail "readback: $(cat "$WORK/back.log")"
 n=$(jq -c 'select(.[3]=="UPDATE" and .[4].attrs.ASPATH.value[0] == 65045)' "$WORK/back.json" | wc -l | tr -d ' ')
 [ "$n" -ge 2 ] || fail "readback: expected >= 2 UPDATEs from AS65045, got $n"

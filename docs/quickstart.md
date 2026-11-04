@@ -53,8 +53,7 @@ Options:
   -o, --stdout                  write JSON to stdout
   -I, --stdin-wait              like --stdin but wait for EVENT_ESTABLISHED
   -O, --stdout-wait             like --stdout but wait for EVENT_EOR
-  -2, --short-asn               force 2-byte AS numbers
-  -g, --guess-asn               if not known, retry parsing with 2-byte AS numbers on errors (default true)
+      --as4 string              4-byte ASNs if not known from session or data: auto (4-byte, fall back to 2-byte), on, off (default "auto")
       --caps string             use given BGP capabilities (JSON format)
       --rpki string             RPKI cache source: URL, RTR host:port, tls://host:port, or a local file path (default "https://rpki.cloudflare.com/rpki.json")
       --rpki-refresh duration   RPKI RTR/URL refresh interval (default 1h0m0s)

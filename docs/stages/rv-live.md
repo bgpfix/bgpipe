@@ -46,7 +46,7 @@ Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for `--stale` duration.
 
 Different RouteViews peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
-encoding automatically (see the global `--guess-asn` option).
+encoding automatically (see the global `--as4` option).
 
 ## Options
 

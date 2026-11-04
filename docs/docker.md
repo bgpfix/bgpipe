@@ -72,7 +72,6 @@ services:
   bgpipe:
     image: ghcr.io/bgpfix/bgpipe:latest
     command: >-
-      -g
       -- ris-live
       -- grep 'prefix ~ 8.0.0.0/8'
       -- stdout

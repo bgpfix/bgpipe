@@ -96,14 +96,17 @@ func (b *Bgpipe) AttachStages() error {
 		b.Autos = append(b.Autos, s)
 	}
 
-	// force 2-byte ASNs?
-	if k.Bool("short-asn") {
+	// 4-byte ASNs? (NB: session caps and per-message metadata take precedence)
+	switch v := k.String("as4"); v {
+	case "auto", "":
+		p.Caps.Use(caps.CAP_AS4)
+		p.Caps.Use(caps.CAP_AS_GUESS) // pseudo-capability: retry with 2-byte ASNs
+	case "on":
+		p.Caps.Use(caps.CAP_AS4)
+	case "off":
 		p.Caps.Set(caps.CAP_AS4, nil) // ban CAP_AS4
-	} else {
-		p.Caps.Use(caps.CAP_AS4) // use CAP_AS4 by default
-	}
-	if k.Bool("guess-asn") {
-		p.Caps.Use(caps.CAP_AS_GUESS) // use pseudo-capability to guess ASN size
+	default:
+		return fmt.Errorf("--as4: invalid value %q (need auto, on, or off)", v)
 	}
 
 	// log events?

@@ -42,7 +42,7 @@ to limit the data at the source. The subscription JSON should include
 `"includeRaw": true` (or will be added automatically).
 
 Different RIS peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
-encoding automatically (see the global `--guess-asn` option).
+encoding automatically (see the global `--as4` option).
 
 ## Options
 

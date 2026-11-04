@@ -22,7 +22,7 @@ done
 # 2-byte ASNs in raw BGP are detected, and stay 2-byte in MRT output
 "$BGPIPE" -- read --format raw "$TESTDATA/as2.raw" -- write --format mrt "$WORK/as2.mrt" 2>"$WORK/as2.log" ||
 	fail "as2: $(cat "$WORK/as2.log")"
-"$BGPIPE" --guess-asn=false -- read "$WORK/as2.mrt" -- stdout >"$WORK/as2.json" 2>>"$WORK/as2.log" ||
+"$BGPIPE" --as4=on -- read "$WORK/as2.mrt" -- stdout >"$WORK/as2.json" 2>>"$WORK/as2.log" ||
 	fail "as2: $(cat "$WORK/as2.log")"
 p=$(jq -c 'select(.[3]=="UPDATE") | .[4].attrs.ASPATH.value' "$WORK/as2.json" | head -1)
 [ "$p" = "[65001,3356,174]" ] || fail "as2: wrong AS_PATH: $p"
