@@ -222,6 +222,9 @@ func (s *Read) Run() error {
 				return err
 			}
 			if err := s.open(); err != nil {
+				if s.Ctx.Err() != nil {
+					return context.Cause(s.Ctx)
+				}
 				return err
 			}
 		}
