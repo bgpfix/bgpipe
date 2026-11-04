@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -564,7 +565,9 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 	}
 
 	// parse error?
-	if read_err != nil && !eio.opt_pardon {
+	if errors.Is(read_err, pipe.ErrInClosed) {
+		return read_err // not a parse error
+	} else if read_err != nil && !eio.opt_pardon {
 		eio.Err(read_err).Msg("input read stream error")
 		return read_err
 	}
@@ -585,6 +588,8 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 
 		// should stop here?
 		switch {
+		case errors.Is(read_err, pipe.ErrInClosed):
+			return core.ErrStageStopped // NB: pipe input closed (eg. by head)
 		case read_err != nil:
 			return read_err
 		case err == io.EOF:
