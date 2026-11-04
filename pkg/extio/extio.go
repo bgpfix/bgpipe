@@ -235,6 +235,16 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 		}
 	}
 
+	// looks like an MRT RIB dump? (starts with TABLE_DUMP_V2 PEER_INDEX_TABLE)
+	buf, err = br.Peek(mrt.HEADLEN)
+	if err != nil {
+		return false
+	} else if mrt.Type(binary.BigEndian.Uint16(buf[4:6])) == mrt.TABLE_DUMP2 &&
+		mrt.Sub(binary.BigEndian.Uint16(buf[6:8])) == mrt.PEER_INDEX_TABLE {
+		eio.opt_mrt = true
+		return true
+	}
+
 	// wild shot: looks like MRT BGP4MP_MESSAGE?
 	// peek max. size for MRT ET + BGP4MP AS4 IPv6 + BGP marker
 	buf, err = br.Peek(mrt.HEADLEN + 4 + 3*4 + 16*2 + msg.MARKLEN)
