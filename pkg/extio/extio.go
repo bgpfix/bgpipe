@@ -588,6 +588,13 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 // ReadStream is a ReadBuf wrapper that reads from an io.Reader.
 // Must not be used concurrently. cb may be nil.
 func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error) {
+	// NB: pipe input closed (eg. by head) is a clean stop, also during MRT flush
+	defer func() {
+		if errors.Is(read_err, pipe.ErrInClosed) {
+			read_err = core.ErrStageStopped
+		}
+	}()
+
 	buf := make([]byte, 64*1024)
 	for {
 		// block on read, try parsing
@@ -598,8 +605,6 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 
 		// should stop here?
 		switch {
-		case errors.Is(read_err, pipe.ErrInClosed):
-			return core.ErrStageStopped // NB: pipe input closed (eg. by head)
 		case read_err != nil:
 			return read_err
 		case err == io.EOF:
