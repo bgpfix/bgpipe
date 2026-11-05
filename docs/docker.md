@@ -15,7 +15,7 @@ Available tags:
 docker run --rm ghcr.io/bgpfix/bgpipe:latest --help
 
 # find RPKI-invalid announcements in RIPE RIS live stream
-docker run --rm ghcr.io/bgpfix/bgpipe:latest -go \
+docker run --rm ghcr.io/bgpfix/bgpipe:latest -o \
     -- ris-live \
     -- rov --invalid=keep \
     -- grep 'tag[rov/status] == INVALID'

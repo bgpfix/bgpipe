@@ -70,25 +70,25 @@ encoding automatically (see the global `--as4` option).
 Stream all RouteViews updates to stdout:
 
 ```bash
-bgpipe -go -- rv-live
+bgpipe -o -- rv-live
 ```
 
 Stream from a specific collector:
 
 ```bash
-bgpipe -go -- rv-live --collector linx
+bgpipe -o -- rv-live --collector linx
 ```
 
 Exclude specific collectors:
 
 ```bash
-bgpipe -go -- rv-live --collector-not amsix --collector-not decix
+bgpipe -o -- rv-live --collector-not amsix --collector-not decix
 ```
 
 Persist consumer state for resumable processing:
 
 ```bash
-bgpipe -go -- rv-live --state /var/lib/bgpipe/rv-live.state
+bgpipe -o -- rv-live --state /var/lib/bgpipe/rv-live.state
 ```
 
 Archive RouteViews data with RPKI validation:

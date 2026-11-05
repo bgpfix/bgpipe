@@ -61,25 +61,25 @@ encoding automatically (see the global `--as4` option).
 Stream all RIS Live updates and print to stdout:
 
 ```bash
-bgpipe -go -- ris-live
+bgpipe -o -- ris-live
 ```
 
 Monitor a specific prefix in real-time:
 
 ```bash
-bgpipe -go -- ris-live -- grep 'prefix ~ 1.1.1.0/24'
+bgpipe -o -- ris-live -- grep 'prefix ~ 1.1.1.0/24'
 ```
 
 Subscribe to a specific collector:
 
 ```bash
-bgpipe -go -- ris-live --sub '{"host":"rrc01"}'
+bgpipe -o -- ris-live --sub '{"host":"rrc01"}'
 ```
 
 Stream with RPKI validation, show only invalid:
 
 ```bash
-bgpipe -go \
+bgpipe -o \
     -- ris-live \
     -- rov --invalid keep \
     -- grep 'tag[rov/status] == INVALID'
