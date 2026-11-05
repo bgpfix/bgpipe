@@ -127,6 +127,15 @@ bgpipe \
   -- listen :179
 ```
 
+By default, bgpipe keeps the session up after the file ends, so that the router keeps the routes. To exit once the whole file has been sent instead, stop the speaker when `read` is done: the queued UPDATEs are flushed to the router, the session is closed, and bgpipe exits with code 0. NB: closing the session makes the router drop the routes it learned (after the graceful-restart timer, if negotiated).
+
+```bash
+bgpipe \
+  -- speaker --active --asn 65055 --stop read/STOP \
+  -- read --wait ESTABLISHED rib.20260723.0600.bz2 \
+  -- listen :179
+```
+
 ## BGP sed-in-the-middle proxy
 
 Stages: [connect](stages/connect.md), [exec](stages/exec.md)
