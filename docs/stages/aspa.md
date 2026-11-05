@@ -150,7 +150,7 @@ ASPA route-leak monitoring on a live route collector feed, with current RPKI
 data fetched from the rpki-client console (tag everything, enforce nothing):
 
 ```bash
-bgpipe -g --rpki https://console.rpki-client.org/vrps.json \
+bgpipe --rpki https://console.rpki-client.org/vrps.json \
     -- ris-live \
     -- aspa --role provider --peer-tag PEER_AS --invalid keep \
     -- grep 'tag[aspa/status] == INVALID' \

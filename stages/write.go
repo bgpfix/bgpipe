@@ -31,9 +31,10 @@ type Write struct {
 	timefmt  string
 	compress string
 
-	fh *os.File       // current file handle
-	wr io.WriteCloser // current writer, can be gzip.Writer
-	n  int64          // number of bytes written to the current file
+	fh  *os.File       // current file handle
+	wr  io.WriteCloser // current writer, can be gzip.Writer
+	n   int64          // number of bytes written to the current file
+	tmp string         // if fh is our .tmp file: its final path
 }
 
 var (
@@ -169,6 +170,7 @@ func (s *Write) openFile() error {
 		s.fh = nil
 		s.wr = nil
 		s.n = 0
+		s.tmp = ""
 	}
 
 	// write to stdout?
@@ -176,13 +178,24 @@ func (s *Write) openFile() error {
 		s.fh = os.Stdout
 	} else {
 		// get target file path
-		fpath := s.fpath + ".tmp"
+		target := s.fpath
 		if strings.Contains(s.fpath, "$") {
 			t := time.Now().UTC()
 			if s.every > 0 {
 				t = t.Truncate(s.every)
 			}
-			fpath = s.pathTime(s.fpath, t) + ".tmp"
+			target = s.pathTime(s.fpath, t)
+		}
+
+		// write to .tmp and rename on close, unless appending, creating,
+		// or the target is not a regular file (eg. /dev/null or a FIFO)
+		fpath := target + ".tmp"
+		if s.flags&(os.O_APPEND|os.O_EXCL) != 0 {
+			fpath = target
+		} else if fi, err := os.Stat(target); err == nil && !fi.Mode().IsRegular() {
+			fpath = target
+		} else {
+			s.tmp = target
 		}
 
 		// create parent directories if they don't exist
@@ -224,7 +237,7 @@ func (s *Write) openFile() error {
 	return nil
 }
 
-func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
+func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64, tmp string) {
 	if wr == nil || fh == nil {
 		return // nothing to close
 	}
@@ -237,14 +250,13 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
 		return
 	}
 
+	// NB: only ever remove or rename our own .tmp file
 	fpath := fh.Name()
-	target, found := strings.CutSuffix(fpath, ".tmp") // remove the .tmp suffix
-
-	if n == 0 {
+	if n == 0 && tmp != "" {
 		s.Debug().Msgf("%s: removing empty file", fpath)
 		os.Remove(fpath)
 	} else {
-		s.Debug().Msgf("%s: writing %d bytes", target, n)
+		s.Debug().Msgf("%s: wrote %d bytes", fpath, n)
 	}
 
 	if err := wr.Close(); err != nil {
@@ -256,9 +268,9 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64) {
 		}
 	}
 
-	if n != 0 && found {
+	if n != 0 && tmp != "" {
 		// publish the file by renaming to the target name
-		if err := os.Rename(fpath, target); err != nil {
+		if err := os.Rename(fpath, tmp); err != nil {
 			s.Warn().Err(err).Msgf("%s: rename error", fh.Name())
 		}
 	}
@@ -269,7 +281,7 @@ func (s *Write) Run() error {
 	bw := bufio.NewWriterSize(s.wr, 64*1024) // NB: s.wr opened in Prepare()
 	defer func() {
 		bw.Flush()
-		s.closeFile(s.wr, s.fh, s.n)
+		s.closeFile(s.wr, s.fh, s.n, s.tmp)
 	}()
 
 	eio := s.eio
@@ -316,7 +328,7 @@ func (s *Write) Run() error {
 			if err := bw.Flush(); err != nil {
 				return err
 			}
-			go s.closeFile(s.wr, s.fh, s.n)
+			go s.closeFile(s.wr, s.fh, s.n, s.tmp)
 
 			// signal that we need to open a new file
 			s.fh = nil

@@ -197,7 +197,7 @@ Connect to [RIPE RIS Live](https://ris-live.ripe.net/) to stream real-time BGP u
 
 ```bash
 # Monitor all announcements for your network prefix
-bgpipe -g \
+bgpipe \
   -- ris-live \
   -- grep 'prefix ~ 1.1.1.0/24' \
   -- stdout
@@ -211,7 +211,7 @@ Stream RIS Live UPDATEs and validate them against RPKI to detect and filter inva
 
 ```bash
 # Real-time BGP monitoring with RPKI validation
-bgpipe -g \
+bgpipe \
   -- ris-live \
   -- rov --invalid=keep \
   -- update --if 'tag[rov/status] = INVALID' --add-com 123:456 \
@@ -310,7 +310,7 @@ Stages: [ris-live](stages/ris-live.md), [rov](stages/rov.md), [grep](stages/grep
 Tag, quarantine, and mirror only RPKI-invalid announcements in real time. This keeps a clean audit trail for responders while streaming live alerts to a remote monitor.
 
 ```bash
-bgpipe -g \
+bgpipe \
   -- ris-live \
   -- rov --invalid keep \
   -- grep 'tag[rov/status] == INVALID' \
@@ -343,7 +343,7 @@ Protect downstream systems from [BGP update storms](https://www.cidr-report.org/
 
 ```bash
 # Sample RIS Live at max 100 updates/sec to avoid overwhelming storage
-bgpipe -g \
+bgpipe \
   -- ris-live --rate-sample 100 \
   -- write sampled-updates.json
 

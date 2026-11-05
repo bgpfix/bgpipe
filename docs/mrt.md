@@ -28,7 +28,9 @@ RIBs, OSPF, IS-IS) are skipped silently, so a mixed archive still streams the
 records bgpipe understands.
 
 Writing MRT (via [write](stages/write.md) `--format mrt`) always produces
-`BGP4MP_ET` update records; table dumps are read-only.
+`BGP4MP_ET` update records; table dumps are read-only. The record subtype
+follows the actual ASN encoding of each message, so unmodified messages with
+2-byte ASNs are written as `MESSAGE`, not `MESSAGE_AS4`.
 
 ## Update dumps
 

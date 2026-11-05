@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -232,6 +233,16 @@ func (eio *Extio) DetectSample(br *bufio.Reader) (success bool) {
 			eio.opt_bmp = true
 			return true
 		}
+	}
+
+	// looks like an MRT RIB dump? (starts with TABLE_DUMP_V2 PEER_INDEX_TABLE)
+	buf, err = br.Peek(mrt.HEADLEN)
+	if err != nil {
+		return false
+	} else if mrt.Type(binary.BigEndian.Uint16(buf[4:6])) == mrt.TABLE_DUMP2 &&
+		mrt.Sub(binary.BigEndian.Uint16(buf[6:8])) == mrt.PEER_INDEX_TABLE {
+		eio.opt_mrt = true
+		return true
 	}
 
 	// wild shot: looks like MRT BGP4MP_MESSAGE?
@@ -564,7 +575,9 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 	}
 
 	// parse error?
-	if read_err != nil && !eio.opt_pardon {
+	if errors.Is(read_err, pipe.ErrInClosed) {
+		return read_err // not a parse error
+	} else if read_err != nil && !eio.opt_pardon {
 		eio.Err(read_err).Msg("input read stream error")
 		return read_err
 	}
@@ -575,6 +588,13 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 // ReadStream is a ReadBuf wrapper that reads from an io.Reader.
 // Must not be used concurrently. cb may be nil.
 func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error) {
+	// NB: pipe input closed (eg. by head) is a clean stop, also during MRT flush
+	defer func() {
+		if errors.Is(read_err, pipe.ErrInClosed) {
+			read_err = core.ErrStageStopped
+		}
+	}()
+
 	buf := make([]byte, 64*1024)
 	for {
 		// block on read, try parsing
@@ -710,7 +730,7 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 		bm.Reset()
 
 		// marshal BGP into BMP
-		err = bm.FromMsg(m)
+		err = bm.FromMsg(m, eio.P.Caps)
 		if err != nil {
 			break
 		}

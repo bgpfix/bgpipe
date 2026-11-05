@@ -2,6 +2,7 @@ package stages
 
 import (
 	"fmt"
+	"math"
 	"net/netip"
 
 	"github.com/bgpfix/bgpfix/speaker"
@@ -23,10 +24,10 @@ func NewSpeaker(parent *core.StageBase) core.Stage {
 
 	do := &speaker.DefaultOptions
 	o.Flags.Bool("active", false, "send the OPEN message first")
-	o.Flags.Int("asn", do.LocalASN, "local ASN, -1 means use remote ASN")
+	o.Flags.Int64("asn", do.LocalASN, "local ASN, -1 means use remote ASN")
 	o.Flags.String("id", "", "local router ID, empty means use remote-1")
 	o.Flags.Int("hold", do.LocalHoldTime, "hold time")
-	o.Flags.Int("remote-asn", do.RemoteASN, "expected remote ASN, -1 means accept any")
+	o.Flags.Int64("remote-asn", do.RemoteASN, "expected remote ASN, -1 means accept any")
 	o.Flags.Int("remote-hold", do.RemoteHoldTime, "minimum acceptable remote hold time (s)")
 	return s
 }
@@ -40,9 +41,15 @@ func (s *Speaker) Attach() error {
 	so := &spk.Options
 	so.Logger = &s.Logger
 	so.Passive = !k.Bool("active")
-	so.LocalASN = k.Int("asn")
+	so.LocalASN = k.Int64("asn")
+	if so.LocalASN < -1 || so.LocalASN > math.MaxUint32 {
+		return fmt.Errorf("--asn: invalid value %d", so.LocalASN)
+	}
 	so.LocalHoldTime = k.Int("hold")
-	so.RemoteASN = k.Int("remote-asn")
+	so.RemoteASN = k.Int64("remote-asn")
+	if so.RemoteASN < -1 || so.RemoteASN > math.MaxUint32 {
+		return fmt.Errorf("--remote-asn: invalid value %d", so.RemoteASN)
+	}
 	so.RemoteHoldTime = k.Int("remote-hold")
 
 	lid := k.String("id")

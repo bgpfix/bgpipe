@@ -45,8 +45,8 @@ This prevents re-processing messages after a pipeline restart.
 Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for `--stale` duration.
 
-The global `-g` / `--guess-asn` flag is recommended when using this stage,
-as different RouteViews peers may use 2-byte or 4-byte ASNs.
+Different RouteViews peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
+encoding automatically (see the global `--as4` option).
 
 ## Options
 
@@ -70,31 +70,31 @@ as different RouteViews peers may use 2-byte or 4-byte ASNs.
 Stream all RouteViews updates to stdout:
 
 ```bash
-bgpipe -go -- rv-live
+bgpipe -o -- rv-live
 ```
 
 Stream from a specific collector:
 
 ```bash
-bgpipe -go -- rv-live --collector linx
+bgpipe -o -- rv-live --collector linx
 ```
 
 Exclude specific collectors:
 
 ```bash
-bgpipe -go -- rv-live --collector-not amsix --collector-not decix
+bgpipe -o -- rv-live --collector-not amsix --collector-not decix
 ```
 
 Persist consumer state for resumable processing:
 
 ```bash
-bgpipe -go -- rv-live --state /var/lib/bgpipe/rv-live.state
+bgpipe -o -- rv-live --state /var/lib/bgpipe/rv-live.state
 ```
 
 Archive RouteViews data with RPKI validation:
 
 ```bash
-bgpipe -g \
+bgpipe \
     -- rv-live \
     -- rov --invalid keep \
     -- write --every 1h 'rv-updates.$TIME.json.gz'
