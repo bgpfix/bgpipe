@@ -6,7 +6,9 @@ need_docker
 run_daemon gobgp 1790 \
 	-v "$TESTDATA/gobgp-passive.conf:/config/gobgp.toml:ro" \
 	jauderho/gobgp:latest
-wait_tcp 127.0.0.1 "$PORT"
+# NB: not wait_tcp: since 4.11, a probe connection leaves the dynamic neighbor
+# idle for ~1s, and GoBGP drops our real connection meanwhile
+wait_cmd 20 "docker exec $DAEMON gobgp global"
 
 run_bgpipe --stdout -- speaker --active --asn 65000 --id 10.0.0.2 -- connect "127.0.0.1:$PORT"
 

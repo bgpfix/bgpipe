@@ -23,7 +23,8 @@ msg "replaying $want UPDATEs"
 # collector-style session (remote 65001, no first-AS check, see frr-replay.conf);
 # the update stage forces every message through bgpipe's marshaling path
 mkfifo "$WORK/replay.mrt"
-run_bgpipe -- read "$WORK/replay.mrt" \
+# NB: --wait: never send UPDATEs before the session is up (FRR rejects them in OpenConfirm)
+run_bgpipe -- read --wait ESTABLISHED "$WORK/replay.mrt" \
 	-- update --add-com "65000:1" \
 	-- speaker --active --asn 65001 --id 10.0.0.8 \
 	-- connect "127.0.0.1:$PORT"
