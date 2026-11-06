@@ -12,9 +12,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
-func (s *RvLive) processRecord(record *kgo.Record) error {
-	om, bm := s.obmp_msg, s.bmp_msg
-
+func (s *RvLive) processRecord(record *kgo.Record, om *bmp.OpenBmp, bm *bmp.Bmp) error {
 	// Parse OpenBMP header
 	om.Reset()
 	if _, err := om.FromBytes(record.Value); err != nil {
