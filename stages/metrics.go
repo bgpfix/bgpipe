@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/VictoriaMetrics/metrics"
 	"github.com/bgpfix/bgpfix/filter"
@@ -24,7 +25,7 @@ type msgKey struct {
 
 type Metrics struct {
 	*core.StageBase
-	eval   [2]*filter.Eval // one per direction (L, R), they run in separate goroutines
+	evals  sync.Pool // of *filter.Eval, callbacks of different inputs run concurrently
 	rules  []metricsRule
 	output string // --output file path
 
@@ -41,7 +42,7 @@ type metricsRule struct {
 
 func NewMetrics(parent *core.StageBase) core.Stage {
 	s := &Metrics{StageBase: parent}
-	s.eval = [2]*filter.Eval{filter.NewEval(false), filter.NewEval(false)}
+	s.evals.New = newEval
 
 	o := &s.Options
 	o.Descr = "count messages matching filters (Prometheus metrics)"
@@ -119,13 +120,14 @@ func (s *Metrics) onMsg(m *msg.Msg) bool {
 	// evaluate filter rules
 	if len(s.rules) > 0 {
 		mx := pipe.UseContext(m)
-		ev := s.eval[m.Dir>>1&1]
+		ev := s.evals.Get().(*filter.Eval)
 		ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
 		for i := range s.rules {
 			if ev.Run(s.rules[i].filter) {
 				s.rules[i].counter.Inc()
 			}
 		}
+		s.evals.Put(ev)
 	}
 
 	return true

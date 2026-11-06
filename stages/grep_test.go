@@ -14,14 +14,15 @@ import (
 	"github.com/bgpfix/bgpfix/pipe"
 )
 
-// the L and R direction goroutines call the same Grep.check: no shared filter state
+// concurrent callbacks (eg. several inputs) call the same Grep.check: no shared filter state
 func TestGrepBothDirections(t *testing.T) {
 	p := pipe.NewPipe(context.Background())
 	f, err := filter.NewFilter("prefix ~ 10.0.0.0/8")
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := &Grep{filter: f, eval: [2]*filter.Eval{filter.NewEval(false), filter.NewEval(false)}}
+	s := &Grep{filter: f}
+	s.evals.New = newEval
 
 	mk := func(d meta.Dir, pfx string) *msg.Msg {
 		m := msg.NewMsg().Switch(msg.UPDATE)
@@ -44,7 +45,7 @@ func TestGrepBothDirections(t *testing.T) {
 	}
 	wg.Add(2)
 	go run(meta.DIR_R, "10.1.0.0/16", true)   // match: kept
-	go run(meta.DIR_L, "192.0.2.0/24", false) // no match: dropped
+	go run(meta.DIR_R, "192.0.2.0/24", false) // no match: dropped, same direction
 	wg.Wait()
 
 	if n := wrong.Load(); n != 0 {
