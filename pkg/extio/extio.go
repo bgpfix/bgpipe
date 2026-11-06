@@ -66,6 +66,7 @@ type Extio struct {
 	InputR     *pipe.Input    // our R input to bgpipe
 	InputD     *pipe.Input    // default input if data doesn't specify the direction
 	drop_input atomic.Bool    // if true, drop all input from the process
+	discard    bool           // text input: skipping the rest of an oversized line
 
 	Output chan *bytebufferpool.ByteBuffer // output ready to be sent to the process
 	Pool   *bytebufferpool.Pool            // pool of byte buffers
@@ -564,14 +565,27 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 			read_err = err
 		}
 	} else { // buffer and parse all lines in buf so far
+		// after an oversized line, skip what is left of it
+		if eio.discard {
+			i := bytes.IndexByte(buf, '\n')
+			if i < 0 {
+				return nil
+			}
+			buf, eio.discard = buf[i+1:], false
+		}
+
 		eio.buf.Write(buf)
 		for {
 			i := bytes.IndexByte(eio.buf.Bytes(), '\n')
 			if i < 0 {
 				break
 			}
-			err := eio.ReadSingle(eio.buf.Next(i+1), cb)
-			if err != nil {
+			line := eio.buf.Next(i + 1)
+			if len(line) > MAX_LINE {
+				read_err = ErrLength
+				continue
+			}
+			if err := eio.ReadSingle(line, cb); err != nil {
 				return err
 			}
 		}
@@ -579,6 +593,7 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 		// an endless line would grow the buffer without bound
 		if eio.buf.Len() > MAX_LINE {
 			eio.buf.Reset()
+			eio.discard = true
 			read_err = ErrLength
 		}
 	}
