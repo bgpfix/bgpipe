@@ -52,8 +52,12 @@ func TestReadOversizedLinePardon(t *testing.T) {
 	if err := os.WriteFile(in, []byte(big+line), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := tryBgpipe("--", "read", in, "--", "write", filepath.Join(dir, "x.json")); err == nil {
+	x := filepath.Join(dir, "x.json")
+	if err := tryBgpipe("--", "read", in, "--", "write", x); err == nil {
 		t.Error("want an error for a 9 MiB line")
+	}
+	if got, _ := os.ReadFile(x); strings.Contains(string(got), "KEEPALIVE") {
+		t.Errorf("messages after an oversized line got through: %.200s", got)
 	}
 
 	runBgpipe(t, "--", "read", "--pardon", in, "--", "write", out)

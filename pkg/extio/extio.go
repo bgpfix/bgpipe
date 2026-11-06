@@ -582,7 +582,10 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 			}
 			line := eio.buf.Next(i + 1)
 			if len(line) > MAX_LINE {
-				read_err = ErrLength
+				if !eio.opt_pardon {
+					eio.Err(ErrLength).Msg("input read stream error")
+					return ErrLength // NB: stop now, before the lines that follow
+				}
 				continue
 			}
 			if err := eio.ReadSingle(line, cb); err != nil {
