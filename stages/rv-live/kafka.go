@@ -39,6 +39,9 @@ func (s *RvLive) runKafka() error {
 		// Consumer group settings for large partition counts
 		kgo.RebalanceTimeout(120 * time.Second), // Allow time for rebalancing 1800+ partitions
 
+		// Resume partitions from where we left off: after a restart, reconnect, or rebalance
+		kgo.AdjustFetchOffsetsFn(s.adjustOffsets),
+
 		// Log partition assignments
 		kgo.OnPartitionsAssigned(func(_ context.Context, _ *kgo.Client, assigned map[string][]int32) {
 			count := 0
@@ -97,13 +100,6 @@ func (s *RvLive) runKafka() error {
 	s.Info().Int("count", len(topics)).Int("consumers", len(clients)).Msg("subscribing to topics")
 	for _, c := range clients {
 		c.AddConsumeTopics(topics...)
-
-		// Seek to saved offsets if we have state
-		if s.state_file != "" && len(s.state.Offsets) > 0 {
-			if err := s.seekToSavedOffsets(c, topics); err != nil {
-				s.Warn().Err(err).Msg("failed to seek to saved offsets")
-			}
-		}
 	}
 
 	// Start state saver goroutine
@@ -190,24 +186,20 @@ func (s *RvLive) discoverTopics(client *kgo.Client) ([]string, error) {
 	return topics, nil
 }
 
-func (s *RvLive) seekToSavedOffsets(client *kgo.Client, topics []string) error {
-	offsets := make(map[string]map[int32]kgo.EpochOffset)
+// adjustOffsets replaces the offsets of newly assigned partitions with the saved ones, if any.
+// NB: an offset that has already expired resets to the end of the partition.
+func (s *RvLive) adjustOffsets(_ context.Context, assigned map[string]map[int32]kgo.Offset) (map[string]map[int32]kgo.Offset, error) {
+	s.state_mu.Lock()
+	defer s.state_mu.Unlock()
 
-	for _, topic := range topics {
-		if partOffsets, ok := s.state.Offsets[topic]; ok {
-			offsets[topic] = make(map[int32]kgo.EpochOffset)
-			for part, off := range partOffsets {
-				offsets[topic][part] = kgo.EpochOffset{Epoch: -1, Offset: off}
+	for topic, parts := range assigned {
+		for part := range parts {
+			if off, ok := s.state.Offsets[topic][part]; ok {
+				parts[part] = kgo.NewOffset().At(off).WithEpoch(-1)
 			}
 		}
 	}
-
-	if len(offsets) > 0 {
-		s.Debug().Interface("offsets", offsets).Msg("seeking to saved offsets")
-		client.SetOffsets(offsets)
-	}
-
-	return nil
+	return assigned, nil
 }
 
 func (s *RvLive) topicRefresher(clients []*kgo.Client, done <-chan struct{}) {

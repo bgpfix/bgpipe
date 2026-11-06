@@ -128,18 +128,17 @@ func (s *RvLive) Run() error {
 
 	lastTry := time.Now()
 	for try := 1; s.Ctx.Err() == nil; try++ {
-		// Reset try count after long success
-		if time.Since(lastTry) > time.Hour {
+		// Reset try count after a session that worked
+		if time.Since(lastTry) > time.Minute {
 			try = 1
 		}
 		if s.retry_max > 0 && try > s.retry_max {
 			return fmt.Errorf("max retries (%d) exceeded", s.retry_max)
 		}
-		lastTry = time.Now()
 
 		// Backoff before retry (skip on first try)
 		if try > 1 {
-			sec := min(60, (try-1)*(try-1)) + rand.Intn(try)
+			sec := min(60, (try-1)*(try-1)) + rand.Intn(min(try, 10))
 			s.Info().Int("try", try).Int("wait_sec", sec).Msg("waiting before reconnect")
 			select {
 			case <-time.After(time.Duration(sec) * time.Second):
@@ -147,6 +146,7 @@ func (s *RvLive) Run() error {
 				return context.Cause(s.Ctx)
 			}
 		}
+		lastTry = time.Now()
 
 		// Run Kafka consumer
 		err := s.runKafka()
