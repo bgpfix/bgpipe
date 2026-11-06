@@ -24,6 +24,9 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
+// MAX_LINE bounds a text line (same as the websocket message limit)
+const MAX_LINE = 4 * 1024 * 1024
+
 var (
 	bbpool   bytebufferpool.Pool
 	mrtPool  = sync.Pool{New: func() any { return mrt.NewMrt() }}
@@ -572,6 +575,12 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 				return err
 			}
 		}
+
+		// an endless line would grow the buffer without bound
+		if eio.buf.Len() > MAX_LINE {
+			eio.buf.Reset()
+			read_err = ErrLength
+		}
 	}
 
 	// parse error?
@@ -608,6 +617,13 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 		case read_err != nil:
 			return read_err
 		case err == io.EOF:
+			// text: parse the last line, if it has no newline
+			if eio.buf.Len() > 0 {
+				if err := eio.ReadSingle(eio.buf.Next(eio.buf.Len()), cb); err != nil {
+					return err
+				}
+			}
+
 			// emit pending aggregated messages (MRT table dumps)
 			if eio.opt_mrt && eio.mrt != nil {
 				check := eio.checkMsg
