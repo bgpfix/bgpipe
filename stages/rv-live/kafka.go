@@ -3,8 +3,10 @@ package rvlive
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
+	"github.com/bgpfix/bgpfix/bmp"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
@@ -68,6 +70,7 @@ func (s *RvLive) runKafka() error {
 		return fmt.Errorf("failed to create kafka client: %w", err)
 	}
 	defer client.Close()
+	clients := []*kgo.Client{client}
 
 	// Discover and subscribe to topics
 	s.Debug().Str("pattern", s.topics).Msg("discovering topics")
@@ -80,13 +83,26 @@ func (s *RvLive) runKafka() error {
 		s.Debug().Strs("topics", topics).Msg("discovered topics")
 	}
 
-	s.Info().Int("count", len(topics)).Msg("subscribing to topics")
-	client.AddConsumeTopics(topics...)
+	// NB: over long distances a broker sends only about 1MB/s per connection, and a client
+	// fetches over one connection per broker, so read in parallel to keep up with the feed
+	for len(clients) < min(s.consumers, len(topics)) {
+		c, err := kgo.NewClient(opts...)
+		if err != nil {
+			return fmt.Errorf("failed to create kafka client: %w", err)
+		}
+		defer c.Close()
+		clients = append(clients, c)
+	}
 
-	// Seek to saved offsets if we have state
-	if s.state_file != "" && len(s.state.Offsets) > 0 {
-		if err := s.seekToSavedOffsets(client, topics); err != nil {
-			s.Warn().Err(err).Msg("failed to seek to saved offsets")
+	s.Info().Int("count", len(topics)).Int("consumers", len(clients)).Msg("subscribing to topics")
+	for _, c := range clients {
+		c.AddConsumeTopics(topics...)
+
+		// Seek to saved offsets if we have state
+		if s.state_file != "" && len(s.state.Offsets) > 0 {
+			if err := s.seekToSavedOffsets(c, topics); err != nil {
+				s.Warn().Err(err).Msg("failed to seek to saved offsets")
+			}
 		}
 	}
 
@@ -98,11 +114,21 @@ func (s *RvLive) runKafka() error {
 
 	// Start topic refresher goroutine
 	refreshDone := make(chan struct{})
-	go s.topicRefresher(client, refreshDone)
+	go s.topicRefresher(clients, refreshDone)
 	s.Debug().Dur("interval", s.refresh).Msg("started topic refresher")
 
-	// Consume messages
-	err = s.consume(client)
+	// Consume messages, until the first consumer ends
+	s.last_data.Store(time.Now().UnixNano())
+	ctx, cancel := context.WithCancelCause(s.Ctx)
+	defer cancel(nil)
+	var wg sync.WaitGroup
+	for _, c := range clients {
+		wg.Go(func() { cancel(s.consume(ctx, c)) })
+	}
+	wg.Wait()
+	if err = context.Cause(ctx); s.Ctx.Err() != nil || err == context.Canceled {
+		err = nil
+	}
 
 	// Cleanup
 	close(refreshDone)
@@ -184,7 +210,7 @@ func (s *RvLive) seekToSavedOffsets(client *kgo.Client, topics []string) error {
 	return nil
 }
 
-func (s *RvLive) topicRefresher(client *kgo.Client, done <-chan struct{}) {
+func (s *RvLive) topicRefresher(clients []*kgo.Client, done <-chan struct{}) {
 	if s.refresh <= 0 {
 		return // disabled
 	}
@@ -200,7 +226,7 @@ func (s *RvLive) topicRefresher(client *kgo.Client, done <-chan struct{}) {
 			return
 		case <-ticker.C:
 			s.Debug().Msg("refreshing topic list")
-			topics, err := s.discoverTopics(client)
+			topics, err := s.discoverTopics(clients[0])
 			if err != nil {
 				s.Warn().Err(err).Msg("failed to refresh topics")
 				continue
@@ -208,25 +234,32 @@ func (s *RvLive) topicRefresher(client *kgo.Client, done <-chan struct{}) {
 
 			s.Debug().Int("count", len(topics)).Msg("topic refresh complete")
 			// Add any new topics (franz-go handles duplicates)
-			client.AddConsumeTopics(topics...)
+			for _, c := range clients {
+				c.AddConsumeTopics(topics...)
+			}
 		}
 	}
 }
 
-func (s *RvLive) consume(client *kgo.Client) error {
+func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 	consecutiveErrors := 0
+	om, bm := bmp.NewOpenBmp(), bmp.NewBmp()
 
-	for s.Ctx.Err() == nil {
+	for ctx.Err() == nil {
 		// NB: PollFetches blocks until there are records, so use a deadline to detect silence
-		ctx, cancel := s.Ctx, context.CancelFunc(func() {})
+		pctx, cancel := ctx, context.CancelFunc(func() {})
 		if s.stale > 0 {
-			ctx, cancel = context.WithTimeout(s.Ctx, s.stale)
+			pctx, cancel = context.WithTimeout(ctx, s.stale)
 		}
-		fetches := client.PollFetches(ctx)
-		stale := ctx.Err() != nil && s.Ctx.Err() == nil && fetches.NumRecords() == 0
+		fetches := client.PollFetches(pctx)
+		silent := pctx.Err() != nil && ctx.Err() == nil && fetches.NumRecords() == 0
 		cancel()
-		if stale {
-			return fmt.Errorf("connection stale: no data for %v", s.stale)
+		if silent {
+			// NB: other consumers may still have data
+			if d := time.Since(time.Unix(0, s.last_data.Load())); d >= s.stale {
+				return fmt.Errorf("connection stale: no data for %v", d.Round(time.Second))
+			}
+			continue
 		}
 
 		// Handle errors
@@ -246,11 +279,14 @@ func (s *RvLive) consume(client *kgo.Client) error {
 		consecutiveErrors = 0
 
 		// Process records
+		if fetches.NumRecords() > 0 {
+			s.last_data.Store(time.Now().UnixNano())
+		}
 		iter := fetches.RecordIter()
-		for !iter.Done() && s.Ctx.Err() == nil {
+		for !iter.Done() && ctx.Err() == nil {
 			record := iter.Next()
 
-			if err := s.processRecord(record); err != nil {
+			if err := s.processRecord(record, om, bm); err != nil {
 				s.Warn().Err(err).
 					Str("topic", record.Topic).
 					Int32("partition", record.Partition).
