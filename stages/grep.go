@@ -13,7 +13,7 @@ type Grep struct {
 	*core.StageBase
 	invert bool
 	filter *filter.Filter
-	eval   *filter.Eval
+	eval   [2]*filter.Eval // one per direction (L, R), they run in separate goroutines
 
 	keep        bool
 	event_match string
@@ -24,7 +24,7 @@ type Grep struct {
 
 func NewGrep(parent *core.StageBase) core.Stage {
 	s := &Grep{StageBase: parent}
-	s.eval = filter.NewEval(false)
+	s.eval = [2]*filter.Eval{filter.NewEval(false), filter.NewEval(false)}
 
 	o := &s.Options
 	o.Bidir = true
@@ -78,8 +78,9 @@ func (s *Grep) Attach() (err error) {
 func (s *Grep) check(m *msg.Msg) bool {
 	// evaluate the filter
 	mx := pipe.UseContext(m)
-	s.eval.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
-	res := s.eval.Run(s.filter)
+	ev := s.eval[m.Dir>>1&1]
+	ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
+	res := ev.Run(s.filter)
 
 	// emit events / kill the session?
 	if res {

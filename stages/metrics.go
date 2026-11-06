@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/VictoriaMetrics/metrics"
-	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/filter"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
@@ -24,7 +24,7 @@ type msgKey struct {
 
 type Metrics struct {
 	*core.StageBase
-	eval   *filter.Eval
+	eval   [2]*filter.Eval // one per direction (L, R), they run in separate goroutines
 	rules  []metricsRule
 	output string // --output file path
 
@@ -41,7 +41,7 @@ type metricsRule struct {
 
 func NewMetrics(parent *core.StageBase) core.Stage {
 	s := &Metrics{StageBase: parent}
-	s.eval = filter.NewEval(false)
+	s.eval = [2]*filter.Eval{filter.NewEval(false), filter.NewEval(false)}
 
 	o := &s.Options
 	o.Descr = "count messages matching filters (Prometheus metrics)"
@@ -119,9 +119,10 @@ func (s *Metrics) onMsg(m *msg.Msg) bool {
 	// evaluate filter rules
 	if len(s.rules) > 0 {
 		mx := pipe.UseContext(m)
-		s.eval.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
+		ev := s.eval[m.Dir>>1&1]
+		ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
 		for i := range s.rules {
-			if s.eval.Run(s.rules[i].filter) {
+			if ev.Run(s.rules[i].filter) {
 				s.rules[i].counter.Inc()
 			}
 		}
