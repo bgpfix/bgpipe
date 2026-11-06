@@ -32,9 +32,11 @@ Each message is tagged with peer and collector metadata:
 These tags can be used in downstream [filters](../filters.md), for example:
 `tag[PEER_AS] == 13335` or `tag[RIS_HOST] ~ "rrc01"`.
 
-Connection retries are enabled by default. The stage monitors message
-freshness and treats stale messages (older than `--delay-err`) as connection
-errors, triggering a reconnect.
+Connection retries are enabled by default, and the wait before a reconnect
+resets after a session of over 30 seconds. The stage reconnects if the stream
+falls behind by more than `--delay-err`. Individual old messages from a backlogged
+peer do not count. Errors reported by RIS Live, for example when the client
+reads too slowly, appear in the log.
 
 Use `--sub` to pass a
 [RIS Live subscription filter](https://ris-live.ripe.net/manual/#ris_subscribe)
@@ -51,10 +53,10 @@ encoding automatically (see the global `--as4` option).
 | `--url` | string | *(RIS Live endpoint)* | Override the streaming endpoint URL |
 | `--sub` | string | | [RIS Subscribe](https://ris-live.ripe.net/manual/#ris_subscribe) JSON filter |
 | `--timeout` | duration | `10s` | Connect timeout; 0 disables |
-| `--read-timeout` | duration | `10s` | Max time between messages before reconnecting |
+| `--read-timeout` | duration | `0` | Max time between messages before reconnecting; 0 means 10s, or none with `--sub` |
 | `--retry` | bool | `true` | Retry connection on errors |
 | `--retry-max` | int | `0` | Max retry attempts; 0 means unlimited |
-| `--delay-err` | duration | `3m` | Treat messages older than this as errors; 0 disables |
+| `--delay-err` | duration | `3m` | Reconnect if the stream falls behind by more than this; 0 disables |
 
 ## Examples
 
