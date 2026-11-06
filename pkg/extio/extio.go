@@ -490,9 +490,9 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 		if eio.opt_pardon {
 			read_err = nil
 		} else if eio.opt_raw {
-			eio.Err(read_err).Hex("input", buf).Msg("input read single error")
+			eio.Err(read_err).Hex("input", buf[:min(len(buf), 1000)]).Msg("input read single error")
 		} else {
-			eio.Err(read_err).Bytes("input", buf).Msg("input read single error")
+			eio.Err(read_err).Bytes("input", buf[:min(len(buf), 1000)]).Msg("input read single error")
 		}
 		eio.P.PutMsg(m)
 		return read_err
