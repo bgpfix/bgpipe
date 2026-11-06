@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/caps"
@@ -20,7 +21,9 @@ type Update struct {
 	run_nexthop      bool
 	opt_nexthop4     netip.Addr
 	opt_nexthop6     netip.Addr
-	opt_nexthop_self int // 0 = disabled, 1 = prepare, 2 = run
+	opt_nexthop_self bool
+	self_once        sync.Once // initializes l_addr, r_addr, self_on: both directions call modifyNexthop
+	self_on          bool
 	l_addr           netip.Addr
 	r_addr           netip.Addr
 
@@ -88,7 +91,7 @@ func (s *Update) Attach() error {
 
 	// next-hop to my IP address?
 	if k.Bool("nexthop-self") {
-		s.opt_nexthop_self = 1
+		s.opt_nexthop_self = true
 		s.run_nexthop = true
 	}
 
@@ -361,23 +364,21 @@ func (s *Update) modifyNexthop(u *msg.Update) (modified bool) {
 	// need to initialize nexthop-self first?
 	// NB: we do this here (not earlier) because we need to wait for
 	// the connection to be established before we can get the addresses
-	if s.opt_nexthop_self == 1 {
-		kv := s.P.KV
-		if v, ok := kv.Load("L_LOCAL_ADDR"); ok {
-			s.l_addr, _ = v.(netip.Addr)
-		}
-		if v, ok := kv.Load("R_LOCAL_ADDR"); ok {
-			s.r_addr, _ = v.(netip.Addr)
-		}
-		if s.l_addr.IsValid() || s.r_addr.IsValid() {
-			s.opt_nexthop_self = 2 // enable the section below
-		} else {
-			s.opt_nexthop_self = 0 // permanently disable
-		}
+	if s.opt_nexthop_self {
+		s.self_once.Do(func() {
+			kv := s.P.KV
+			if v, ok := kv.Load("L_LOCAL_ADDR"); ok {
+				s.l_addr, _ = v.(netip.Addr)
+			}
+			if v, ok := kv.Load("R_LOCAL_ADDR"); ok {
+				s.r_addr, _ = v.(netip.Addr)
+			}
+			s.self_on = s.l_addr.IsValid() || s.r_addr.IsValid() // else permanently disabled
+		})
 	}
 
 	// attempt nexthop-self?
-	if s.opt_nexthop_self == 2 {
+	if s.self_on {
 		var selfip netip.Addr
 		if u.Msg.Dir == meta.DIR_L {
 			selfip = s.l_addr

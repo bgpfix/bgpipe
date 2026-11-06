@@ -230,9 +230,8 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 
 		// check AS origin limit
 		if s.limit_origin > 0 && slices.Index(pp.origins, origin) < 0 {
-			po, _ := s.origin.LoadOrCompute(origin, newLimitCounter)
-			po.Lock()
-			defer po.Unlock()
+			po := lockCounter(s.origin, origin)
+			defer unlockCounter(s.origin, origin, po)
 
 			// can't add more to origin?
 			if po.counter >= s.limit_origin {
@@ -251,9 +250,9 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 
 		// check IP block limit
 		if s.limit_block > 0 && !loaded {
-			pb, _ := s.block.LoadOrCompute(s.p2b(p), newLimitCounter)
-			pb.Lock()
-			defer pb.Unlock()
+			block := s.p2b(p)
+			pb := lockCounter(s.block, block)
+			defer unlockCounter(s.block, block, pb)
 
 			// can't add more to block?
 			if pb.counter >= s.limit_block {
@@ -336,21 +335,21 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 		// remove from origins
 		if s.limit_origin > 0 {
 			for _, origin := range pp.origins {
-				po, ok := s.origin.Load(origin)
-				if ok && po != nil {
+				if po, ok := s.origin.Load(origin); ok && po != nil {
 					po.Lock()
 					po.counter--
-					po.Unlock()
+					unlockCounter(s.origin, origin, po)
 				}
 			}
 		}
 
 		// remove from IP block
 		if s.limit_block > 0 {
-			if pb, ok := s.block.Load(s.p2b(p)); ok && pb != nil {
+			block := s.p2b(p)
+			if pb, ok := s.block.Load(block); ok && pb != nil {
 				pb.Lock()
 				pb.counter--
-				pb.Unlock()
+				unlockCounter(s.block, block, pb)
 			}
 		}
 
@@ -395,8 +394,30 @@ func newLimitPrefix() (*limitPrefix, bool) {
 type limitCounter struct {
 	sync.Mutex
 	counter int64
+	dropped bool // evicted from its map, do not use
 }
 
 func newLimitCounter() (*limitCounter, bool) {
 	return &limitCounter{}, false
+}
+
+// lockCounter returns the locked counter for key k in m, creating it if needed
+func lockCounter[K comparable](m *xsync.Map[K, *limitCounter], k K) *limitCounter {
+	for {
+		c, _ := m.LoadOrCompute(k, newLimitCounter)
+		c.Lock()
+		if !c.dropped {
+			return c
+		}
+		c.Unlock() // evicted in the meantime, try again
+	}
+}
+
+// unlockCounter unlocks c, after evicting it from m if unused: keeps m bounded by live prefixes
+func unlockCounter[K comparable](m *xsync.Map[K, *limitCounter], k K, c *limitCounter) {
+	if c.counter <= 0 {
+		c.dropped = true
+		m.Delete(k)
+	}
+	c.Unlock()
 }

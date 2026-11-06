@@ -3,6 +3,7 @@
 package util
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
 
@@ -16,6 +17,9 @@ func TcpMd5(md5pass string) ControlFunc {
 	}
 	return func(network, address string, c syscall.RawConn) error {
 		var key [80]byte
+		if len(md5pass) > len(key) {
+			return fmt.Errorf("TCP-MD5 password too long: %d > %d bytes", len(md5pass), len(key))
+		}
 		l := copy(key[:], md5pass)
 		sig := unix.TCPMD5Sig{
 			Flags:     unix.TCP_MD5SIG_FLAG_PREFIX,

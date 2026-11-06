@@ -62,7 +62,7 @@ operation with `-LR`.
 | `--cert` | string | | TLS certificate file path (required for `wss://` server) |
 | `--key` | string | | TLS private key file path (required for `wss://` server) |
 | `--insecure` | bool | `false` | Skip TLS certificate validation |
-| `--header` | strings | | Additional HTTP headers (`Header:Value` format) |
+| `--header` | strings | | Additional HTTP headers to send in client mode (`Header:Value` format) |
 
 ### Data Format
 

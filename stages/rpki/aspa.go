@@ -259,13 +259,13 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	switch {
 	case flat == nil:
 		result = rpki.ASPA_INVALID // empty path or AS_SET (draft-29 sections 5.5/5.6, steps 1 and 3)
-	case len(flat) == 1:
-		result = rpki.ASPA_VALID // single-hop
 	case s.first_hop && !peer.rs && asn != 0 && flat[0] != asn:
 		// NB: per draft section 5.4/5.5 step 2, path[0] must equal the neighbor AS.
 		// RS peers don't prepend their ASN (RFC 7947); --first-hop=false
 		// disables this check entirely for multiplexed collector feeds.
 		result = rpki.ASPA_INVALID
+	case len(flat) == 1:
+		result = rpki.ASPA_VALID // single-hop
 	default:
 		result, failCAS, failPAS = rpki.VerifyPath(aspa, flat, peer.down)
 	}
@@ -319,11 +319,11 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 		if len(reach) > 0 {
 			u.AddUnreach(reach...)
 		}
+		m.Edit() // NB: first, to invalidate the cached AllReach()
 		// NB: pure withdrawal must not carry path attributes (RFC 4271 section 4.3)
 		if !u.HasReach() {
 			u.Attrs.Filter(attrs.ATTR_MP_UNREACH)
 		}
-		m.Edit()
 	}
 
 	return true

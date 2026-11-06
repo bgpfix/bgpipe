@@ -3,7 +3,9 @@ package rpki
 import (
 	"testing"
 
+	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/meta"
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/stretchr/testify/require"
 )
@@ -179,4 +181,48 @@ func TestAspa_PeerASNCachedPerDirection(t *testing.T) {
 	m2 := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m2, 65010, 65020)
 	require.True(t, s.validateMsg(m2))
+}
+
+func TestAspa_SingleHopPathChecksFirstHop(t *testing.T) {
+	s := newTestAspa()
+	s.role, _ = parseRoleName("customer")
+	s.act = act_drop
+
+	s.cache.AddASPA(true, 65020, []uint32{65010})
+	s.cache.Apply()
+	storeOpenASN(s.P, meta.DIR_R, 65099)
+
+	// the peer omits its own ASN, path[0] is not the neighbor
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
+	setAsPathSeq(m, 65020)
+	require.False(t, s.validateMsg(m))
+
+	m = newReachUpdate(meta.DIR_R, "192.0.2.0/24")
+	setAsPathSeq(m, 65099)
+	require.True(t, s.validateMsg(m))
+}
+
+func TestAspa_WithdrawStripsPathAttrs(t *testing.T) {
+	s := newTestAspa()
+	s.role, _ = parseRoleName("customer")
+	s.act = act_withdraw
+
+	s.cache.AddASPA(true, 65020, []uint32{65010})
+	s.cache.Apply()
+	storeOpenASN(s.P, meta.DIR_R, 65099)
+
+	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24", "2001:db8::/32")
+	setAsPathSeq(m, 65010, 65020) // first hop is not 65099
+	u := &m.Update
+	require.True(t, u.HasReach()) // fills the AllReach cache
+
+	require.True(t, s.validateMsg(m))
+	require.False(t, u.HasReach())
+	require.ElementsMatch(t, []string{"192.0.2.0/24", "2001:db8::/32"}, prefixStrings(u.AllUnreach()))
+	require.Equal(t, []attrs.Code{attrs.ATTR_MP_UNREACH}, attrCodes(u))
+}
+
+func attrCodes(u *msg.Update) (cs []attrs.Code) {
+	u.Attrs.Each(func(i int, ac attrs.Code, at attrs.Attr) { cs = append(cs, ac) })
+	return
 }
