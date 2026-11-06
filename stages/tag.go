@@ -74,7 +74,9 @@ func (s *Tag) onmsg(m *msg.Msg) bool {
 			mod = mx.DropTags()
 		} else {
 			for _, tag := range s.drop {
-				mod = mod || mx.DropTag(tag)
+				if mx.DropTag(tag) {
+					mod = true
+				}
 			}
 		}
 	}
