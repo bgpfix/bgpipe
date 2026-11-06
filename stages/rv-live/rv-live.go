@@ -126,12 +126,7 @@ func (s *RvLive) Attach() error {
 func (s *RvLive) Run() error {
 	defer s.in.Close()
 
-	lastTry := time.Now()
 	for try := 1; s.Ctx.Err() == nil; try++ {
-		// Reset try count after a session that worked
-		if time.Since(lastTry) > time.Minute {
-			try = 1
-		}
 		if s.retry_max > 0 && try > s.retry_max {
 			return fmt.Errorf("max retries (%d) exceeded", s.retry_max)
 		}
@@ -146,9 +141,9 @@ func (s *RvLive) Run() error {
 				return context.Cause(s.Ctx)
 			}
 		}
-		lastTry = time.Now()
 
 		// Run Kafka consumer
+		start := time.Now()
 		err := s.runKafka()
 		if err == nil || s.Ctx.Err() != nil {
 			return err
@@ -158,6 +153,11 @@ func (s *RvLive) Run() error {
 			return fmt.Errorf("kafka error: %w", err)
 		}
 		s.Warn().Err(err).Msg("kafka connection ended")
+
+		// Reset try count if records kept coming for a while
+		if time.Unix(0, s.last_data.Load()).Sub(start) > time.Minute {
+			try = 0
+		}
 	}
 
 	return context.Cause(s.Ctx)
