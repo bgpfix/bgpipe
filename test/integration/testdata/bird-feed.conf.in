@@ -1,0 +1,14 @@
+# BIRD dialing out to bgpipe listen at @HOSTIP@:@PORT@, receiving an MRT feed (template, see lib.sh)
+router id 10.0.0.45;
+log stderr all;
+
+protocol device { }
+
+protocol bgp feed {
+  local as 65000;
+  neighbor @HOSTIP@ port @PORT@ as 65000;
+  multihop;
+  hold time 90;
+  debug { routes };
+  ipv4 { import all; export none; };
+}

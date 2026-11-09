@@ -2,7 +2,7 @@
 
 # multi-stage build: cross-compile on builder platform, ship in scratch
 # NB: --platform=$BUILDPLATFORM keeps the Go compiler native (no QEMU needed for build)
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
 
 ARG TARGETOS TARGETARCH TARGETVARIANT
 ARG BUILD_VERSION=dev
