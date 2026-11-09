@@ -56,7 +56,7 @@ routers already share for the pair.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--timeout` | duration | `15s` | TCP connect timeout; 0 disables |
-| `--closed-timeout` | duration | `1s` | TCP half-closed timeout; 0 disables |
+| `--closed-timeout` | duration | `1s` | TCP half-closed timeout: how long to wait for the other direction once one has ended (at least 30s after we sent everything, so the peer can read it and close first); 0 disables |
 | `--keepalive` | duration | `15s` | TCP keepalive period; -1 disables |
 | `--md5` | string | | TCP MD5 password ([RFC 2385](https://datatracker.ietf.org/doc/html/rfc2385)): `$ENV_VAR`, file path (`/...` or `./...`), or literal |
 | `--bind` | string | | Local address to bind to (`IP` or `IP:port`) |
