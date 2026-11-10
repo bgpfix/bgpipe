@@ -54,11 +54,14 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	closed_timeout := s.K.Duration("closed-timeout")
 
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
-	defer conn.Close()
 
-	// get tcp conn
+	// get tcp conn (the one under TLS, if any)
 	tcp, _ := conn.(*net.TCPConn)
+	if tc, ok := conn.(*tls.Conn); ok {
+		tcp, _ = tc.NetConn().(*net.TCPConn)
+	}
 	if tcp == nil {
+		conn.Close()
 		return fmt.Errorf("could not get TCPConn")
 	}
 
@@ -66,6 +69,15 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	if err := tcp.SetLinger(0); err != nil {
 		s.Info().Err(err).Msg("SetLinger failed")
 	}
+
+	// NB: if we wrote everything, let the kernel deliver it (no RST on close)
+	wrote_all := false
+	defer func() {
+		if wrote_all {
+			tcp.SetLinger(-1)
+		}
+		conn.Close()
+	}()
 
 	// variables for reader / writer
 	type retval struct {
@@ -91,14 +103,16 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	// write to conn
 	go func() {
 		pipeline := s.P.LineFor(s.Dir.Flip())
-		n, err := tcp.ReadFrom(pipeline)
+		n, err := io.Copy(conn, pipeline) // NB: writes through TLS, if any
 		s.Trace().Err(err).Msg("connection writer returned")
-		tcp.CloseWrite()
+		conn.(interface{ CloseWrite() error }).CloseWrite()
 		wch <- retval{n, err}
 
+		// NB: we're done writing: give the peer time to read it all and close its
+		// side (closing first would make its next packet RST away unread data)
 		if closed_timeout > 0 {
-			time.Sleep(closed_timeout)
-			s.Cancel(io.EOF)
+			time.Sleep(max(closed_timeout, 30*time.Second))
+			s.Cancel(core.ErrStageStopped)
 		}
 	}()
 
@@ -123,6 +137,7 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 			if err == io.EOF {
 				err = nil
 			}
+			wrote_all = err == nil
 		}
 	}
 

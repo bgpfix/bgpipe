@@ -635,13 +635,12 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 		case read_err != nil:
 			return read_err
 		case err == io.EOF:
-			// text: parse the last line, if it has no newline
+			// NB: the last line may lack the newline; don't lose it, nor glue it to the next input
 			if eio.buf.Len() > 0 {
-				if err := eio.ReadSingle(eio.buf.Next(eio.buf.Len()), cb); err != nil {
+				if err := eio.ReadBuf([]byte{'\n'}, cb); err != nil {
 					return err
 				}
 			}
-
 			// emit pending aggregated messages (MRT table dumps)
 			if eio.opt_mrt && eio.mrt != nil {
 				check := eio.checkMsg
