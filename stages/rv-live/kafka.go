@@ -288,6 +288,12 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 		if fetches.NumRecords() > 0 {
 			s.last_data.Store(time.Now().UnixNano())
 		}
+		// NB: checkpoint the partitions first, in case we stop before we get to their records
+		fetches.EachPartition(func(p kgo.FetchTopicPartition) {
+			if len(p.Records) > 0 {
+				s.updateOffset(p.Topic, p.Partition, p.Records[0].Offset)
+			}
+		})
 		iter := fetches.RecordIter()
 		for !iter.Done() && ctx.Err() == nil {
 			record := iter.Next()
