@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/bmp"
+	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
@@ -41,6 +42,10 @@ func (s *RvLive) runKafka() error {
 
 		// Resume partitions from where we left off: after a restart, reconnect, or rebalance
 		kgo.AdjustFetchOffsetsFn(s.adjustOffsets),
+
+		// NB: a rebalance must wait for the records we already polled, or the next
+		// consumer of a partition would resume from a stale offset
+		kgo.BlockRebalanceOnPoll(),
 
 		// Log partition assignments
 		kgo.OnPartitionsAssigned(func(_ context.Context, _ *kgo.Client, assigned map[string][]int32) {
@@ -237,7 +242,10 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 	consecutiveErrors := 0
 	om, bm := bmp.NewOpenBmp(), bmp.NewBmp()
 
+	defer client.AllowRebalance()
 	for ctx.Err() == nil {
+		client.AllowRebalance() // done with the previous poll
+
 		// NB: PollFetches blocks until there are records, so use a deadline to detect silence
 		pctx, cancel := ctx, context.CancelFunc(func() {})
 		if s.stale > 0 {
@@ -278,7 +286,9 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 		for !iter.Done() && ctx.Err() == nil {
 			record := iter.Next()
 
-			if err := s.processRecord(record, om, bm); err != nil {
+			if err := s.processRecord(record, om, bm); err == pipe.ErrInClosed {
+				return nil // we are stopping
+			} else if err != nil {
 				s.Warn().Err(err).
 					Str("topic", record.Topic).
 					Int32("partition", record.Partition).
