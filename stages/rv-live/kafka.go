@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/bmp"
+	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
@@ -42,6 +43,10 @@ func (s *RvLive) runKafka() error {
 		// Resume partitions from where we left off: after a restart, reconnect, or rebalance
 		kgo.AdjustFetchOffsetsFn(s.adjustOffsets),
 
+		// NB: a rebalance must wait for the records we already polled, or the next
+		// consumer of a partition would resume from a stale offset
+		kgo.BlockRebalanceOnPoll(),
+
 		// Log partition assignments
 		kgo.OnPartitionsAssigned(func(_ context.Context, _ *kgo.Client, assigned map[string][]int32) {
 			count := 0
@@ -72,8 +77,14 @@ func (s *RvLive) runKafka() error {
 	if err != nil {
 		return fmt.Errorf("failed to create kafka client: %w", err)
 	}
-	defer client.Close()
 	clients := []*kgo.Client{client}
+	defer func() { // NB: close in parallel, or each close would rebalance the others
+		var wg sync.WaitGroup
+		for _, c := range clients {
+			wg.Go(c.Close)
+		}
+		wg.Wait()
+	}()
 
 	// Discover and subscribe to topics
 	s.Debug().Str("pattern", s.topics).Msg("discovering topics")
@@ -93,7 +104,6 @@ func (s *RvLive) runKafka() error {
 		if err != nil {
 			return fmt.Errorf("failed to create kafka client: %w", err)
 		}
-		defer c.Close()
 		clients = append(clients, c)
 	}
 
@@ -114,7 +124,8 @@ func (s *RvLive) runKafka() error {
 	s.Debug().Dur("interval", s.refresh).Msg("started topic refresher")
 
 	// Consume messages, until the first consumer ends
-	s.last_data.Store(time.Now().UnixNano())
+	s.start = time.Now() // NB: a slow start must not count as getting records
+	s.last_data.Store(s.start.UnixNano())
 	ctx, cancel := context.WithCancelCause(s.Ctx)
 	defer cancel(nil)
 	var wg sync.WaitGroup
@@ -237,7 +248,10 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 	consecutiveErrors := 0
 	om, bm := bmp.NewOpenBmp(), bmp.NewBmp()
 
+	defer client.AllowRebalance()
 	for ctx.Err() == nil {
+		client.AllowRebalance() // done with the previous poll
+
 		// NB: PollFetches blocks until there are records, so use a deadline to detect silence
 		pctx, cancel := ctx, context.CancelFunc(func() {})
 		if s.stale > 0 {
@@ -274,11 +288,19 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 		if fetches.NumRecords() > 0 {
 			s.last_data.Store(time.Now().UnixNano())
 		}
+		// NB: checkpoint the partitions first, in case we stop before we get to their records
+		fetches.EachPartition(func(p kgo.FetchTopicPartition) {
+			if len(p.Records) > 0 {
+				s.updateOffset(p.Topic, p.Partition, p.Records[0].Offset)
+			}
+		})
 		iter := fetches.RecordIter()
 		for !iter.Done() && ctx.Err() == nil {
 			record := iter.Next()
 
-			if err := s.processRecord(record, om, bm); err != nil {
+			if err := s.processRecord(record, om, bm); err == pipe.ErrInClosed {
+				return nil // we are stopping
+			} else if err != nil {
 				s.Warn().Err(err).
 					Str("topic", record.Topic).
 					Int32("partition", record.Partition).
