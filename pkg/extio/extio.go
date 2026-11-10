@@ -636,7 +636,7 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 			return read_err
 		case err == io.EOF:
 			// NB: the last line may lack the newline; don't lose it, nor glue it to the next input
-			if eio.buf.Len() > 0 {
+			if eio.buf.Len() > 0 || eio.discard {
 				if err := eio.ReadBuf([]byte{'\n'}, cb); err != nil {
 					return err
 				}
