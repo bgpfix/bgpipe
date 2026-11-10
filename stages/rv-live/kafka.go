@@ -77,8 +77,14 @@ func (s *RvLive) runKafka() error {
 	if err != nil {
 		return fmt.Errorf("failed to create kafka client: %w", err)
 	}
-	defer client.Close()
 	clients := []*kgo.Client{client}
+	defer func() { // NB: close in parallel, or each close would rebalance the others
+		var wg sync.WaitGroup
+		for _, c := range clients {
+			wg.Go(c.Close)
+		}
+		wg.Wait()
+	}()
 
 	// Discover and subscribe to topics
 	s.Debug().Str("pattern", s.topics).Msg("discovering topics")
@@ -98,7 +104,6 @@ func (s *RvLive) runKafka() error {
 		if err != nil {
 			return fmt.Errorf("failed to create kafka client: %w", err)
 		}
-		defer c.Close()
 		clients = append(clients, c)
 	}
 
@@ -119,7 +124,8 @@ func (s *RvLive) runKafka() error {
 	s.Debug().Dur("interval", s.refresh).Msg("started topic refresher")
 
 	// Consume messages, until the first consumer ends
-	s.last_data.Store(time.Now().UnixNano())
+	s.start = time.Now() // NB: a slow start must not count as getting records
+	s.last_data.Store(s.start.UnixNano())
 	ctx, cancel := context.WithCancelCause(s.Ctx)
 	defer cancel(nil)
 	var wg sync.WaitGroup

@@ -40,6 +40,7 @@ type RvLive struct {
 	state_mu    sync.Mutex
 	state_dirty bool
 
+	start     time.Time    // when the session started, then when it started to consume
 	last_data atomic.Int64 // when any consumer last got records (unix nanoseconds)
 }
 
@@ -143,7 +144,7 @@ func (s *RvLive) Run() error {
 		}
 
 		// Run Kafka consumer
-		start := time.Now()
+		s.start = time.Now()
 		err := s.runKafka()
 		if err == nil || s.Ctx.Err() != nil {
 			return err
@@ -155,7 +156,7 @@ func (s *RvLive) Run() error {
 		s.Warn().Err(err).Msg("kafka connection ended")
 
 		// Reset try count if records kept coming for a while
-		if time.Unix(0, s.last_data.Load()).Sub(start) > time.Minute {
+		if time.Unix(0, s.last_data.Load()).Sub(s.start) > time.Minute {
 			try = 0
 		}
 	}
