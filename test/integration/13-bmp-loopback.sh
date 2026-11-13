@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# bmp stage against itself, no docker needed: an exporter listens, a station
-# connects with --retry; routes, peer tags and the router name must arrive
+# bmp stage against itself, no docker needed: a station keeps dialing until the
+# exporter listens; routes, peer tags and the router name must arrive
 . "$(dirname "$0")/lib.sh"
 freeport
+
+# station first: nothing listens yet, so --retry must survive a refused connection
+run_bgpipe -- bmp --retry "127.0.0.1:$LPORT"
+sleep 0.5
 
 # exporter: a FIFO keeps the BMP session up
 mkfifo "$WORK/in.json"
@@ -11,7 +15,6 @@ mkfifo "$WORK/in.json"
 PIDS="$PIDS $!"
 exec 9>"$WORK/in.json"
 
-run_bgpipe -- bmp --retry "127.0.0.1:$LPORT"
 # NB: the exporter does not queue for stations that are yet to connect
 wait_cmd 10 "grep -q 'connected 127.0.0.1' '$WORK/export.log'"
 

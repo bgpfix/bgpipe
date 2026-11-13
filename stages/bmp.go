@@ -116,20 +116,24 @@ func (s *Bmp) Attach() error {
 
 func (s *Bmp) Run() error {
 	// client mode: one connection at a time
-	for !s.listen {
+	// NB: DialRetry retries timeouts only; a station must also survive
+	// a refused connection, eg. while the other side restarts
+	for try := 1; !s.listen; try++ {
 		conn, err := util.DialRetry(s.StageBase, nil, "tcp", s.addr)
-		if err != nil {
+		if err == nil {
+			try = 0 // connected, start over
+			err = s.serve(conn)
+		}
+		max := s.K.Int("retry-max")
+		if !s.K.Bool("retry") || s.Ctx.Err() != nil || s.isStopped() || (max > 0 && try > max) {
 			return err
 		}
-		err = s.serve(conn)
-		if !s.K.Bool("retry") || s.Ctx.Err() != nil || s.isStopped() {
-			return err
-		}
-		s.Warn().Err(err).Msg("connection closed, reconnecting")
+		wait := time.Duration(min(60, 1+try*try)) * time.Second
+		s.Warn().Err(err).Msgf("not connected, retrying in %s", wait)
 		select {
 		case <-s.Ctx.Done():
 			return nil
-		case <-time.After(time.Second):
+		case <-time.After(wait):
 		}
 	}
 
