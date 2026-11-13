@@ -12,6 +12,16 @@ API="http://127.0.0.1:$(daemon_port 8080)/api/v1"
 wait_cmd 30 "docker logs $DAEMON 2>&1 | grep -q 'bmp-in: Listening'"
 wait_cmd 30 "curl -sf $API/ingresses"
 
+# a file from write --format bmp, replayed raw, is a whole BMP session (Initiation,
+# Peer Ups): Rotonda must see the router, all 26 peers, and their routes
+"$BGPIPE" --log warn -- read "$TESTDATA/sample.mrt" -- write --format bmp "$WORK/out.bmp"
+exec 8>"/dev/tcp/127.0.0.1/$PORT"
+cat "$WORK/out.bmp" >&8
+wait_cmd 20 "curl -sf $API/ingresses | jq -e '[.data[] | select(.ingress_type==\"bmp\" and .name==\"bgpipe\")] | length == 1'"
+wait_cmd 20 "curl -sf $API/ingresses | jq -e '[.data[] | select(.ingress_type==\"bgpViaBmp\")] | length == 26'"
+wait_cmd 20 "curl -sf $API/ribs/ipv4unicast/routes/182.239.53.0/24 | jq -e '[.data.routes[].ingress.remote_asn] | index(2914)'"
+exec 8>&-
+
 # a FIFO keeps the BMP session up: a station drops the routes when it ends
 mkfifo "$WORK/in.mrt"
 run_bgpipe -- read --format mrt "$WORK/in.mrt" -- bmp --write --sys-name bgpipe-test "127.0.0.1:$PORT"
@@ -27,3 +37,4 @@ wait_cmd 20 "curl -sf $API/ribs/ipv4unicast/routes/182.239.53.0/24 | jq -e '[.da
 n=$(curl -sf "$API/ribs/ipv6unicast/routes" | jq '.included.moreSpecifics | length')
 [ "$n" -gt 0 ] || fail "no IPv6 routes in Rotonda"
 msg "Rotonda has $n IPv6 prefixes"
+

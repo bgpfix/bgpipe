@@ -22,3 +22,11 @@ wait_json 10 '.[4].unreach==["#1#10.0.0.0/24"]'
 if jq -n -e 'any(inputs; .[5].PEER_AS=="65001" and (.[4].reach // [] | index("0.0.0.0/0")))' <"$WORK/out.json" >/dev/null 2>&1; then
 	fail "Path Identifiers decoded as prefixes"
 fi
+
+# a file from write --format bmp replays raw into a station (see 94 for Rotonda,
+# which needs the Initiation and Peer Ups in it)
+"$BGPIPE" --log warn -- read "$TESTDATA/sample.mrt" -- write --format bmp "$WORK/out.bmp"
+n=$(jq -c 'select(.[3]=="UPDATE")' "$WORK/out.json" | wc -l | tr -d ' ')
+cat "$WORK/out.bmp" >"/dev/tcp/127.0.0.1/$LPORT"
+wait_cmd 10 "[ \$(jq -c 'select(.[3]==\"UPDATE\")' '$WORK/out.json' | wc -l) -eq $((n + want)) ]"
+msg "raw replay of write --format bmp: all $want UPDATEs arrived"

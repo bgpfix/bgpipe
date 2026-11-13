@@ -330,8 +330,9 @@ func (s *Write) Run() error {
 			}
 			go s.closeFile(s.wr, s.fh, s.n, s.tmp)
 
-			// signal that we need to open a new file
+			// signal that we need to open a new file, a new BMP session if --format bmp
 			s.fh = nil
+			eio.Restart()
 
 			// change to periodic ticks from here on?
 			if first_run {

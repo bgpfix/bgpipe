@@ -61,6 +61,9 @@ type Extio struct {
 	bmp *bmp.Reader  // BMP reader
 	buf bytes.Buffer // for ReadBuf()
 
+	bmpw    bmp.Writer // BMP output: adds Initiation and Peer Up
+	bmpw_mu sync.Mutex // guards bmpw, and keeps its output in order
+
 	Callback   *pipe.Callback // our callback for capturing bgpipe output
 	InputL     *pipe.Input    // our L input to bgpipe
 	InputR     *pipe.Input    // our R input to bgpipe
@@ -89,6 +92,7 @@ func NewExtio(parent *core.StageBase, mode Mode, autodetect bool) *Extio {
 		Pool:      &bbpool,
 		mode:      mode,
 	}
+	eio.bmpw.SysName = "bgpipe"
 
 	// add CLI options iff needed
 	f := eio.Options.Flags
@@ -687,6 +691,15 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 	return true
 }
 
+// Restart makes BMP output start a new session, eg. in a new file:
+// Initiation and Peer Ups are sent again.
+// NB: what was already queued on Output does not change.
+func (eio *Extio) Restart() {
+	eio.bmpw_mu.Lock()
+	defer eio.bmpw_mu.Unlock()
+	eio.bmpw = bmp.Writer{SysName: "bgpipe"}
+}
+
 // OnMsg queues BGP message to the process. Can be used concurrently.
 func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 	// should skip message type? (NB: --type already handled by the callback manager)
@@ -794,6 +807,17 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 			}
 			_, err = om.WriteTo(bb)
 		} else {
+			// NB: a BMP session starts with Initiation, and needs a Peer Up per peer (RFC 7854);
+			// in separate buffers, as message-based transports read one BMP message per buffer
+			eio.bmpw_mu.Lock()
+			defer eio.bmpw_mu.Unlock() // NB: until bb is sent below
+			if hdr := eio.bmpw.Prepend(nil, bm, m, eio.P.Caps); len(hdr) > 0 {
+				hb := eio.Pool.Get()
+				hb.Write(hdr)
+				if !util.Send(eio.Output, hb) {
+					eio.Pool.Put(hb)
+				}
+			}
 			_, err = bm.WriteTo(bb)
 		}
 

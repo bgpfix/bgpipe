@@ -47,8 +47,8 @@ Use them in filters, eg. `--of 'tag[BMP_RIB] == loc'`.
 
 The stage follows Peer Up and Peer Down notifications: ADD-PATH is taken per
 peer and address family, as negotiated in its BGP session, and the AS number
-size per peer.
-Statistics reports are ignored.
+size per peer. Peer Up and Peer Down also become events (see below), and
+Statistics Reports become Prometheus gauges.
 
 ### Exporter
 
@@ -62,12 +62,40 @@ address, and the AS number and BGP Identifier from its OPEN.
 For a live BGP session, Peer Up carries the real OPEN messages of the session,
 so the station sees its true capabilities, hold time, and ADD-PATH; otherwise
 the OPENs are synthesized, announcing ADD-PATH where the exported UPDATEs
-carry path IDs. Only UPDATEs are exported, and
-there is no initial table dump: a station sees what flows through the
-pipeline after it connects. Without `--listen`, the stage connects before the
-pipeline starts, so eg. a file replay is exported from its first UPDATE. A station that reads too slowly is disconnected
-(see `--buffer`), so it never stalls the pipeline. When the pipeline stops,
-each station gets up to 5 seconds to receive what is queued for it.
+carry path IDs. Only UPDATEs are exported, and there is no initial table dump:
+a station sees what flows through the pipeline after it connects. Without
+`--listen`, the stage connects before the pipeline starts, so eg. a file
+replay is exported from its first UPDATE. A station that reads too slowly is
+disconnected (see `--buffer`), so it never stalls the pipeline. When the
+pipeline stops, each station gets up to 5 seconds to receive what is queued
+for it.
+
+To write a BMP session to a file instead, use [write](write.md) with
+`--format bmp`: the file can be replayed to any station later.
+
+### Events
+
+| Event | Arguments | Trigger |
+|-------|-----------|---------|
+| `bmp/peer-up` | router, peer IP, peer AS | Peer Up notification from a router |
+| `bmp/peer-down` | router, peer IP, peer AS | Peer Down notification from a router |
+
+Use eg. `--events bmp/peer-down` on bgpipe to log them, or `exec` a script on
+them. After a Peer Down, all routes of that peer are implicitly withdrawn;
+the stage does not keep a RIB, so it does not send the withdrawals.
+
+### Prometheus Metrics
+
+Each Statistics Report counter or gauge is exported as:
+
+```
+bgpipe_bmp_stats{router="192.0.2.1",peer="198.51.100.7",type="7"} 912345
+```
+
+`router` is the IP address of the router connection, `peer` the monitored
+peer, and `type` the BMP Statistics Type (RFC 7854 section 4.8, eg. 7 for
+routes in Adj-RIB-In). Per address family gauges (eg. type 9) also get an
+`af` label, eg. `af="IPV6/UNICAST"`. See [HTTP API](../http-api.md).
 
 ## Options
 
