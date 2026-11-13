@@ -30,6 +30,10 @@ func (s *RvLive) runKafka() error {
 		kgo.FetchMaxWait(100 * time.Millisecond), // Don't wait long - we want real-time data
 		kgo.FetchMaxPartitionBytes(128 * 1024),   // 128KB max per partition (prevents slow consumer issues)
 
+		// NB: a whole fetch must be read within about 10s, or the client drops the connection
+		// and re-fetches even more data; the 50MB default never recovers on a slow link
+		kgo.FetchMaxBytes(2 << 20),
+
 		// Consumer group settings for large partition counts
 		kgo.RebalanceTimeout(120 * time.Second), // Allow time for rebalancing 1800+ partitions
 
@@ -210,12 +214,20 @@ func (s *RvLive) topicRefresher(client *kgo.Client, done <-chan struct{}) {
 }
 
 func (s *RvLive) consume(client *kgo.Client) error {
-	lastData := time.Now()
-	lastStaleCheck := time.Now()
 	consecutiveErrors := 0
 
 	for s.Ctx.Err() == nil {
-		fetches := client.PollFetches(s.Ctx)
+		// NB: PollFetches blocks until there are records, so use a deadline to detect silence
+		ctx, cancel := s.Ctx, context.CancelFunc(func() {})
+		if s.stale > 0 {
+			ctx, cancel = context.WithTimeout(s.Ctx, s.stale)
+		}
+		fetches := client.PollFetches(ctx)
+		stale := ctx.Err() != nil && s.Ctx.Err() == nil && fetches.NumRecords() == 0
+		cancel()
+		if stale {
+			return fmt.Errorf("connection stale: no data for %v", s.stale)
+		}
 
 		// Handle errors
 		if errs := fetches.Errors(); len(errs) > 0 {
@@ -233,19 +245,10 @@ func (s *RvLive) consume(client *kgo.Client) error {
 		}
 		consecutiveErrors = 0
 
-		// Check staleness periodically
-		if s.stale > 0 && fetches.NumRecords() == 0 && time.Since(lastStaleCheck) >= 30*time.Second {
-			lastStaleCheck = time.Now()
-			if staleDuration := time.Since(lastData); staleDuration >= s.stale {
-				return fmt.Errorf("connection stale: no data for %v", staleDuration.Round(time.Second))
-			}
-		}
-
 		// Process records
 		iter := fetches.RecordIter()
 		for !iter.Done() && s.Ctx.Err() == nil {
 			record := iter.Next()
-			lastData = time.Now()
 
 			if err := s.processRecord(record); err != nil {
 				s.Warn().Err(err).
