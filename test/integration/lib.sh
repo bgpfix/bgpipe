@@ -79,6 +79,15 @@ run_daemon() {
 	msg "$name: container ${DAEMON%"${DAEMON#????????????}"} port ${PORT:-none}"
 }
 
+# daemon_port <container-port> - prints the host port mapped to another port of
+# $DAEMON (publish it with an extra -p 127.0.0.1:0:<container-port> in run_daemon)
+daemon_port() {
+	local p
+	p=$(docker port "$DAEMON" "$1" | head -1 | sed 's/.*://')
+	[ -n "$p" ] || fail "no mapped port for $1"
+	echo "$p"
+}
+
 # wait_tcp <host> <port> [timeout-seconds]
 wait_tcp() {
 	local h="$1" p="$2" t="${3:-30}" i=0
@@ -101,7 +110,8 @@ run_bgpipe() {
 # wait_json <timeout-seconds> <jq-expr> - wait for an output line matching expr
 wait_json() {
 	local t="$1" expr="$2" i=0
-	while ! jq -e "select($expr)" <"$WORK/out.json" >/dev/null 2>&1; do
+	# NB: not -e with select(), which fails on jq 1.6 if the last line does not match
+	while ! jq -n -e "any(inputs; $expr)" <"$WORK/out.json" >/dev/null 2>&1; do
 		i=$((i + 1))
 		[ $i -ge $((t * 5)) ] && fail "timeout waiting for JSON: $expr"
 		sleep 0.2

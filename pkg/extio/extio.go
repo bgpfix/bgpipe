@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/bmp"
-	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/exa"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -61,6 +61,9 @@ type Extio struct {
 	bmp *bmp.Reader  // BMP reader
 	buf bytes.Buffer // for ReadBuf()
 
+	bmpw    bmp.Writer // BMP output: adds Initiation and Peer Up
+	bmpw_mu sync.Mutex // guards bmpw, and keeps its output in order
+
 	Callback   *pipe.Callback // our callback for capturing bgpipe output
 	InputL     *pipe.Input    // our L input to bgpipe
 	InputR     *pipe.Input    // our R input to bgpipe
@@ -89,6 +92,7 @@ func NewExtio(parent *core.StageBase, mode Mode, autodetect bool) *Extio {
 		Pool:      &bbpool,
 		mode:      mode,
 	}
+	eio.bmpw.SysName = "bgpipe"
 
 	// add CLI options iff needed
 	f := eio.Options.Flags
@@ -687,6 +691,11 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 	return true
 }
 
+// IsBMP returns true iff writing --format bmp
+func (eio *Extio) IsBMP() bool {
+	return eio.opt_bmp
+}
+
 // OnMsg queues BGP message to the process. Can be used concurrently.
 func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 	// should skip message type? (NB: --type already handled by the callback manager)
@@ -745,6 +754,12 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 		}
 
 	case eio.opt_bmp, eio.opt_obmp:
+		// NB: Route Monitoring carries UPDATEs only (RFC 7854/4.6)
+		if m.Type != msg.UPDATE {
+			eio.Pool.Put(bb)
+			return keep
+		}
+
 		// marshal BGP message first
 		err = m.Marshal(eio.P.Caps)
 		if err != nil {
@@ -788,6 +803,20 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 			}
 			_, err = om.WriteTo(bb)
 		} else {
+			// NB: a BMP session starts with Initiation, and needs a Peer Up per peer (RFC 7854);
+			// in separate buffers, as message-based transports read one BMP message per buffer
+			eio.bmpw_mu.Lock()
+			defer eio.bmpw_mu.Unlock() // NB: until bb is sent below
+			hdr := eio.bmpw.Prepend(nil, bm, m, eio.P.Caps)
+			for len(hdr) >= bmp.HEADLEN { // NB: one BMP message per buffer
+				l := int(binary.BigEndian.Uint32(hdr[1:5]))
+				hb := eio.Pool.Get()
+				hb.Write(hdr[:l])
+				if !util.Send(eio.Output, hb) {
+					eio.Pool.Put(hb)
+				}
+				hdr = hdr[l:]
+			}
 			_, err = bm.WriteTo(bb)
 		}
 

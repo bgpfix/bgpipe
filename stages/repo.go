@@ -8,6 +8,7 @@ import (
 
 var Repo = map[string]core.NewStage{
 	"aspa":      rpki.NewAspa,
+	"bmp":       NewBmp,
 	"connect":   NewConnect,
 	"drop":      NewGrep,
 	"exec":      NewExec,

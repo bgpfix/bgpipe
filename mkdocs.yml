@@ -6,6 +6,7 @@ nav:
   - Stages:
     - Overview: stages/index.md
     - aspa: stages/aspa.md
+    - bmp: stages/bmp.md
     - connect: stages/connect.md
     - drop: stages/grep.md
     - exec: stages/exec.md

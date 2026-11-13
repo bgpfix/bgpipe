@@ -36,6 +36,12 @@ Compression is also auto-detected: `.gz` (gzip), `.bz2` (bzip2),
 `.zst` / `.zstd` (Zstandard). Writing to standard output defaults to JSON;
 use `--format` to override.
 
+With `--format bmp`, the output is a complete BMP session: an Initiation
+first, then a Peer Up before the first message of each peer, and the UPDATEs
+as Route Monitoring. So it can be replayed to any BMP station, eg. with
+`nc station 11019 <file.bmp`. With `--every`, each file starts a new session.
+`--format obmp` writes each UPDATE as a standalone OpenBMP message.
+
 ## Options
 
 | Option | Type | Default | Description |

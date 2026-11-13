@@ -40,7 +40,7 @@ func NewConnect(parent *core.StageBase) core.Stage {
 	f.Duration("timeout", 15*time.Second, "TCP connect timeout (0 means off)")
 	f.Duration("closed-timeout", time.Second, "TCP half-closed timeout (0 means off)")
 	f.Duration("keepalive", 15*time.Second, "TCP keepalive period (-1 means off)")
-	f.Bool("retry", false, "retry connection on temporary errors")
+	f.Bool("retry", false, "retry on connection errors")
 	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
 	f.Bool("tls", false, "connect over TLS")
 	f.Bool("insecure", false, "do not validate TLS certificates")

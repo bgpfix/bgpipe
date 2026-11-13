@@ -18,6 +18,7 @@ bgpipe sits between routers as a transparent proxy, auditing, filtering, and tra
 - MRT file processing and conversion at scale, incl. RIB snapshots (table dumps)
 - Scriptable pipeline - chain stages or pipe through external programs, keep it in a config file
 - Live BGP monitoring from RIPE RIS Live or RouteViews with real-time filters
+- BMP station and exporter - collect BMP from routers, or turn any BGP session or feed into a live BMP stream
 - Secure transport - add TCP-MD5 to sessions, proxy over encrypted WebSockets
 
 **Fast and hardened:**

@@ -65,7 +65,7 @@ routers already share for the pair.
 | `--tls` | bool | `false` | Connect over TLS |
 | `--insecure` | bool | `false` | Skip TLS certificate validation |
 | `--no-ipv6` | bool | `false` | Avoid IPv6 when resolving *ADDR* |
-| `--retry` | bool | `false` | Retry on temporary connection errors |
+| `--retry` | bool | `false` | Retry on connection errors (timeouts, refused connections, ...) |
 | `--retry-max` | int | `0` | Max retry attempts; 0 means unlimited |
 
 ## Examples

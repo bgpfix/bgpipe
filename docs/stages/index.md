@@ -13,6 +13,7 @@ bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGS] [--] STAGE2 [OPTIONS] [ARGS] ...
 | Stage | Description |
 |-------|-------------|
 | [aspa](aspa.md) | Validate AS paths using RPKI ASPA |
+| [bmp](bmp.md) | Collect or export a BMP feed over TCP |
 | [connect](connect.md) | Connect to a BGP endpoint over TCP |
 | [drop](grep.md) | Drop messages matching a filter; keep the rest |
 | [exec](exec.md) | Pipe messages through an external process |
