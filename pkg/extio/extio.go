@@ -691,13 +691,9 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 	return true
 }
 
-// Restart makes BMP output start a new session, eg. in a new file:
-// Initiation and Peer Ups are sent again.
-// NB: what was already queued on Output does not change.
-func (eio *Extio) Restart() {
-	eio.bmpw_mu.Lock()
-	defer eio.bmpw_mu.Unlock()
-	eio.bmpw = bmp.Writer{SysName: "bgpipe"}
+// IsBMP returns true iff writing --format bmp
+func (eio *Extio) IsBMP() bool {
+	return eio.opt_bmp
 }
 
 // OnMsg queues BGP message to the process. Can be used concurrently.
@@ -811,12 +807,15 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 			// in separate buffers, as message-based transports read one BMP message per buffer
 			eio.bmpw_mu.Lock()
 			defer eio.bmpw_mu.Unlock() // NB: until bb is sent below
-			if hdr := eio.bmpw.Prepend(nil, bm, m, eio.P.Caps); len(hdr) > 0 {
+			hdr := eio.bmpw.Prepend(nil, bm, m, eio.P.Caps)
+			for len(hdr) >= bmp.HEADLEN { // NB: one BMP message per buffer
+				l := int(binary.BigEndian.Uint32(hdr[1:5]))
 				hb := eio.Pool.Get()
-				hb.Write(hdr)
+				hb.Write(hdr[:l])
 				if !util.Send(eio.Output, hb) {
 					eio.Pool.Put(hb)
 				}
+				hdr = hdr[l:]
 			}
 			_, err = bm.WriteTo(bb)
 		}

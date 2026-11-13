@@ -41,6 +41,7 @@ Each UPDATE is tagged with where it comes from:
 | `PEER_ID` | BGP Identifier of the peer |
 | `BMP_RIB` | RIB view: `in-post`, `out-pre`, `out-post`, or `loc` (not set for pre-policy Adj-RIB-In) |
 | `PEER_RD` | Peer distinguisher (hex), if non-zero |
+| `PEER_TYPE` | `rd` or `local` for RD and local instance peers (not set for global peers) |
 | `ROUTER` | sysName of the monitored router (its IP address if not sent) |
 
 Use them in filters, eg. `--of 'tag[BMP_RIB] == loc'`.
@@ -95,7 +96,8 @@ bgpipe_bmp_stats{router="192.0.2.1",peer="198.51.100.7",type="7"} 912345
 `router` is the IP address of the router connection, `peer` the monitored
 peer, and `type` the BMP Statistics Type (RFC 7854 section 4.8, eg. 7 for
 routes in Adj-RIB-In). Per address family gauges (eg. type 9) also get an
-`af` label, eg. `af="IPV6/UNICAST"`. See [HTTP API](../http-api.md).
+`af` label, eg. `af="IPV6/UNICAST"`. At most 10000 series are kept, as the
+labels come from the routers. See [HTTP API](../http-api.md).
 
 ## Options
 

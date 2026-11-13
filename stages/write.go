@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bgpfix/bgpfix/bmp"
 	"io"
 	"os"
 	"path"
@@ -293,6 +294,10 @@ func (s *Write) Run() error {
 		reload = time.After(time.Until(t))
 	}
 
+	// NB: a BMP file must be a whole session: repeat Initiation and Peer Ups in each new file
+	var bmphdr []byte
+	isbmp := eio.IsBMP()
+
 	// writeBuf writes one output buffer to the target file
 	writeBuf := func(bb *bytebufferpool.ByteBuffer) error {
 		// open the target file if needed
@@ -301,6 +306,15 @@ func (s *Write) Run() error {
 				return err
 			}
 			bw.Reset(s.wr)
+			n, _ := bw.Write(bmphdr)
+			s.n += int64(n)
+		}
+
+		// remember the BMP session headers (NB: one message per buffer)
+		if isbmp && len(bb.B) > bmp.HEADLEN {
+			if t := bmp.MsgType(bb.B[5]); t == bmp.MSG_INITIATION || t == bmp.MSG_PEER_UP {
+				bmphdr = append(bmphdr, bb.B...)
+			}
 		}
 
 		// write to file
@@ -330,9 +344,8 @@ func (s *Write) Run() error {
 			}
 			go s.closeFile(s.wr, s.fh, s.n, s.tmp)
 
-			// signal that we need to open a new file, a new BMP session if --format bmp
+			// signal that we need to open a new file
 			s.fh = nil
-			eio.Restart()
 
 			// change to periodic ticks from here on?
 			if first_run {

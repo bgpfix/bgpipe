@@ -37,15 +37,17 @@ type Bmp struct {
 	conns   map[net.Conn]*station // open connections
 	nconns  atomic.Int32          // len(conns), read without the lock
 	stopped bool
-	ln      net.Listener // with --listen
-	first   net.Conn     // exporter: the connection made in Prepare
-	pool    sync.Pool    // of *bmp.Bmp
+	ln      net.Listener              // with --listen
+	first   *station                  // exporter: the connection made in Prepare
+	gauges  map[string]*metrics.Gauge // statistics
+	pool    sync.Pool                 // of *bmp.Bmp
 }
 
 // station is an exporter connection (empty in read mode)
 type station struct {
-	ch chan []byte // queued BMP messages
-	w  *bmp.Writer // adds Initiation and Peer Up
+	conn net.Conn
+	ch   chan []byte // queued BMP messages
+	w    *bmp.Writer // adds Initiation and Peer Up
 }
 
 func NewBmp(parent *core.StageBase) core.Stage {
@@ -58,6 +60,7 @@ func NewBmp(parent *core.StageBase) core.Stage {
 	o.FilterOut = true
 	o.Bidir = true
 	o.Args = []string{"addr"}
+	o.StopTimeout = 6 * time.Second // NB: exporters get 5s to drain on Stop
 	o.Events = map[string]string{
 		"peer-up":   "station: a monitored peer is up (router, peer IP, peer AS)",
 		"peer-down": "station: a monitored peer is down (router, peer IP, peer AS)",
@@ -140,24 +143,24 @@ func (s *Bmp) Prepare() error {
 	if err != nil {
 		return err
 	}
-	s.add(conn)
-	s.first = conn
+	s.first, _ = s.add(conn)
 	return nil
 }
 
 func (s *Bmp) Run() error {
 	// client mode: one connection at a time, reconnect on --retry
 	for !s.listen {
-		conn := s.first
+		st := s.first // NB: may already be stopped, still drain it
 		s.first = nil
-		if conn == nil {
-			var err error
-			conn, err = util.DialRetry(s.StageBase, nil, "tcp", s.addr)
-			if err != nil {
-				return err
-			}
+		var conn net.Conn
+		if st != nil {
+			conn = st.conn
+		} else if c, err := util.DialRetry(s.StageBase, nil, "tcp", s.addr); err != nil {
+			return err
+		} else {
+			conn = c
 		}
-		err := s.serve(conn)
+		err := s.serve(conn, st)
 		if !s.K.Bool("retry") || s.Ctx.Err() != nil || s.isStopped() {
 			return err
 		}
@@ -210,7 +213,7 @@ func (s *Bmp) Run() error {
 			continue
 		}
 		wg.Go(func() {
-			if err := s.serve(conn); err != nil {
+			if err := s.serve(conn, nil); err != nil {
 				s.Warn().Err(err).Msgf("%s: connection closed", conn.RemoteAddr())
 			}
 		})
@@ -237,14 +240,16 @@ func (s *Bmp) isStopped() bool {
 	return s.stopped
 }
 
-// serve handles one BMP connection, until it ends
-func (s *Bmp) serve(conn net.Conn) error {
+// serve handles one BMP connection, until it ends; st is its station, if registered already
+func (s *Bmp) serve(conn net.Conn, st *station) error {
 	defer conn.Close()
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 
-	st, ok := s.add(conn)
-	if !ok {
-		return nil // stopped
+	if st == nil {
+		var ok bool
+		if st, ok = s.add(conn); !ok {
+			return nil // stopped
+		}
 	}
 	defer s.drop(conn)
 
@@ -306,7 +311,7 @@ func (s *Bmp) add(conn net.Conn) (st *station, ok bool) {
 	} else if st, ok = s.conns[conn]; ok {
 		return st, true
 	}
-	st = new(station)
+	st = &station{conn: conn}
 	if s.write {
 		st.ch = make(chan []byte, s.K.Int("buffer"))
 		st.w = &bmp.Writer{SysName: s.K.String("sys-name"), SysDescr: "bgpipe BMP export", PeerUp: s.peerUp}
@@ -466,9 +471,29 @@ func (s *Bmp) onBmp(bm *bmp.Bmp, router, ip string) {
 			if as != 0 {
 				n += fmt.Sprintf(`,af="%s/%s"`, as.Afi(), as.Safi())
 			}
-			metrics.GetOrCreateGauge(n+"}", nil).Set(float64(val))
+			if g := s.gauge(n + "}"); g != nil {
+				g.Set(float64(val))
+			}
 		})
 	}
+}
+
+// MAX_GAUGES bounds the statistics series, as routers choose the labels
+const MAX_GAUGES = 10000
+
+// gauge returns the statistics gauge named n, or nil if there are too many already
+func (s *Bmp) gauge(n string) *metrics.Gauge {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	g := s.gauges[n]
+	if g == nil && len(s.gauges) < MAX_GAUGES {
+		if s.gauges == nil {
+			s.gauges = make(map[string]*metrics.Gauge)
+		}
+		g = metrics.GetOrCreateGauge(n, nil)
+		s.gauges[n] = g
+	}
+	return g
 }
 
 func msbUint32(a netip.Addr) uint32 {
