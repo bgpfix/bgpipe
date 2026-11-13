@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -31,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -459,6 +459,34 @@
     
   
     aspa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bmp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bmp
   
 
     
@@ -1511,10 +1539,14 @@ to preserve the original AS_PATH as received from the collector.</p>
 <p>The <code>--state</code> option enables offset persistence: the stage saves its Kafka
 consumer position to a file and resumes from the same point on restart.
 This prevents re-processing messages after a pipeline restart.</p>
+<p>Over long distances, each broker sends only about 1 MB/s per connection, which is
+not enough for the whole RouteViews feed. The stage therefore reads with <code>--consumers</code>
+parallel Kafka consumers in one consumer group. Messages from one topic stay in order,
+but messages from different topics can interleave differently between runs.</p>
 <p>Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for <code>--stale</code> duration.</p>
-<p>The global <code>-g</code> / <code>--guess-asn</code> flag is recommended when using this stage,
-as different RouteViews peers may use 2-byte or 4-byte ASNs.</p>
+<p>Different RouteViews peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
+encoding automatically (see the global <code>--as4</code> option).</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1581,6 +1613,12 @@ as different RouteViews peers may use 2-byte or 4-byte ASNs.</p>
 <td>Reconnect if no data for this long; 0 disables</td>
 </tr>
 <tr>
+<td><code>--consumers</code></td>
+<td>int</td>
+<td><code>4</code></td>
+<td>Number of parallel Kafka consumers</td>
+</tr>
+<tr>
 <td><code>--retry</code></td>
 <td>bool</td>
 <td><code>true</code></td>
@@ -1602,19 +1640,19 @@ as different RouteViews peers may use 2-byte or 4-byte ASNs.</p>
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Stream all RouteViews updates to stdout:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>rv-live
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>rv-live
 </span></code></pre></div>
 <p>Stream from a specific collector:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>rv-live<span class="w"> </span>--collector<span class="w"> </span>linx
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>rv-live<span class="w"> </span>--collector<span class="w"> </span>linx
 </span></code></pre></div>
 <p>Exclude specific collectors:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>rv-live<span class="w"> </span>--collector-not<span class="w"> </span>amsix<span class="w"> </span>--collector-not<span class="w"> </span>decix
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>rv-live<span class="w"> </span>--collector-not<span class="w"> </span>amsix<span class="w"> </span>--collector-not<span class="w"> </span>decix
 </span></code></pre></div>
 <p>Persist consumer state for resumable processing:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>rv-live<span class="w"> </span>--state<span class="w"> </span>/var/lib/bgpipe/rv-live.state
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>rv-live<span class="w"> </span>--state<span class="w"> </span>/var/lib/bgpipe/rv-live.state
 </span></code></pre></div>
 <p>Archive RouteViews data with RPKI validation:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>rv-live<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">'rv-updates.$TIME.json.gz'</span>
@@ -1676,10 +1714,10 @@ as different RouteViews peers may use 2-byte or 4-byte ASNs.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

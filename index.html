@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -557,6 +557,34 @@
     
   
     aspa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="stages/bmp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bmp
   
 
     
@@ -1460,8 +1488,18 @@
 <p><strong>bgpipe</strong> is an open-source tool that processes <a href="https://en.wikipedia.org/wiki/Border_Gateway_Protocol">BGP</a> messages
 through a pipeline of composable stages - <a href="https://www.youtube.com/watch?v=Y-YCYXGF_UY"><em>bridging the gaps</em></a> between monitoring and control.</p>
 <p>Usually, bgpipe sits between routers as a transparent proxy, auditing, filtering, and transforming BGP sessions on the fly.
+The same pipeline works on MRT archives, BMP feeds from your routers, and live streams from RIPE RIS and RouteViews.
 Built on the <a href="https://bgpfix.org/">bgpfix</a> library, written in <a href="https://go.dev/">Go</a>, and distributed under the MIT license.
 Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.3657000">research project</a> at the <a href="https://www.iitis.pl/en">Polish Academy of Sciences</a>.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>  sources               processors                      sinks
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  listen   ─┐                                       ┌─▶  connect
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  read      │   grep · rov · aspa · limit · update  │    write
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ris-live  ├─▶   tag · exec · pipe · metrics     ──┤    stdout
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  rv-live   │                                       │    websocket
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  bmp      ─┘                                       └─▶  bmp --write
+</span></code></pre></div>
+<p>Each stage does one thing; chain them with <code>--</code>. Messages flow in both directions,
+so the very same pipeline can sit inside a live BGP session.</p>
 <div class="grid cards">
 <ul>
 <li>
@@ -1488,63 +1526,70 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 </div>
 <h2 id="quick-demo">Quick Demo<a class="headerlink" href="#quick-demo" title="Permanent link">&para;</a></h2>
 <p>Stream <a href="https://ris-live.ripe.net/">live from RIPE RIS</a>, add <a href="https://en.wikipedia.org/wiki/Resource_Public_Key_Infrastructure">RPKI validation</a> on the fly, and show RPKI-invalid announcements:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span>-go<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="o">=</span>keep<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span>
 </span></code></pre></div>
 <p>Sample output:
-<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">[</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="s2">"R"</span><span class="p">,</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="mi">10843</span><span class="p">,</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="s2">"2026-02-10T12:47:02.900"</span><span class="p">,</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="s2">"UPDATE"</span><span class="p">,</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="p">{</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="nt">"reach"</span><span class="p">:[</span><span class="s2">"201.49.180.0/23"</span><span class="p">,</span><span class="s2">"201.49.181.0/24"</span><span class="p">],</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="nt">"attrs"</span><span class="p">:{</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">            </span><span class="nt">"ORIGIN"</span><span class="p">:{</span><span class="nt">"flags"</span><span class="p">:</span><span class="s2">"T"</span><span class="p">,</span><span class="nt">"value"</span><span class="p">:</span><span class="s2">"IGP"</span><span class="p">},</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">            </span><span class="nt">"ASPATH"</span><span class="p">:{</span><span class="nt">"flags"</span><span class="p">:</span><span class="s2">"T"</span><span class="p">,</span><span class="nt">"value"</span><span class="p">:[</span><span class="mi">199524</span><span class="p">,</span><span class="mi">174</span><span class="p">,</span><span class="mi">52320</span><span class="p">,</span><span class="mi">53062</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">52900</span><span class="p">,</span><span class="mi">273801</span><span class="p">]},</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">            </span><span class="nt">"NEXTHOP"</span><span class="p">:{</span><span class="nt">"flags"</span><span class="p">:</span><span class="s2">"T"</span><span class="p">,</span><span class="nt">"value"</span><span class="p">:</span><span class="s2">"196.60.9.188"</span><span class="p">}</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="p">},</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="p">{</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="nt">"PEER_IP"</span><span class="p">:</span><span class="s2">"196.60.9.188"</span><span class="p">,</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="nt">"PEER_AS"</span><span class="p">:</span><span class="s2">"199524"</span><span class="p">,</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">        </span><span class="nt">"COLLECTOR"</span><span class="p">:</span><span class="s2">"rrc19"</span><span class="p">,</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="nt">"RIS_HOST"</span><span class="p">:</span><span class="s2">"rrc19.ripe.net"</span><span class="p">,</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">        </span><span class="nt">"RIS_ID"</span><span class="p">:</span><span class="s2">"196.60.9.188-019c479748f40019"</span><span class="p">,</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">        </span><span class="nt">"rov/201.49.180.0/23"</span><span class="p">:</span><span class="s2">"INVALID"</span><span class="p">,</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="nt">"rov/201.49.181.0/24"</span><span class="p">:</span><span class="s2">"INVALID"</span><span class="p">,</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">        </span><span class="nt">"rov/status"</span><span class="p">:</span><span class="s2">"INVALID"</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="p">]</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">[</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="s2">"R"</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="mi">10843</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="s2">"2026-02-10T12:47:02.900"</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="s2">"UPDATE"</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="nt">"reach"</span><span class="p">:[</span><span class="s2">"201.49.180.0/23"</span><span class="p">,</span><span class="s2">"201.49.181.0/24"</span><span class="p">],</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="nt">"attrs"</span><span class="p">:{</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">            </span><span class="nt">"ORIGIN"</span><span class="p">:{</span><span class="nt">"flags"</span><span class="p">:</span><span class="s2">"T"</span><span class="p">,</span><span class="nt">"value"</span><span class="p">:</span><span class="s2">"IGP"</span><span class="p">},</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">            </span><span class="nt">"ASPATH"</span><span class="p">:{</span><span class="nt">"flags"</span><span class="p">:</span><span class="s2">"T"</span><span class="p">,</span><span class="nt">"value"</span><span class="p">:[</span><span class="mi">199524</span><span class="p">,</span><span class="mi">174</span><span class="p">,</span><span class="mi">52320</span><span class="p">,</span><span class="mi">53062</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">262907</span><span class="p">,</span><span class="mi">52900</span><span class="p">,</span><span class="mi">273801</span><span class="p">]},</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">            </span><span class="nt">"NEXTHOP"</span><span class="p">:{</span><span class="nt">"flags"</span><span class="p">:</span><span class="s2">"T"</span><span class="p">,</span><span class="nt">"value"</span><span class="p">:</span><span class="s2">"196.60.9.188"</span><span class="p">}</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">        </span><span class="nt">"PEER_IP"</span><span class="p">:</span><span class="s2">"196.60.9.188"</span><span class="p">,</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">        </span><span class="nt">"PEER_AS"</span><span class="p">:</span><span class="s2">"199524"</span><span class="p">,</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="nt">"COLLECTOR"</span><span class="p">:</span><span class="s2">"rrc19"</span><span class="p">,</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="nt">"RIS_HOST"</span><span class="p">:</span><span class="s2">"rrc19.ripe.net"</span><span class="p">,</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="nt">"RIS_ID"</span><span class="p">:</span><span class="s2">"196.60.9.188-019c479748f40019"</span><span class="p">,</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">        </span><span class="nt">"rov/201.49.180.0/23"</span><span class="p">:</span><span class="s2">"INVALID"</span><span class="p">,</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">        </span><span class="nt">"rov/201.49.181.0/24"</span><span class="p">:</span><span class="s2">"INVALID"</span><span class="p">,</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">        </span><span class="nt">"rov/status"</span><span class="p">:</span><span class="s2">"INVALID"</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="p">]</span>
 </span></code></pre></div></p>
 <p>More one-liners:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># convert an MRT archive to JSON, straight from RIPE RIS (or RouteViews) URL</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>$<span class="w"> </span>bgpipe<span class="w"> </span><span class="nb">read</span><span class="w"> </span>https://data.ris.ripe.net/rrc01/latest-update.gz<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># stream a full RIB snapshot as BGP updates, keeping one peer's view</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>$<span class="w"> </span>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>https://data.ris.ripe.net/rrc01/latest-bview.gz<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[PEER_AS] == "8218"'</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>$<span class="w"> </span>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">198</span>.51.100.7<span class="w"> </span>:179<span class="w"> </span>--<span class="w"> </span>rov<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">192</span>.0.2.1
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># convert an MRT archive to JSON, straight from RIPE RIS (or RouteViews) URL</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>$<span class="w"> </span>bgpipe<span class="w"> </span><span class="nb">read</span><span class="w"> </span>https://data.ris.ripe.net/rrc01/latest-update.gz<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># stream a full RIB snapshot as BGP updates, keeping one peer's view</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>$<span class="w"> </span>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>https://data.ris.ripe.net/rrc01/latest-bview.gz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[PEER_AS] == "8218"'</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>$<span class="w"> </span>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">198</span>.51.100.7<span class="w"> </span>:179<span class="w"> </span>--<span class="w"> </span>rov<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span>--wait<span class="w"> </span>listen<span class="w"> </span><span class="m">192</span>.0.2.1
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># BMP station: collect from your routers, keep post-policy routes, archive as MRT</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>$<span class="w"> </span>bgpipe<span class="w"> </span>--<span class="w"> </span>bmp<span class="w"> </span>--listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">192</span>.0.2.0/24<span class="w"> </span>:11019<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[BMP_RIB] == in-post'</span><span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>--every<span class="w"> </span>15m<span class="w"> </span><span class="s1">'bmp.$TIME.mrt.gz'</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="c1"># turn RIPE RIS Live into a BMP feed for your own collector</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>$<span class="w"> </span>bgpipe<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--<span class="w"> </span>bmp<span class="w"> </span>--write<span class="w"> </span>collector.example.net:11019
 </span></code></pre></div>
 <h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Docker</label><label for="__tabbed_1_2">Binary</label><label for="__tabbed_1_3">Go install</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/bgpfix/bgpipe:latest
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>wget<span class="w"> </span>-O<span class="w"> </span>bgpipe<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>https://github.com/bgpfix/bgpipe/releases/latest/download/bgpipe-linux-amd64
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>chmod<span class="w"> </span>+x<span class="w"> </span>bgpipe
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>wget<span class="w"> </span>-O<span class="w"> </span>bgpipe<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>https://github.com/bgpfix/bgpipe/releases/latest/download/bgpipe-linux-amd64
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>chmod<span class="w"> </span>+x<span class="w"> </span>bgpipe
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/bgpfix/bgpipe@latest
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/bgpfix/bgpipe@latest
 </span></code></pre></div>
 </div>
 </div>
@@ -1574,6 +1619,10 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 <p>Stream from RIPE RIS Live or RouteViews with real-time filters</p>
 </li>
 <li>
+<p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19.07 4.93-1.41 1.41A8.01 8.01 0 0 1 20 12a8 8 0 0 1-8 8 8 8 0 0 1-8-8c0-4.08 3.05-7.44 7-7.93v2.02C8.16 6.57 6 9.03 6 12a6 6 0 0 0 6 6 6 6 0 0 0 6-6c0-1.66-.67-3.16-1.76-4.24l-1.41 1.41C15.55 9.9 16 10.9 16 12a4 4 0 0 1-4 4 4 4 0 0 1-4-4c0-1.86 1.28-3.41 3-3.86v2.14c-.6.35-1 .98-1 1.72a2 2 0 0 0 2 2 2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V2h-1A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10c0-2.76-1.12-5.26-2.93-7.07"/></svg></span> <strong>BMP Station &amp; Exporter</strong></p>
+<p>Collect BMP from your routers, or turn any session, archive, or feed into BMP</p>
+</li>
+<li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17a2 2 0 0 0 2-2 2 2 0 0 0-2-2 2 2 0 0 0-2 2 2 2 0 0 0 2 2m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 0 1 5-5 5 5 0 0 1 5 5v2zm-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3"/></svg></span> <strong>Secure Transport</strong></p>
 <p>Add TCP-MD5 to sessions, proxy over encrypted WebSockets</p>
 </li>
@@ -1585,27 +1634,18 @@ Started in 2023 as part of a <a href="https://dl.acm.org/doi/10.1145/3634737.365
 </div>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>High performance</strong> - UPDATE parsing in ~175 ns with zero allocations, ~1M messages/s from MRT to JSON on one box</li>
-<li><strong>Hardened</strong> - all parsers are fuzzed, malformed input from a peer or a public feed can't crash the process, and capability negotiation is race-free</li>
-<li><strong>Transparent proxy</strong> - sits between two BGP speakers; with <a href="stages/connect/#transparent-mode">TPROXY mode</a>, invisible even at the IP layer - no router reconfiguration</li>
-<li><strong>Full JSON translation</strong> - bidirectional BGP &lt;-&gt; JSON for every message type, including <a href="flowspec/">Flowspec</a></li>
-<li><strong>Built-in filters</strong> - match on prefixes, AS paths, communities, attributes, and <a href="stages/tag/">tags</a> with a concise <a href="filters/">filter language</a></li>
-<li><strong>RPKI origin validation</strong> - <a href="stages/rov/">rov</a> stage implements RFC 6811, fed over HTTPS by default (Cloudflare's rpki-client export), RTR (also over TLS), or local files</li>
-<li><strong>ASPA path verification</strong> - <a href="stages/aspa/">aspa</a> stage detects route leaks per the IETF draft (-29, tested against its published examples) - available today, before router vendors ship it</li>
-<li><strong>Prefix and rate limits</strong> - enforce prefix count/length thresholds and message rate limits per session</li>
-<li><strong>Route policy</strong> - <a href="stages/update/">update</a> prepends and cleans AS_PATHs, scrubs communities by pattern, sets MED / LOCAL_PREF / ORIGIN, and drops attributes on the fly</li>
-<li><strong>Multiple data formats</strong> - read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format</li>
-<li><strong>Compression support</strong> - transparent gzip/bzip2/zstd for MRT and other file formats</li>
-<li><strong>HTTP/HTTPS sources</strong> - read directly from URLs (e.g. RouteViews or RIS MRT archives)</li>
-<li><strong>External program integration</strong> - pipe messages through any process (<code>exec</code>, <code>pipe</code> stages)</li>
-<li><strong>WebSocket transport</strong> - exchange messages over encrypted WebSockets for remote processing</li>
-<li><strong>TCP-MD5 handling</strong> - add or drop TCP-MD5 independently on each side of a session</li>
-<li><strong>Live data feeds</strong> - stream from <a href="https://ris-live.ripe.net/">RIPE RIS Live</a> or <a href="https://www.routeviews.org/">RouteViews</a> in real time</li>
-<li><strong>Message tagging</strong> - attach metadata to messages for downstream filtering and routing decisions</li>
-<li><strong>HTTP API</strong> - live dashboard, Prometheus metrics, Kubernetes-style liveness (<code>/hc</code>) and readiness (<code>/ready</code>) checks, and optional pprof profiling, with HTTP Basic Auth (<a href="http-api/">details</a>)</li>
-<li><strong>Config files</strong> - keep long pipelines in a file with comments, one stage per line: <code>bgpipe -f edge.conf</code> (<a href="quickstart/#config-files">details</a>)</li>
-<li><strong>Safe by default</strong> - peer allow-lists on <code>listen</code>, authenticated WebSocket servers, slow monitoring clients can never stall a session, and a warning for unencrypted RPKI sources</li>
-<li><strong>21 pipeline stages</strong> - composable building blocks, each doing one thing well (<a href="stages/">full list</a>)</li>
+<li><strong>Fast</strong> - UPDATE parsing in ~175 ns with zero allocations; ~1M messages/s from MRT to JSON on one box</li>
+<li><strong>Hardened</strong> - all parsers are fuzzed: malformed input from a peer or a public feed can't crash the process</li>
+<li><strong>Safe by default</strong> - peer allow-lists, authenticated servers, and slow clients can never stall a session</li>
+<li><strong>Interop-tested</strong> - every change runs against GoBGP, BIRD, FRR, NLnet Labs Rotonda, and FastNetMon Netom</li>
+<li><strong>Transparent proxy</strong> - with <a href="stages/connect/#transparent-mode">TPROXY mode</a>, invisible even at the IP layer: no router reconfiguration</li>
+<li><strong>RPKI</strong> - origin validation (<a href="stages/rov/">rov</a>, RFC 6811) and route leak detection (<a href="stages/aspa/">aspa</a>, IETF draft-29) - before router vendors ship it</li>
+<li><strong>Route policy</strong> - prefix and rate <a href="stages/limit/">limits</a>; AS_PATH, community, MED, LOCAL_PREF and ORIGIN rewrites with <a href="stages/update/">update</a></li>
+<li><strong>Every format</strong> - <a href="json-format/">JSON</a> (incl. <a href="flowspec/">Flowspec</a>), <a href="mrt/">MRT</a> updates and RIB dumps, BMP, OpenBMP, ExaBGP, and raw BGP; gzip/bzip2/zstd; files, URLs, and pipes</li>
+<li><strong>BMP</strong> - a <a href="stages/bmp/">station and exporter</a> over TCP or TLS: ADD-PATH per address family, RIB views, Peer Up/Down events, and statistics as metrics</li>
+<li><strong>Glue</strong> - a concise <a href="filters/">filter language</a>, message <a href="stages/tag/">tags</a>, external programs, WebSockets, TCP-MD5, and <a href="quickstart/#config-files">config files</a></li>
+<li><strong>Observable</strong> - live dashboard, Prometheus metrics, health checks, and pprof over the <a href="http-api/">HTTP API</a></li>
+<li><strong>22 stages</strong> - composable building blocks, each doing one thing well (<a href="stages/">full list</a>)</li>
 </ul>
 <h2 id="project">Project<a class="headerlink" href="#project" title="Permanent link">&para;</a></h2>
 <p>bgpipe is hosted on <a href="https://github.com/bgpfix/bgpipe">GitHub</a> under the MIT license,
@@ -1671,10 +1711,10 @@ built on the <a href="https://bgpfix.org/">bgpfix</a> library.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

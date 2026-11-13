@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -31,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -459,6 +459,34 @@
     
   
     aspa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bmp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bmp
   
 
     
@@ -1507,15 +1535,17 @@ Each message is tagged with peer and collector metadata:</p>
 </table>
 <p>These tags can be used in downstream <a href="../../filters/">filters</a>, for example:
 <code>tag[PEER_AS] == 13335</code> or <code>tag[RIS_HOST] ~ "rrc01"</code>.</p>
-<p>Connection retries are enabled by default. The stage monitors message
-freshness and treats stale messages (older than <code>--delay-err</code>) as connection
-errors, triggering a reconnect.</p>
+<p>Connection retries are enabled by default, and the wait before a reconnect
+resets after a session of over 30 seconds. The stage reconnects if the stream
+falls behind by more than <code>--delay-err</code>. Individual old messages from a backlogged
+peer do not count. Errors reported by RIS Live, for example when the client
+reads too slowly, appear in the log.</p>
 <p>Use <code>--sub</code> to pass a
 <a href="https://ris-live.ripe.net/manual/#ris_subscribe">RIS Live subscription filter</a>
 to limit the data at the source. The subscription JSON should include
 <code>"includeRaw": true</code> (or will be added automatically).</p>
-<p>The global <code>-g</code> / <code>--guess-asn</code> flag is recommended when using this stage,
-as different RIS peers may use 2-byte or 4-byte ASNs.</p>
+<p>Different RIS peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
+encoding automatically (see the global <code>--as4</code> option).</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1548,8 +1578,8 @@ as different RIS peers may use 2-byte or 4-byte ASNs.</p>
 <tr>
 <td><code>--read-timeout</code></td>
 <td>duration</td>
-<td><code>10s</code></td>
-<td>Max time between messages before reconnecting</td>
+<td><code>0</code></td>
+<td>Max time between messages before reconnecting; 0 means 10s, or none with <code>--sub</code></td>
 </tr>
 <tr>
 <td><code>--retry</code></td>
@@ -1567,28 +1597,28 @@ as different RIS peers may use 2-byte or 4-byte ASNs.</p>
 <td><code>--delay-err</code></td>
 <td>duration</td>
 <td><code>3m</code></td>
-<td>Treat messages older than this as errors; 0 disables</td>
+<td>Reconnect if the stream falls behind by more than this; 0 disables</td>
 </tr>
 </tbody>
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Stream all RIS Live updates and print to stdout:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>ris-live
 </span></code></pre></div>
 <p>Monitor a specific prefix in real-time:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'prefix ~ 1.1.1.0/24'</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'prefix ~ 1.1.1.0/24'</span>
 </span></code></pre></div>
 <p>Subscribe to a specific collector:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--sub<span class="w"> </span><span class="s1">'{"host":"rrc01"}'</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span>ris-live<span class="w"> </span>--sub<span class="w"> </span><span class="s1">'{"host":"rrc01"}'</span>
 </span></code></pre></div>
 <p>Stream with RPKI validation, show only invalid:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-go<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bgpipe<span class="w"> </span>-o<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--<span class="w"> </span>rov<span class="w"> </span>--invalid<span class="w"> </span>keep<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[rov/status] == INVALID'</span>
 </span></code></pre></div>
 <p>Archive RIS Live to compressed files with hourly rotation:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span>-g<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--<span class="w"> </span>ris-live<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>--every<span class="w"> </span>1h<span class="w"> </span><span class="s1">'ris-live.$TIME.mrt.gz'</span>
 </span></code></pre></div>
@@ -1649,10 +1679,10 @@ as different RIS peers may use 2-byte or 4-byte ASNs.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

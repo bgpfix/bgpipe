@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../img/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -31,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -459,6 +459,34 @@
     
   
     aspa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bmp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bmp
   
 
     
@@ -1480,12 +1508,19 @@ see every message.</p>
 The minimum rotation interval is 60 seconds.</p>
 <p>Files are written atomically: data is first written to a <code>.tmp</code> file, then
 renamed to the final path on successful completion. Empty files are removed
-automatically. Parent directories are created as needed.</p>
+automatically. Parent directories are created as needed. With <code>--append</code> or
+<code>--create</code>, and for targets that are not regular files (eg. <code>/dev/null</code> or a
+named pipe), data is written directly to the target instead.</p>
 <p>The output format is auto-detected from the file extension by default.
 For example, <code>output.json</code> selects JSON, <code>output.mrt</code> selects MRT.
 Compression is also auto-detected: <code>.gz</code> (gzip), <code>.bz2</code> (bzip2),
 <code>.zst</code> / <code>.zstd</code> (Zstandard). Writing to standard output defaults to JSON;
 use <code>--format</code> to override.</p>
+<p>With <code>--format bmp</code>, the output is a complete BMP session: an Initiation
+first, then a Peer Up before the first message of each peer, and the UPDATEs
+as Route Monitoring. So it can be replayed to any BMP station, eg. with
+<code>nc station 11019 &lt;file.bmp</code>. With <code>--every</code>, each file starts a new session.
+<code>--format obmp</code> writes each UPDATE as a standalone OpenBMP message.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1619,10 +1654,10 @@ use <code>--format</code> to override.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.top", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>
