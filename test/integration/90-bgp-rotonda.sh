@@ -45,6 +45,6 @@ wait_cmd 20 "[ \"\$(rib 198.51.100.0/24)\" = 0 ]"
 [ "$(rib 192.0.2.0/24)" = 1 ] || fail "192.0.2.0/24 gone after an unrelated withdrawal"
 
 # Rotonda must not have complained
-if jq -e 'select(.[3]=="NOTIFY")' <"$WORK/out.json" >/dev/null 2>&1; then
+if jq -n -e 'any(inputs; .[3]=="NOTIFY")' <"$WORK/out.json" >/dev/null 2>&1; then
 	fail "Rotonda sent a NOTIFICATION"
 fi

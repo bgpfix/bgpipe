@@ -46,6 +46,6 @@ wait_cmd 20 "curl -sf $API/ribs/ipv4unicast/routes/10.99.0.0/16 | jq -e '.data.r
 
 # both bgpipes must still be up, and Netom must not have complained
 kill -0 "$BGPIPE_PID" 2>/dev/null || fail "BMP reader died"
-if jq -e 'select(.[3]=="NOTIFY")' <"$WORK/feeder.json" >/dev/null 2>&1; then
+if jq -n -e 'any(inputs; .[3]=="NOTIFY")' <"$WORK/feeder.json" >/dev/null 2>&1; then
 	fail "Netom sent a NOTIFICATION"
 fi

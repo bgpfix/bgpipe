@@ -110,7 +110,8 @@ run_bgpipe() {
 # wait_json <timeout-seconds> <jq-expr> - wait for an output line matching expr
 wait_json() {
 	local t="$1" expr="$2" i=0
-	while ! jq -e "select($expr)" <"$WORK/out.json" >/dev/null 2>&1; do
+	# NB: not -e with select(), which fails on jq 1.6 if the last line does not match
+	while ! jq -n -e "any(inputs; $expr)" <"$WORK/out.json" >/dev/null 2>&1; do
 		i=$((i + 1))
 		[ $i -ge $((t * 5)) ] && fail "timeout waiting for JSON: $expr"
 		sleep 0.2

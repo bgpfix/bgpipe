@@ -19,6 +19,6 @@ msg "all $want UPDATEs arrived"
 "$BGPIPE" --log warn -- read "$TESTDATA/addpath.bmp" -- bmp --write "127.0.0.1:$LPORT"
 wait_json 10 '.[4].reach==["#2#10.0.0.0/24"] and .[5].PEER_AS=="65001"'
 wait_json 10 '.[4].unreach==["#1#10.0.0.0/24"]'
-if jq -e 'select(.[5].PEER_AS=="65001" and (.[4].reach // [] | index("0.0.0.0/0")))' <"$WORK/out.json" >/dev/null 2>&1; then
+if jq -n -e 'any(inputs; .[5].PEER_AS=="65001" and (.[4].reach // [] | index("0.0.0.0/0")))' <"$WORK/out.json" >/dev/null 2>&1; then
 	fail "Path Identifiers decoded as prefixes"
 fi

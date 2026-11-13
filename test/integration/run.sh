@@ -5,7 +5,6 @@ set -eu
 cd "$(dirname "$0")"
 
 command -v jq >/dev/null 2>&1 || { echo "error: jq is required" >&2; exit 1; }
-command -v docker >/dev/null 2>&1 || { echo "error: docker is required" >&2; exit 1; }
 
 # build bgpipe once for all tests (override with BGPIPE_BIN)
 if [ -z "${BGPIPE_BIN:-}" ]; then

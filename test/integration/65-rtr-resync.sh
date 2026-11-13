@@ -38,7 +38,7 @@ while :; do
 	[ $i -gt 30 ] && fail "revoked ROA still VALID (stale cache?)"
 	echo "$line" | jq -c ".[1]=$i" >&9
 	sleep 1
-	if jq -e "select(.[1]==$i and .[5][\"rov/status\"]==\"NOT_FOUND\")" \
+	if jq -n -e "any(inputs; .[1]==$i and .[5][\"rov/status\"]==\"NOT_FOUND\")" \
 		<"$WORK/out.json" >/dev/null 2>&1; then
 		break
 	fi
