@@ -200,6 +200,7 @@ func (s *StageBase) wgAdd(delta int) {
 		}
 		if o.IsConsumer {
 			s.B.wg_lread.Add(delta)
+			s.B.has_lread = true
 		}
 	}
 	if s.IsLeft {
@@ -208,6 +209,7 @@ func (s *StageBase) wgAdd(delta int) {
 		}
 		if o.IsConsumer {
 			s.B.wg_rread.Add(delta)
+			s.B.has_rread = true
 		}
 	}
 }
