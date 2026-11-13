@@ -80,7 +80,7 @@ func (b *Bgpipe) addFlags() {
 	f.BoolP("stdout-wait", "O", false, "like --stdout but wait for EVENT_EOR")
 	f.String("as4", "auto", "4-byte ASNs if not known from session or data: auto (4-byte, fall back to 2-byte), on, off")
 	f.String("caps", "", "use given BGP capabilities (JSON format)")
-	f.String("rpki", "https://rpki.cloudflare.com/rpki.json", "RPKI cache source: URL, RTR host:port, tls://host:port, or a local file path")
+	f.String("rpki", "https://rpki.cloudflare.com/rpki.json", "RPKI cache source: URL, RTR host:port, tls://host:port, or a local file path (JSON, CSV, CCR, or an RPKIviews .tgz)")
 	f.Duration("rpki-refresh", time.Hour, "RPKI RTR/URL refresh interval")
 	f.Duration("rpki-retry", 10*time.Minute, "RPKI RTR reconnect interval")
 	f.Bool("rpki-insecure", false, "do not validate the RPKI RTR server TLS certificate")

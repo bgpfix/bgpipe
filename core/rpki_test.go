@@ -1,6 +1,9 @@
 package core
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"io"
@@ -158,4 +161,35 @@ func TestRpkiFileLoadBroken(t *testing.T) {
 	b.UseRpki()
 	b.Rpki.source = file
 	require.Error(t, b.Rpki.fileLoad())
+}
+
+func TestRpkiDataTgz(t *testing.T) {
+	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(zw)
+	for _, f := range []struct{ name, body string }{
+		{"rpki/output/README", "readme"},
+		{"rpki/output/rpki-client.ccr", "ccr-bytes"},
+		{"rpki/output/other.ccr", "other"},
+	} {
+		require.NoError(t, tw.WriteHeader(&tar.Header{Name: f.name, Mode: 0o644, Size: int64(len(f.body))}))
+		_, err := tw.Write([]byte(f.body))
+		require.NoError(t, err)
+	}
+	require.NoError(t, tw.Close())
+	require.NoError(t, zw.Close())
+
+	// the first .ccr member of a .tgz, whatever the query string
+	data, err := rpkiData(bytes.NewReader(buf.Bytes()), "https://example.net/rpki-20261025.tgz?x=1")
+	require.NoError(t, err)
+	require.Equal(t, "ccr-bytes", string(data))
+
+	// other sources are read as they are
+	data, err = rpkiData(bytes.NewReader([]byte("plain")), "rpki.json")
+	require.NoError(t, err)
+	require.Equal(t, "plain", string(data))
+
+	// an archive without a .ccr file is an error
+	_, err = rpkiData(bytes.NewReader(buf.Bytes()[:0]), "empty.tgz")
+	require.Error(t, err)
 }

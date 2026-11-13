@@ -1,6 +1,8 @@
 package core
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
@@ -313,7 +315,7 @@ func (r *Rpki) urlFetch() error {
 		return fmt.Errorf("HTTP status %s", resp.Status)
 	}
 
-	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<30))
+	data, err := rpkiData(io.LimitReader(resp.Body, 1<<30), r.source)
 	if err != nil {
 		return err
 	}
@@ -326,6 +328,32 @@ func (r *Rpki) urlFetch() error {
 	return nil
 }
 
+// rpkiData reads RPKI data from rd. A .tgz source (eg. an RPKIviews snapshot)
+// is searched for its first .ccr file, so only the head of the archive is read.
+func rpkiData(rd io.Reader, source string) ([]byte, error) {
+	path, _, _ := strings.Cut(source, "?")
+	if !strings.HasSuffix(path, ".tgz") && !strings.HasSuffix(path, ".tar.gz") {
+		return io.ReadAll(rd)
+	}
+
+	zr, err := gzip.NewReader(rd)
+	if err != nil {
+		return nil, err
+	}
+	tr := tar.NewReader(zr)
+	for {
+		h, err := tr.Next()
+		if err == io.EOF {
+			return nil, errors.New("no .ccr file in the archive")
+		} else if err != nil {
+			return nil, err
+		}
+		if strings.HasSuffix(h.Name, ".ccr") {
+			return io.ReadAll(io.LimitReader(tr, 1<<28))
+		}
+	}
+}
+
 // fileLoad loads VRP/ASPA data from the file, unless already loaded.
 func (r *Rpki) fileLoad() error {
 	fi, err := os.Stat(r.source)
@@ -336,7 +364,12 @@ func (r *Rpki) fileLoad() error {
 		return nil
 	}
 
-	data, err := os.ReadFile(r.source)
+	f, err := os.Open(r.source)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	data, err := rpkiData(f, r.source)
 	if err != nil {
 		return err
 	}
