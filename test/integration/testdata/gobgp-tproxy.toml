@@ -1,0 +1,13 @@
+# router L (10.179.1.2): dials router R's real address, knows nothing of the proxy
+[global.config]
+  as = 65000
+  router-id = "10.179.1.2"
+  port = -1
+
+[[neighbors]]
+  [neighbors.config]
+    neighbor-address = "10.179.2.2"
+    peer-as = 65000
+  [neighbors.timers.config]
+    connect-retry = 3
+    idle-hold-time-after-reset = 1
