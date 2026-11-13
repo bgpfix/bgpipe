@@ -265,8 +265,8 @@ func (s *Bmp) serve(conn net.Conn, st *station) error {
 		_, err := rd.ReadFrom(conn)
 		s.Info().Msgf("%s: %d BMP messages, %d peers up, %d down", conn.RemoteAddr(),
 			rd.Stats.Parsed, rd.Stats.PeerUp, rd.Stats.PeerDown)
-		if s.Ctx.Err() != nil {
-			return nil
+		if s.Ctx.Err() != nil || s.isStopped() {
+			return nil // NB: Stop closed conn
 		}
 		return err
 	}
