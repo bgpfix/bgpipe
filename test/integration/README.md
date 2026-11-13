@@ -5,8 +5,8 @@ docker containers: GoBGP, BIRD, FRR (BGP sessions in both directions, plus a
 fully transparent proxy scenario), StayRTR and rtrtr (RPKI ROV and ASPA over
 the RTR protocol, including live ROA revocation), a real-world replay of
 500 RouteViews UPDATEs re-marshaled into FRR, NLnet Labs Rotonda (BGP in, RIB
-checked over its HTTP API), and FastNetMon Netom (BGP in, BMP restream read
-back by bgpipe).
+and BMP in, RIB checked over its HTTP API), and FastNetMon Netom (BGP in,
+BMP restream read back by bgpipe).
 
 Each test is a standalone shell script that doubles as a usage example: it
 shows the exact docker and bgpipe commands needed to wire bgpipe to a given
@@ -60,7 +60,7 @@ in CI (env CI set) missing docker is a failure instead.
 - Rotonda and Netom run a strict RFC 4271 FSM: an UPDATE before the session
   is established gets a NOTIFICATION, so the feeding stage needs
   `--wait ESTABLISHED`.
-- The Netom test reads Netom's BMP restream (bmp-tcp-out) through bash's
-  /dev/tcp into `read --format bmp -`, as bgpipe has no BMP-over-TCP stage.
+- BMP is tested in both roles of the bmp stage: as a station reading Netom's
+  restream (bmp-tcp-out), and as an exporter feeding Rotonda (bmp-tcp-in).
   Set NETOM_IMAGE to test another Netom build.
 - ExaBGP interop (exec --format=exa) is a possible later addition.

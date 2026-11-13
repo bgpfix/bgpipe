@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/bmp"
-	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/exa"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/mrt"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -745,6 +745,12 @@ func (eio *Extio) OnMsg(m *msg.Msg) (keep bool) {
 		}
 
 	case eio.opt_bmp, eio.opt_obmp:
+		// NB: Route Monitoring carries UPDATEs only (RFC 7854/4.6)
+		if m.Type != msg.UPDATE {
+			eio.Pool.Put(bb)
+			return keep
+		}
+
 		// marshal BGP message first
 		err = m.Marshal(eio.P.Caps)
 		if err != nil {

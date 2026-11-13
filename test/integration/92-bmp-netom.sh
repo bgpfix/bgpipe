@@ -31,20 +31,13 @@ for p in 192.0.2.0/24 198.51.100.0/24 10.99.0.0/16; do
 done
 
 # BMP station: Netom sends Initiation, Peer Up, the table dump, then live updates
-# NB: bgpipe has no BMP-over-TCP stage (yet), so let bash open the connection
-# NB: not run_bgpipe: bash gives background jobs /dev/null for stdin, unless
-# redirected right on the command
-exec 8<>"/dev/tcp/127.0.0.1/$BMPPORT"
-msg "bgpipe (BMP reader) <- 127.0.0.1:$BMPPORT"
-"$BGPIPE" --log warn -- read --format bmp - <&8 >"$WORK/out.json" 2>"$WORK/bgpipe.log" &
-BGPIPE_PID=$!
-PIDS="$PIDS $BGPIPE_PID"
+run_bgpipe -- bmp "127.0.0.1:$BMPPORT"
 
 # initial dump: all 3 prefixes, attributed to our BGP session
 for p in 192.0.2.0/24 198.51.100.0/24 10.99.0.0/16; do
 	wait_json 20 ".[3]==\"UPDATE\" and .[5].PEER_AS==\"65010\" and (.[4].reach // [] | index(\"$p\"))"
 done
-wait_json 20 '.[4].reach==["192.0.2.0/24"] and .[4].attrs.ASPATH.value==[65010,65001]'
+wait_json 20 '.[4].reach==["192.0.2.0/24"] and .[4].attrs.ASPATH.value==[65010,65001] and .[5].ROUTER=="netom-test"'
 
 # live: a withdrawal on the BGP session must come out of the BMP stream
 echo '{"unreach": ["198.51.100.0/24"]}' >&9

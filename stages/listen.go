@@ -53,17 +53,11 @@ func (s *Listen) Attach() error {
 		s.bind += ":179" // best-effort try
 	}
 
-	for _, v := range s.K.Strings("peer") {
-		p, err := netip.ParsePrefix(v)
-		if err != nil {
-			a, err := netip.ParseAddr(v)
-			if err != nil {
-				return fmt.Errorf("--peer %s: invalid IP or prefix", v)
-			}
-			p = netip.PrefixFrom(a, a.BitLen())
-		}
-		s.peers = append(s.peers, p.Masked())
+	peers, err := parsePeers(s.K.Strings("peer"))
+	if err != nil {
+		return err
 	}
+	s.peers = peers
 
 	s.in = s.P.AddInput(s.Dir)
 	return nil
@@ -125,9 +119,30 @@ func (s *Listen) Prepare() error {
 	return nil
 }
 
+// parsePeers parses --peer values: IP addresses or prefixes
+func parsePeers(vals []string) (peers []netip.Prefix, err error) {
+	for _, v := range vals {
+		p, err := netip.ParsePrefix(v)
+		if err != nil {
+			a, err := netip.ParseAddr(v)
+			if err != nil {
+				return nil, fmt.Errorf("--peer %s: invalid IP or prefix", v)
+			}
+			p = netip.PrefixFrom(a, a.BitLen())
+		}
+		peers = append(peers, p.Masked())
+	}
+	return peers, nil
+}
+
 // allowed returns true iff addr matches --peer (or no --peer given)
 func (s *Listen) allowed(addr net.Addr) bool {
-	if len(s.peers) == 0 {
+	return peerAllowed(s.peers, addr)
+}
+
+// peerAllowed returns true iff addr matches peers (or peers is empty)
+func peerAllowed(peers []netip.Prefix, addr net.Addr) bool {
+	if len(peers) == 0 {
 		return true
 	}
 	ta, ok := addr.(*net.TCPAddr)
@@ -135,7 +150,7 @@ func (s *Listen) allowed(addr net.Addr) bool {
 		return false
 	}
 	ip := ta.AddrPort().Addr().Unmap()
-	for _, p := range s.peers {
+	for _, p := range peers {
 		if p.Contains(ip) {
 			return true
 		}
