@@ -50,7 +50,7 @@ func NewRisLive(parent *core.StageBase) core.Stage {
 		"RIS Live streaming endpoint URL")
 	f.String("sub", "", "X-RIS-Subscribe header, see https://ris-live.ripe.net/manual/#ris_subscribe")
 	f.Duration("timeout", 10*time.Second, "connect timeout (0 means none)")
-	f.Duration("read-timeout", 10*time.Second, "stream read timeout (max time between messages)")
+	f.Duration("read-timeout", 0, "max time between messages (0 means 10s, or none with --sub)")
 	f.Bool("retry", true, "retry connection on errors")
 	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
 	f.Duration("delay-err", 3*time.Minute, "treat too old messages as connection errors (0 to disable)")
@@ -67,6 +67,15 @@ func (s *RisLive) Attach() error {
 	s.retry = k.Bool("retry")
 	s.retry_max = k.Int("retry-max")
 	s.delay_err = k.Duration("delay-err")
+
+	// NB: a filtered stream can be quiet for a long time; TCP keepalive still detects dead peers
+	if s.timeout_read == 0 {
+		if s.sub == "" {
+			s.timeout_read = 10 * time.Second
+		} else {
+			s.timeout_read = math.MaxInt64
+		}
+	}
 
 	// ensure --sub includes includeRaw=true
 	if sl := len(s.sub); sl > 0 {
@@ -99,20 +108,15 @@ func (s *RisLive) Run() error {
 		},
 	}
 
-	last_try := time.Now()
 	for try := 1; s.Ctx.Err() == nil; try++ {
 		// check retry limit
-		if time.Since(last_try) > time.Hour {
-			try = 1 // reset try count after long wait
-		}
 		if s.retry_max > 0 && try > s.retry_max {
 			return fmt.Errorf("max retries (%d) exceeded", s.retry_max)
 		}
-		last_try = time.Now()
 
 		// backoff before retry (skip on first try)
 		if try > 1 {
-			sec := min(60, (try-1)*(try-1)) + rand.Intn(try)
+			sec := min(60, (try-1)*(try-1)) + rand.Intn(min(try, 10))
 			s.Info().Int("try", try).Int("wait_sec", sec).Msg("waiting before reconnect")
 			select {
 			case <-time.After(time.Duration(sec) * time.Second):
@@ -136,12 +140,9 @@ func (s *RisLive) Run() error {
 		if err != nil {
 			if !s.retry {
 				return fmt.Errorf("connection failed: %w", err)
-			} else if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-				s.Warn().Err(err).Msg("connection failed")
-				continue
-			} else {
-				return fmt.Errorf("connection not possible: %w", err)
 			}
+			s.Warn().Err(err).Msg("connection failed")
+			continue
 		}
 
 		// check status code
@@ -157,11 +158,18 @@ func (s *RisLive) Run() error {
 
 		// stream messages
 		s.Info().Str("url", s.url).Msg("connected")
+		start := time.Now()
 		err = s.stream(resp)
 		if !s.retry {
 			return fmt.Errorf("stream error: %w", err)
 		} else {
 			s.Warn().Err(err).Msg("stream ended")
+		}
+
+		// reset try count after a session that worked
+		// NB: RIS Live closes a quiet stream after 60s, which must not grow the backoff
+		if time.Since(start) > 30*time.Second {
+			try = 0
 		}
 	}
 
@@ -183,7 +191,8 @@ func (s *RisLive) stream(resp *http.Response) error {
 	scanner.Buffer(nil, 1024*1024)
 
 	// read lines
-	var last_ts int64
+	// NB: skip the check for backlogged messages older than --delay-err from the start
+	last_ts := time.Now().Add(-s.delay_err).Unix()
 	for (rt.Reset(s.timeout_read) || true) && scanner.Scan() {
 		// skip empty lines
 		line := bytes.TrimSpace(scanner.Bytes())
@@ -277,6 +286,9 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 
 	// sanity checks
 	switch {
+	case ris_type == "ris_error":
+		s.Warn().Msgf("RIS Live error: %s", buf)
+		return ts, nil
 	case ris_type != "ris_message":
 		return ts, nil // NB: silently skip
 	case msg_type == "STATE":
