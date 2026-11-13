@@ -8,8 +8,21 @@ description: "bgpipe is an open-source BGP reverse proxy and pipeline processor 
 through a pipeline of composable stages - [*bridging the gaps*](https://www.youtube.com/watch?v=Y-YCYXGF_UY) between monitoring and control.
 
 Usually, bgpipe sits between routers as a transparent proxy, auditing, filtering, and transforming BGP sessions on the fly.
+The same pipeline works on MRT archives, BMP feeds from your routers, and live streams from RIPE RIS and RouteViews.
 Built on the [bgpfix](https://bgpfix.org/) library, written in [Go](https://go.dev/), and distributed under the MIT license.
 Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3634737.3657000) at the [Polish Academy of Sciences](https://www.iitis.pl/en).
+
+```
+  sources               processors                      sinks
+  listen   ─┐                                       ┌─▶  connect
+  read      │   grep · rov · aspa · limit · update  │    write
+  ris-live  ├─▶   tag · exec · pipe · metrics     ──┤    stdout
+  rv-live   │                                       │    websocket
+  bmp      ─┘                                       └─▶  bmp --write
+```
+
+Each stage does one thing; chain them with `--`. Messages flow in both directions,
+so the very same pipeline can sit inside a live BGP session.
 
 <div class="grid cards" markdown>
 
@@ -86,6 +99,13 @@ $ bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-bview.gz \
 
 # proxy a BGP session, dump messages to stdout, withdraw RPKI-invalid prefixes
 $ bgpipe -o -- listen --peer 198.51.100.7 :179 -- rov -- connect --wait listen 192.0.2.1
+
+# BMP station: collect from your routers, keep post-policy routes, archive as MRT
+$ bgpipe -- bmp --listen --peer 192.0.2.0/24 :11019 \
+    -- grep 'tag[BMP_RIB] == in-post' -- write --every 15m 'bmp.$TIME.mrt.gz'
+
+# turn RIPE RIS Live into a BMP feed for your own collector
+$ bgpipe -- ris-live -- bmp --write collector.example.net:11019
 ```
 
 ## Install
@@ -136,6 +156,10 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 
     Stream from RIPE RIS Live or RouteViews with real-time filters
 
+-   :material-radar:{ .lg } **BMP Station & Exporter**
+
+    Collect BMP from your routers, or turn any session, archive, or feed into BMP
+
 -   :material-lock:{ .lg } **Secure Transport**
 
     Add TCP-MD5 to sessions, proxy over encrypted WebSockets
@@ -148,28 +172,18 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 
 ## Features
 
-- **High performance** - UPDATE parsing in ~175 ns with zero allocations, ~1M messages/s from MRT to JSON on one box
-- **Hardened** - all parsers are fuzzed, malformed input from a peer or a public feed can't crash the process, and capability negotiation is race-free
-- **Transparent proxy** - sits between two BGP speakers; with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer - no router reconfiguration
-- **Full JSON translation** - bidirectional BGP <-> JSON for every message type, including [Flowspec](flowspec.md)
-- **Built-in filters** - match on prefixes, AS paths, communities, attributes, and [tags](stages/tag.md) with a concise [filter language](filters.md)
-- **RPKI origin validation** - [rov](stages/rov.md) stage implements RFC 6811, fed over HTTPS by default (Cloudflare's rpki-client export), RTR (also over TLS), or local files
-- **ASPA path verification** - [aspa](stages/aspa.md) stage detects route leaks per the IETF draft (-29, tested against its published examples) - available today, before router vendors ship it
-- **Prefix and rate limits** - enforce prefix count/length thresholds and message rate limits per session
-- **Route policy** - [update](stages/update.md) prepends and cleans AS_PATHs, scrubs communities by pattern, sets MED / LOCAL_PREF / ORIGIN, and drops attributes on the fly
-- **Multiple data formats** - read and write JSON, MRT, BMP, OpenBMP, ExaBGP, and raw BGP wire format
-- **Compression support** - transparent gzip/bzip2/zstd for MRT and other file formats
-- **HTTP/HTTPS sources** - read directly from URLs (e.g. RouteViews or RIS MRT archives)
-- **External program integration** - pipe messages through any process (`exec`, `pipe` stages)
-- **WebSocket transport** - exchange messages over encrypted WebSockets for remote processing
-- **TCP-MD5 handling** - add or drop TCP-MD5 independently on each side of a session
-- **Live data feeds** - stream from [RIPE RIS Live](https://ris-live.ripe.net/) or [RouteViews](https://www.routeviews.org/) in real time
-- **BMP station and exporter** - collect BMP from routers (ADD-PATH and RIB views per peer), or export any pipeline as a live BMP feed, over TCP or TLS ([bmp](stages/bmp.md))
-- **Message tagging** - attach metadata to messages for downstream filtering and routing decisions
-- **HTTP API** - live dashboard, Prometheus metrics, Kubernetes-style liveness (`/hc`) and readiness (`/ready`) checks, and optional pprof profiling, with HTTP Basic Auth ([details](http-api.md))
-- **Config files** - keep long pipelines in a file with comments, one stage per line: `bgpipe -f edge.conf` ([details](quickstart.md#config-files))
-- **Safe by default** - peer allow-lists on `listen`, authenticated WebSocket servers, slow monitoring clients can never stall a session, and a warning for unencrypted RPKI sources
-- **22 pipeline stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
+- **Fast** - UPDATE parsing in ~175 ns with zero allocations; ~1M messages/s from MRT to JSON on one box
+- **Hardened** - all parsers are fuzzed: malformed input from a peer or a public feed can't crash the process
+- **Safe by default** - peer allow-lists, authenticated servers, and slow clients can never stall a session
+- **Interop-tested** - every change runs against GoBGP, BIRD, FRR, NLnet Labs Rotonda, and FastNetMon Netom
+- **Transparent proxy** - with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer: no router reconfiguration
+- **RPKI** - origin validation ([rov](stages/rov.md), RFC 6811) and route leak detection ([aspa](stages/aspa.md), IETF draft-29) - before router vendors ship it
+- **Route policy** - prefix and rate [limits](stages/limit.md); AS_PATH, community, MED, LOCAL_PREF and ORIGIN rewrites with [update](stages/update.md)
+- **Every format** - [JSON](json-format.md) (incl. [Flowspec](flowspec.md)), [MRT](mrt.md) updates and RIB dumps, BMP, OpenBMP, ExaBGP, and raw BGP; gzip/bzip2/zstd; files, URLs, and pipes
+- **BMP** - a [station and exporter](stages/bmp.md) over TCP or TLS: ADD-PATH per address family, RIB views, Peer Up/Down events, and statistics as metrics
+- **Glue** - a concise [filter language](filters.md), message [tags](stages/tag.md), external programs, WebSockets, TCP-MD5, and [config files](quickstart.md#config-files)
+- **Observable** - live dashboard, Prometheus metrics, health checks, and pprof over the [HTTP API](http-api.md)
+- **22 stages** - composable building blocks, each doing one thing well ([full list](stages/index.md))
 
 ## Project
 
