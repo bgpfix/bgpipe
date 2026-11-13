@@ -79,6 +79,15 @@ run_daemon() {
 	msg "$name: container ${DAEMON%"${DAEMON#????????????}"} port ${PORT:-none}"
 }
 
+# daemon_port <container-port> - prints the host port mapped to another port of
+# $DAEMON (publish it with an extra -p 127.0.0.1:0:<container-port> in run_daemon)
+daemon_port() {
+	local p
+	p=$(docker port "$DAEMON" "$1" | head -1 | sed 's/.*://')
+	[ -n "$p" ] || fail "no mapped port for $1"
+	echo "$p"
+}
+
 # wait_tcp <host> <port> [timeout-seconds]
 wait_tcp() {
 	local h="$1" p="$2" t="${3:-30}" i=0
