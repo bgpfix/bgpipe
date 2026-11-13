@@ -3,7 +3,6 @@ package util
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -243,14 +242,12 @@ func DialRetry(s *core.StageBase, dialer *net.Dialer, network, address string) (
 			return conn, nil // success
 		} else if !retry || (retry_max > 0 && try >= retry_max) {
 			return nil, err // no (more) retries
-		} else if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-			s.Warn().Err(err).Msg("dial timeout, retrying")
-			continue // temporary timeout, retry
-		} else if timeout > 0 && errors.Is(err, context.DeadlineExceeded) {
-			s.Warn().Err(err).Msg("dial timeout, retrying")
-			continue // context timeout, retry
+		} else if s.Ctx.Err() != nil {
+			return nil, err // stopping
 		} else {
-			return nil, err // non-retryable error
+			// NB: retry also "connection refused" etc., eg. while the other side restarts
+			s.Warn().Err(err).Msg("dial failed, retrying")
+			continue
 		}
 	}
 }

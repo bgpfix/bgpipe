@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/netip"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/bgpfix/bgpfix/afi"
@@ -33,8 +34,16 @@ type Bmp struct {
 	tls    *tls.Config    // server TLS config, if any
 
 	mu      sync.Mutex
-	conns   map[net.Conn]chan []byte // open connections (the channel is nil in read mode)
+	conns   map[net.Conn]chan bmpOut // open connections (the channel is nil in read mode)
+	nconns  atomic.Int32             // len(conns), read without the lock
 	stopped bool
+	pool    sync.Pool // of *bmp.Bmp
+}
+
+// bmpOut is a marshaled Route Monitoring message for the stations
+type bmpOut struct {
+	buf []byte   // the BMP message, shared by all stations
+	dir meta.Dir // if not 0: the peer is the live BGP neighbor that sent the message in dir
 }
 
 func NewBmp(parent *core.StageBase) core.Stage {
@@ -70,7 +79,8 @@ func (s *Bmp) Attach() error {
 	k := s.K
 	s.listen = k.Bool("listen")
 	s.write = k.Bool("write")
-	s.conns = make(map[net.Conn]chan []byte)
+	s.conns = make(map[net.Conn]chan bmpOut)
+	s.pool.New = func() any { return bmp.NewBmp() }
 
 	s.addr = k.String("addr")
 	if _, _, err := net.SplitHostPort(s.addr); err != nil {
@@ -115,25 +125,21 @@ func (s *Bmp) Attach() error {
 }
 
 func (s *Bmp) Run() error {
-	// client mode: one connection at a time
-	// NB: DialRetry retries timeouts only; a station must also survive
-	// a refused connection, eg. while the other side restarts
-	for try := 1; !s.listen; try++ {
+	// client mode: one connection at a time, reconnect on --retry
+	for !s.listen {
 		conn, err := util.DialRetry(s.StageBase, nil, "tcp", s.addr)
-		if err == nil {
-			try = 0 // connected, start over
-			err = s.serve(conn)
-		}
-		max := s.K.Int("retry-max")
-		if !s.K.Bool("retry") || s.Ctx.Err() != nil || s.isStopped() || (max > 0 && try > max) {
+		if err != nil {
 			return err
 		}
-		wait := time.Duration(min(60, 1+try*try)) * time.Second
-		s.Warn().Err(err).Msgf("not connected, retrying in %s", wait)
-		select {
+		err = s.serve(conn)
+		if !s.K.Bool("retry") || s.Ctx.Err() != nil || s.isStopped() {
+			return err
+		}
+		s.Warn().Err(err).Msg("connection ended, reconnecting")
+		select { // NB: do not hammer a station that keeps closing on us
 		case <-s.Ctx.Done():
 			return nil
-		case <-time.After(wait):
+		case <-time.After(time.Second):
 		}
 	}
 
@@ -151,6 +157,9 @@ func (s *Bmp) Run() error {
 	}
 	go func() { <-s.Ctx.Done(); l.Close() }()
 	s.Info().Msgf("listening on %s", l.Addr())
+	if len(s.peers) == 0 {
+		s.Warn().Msg("no --peer given: any host can connect")
+	}
 
 	var wg sync.WaitGroup
 	defer wg.Wait()
@@ -180,13 +189,8 @@ func (s *Bmp) Stop() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.stopped = true
-	for conn, ch := range s.conns {
-		if ch != nil {
-			close(ch)
-		} else {
-			conn.Close()
-		}
-		delete(s.conns, conn)
+	for conn := range s.conns {
+		s.dropLocked(conn, 5*time.Second) // NB: time to drain, then Termination
 	}
 	return nil
 }
@@ -202,9 +206,9 @@ func (s *Bmp) serve(conn net.Conn) error {
 	defer conn.Close()
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 
-	var ch chan []byte
+	var ch chan bmpOut
 	if s.write {
-		ch = make(chan []byte, s.K.Int("buffer"))
+		ch = make(chan bmpOut, s.K.Int("buffer"))
 	}
 	s.mu.Lock()
 	if s.stopped {
@@ -212,6 +216,7 @@ func (s *Bmp) serve(conn net.Conn) error {
 		return nil
 	}
 	s.conns[conn] = ch
+	s.nconns.Store(int32(len(s.conns)))
 	s.mu.Unlock()
 	defer s.drop(conn)
 
@@ -245,15 +250,18 @@ func (s *Bmp) serve(conn net.Conn) error {
 
 	type peerKey [25]byte // peer type, distinguisher, and address
 	seen := make(map[peerKey]bool)
-	for buf := range ch {
-		key := peerKey(append(buf[6:7:7], buf[8:32]...))
+	for out := range ch {
+		buf := out.buf
+		var key peerKey
+		key[0] = buf[bmp.HEADLEN]                        // peer type
+		copy(key[1:], buf[bmp.HEADLEN+2:bmp.HEADLEN+26]) // NB: skip the flags
 		if !seen[key] {
 			seen[key] = true
 			bm.Reset()
 			if _, err := bm.Peer.FromBytes(buf[bmp.HEADLEN:]); err != nil {
 				return err
 			}
-			bm.SetPeerUp(s.peerUp(&bm.Peer))
+			bm.SetPeerUp(s.peerUp(&bm.Peer, out.dir))
 			if err := bm.Marshal(); err != nil {
 				return err
 			}
@@ -280,18 +288,28 @@ func (s *Bmp) serve(conn net.Conn) error {
 func (s *Bmp) drop(conn net.Conn) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if ch, ok := s.conns[conn]; ok {
-		delete(s.conns, conn)
-		if ch != nil {
-			close(ch)
-		} else {
-			conn.Close()
-		}
+	s.dropLocked(conn, 0)
+}
+
+// dropLocked is drop with s.mu held. A writer gets up to wait to finish writing.
+func (s *Bmp) dropLocked(conn net.Conn, wait time.Duration) {
+	ch, ok := s.conns[conn]
+	if !ok {
+		return
+	}
+	delete(s.conns, conn)
+	s.nconns.Store(int32(len(s.conns)))
+	if ch == nil {
+		conn.Close() // reader: unblock it
+	} else {
+		close(ch)
+		conn.SetWriteDeadline(time.Now().Add(wait)) // NB: a stuck station must not block us
 	}
 }
 
-// peerUp synthesizes the Peer Up body for peer: we did not see its real OPENs
-func (s *Bmp) peerUp(peer *bmp.Peer) *bmp.PeerUp {
+// peerUp returns the Peer Up body for peer. If dir is not 0, the peer is the live
+// BGP neighbor that sends in dir, so use the real OPENs; else synthesize them.
+func (s *Bmp) peerUp(peer *bmp.Peer, dir meta.Dir) *bmp.PeerUp {
 	mkopen := func(asn uint32, id netip.Addr) []byte {
 		m := msg.NewMsg().Switch(msg.OPEN)
 		o := &m.Open
@@ -325,28 +343,68 @@ func (s *Bmp) peerUp(peer *bmp.Peer) *bmp.PeerUp {
 	if peer.IsIPv6() {
 		local = netip.IPv6Unspecified()
 	}
-	return &bmp.PeerUp{
+	pu := &bmp.PeerUp{
 		LocalAddr:  local,
 		LocalPort:  179,
 		RemotePort: 179,
-		SentOpen:   mkopen(peer.AS, netip.AddrFrom4([4]byte{0, 0, 0, 1})), // NB: must differ from the peer's
-		RcvdOpen:   mkopen(peer.AS, id),
 	}
+
+	// a live session? NB: LineFor(dir).Open is the OPEN that travels in dir, ie. the peer's
+	if dir != 0 {
+		pu.RcvdOpen = openBytes(s.P.LineFor(dir).Open.Load())
+		pu.SentOpen = openBytes(s.P.LineFor(dir.Flip()).Open.Load())
+		side := "L_" // NB: the neighbor sending to R is on the L side
+		if dir == meta.DIR_L {
+			side = "R_"
+		}
+		if v, ok := s.P.KV.Load(side + "LOCAL"); ok {
+			if ap, ok := v.(netip.AddrPort); ok {
+				pu.LocalAddr, pu.LocalPort = ap.Addr().Unmap(), ap.Port()
+			}
+		}
+		if v, ok := s.P.KV.Load(side + "REMOTE"); ok {
+			if ap, ok := v.(netip.AddrPort); ok {
+				pu.RemotePort = ap.Port()
+			}
+		}
+	}
+	if pu.SentOpen == nil || pu.RcvdOpen == nil {
+		pu.SentOpen = mkopen(peer.AS, netip.AddrFrom4([4]byte{0, 0, 0, 1})) // NB: must differ from the peer's
+		pu.RcvdOpen = mkopen(peer.AS, id)
+	}
+	return pu
+}
+
+// openBytes returns the wire format of o, or nil
+func openBytes(o *msg.Open) []byte {
+	if o == nil || o.Msg == nil {
+		return nil
+	}
+	var bb bytes.Buffer
+	if _, err := o.Msg.WriteTo(&bb); err != nil {
+		return nil
+	}
+	return bb.Bytes()
 }
 
 // onMsg queues m to all connected BMP stations
 func (s *Bmp) onMsg(m *msg.Msg) bool {
-	if m.Marshal(s.P.Caps) != nil {
+	if s.nconns.Load() == 0 {
+		return true // NB: nobody to send to, skip the work
+	} else if m.Marshal(s.P.Caps) != nil {
 		return true
 	}
-	bm := bmp.NewBmp()
-	if bm.FromMsg(m, s.P.Caps) != nil {
+	bm := s.pool.Get().(*bmp.Bmp)
+	defer s.pool.Put(bm)
+	if bm.Reset().FromMsg(m, s.P.Caps) != nil {
 		return true
 	}
 
 	// no peer in message tags? it is a live BGP session: take the neighbor that sent m
 	peer := &bm.Peer
+	var dir meta.Dir
 	if !peer.Address.IsValid() {
+		dir = m.Dir
 		side := "L_REMOTE" // NB: m flowing to R was sent by L
 		if m.Dir == meta.DIR_L {
 			side = "R_REMOTE"
@@ -374,17 +432,16 @@ func (s *Bmp) onMsg(m *msg.Msg) bool {
 	if bm.Marshal() != nil {
 		return true
 	}
-	buf := append([]byte(nil), bm.Bytes()...)
+	out := bmpOut{append([]byte(nil), bm.Bytes()...), dir}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for conn, ch := range s.conns {
 		select {
-		case ch <- buf:
+		case ch <- out:
 		default: // NB: a slow station must not stall the pipe
 			s.Warn().Msgf("%s: too slow, dropping the connection", conn.RemoteAddr())
-			delete(s.conns, conn)
-			close(ch)
+			s.dropLocked(conn, 0)
 		}
 	}
 	return true

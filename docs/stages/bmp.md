@@ -23,6 +23,11 @@ station runs `bmp --listen :11019`, and a typical exporter `bmp --write
 station:11019`. With `--listen`, any number of peers can connect at the same
 time; use `--peer` to limit who can.
 
+NB: BMP has no authentication. A station injects whatever routes a connected
+peer sends, and an exporter sends the pipeline's routes to anyone who connects.
+Always use `--peer` with `--listen` (the stage warns without it), and TLS
+(`--cert`/`--key`, `--tls`) on untrusted networks.
+
 To read or write BMP *files*, use [read](read.md) and [write](write.md) with
 `--format bmp`.
 
@@ -40,8 +45,9 @@ Each UPDATE is tagged with where it comes from:
 
 Use them in filters, eg. `--of 'tag[BMP_RIB] == loc'`.
 
-The stage follows Peer Up and Peer Down notifications: ADD-PATH and the
-AS number size are taken per peer, as negotiated in its BGP session.
+The stage follows Peer Up and Peer Down notifications: ADD-PATH is taken per
+peer and address family, as negotiated in its BGP session, and the AS number
+size per peer.
 Statistics reports are ignored.
 
 ### Exporter
@@ -53,10 +59,13 @@ peer is taken from the message tags listed above, which is what
 set. For a live BGP session it is the neighbor that sent the UPDATE: its
 address, and the AS number and BGP Identifier from its OPEN.
 
-The OPEN messages in Peer Up are synthesized. Only UPDATEs are exported, and
+For a live BGP session, Peer Up carries the real OPEN messages of the session,
+so the station sees its true capabilities, hold time, and ADD-PATH; otherwise
+the OPENs are synthesized. Only UPDATEs are exported, and
 there is no initial table dump: a station sees what flows through the
 pipeline after it connects. A station that reads too slowly is disconnected
-(see `--buffer`), so it never stalls the pipeline.
+(see `--buffer`), so it never stalls the pipeline. When the pipeline stops,
+each station gets up to 5 seconds to receive what is queued for it.
 
 ## Options
 
@@ -71,7 +80,7 @@ pipeline after it connects. A station that reads too slowly is disconnected
 | `--insecure` | bool | `false` | Do not validate TLS certificates |
 | `--timeout` | duration | `15s` | TCP connect timeout (0 means off) |
 | `--keepalive` | duration | `15s` | TCP keepalive period (-1 means off) |
-| `--retry` | bool | `false` | Retry and reconnect on connection errors |
+| `--retry` | bool | `false` | Retry on connection errors (also refused connections), and reconnect when the session ends |
 | `--retry-max` | int | `0` | Maximum number of connection retries (0 means unlimited) |
 | `--sys-name` | string | `bgpipe` | sysName to send in export mode |
 | `--buffer` | int | `100000` | Export: max. queued messages per client before it is dropped |
