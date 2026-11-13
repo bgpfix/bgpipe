@@ -61,9 +61,11 @@ address, and the AS number and BGP Identifier from its OPEN.
 
 For a live BGP session, Peer Up carries the real OPEN messages of the session,
 so the station sees its true capabilities, hold time, and ADD-PATH; otherwise
-the OPENs are synthesized. Only UPDATEs are exported, and
+the OPENs are synthesized, announcing ADD-PATH where the exported UPDATEs
+carry path IDs. Only UPDATEs are exported, and
 there is no initial table dump: a station sees what flows through the
-pipeline after it connects. A station that reads too slowly is disconnected
+pipeline after it connects. Without `--listen`, the stage connects before the
+pipeline starts, so eg. a file replay is exported from its first UPDATE. A station that reads too slowly is disconnected
 (see `--buffer`), so it never stalls the pipeline. When the pipeline stops,
 each station gets up to 5 seconds to receive what is queued for it.
 

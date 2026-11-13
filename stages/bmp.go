@@ -37,13 +37,32 @@ type Bmp struct {
 	conns   map[net.Conn]chan bmpOut // open connections (the channel is nil in read mode)
 	nconns  atomic.Int32             // len(conns), read without the lock
 	stopped bool
-	pool    sync.Pool // of *bmp.Bmp
+	ln      net.Listener // with --listen
+	first   net.Conn     // exporter: the connection made in Prepare
+	pool    sync.Pool    // of *bmp.Bmp
 }
 
 // bmpOut is a marshaled Route Monitoring message for the stations
 type bmpOut struct {
-	buf []byte   // the BMP message, shared by all stations
-	dir meta.Dir // if not 0: the peer is the live BGP neighbor that sent the message in dir
+	buf  []byte   // the BMP message, shared by all stations
+	live meta.Dir // if not 0: the peer is the live BGP neighbor that sent the message in this dir
+
+	// how the UPDATE encodes ADD-PATH (see meta.Meta)
+	dir     meta.Dir
+	addpath int8
+	perfam  map[afi.AS]bool
+}
+
+// hasAddPath returns true iff the UPDATE in o carries path IDs for as
+func (o *bmpOut) hasAddPath(as afi.AS, cps caps.Caps) bool {
+	switch {
+	case o.perfam != nil:
+		return o.perfam[as]
+	case o.addpath != 0:
+		return o.addpath > 0
+	default:
+		return cps.AddPathEnabled(as, o.dir)
+	}
 }
 
 func NewBmp(parent *core.StageBase) core.Stage {
@@ -124,14 +143,34 @@ func (s *Bmp) Attach() error {
 	return nil
 }
 
+// Prepare connects an exporter before the pipeline starts, so it gets every UPDATE
+// (eg. in read file.mrt -- bmp --write)
+func (s *Bmp) Prepare() error {
+	if s.listen || !s.write {
+		return nil
+	}
+	conn, err := util.DialRetry(s.StageBase, nil, "tcp", s.addr)
+	if err != nil {
+		return err
+	}
+	s.add(conn)
+	s.first = conn
+	return nil
+}
+
 func (s *Bmp) Run() error {
 	// client mode: one connection at a time, reconnect on --retry
 	for !s.listen {
-		conn, err := util.DialRetry(s.StageBase, nil, "tcp", s.addr)
-		if err != nil {
-			return err
+		conn := s.first
+		s.first = nil
+		if conn == nil {
+			var err error
+			conn, err = util.DialRetry(s.StageBase, nil, "tcp", s.addr)
+			if err != nil {
+				return err
+			}
 		}
-		err = s.serve(conn)
+		err := s.serve(conn)
 		if !s.K.Bool("retry") || s.Ctx.Err() != nil || s.isStopped() {
 			return err
 		}
@@ -156,6 +195,13 @@ func (s *Bmp) Run() error {
 		l = tls.NewListener(l, s.tls)
 	}
 	go func() { <-s.Ctx.Done(); l.Close() }()
+	s.mu.Lock()
+	s.ln = l
+	stopped := s.stopped
+	s.mu.Unlock()
+	if stopped {
+		l.Close()
+	}
 	s.Info().Msgf("listening on %s", l.Addr())
 	if len(s.peers) == 0 {
 		s.Warn().Msg("no --peer given: any host can connect")
@@ -166,7 +212,7 @@ func (s *Bmp) Run() error {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			if s.Ctx.Err() != nil {
+			if s.Ctx.Err() != nil || s.isStopped() {
 				return nil
 			}
 			return err
@@ -189,6 +235,9 @@ func (s *Bmp) Stop() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.stopped = true
+	if s.ln != nil {
+		s.ln.Close() // NB: --stop does not cancel s.Ctx
+	}
 	for conn := range s.conns {
 		s.dropLocked(conn, 5*time.Second) // NB: time to drain, then Termination
 	}
@@ -206,18 +255,10 @@ func (s *Bmp) serve(conn net.Conn) error {
 	defer conn.Close()
 	s.Info().Msgf("connected %s -> %s", conn.LocalAddr(), conn.RemoteAddr())
 
-	var ch chan bmpOut
-	if s.write {
-		ch = make(chan bmpOut, s.K.Int("buffer"))
+	ch, ok := s.add(conn)
+	if !ok {
+		return nil // stopped
 	}
-	s.mu.Lock()
-	if s.stopped {
-		s.mu.Unlock()
-		return nil
-	}
-	s.conns[conn] = ch
-	s.nconns.Store(int32(len(s.conns)))
-	s.mu.Unlock()
 	defer s.drop(conn)
 
 	// collect: every connection has its own parser state
@@ -247,6 +288,9 @@ func (s *Bmp) serve(conn net.Conn) error {
 		return err
 	}
 	bw.Write(bm.Bytes())
+	if err := bw.Flush(); err != nil {
+		return err
+	}
 
 	type peerKey [25]byte // peer type, distinguisher, and address
 	seen := make(map[peerKey]bool)
@@ -261,7 +305,7 @@ func (s *Bmp) serve(conn net.Conn) error {
 			if _, err := bm.Peer.FromBytes(buf[bmp.HEADLEN:]); err != nil {
 				return err
 			}
-			bm.SetPeerUp(s.peerUp(&bm.Peer, out.dir))
+			bm.SetPeerUp(s.peerUp(&bm.Peer, &out))
 			if err := bm.Marshal(); err != nil {
 				return err
 			}
@@ -282,6 +326,23 @@ func (s *Bmp) serve(conn net.Conn) error {
 	}
 	bw.Write(bm.Bytes())
 	return bw.Flush()
+}
+
+// add registers conn, unless already registered; returns false if stopped
+func (s *Bmp) add(conn net.Conn) (ch chan bmpOut, ok bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.stopped {
+		return nil, false
+	} else if ch, ok = s.conns[conn]; ok {
+		return ch, true
+	}
+	if s.write {
+		ch = make(chan bmpOut, s.K.Int("buffer"))
+	}
+	s.conns[conn] = ch
+	s.nconns.Store(int32(len(s.conns)))
+	return ch, true
 }
 
 // drop forgets conn and makes its serve return
@@ -307,9 +368,9 @@ func (s *Bmp) dropLocked(conn net.Conn, wait time.Duration) {
 	}
 }
 
-// peerUp returns the Peer Up body for peer. If dir is not 0, the peer is the live
-// BGP neighbor that sends in dir, so use the real OPENs; else synthesize them.
-func (s *Bmp) peerUp(peer *bmp.Peer, dir meta.Dir) *bmp.PeerUp {
+// peerUp returns the Peer Up body for peer, the sender of the first message out.
+// For a live BGP neighbor, use the real OPENs; else synthesize them.
+func (s *Bmp) peerUp(peer *bmp.Peer, out *bmpOut) *bmp.PeerUp {
 	mkopen := func(asn uint32, id netip.Addr) []byte {
 		m := msg.NewMsg().Switch(msg.OPEN)
 		o := &m.Open
@@ -327,6 +388,17 @@ func (s *Bmp) peerUp(peer *bmp.Peer, dir meta.Dir) *bmp.PeerUp {
 			if pmp, ok := s.P.Caps.Get(caps.CAP_MP).(*caps.MP); ok {
 				for _, as := range pmp.Sorted() {
 					mp.Add(as.Afi(), as.Safi())
+				}
+			}
+
+			// NB: announce ADD-PATH where the exported UPDATEs carry path IDs
+			var ap *caps.AddPath
+			for _, as := range mp.Sorted() {
+				if out.hasAddPath(as, s.P.Caps) {
+					if ap == nil {
+						ap = o.Caps.Use(caps.CAP_ADDPATH).(*caps.AddPath)
+					}
+					ap.Add(as, caps.ADDPATH_BIDIR)
 				}
 			}
 		}
@@ -350,7 +422,7 @@ func (s *Bmp) peerUp(peer *bmp.Peer, dir meta.Dir) *bmp.PeerUp {
 	}
 
 	// a live session? NB: LineFor(dir).Open is the OPEN that travels in dir, ie. the peer's
-	if dir != 0 {
+	if dir := out.live; dir != 0 {
 		pu.RcvdOpen = openBytes(s.P.LineFor(dir).Open.Load())
 		pu.SentOpen = openBytes(s.P.LineFor(dir.Flip()).Open.Load())
 		side := "L_" // NB: the neighbor sending to R is on the L side
@@ -402,9 +474,9 @@ func (s *Bmp) onMsg(m *msg.Msg) bool {
 
 	// no peer in message tags? it is a live BGP session: take the neighbor that sent m
 	peer := &bm.Peer
-	var dir meta.Dir
+	var live meta.Dir
 	if !peer.Address.IsValid() {
-		dir = m.Dir
+		live = m.Dir
 		side := "L_REMOTE" // NB: m flowing to R was sent by L
 		if m.Dir == meta.DIR_L {
 			side = "R_REMOTE"
@@ -432,7 +504,13 @@ func (s *Bmp) onMsg(m *msg.Msg) bool {
 	if bm.Marshal() != nil {
 		return true
 	}
-	out := bmpOut{append([]byte(nil), bm.Bytes()...), dir}
+	out := bmpOut{
+		buf:     append([]byte(nil), bm.Bytes()...),
+		live:    live,
+		dir:     m.Dir,
+		addpath: m.ParseAddPath,
+		perfam:  m.AddPath,
+	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
