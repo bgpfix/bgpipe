@@ -2,6 +2,7 @@ package stages
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/msg"
@@ -13,7 +14,7 @@ type Grep struct {
 	*core.StageBase
 	invert bool
 	filter *filter.Filter
-	eval   *filter.Eval
+	evals  sync.Pool // of *filter.Eval, callbacks of different inputs run concurrently
 
 	keep        bool
 	event_match string
@@ -24,7 +25,7 @@ type Grep struct {
 
 func NewGrep(parent *core.StageBase) core.Stage {
 	s := &Grep{StageBase: parent}
-	s.eval = filter.NewEval(false)
+	s.evals.New = newEval
 
 	o := &s.Options
 	o.Bidir = true
@@ -78,8 +79,10 @@ func (s *Grep) Attach() (err error) {
 func (s *Grep) check(m *msg.Msg) bool {
 	// evaluate the filter
 	mx := pipe.UseContext(m)
-	s.eval.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
-	res := s.eval.Run(s.filter)
+	ev := s.evals.Get().(*filter.Eval)
+	ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
+	res := ev.Run(s.filter)
+	s.evals.Put(ev)
 
 	// emit events / kill the session?
 	if res {
@@ -105,3 +108,5 @@ func (s *Grep) check(m *msg.Msg) bool {
 		return res
 	}
 }
+
+func newEval() any { return filter.NewEval(false) }

@@ -7,7 +7,7 @@ godebug multipathtcp=0
 
 require (
 	github.com/VictoriaMetrics/metrics v1.44.1
-	github.com/bgpfix/bgpfix v0.24.1-0.20261109122331-42371ec83746
+	github.com/bgpfix/bgpfix v0.24.1-0.20261113100701-da26faf2ec67
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/gorilla/websocket v1.5.3

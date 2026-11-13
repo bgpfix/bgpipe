@@ -24,6 +24,9 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
+// MAX_LINE bounds a text line (same as the websocket message limit)
+const MAX_LINE = 4 * 1024 * 1024
+
 var (
 	bbpool   bytebufferpool.Pool
 	mrtPool  = sync.Pool{New: func() any { return mrt.NewMrt() }}
@@ -63,6 +66,7 @@ type Extio struct {
 	InputR     *pipe.Input    // our R input to bgpipe
 	InputD     *pipe.Input    // default input if data doesn't specify the direction
 	drop_input atomic.Bool    // if true, drop all input from the process
+	discard    bool           // text input: skipping the rest of an oversized line
 
 	Output chan *bytebufferpool.ByteBuffer // output ready to be sent to the process
 	Pool   *bytebufferpool.Pool            // pool of byte buffers
@@ -487,9 +491,9 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 		if eio.opt_pardon {
 			read_err = nil
 		} else if eio.opt_raw {
-			eio.Err(read_err).Hex("input", buf).Msg("input read single error")
+			eio.Err(read_err).Hex("input", buf[:min(len(buf), 1000)]).Msg("input read single error")
 		} else {
-			eio.Err(read_err).Bytes("input", buf).Msg("input read single error")
+			eio.Err(read_err).Bytes("input", buf[:min(len(buf), 1000)]).Msg("input read single error")
 		}
 		eio.P.PutMsg(m)
 		return read_err
@@ -561,16 +565,39 @@ func (eio *Extio) ReadBuf(buf []byte, cb pipe.CallbackFunc) (read_err error) {
 			read_err = err
 		}
 	} else { // buffer and parse all lines in buf so far
+		// after an oversized line, skip what is left of it
+		if eio.discard {
+			i := bytes.IndexByte(buf, '\n')
+			if i < 0 {
+				return nil
+			}
+			buf, eio.discard = buf[i+1:], false
+		}
+
 		eio.buf.Write(buf)
 		for {
 			i := bytes.IndexByte(eio.buf.Bytes(), '\n')
 			if i < 0 {
 				break
 			}
-			err := eio.ReadSingle(eio.buf.Next(i+1), cb)
-			if err != nil {
+			line := eio.buf.Next(i + 1)
+			if len(line) > MAX_LINE {
+				if !eio.opt_pardon {
+					eio.Err(ErrLength).Msg("input read stream error")
+					return ErrLength // NB: stop now, before the lines that follow
+				}
+				continue
+			}
+			if err := eio.ReadSingle(line, cb); err != nil {
 				return err
 			}
+		}
+
+		// an endless line would grow the buffer without bound
+		if eio.buf.Len() > MAX_LINE {
+			eio.buf.Reset()
+			eio.discard = true
+			read_err = ErrLength
 		}
 	}
 
@@ -609,7 +636,7 @@ func (eio *Extio) ReadStream(rd io.Reader, cb pipe.CallbackFunc) (read_err error
 			return read_err
 		case err == io.EOF:
 			// NB: the last line may lack the newline; don't lose it, nor glue it to the next input
-			if eio.buf.Len() > 0 {
+			if eio.buf.Len() > 0 || eio.discard {
 				if err := eio.ReadBuf([]byte{'\n'}, cb); err != nil {
 					return err
 				}

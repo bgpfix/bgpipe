@@ -233,20 +233,14 @@ func (s *Websocket) serverListen() {
 }
 
 func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
-	headers := s.headers
-
 	// require authorization?
-	if auth := headers.Get("Authorization"); len(auth) > 0 {
+	if auth := s.headers.Get("Authorization"); len(auth) > 0 {
 		if subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte(auth)) != 1 {
 			s.Warn().Msgf("%s: not authorized", r.RemoteAddr)
 			w.Header().Set("WWW-Authenticate", `Basic realm="bgpipe"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-
-		// avoid sending auth back to client
-		headers = headers.Clone()
-		headers.Del("Authorization")
 	}
 
 	// websocket upgrader
@@ -264,7 +258,7 @@ func (s *Websocket) serverHandle(w http.ResponseWriter, r *http.Request) {
 			return strings.EqualFold(u.Host, r.Host)
 		},
 	}
-	conn, err := upgrader.Upgrade(w, r, headers)
+	conn, err := upgrader.Upgrade(w, r, nil) // NB: --header is for client mode only
 	if err != nil {
 		s.Warn().Err(err).Msgf("%s: could not upgrade", r.RemoteAddr)
 		return
