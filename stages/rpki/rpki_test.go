@@ -76,7 +76,7 @@ func setEmptyAsPath(m *msg.Msg) {
 	ap.Segments = ap.Segments[:0]
 }
 
-func storeOpenASN(p *pipe.Pipe, d meta.Dir, asn int) {
+func storeOpenASN(p *pipe.Pipe, d meta.Dir, asn uint32) {
 	om := &msg.Open{}
 	om.Caps.Init()
 	om.SetASN(asn)

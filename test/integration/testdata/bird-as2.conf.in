@@ -1,0 +1,19 @@
+# BIRD without 4-byte ASN support (RFC 6793 off), dialing out to bgpipe listen
+router id 10.0.0.45;
+log stderr all;
+
+protocol device { }
+
+protocol static statics {
+  ipv4;
+  route 10.45.0.0/24 blackhole;
+  route 10.46.0.0/24 blackhole { bgp_path.prepend(4200000001); };
+}
+
+protocol bgp b1 {
+  local as 65045;
+  neighbor @HOSTIP@ port @PORT@ as 65000;
+  enable as4 off;
+  hold time 90;
+  ipv4 { import all; export where source = RTS_STATIC; next hop self; };
+}

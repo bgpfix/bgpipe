@@ -26,7 +26,9 @@ The minimum rotation interval is 60 seconds.
 
 Files are written atomically: data is first written to a `.tmp` file, then
 renamed to the final path on successful completion. Empty files are removed
-automatically. Parent directories are created as needed.
+automatically. Parent directories are created as needed. With `--append` or
+`--create`, and for targets that are not regular files (eg. `/dev/null` or a
+named pipe), data is written directly to the target instead.
 
 The output format is auto-detected from the file extension by default.
 For example, `output.json` selects JSON, `output.mrt` selects MRT.

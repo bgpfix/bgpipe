@@ -67,7 +67,7 @@ bgpipe -o -- read https://data.ris.ripe.net/rrc01/latest-update.gz
 Read a whole day of hourly dumps as one stream:
 
 ```bash
-bgpipe -g -- read -A dumps/ris.20261025.*.json.zst -- rov -- aspa --role provider
+bgpipe -- read -A dumps/ris.20261025.*.json.zst -- rov -- aspa --role provider
 ```
 
 Read a local MRT file and filter for a prefix:
