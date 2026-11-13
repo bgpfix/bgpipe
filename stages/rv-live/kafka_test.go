@@ -16,5 +16,5 @@ func TestConsumeStale(t *testing.T) {
 	defer client.Close()
 
 	s := &RvLive{StageBase: &core.StageBase{Ctx: t.Context()}, stale: 100 * time.Millisecond}
-	require.ErrorContains(t, s.consume(client), "connection stale")
+	require.ErrorContains(t, s.consume(t.Context(), client), "connection stale")
 }

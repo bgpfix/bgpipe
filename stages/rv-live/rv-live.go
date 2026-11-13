@@ -8,9 +8,9 @@ import (
 	"os"
 	"regexp"
 	"sync"
+	"sync/atomic"
 	"time"
 
-	"github.com/bgpfix/bgpfix/bmp"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 )
@@ -32,6 +32,7 @@ type RvLive struct {
 	stale         time.Duration
 	retry         bool
 	retry_max     int
+	consumers     int
 	keep_aspath   bool
 
 	// state management
@@ -39,9 +40,8 @@ type RvLive struct {
 	state_mu    sync.Mutex
 	state_dirty bool
 
-	// reusable parsers
-	obmp_msg *bmp.OpenBmp
-	bmp_msg  *bmp.Bmp
+	start     time.Time    // when the session started, then when it started to consume
+	last_data atomic.Int64 // when any consumer last got records (unix nanoseconds)
 }
 
 func NewRvLive(parent *core.StageBase) core.Stage {
@@ -64,6 +64,7 @@ func NewRvLive(parent *core.StageBase) core.Stage {
 	f.Duration("refresh", 5*time.Minute, "topic refresh interval")
 	f.Duration("timeout", 30*time.Second, "connection timeout")
 	f.Duration("stale", 3*time.Minute, "reconnect if no data for this long (0 to disable)")
+	f.Int("consumers", 4, "number of parallel Kafka consumers")
 	f.Bool("retry", true, "retry connection on errors")
 	f.Int("retry-max", 0, "maximum number of retries (0 means unlimited)")
 	f.Bool("keep-aspath", false, "keep collector AS in AS_PATH")
@@ -80,6 +81,7 @@ func (s *RvLive) Attach() error {
 	s.refresh = k.Duration("refresh")
 	s.timeout = k.Duration("timeout")
 	s.stale = k.Duration("stale")
+	s.consumers = k.Int("consumers")
 	s.retry = k.Bool("retry")
 	s.retry_max = k.Int("retry-max")
 	s.keep_aspath = k.Bool("keep-aspath")
@@ -104,10 +106,6 @@ func (s *RvLive) Attach() error {
 		s.group = fmt.Sprintf("bgpipe-%d-%d", os.Getpid(), time.Now().UnixNano())
 	}
 
-	// Initialize parsers
-	s.obmp_msg = bmp.NewOpenBmp()
-	s.bmp_msg = bmp.NewBmp()
-
 	// Load state file if specified
 	if s.state_file != "" {
 		s.Debug().Str("file", s.state_file).Msg("loading state file")
@@ -129,20 +127,14 @@ func (s *RvLive) Attach() error {
 func (s *RvLive) Run() error {
 	defer s.in.Close()
 
-	lastTry := time.Now()
 	for try := 1; s.Ctx.Err() == nil; try++ {
-		// Reset try count after long success
-		if time.Since(lastTry) > time.Hour {
-			try = 1
-		}
 		if s.retry_max > 0 && try > s.retry_max {
 			return fmt.Errorf("max retries (%d) exceeded", s.retry_max)
 		}
-		lastTry = time.Now()
 
 		// Backoff before retry (skip on first try)
 		if try > 1 {
-			sec := min(60, (try-1)*(try-1)) + rand.Intn(try)
+			sec := min(60, (try-1)*(try-1)) + rand.Intn(min(try, 10))
 			s.Info().Int("try", try).Int("wait_sec", sec).Msg("waiting before reconnect")
 			select {
 			case <-time.After(time.Duration(sec) * time.Second):
@@ -152,6 +144,7 @@ func (s *RvLive) Run() error {
 		}
 
 		// Run Kafka consumer
+		s.start = time.Now()
 		err := s.runKafka()
 		if err == nil || s.Ctx.Err() != nil {
 			return err
@@ -161,6 +154,11 @@ func (s *RvLive) Run() error {
 			return fmt.Errorf("kafka error: %w", err)
 		}
 		s.Warn().Err(err).Msg("kafka connection ended")
+
+		// Reset try count if records kept coming for a while
+		if time.Unix(0, s.last_data.Load()).Sub(s.start) > time.Minute {
+			try = 0
+		}
 	}
 
 	return context.Cause(s.Ctx)

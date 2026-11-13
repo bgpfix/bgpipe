@@ -42,6 +42,11 @@ The `--state` option enables offset persistence: the stage saves its Kafka
 consumer position to a file and resumes from the same point on restart.
 This prevents re-processing messages after a pipeline restart.
 
+Over long distances, each broker sends only about 1 MB/s per connection, which is
+not enough for the whole RouteViews feed. The stage therefore reads with `--consumers`
+parallel Kafka consumers in one consumer group. Messages from one topic stay in order,
+but messages from different topics can interleave differently between runs.
+
 Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for `--stale` duration.
 
@@ -61,6 +66,7 @@ encoding automatically (see the global `--as4` option).
 | `--refresh` | duration | `5m` | Topic list refresh interval |
 | `--timeout` | duration | `30s` | Connection timeout |
 | `--stale` | duration | `3m` | Reconnect if no data for this long; 0 disables |
+| `--consumers` | int | `4` | Number of parallel Kafka consumers |
 | `--retry` | bool | `true` | Retry connection on errors |
 | `--retry-max` | int | `0` | Max retry attempts; 0 means unlimited |
 | `--keep-aspath` | bool | `false` | Keep the collector AS in AS_PATH |
