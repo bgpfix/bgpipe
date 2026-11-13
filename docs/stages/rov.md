@@ -100,8 +100,8 @@ prefix,maxLength,asn
 
 CCR format: the Canonical Cache Representation
 ([draft-ietf-sidrops-rpki-ccr](https://datatracker.ietf.org/doc/draft-ietf-sidrops-rpki-ccr/))
-is the binary snapshot of a validated cache that rpki-client writes
-(`rpki-client -c`), and that [RPKIviews](https://www.rpkiviews.org/) archives
+is the binary snapshot of a validated cache that rpki-client writes as
+`rpki.ccr` in its output directory (see rpki-client(8)), and that [RPKIviews](https://www.rpkiviews.org/) archives
 every 20 minutes. bgpipe reads its VRPs and ASPAs, and verifies the integrity
 hash of each, so you can validate against the RPKI state of any past moment:
 

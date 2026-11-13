@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -331,8 +332,13 @@ func (r *Rpki) urlFetch() error {
 // rpkiData reads RPKI data from rd. A .tgz source (eg. an RPKIviews snapshot)
 // is searched for its first .ccr file, so only the head of the archive is read.
 func rpkiData(rd io.Reader, source string) ([]byte, error) {
-	path, _, _ := strings.Cut(source, "?")
-	if !strings.HasSuffix(path, ".tgz") && !strings.HasSuffix(path, ".tar.gz") {
+	name := source
+	if strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") {
+		if u, err := url.Parse(source); err == nil {
+			name = u.Path // no query string, no fragment
+		}
+	}
+	if !strings.HasSuffix(name, ".tgz") && !strings.HasSuffix(name, ".tar.gz") {
 		return io.ReadAll(rd)
 	}
 
@@ -348,7 +354,7 @@ func rpkiData(rd io.Reader, source string) ([]byte, error) {
 		} else if err != nil {
 			return nil, err
 		}
-		if strings.HasSuffix(h.Name, ".ccr") {
+		if h.Typeflag == tar.TypeReg && strings.HasSuffix(h.Name, ".ccr") { // not a directory or link
 			return io.ReadAll(io.LimitReader(tr, 1<<28))
 		}
 	}

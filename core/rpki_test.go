@@ -184,6 +184,19 @@ func TestRpkiDataTgz(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "ccr-bytes", string(data))
 
+	// ... nor the fragment, which is never sent to the server
+	data, err = rpkiData(bytes.NewReader(buf.Bytes()), "https://example.net/rpki-20261025.tgz#snapshot")
+	require.NoError(t, err)
+	require.Equal(t, "ccr-bytes", string(data))
+
+	// a local path is taken as it is, '#' and '?' included
+	data, err = rpkiData(bytes.NewReader(buf.Bytes()), "/tmp/a#1/rpki.tgz")
+	require.NoError(t, err)
+	require.Equal(t, "ccr-bytes", string(data))
+	data, err = rpkiData(bytes.NewReader([]byte("plain")), "/tmp/rpki.tgz?x")
+	require.NoError(t, err)
+	require.Equal(t, "plain", string(data))
+
 	// other sources are read as they are
 	data, err = rpkiData(bytes.NewReader([]byte("plain")), "rpki.json")
 	require.NoError(t, err)
@@ -192,4 +205,23 @@ func TestRpkiDataTgz(t *testing.T) {
 	// an archive without a .ccr file is an error
 	_, err = rpkiData(bytes.NewReader(buf.Bytes()[:0]), "empty.tgz")
 	require.Error(t, err)
+}
+
+// a directory or a link named *.ccr must not hide the real file after it
+func TestRpkiDataTgzSkipsNonRegular(t *testing.T) {
+	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(zw)
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "output/dir.ccr", Typeflag: tar.TypeDir, Mode: 0o755}))
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "output/link.ccr", Typeflag: tar.TypeSymlink, Linkname: "x", Mode: 0o777}))
+	body := "real-ccr"
+	require.NoError(t, tw.WriteHeader(&tar.Header{Name: "output/rpki-client.ccr", Typeflag: tar.TypeReg, Mode: 0o644, Size: int64(len(body))}))
+	_, err := tw.Write([]byte(body))
+	require.NoError(t, err)
+	require.NoError(t, tw.Close())
+	require.NoError(t, zw.Close())
+
+	data, err := rpkiData(bytes.NewReader(buf.Bytes()), "snapshot.tgz")
+	require.NoError(t, err)
+	require.Equal(t, body, string(data))
 }
