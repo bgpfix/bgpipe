@@ -36,7 +36,7 @@ before the first stage:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--rpki` | string | `https://rpki.cloudflare.com/rpki.json` | RPKI cache source: an HTTP(S) URL, RTR `host:port`, `tls://host:port`, or a local file path |
+| `--rpki` | string | `https://rpki.cloudflare.com/rpki.json` | RPKI cache source: an HTTP(S) URL, RTR `host:port`, `tls://host:port`, or a local file path (JSON, CSV, CCR, or an RPKIviews `.tgz`) |
 | `--rpki-refresh` | duration | `1h` | RTR refresh interval (periodic Serial Query), or URL re-fetch interval |
 | `--rpki-retry` | duration | `10m` | RTR reconnect interval after failure |
 | `--rpki-insecure` | bool | `false` | Do not validate the RTR server TLS certificate |
@@ -97,6 +97,23 @@ prefix,maxLength,asn
 192.0.2.0/24,24,AS65001
 2001:db8::/32,48,65002
 ```
+
+CCR format: the Canonical Cache Representation
+([draft-ietf-sidrops-rpki-ccr](https://datatracker.ietf.org/doc/draft-ietf-sidrops-rpki-ccr/))
+is the binary snapshot of a validated cache that rpki-client writes as
+`rpki.ccr` in its output directory (see rpki-client(8)), and that [RPKIviews](https://www.rpkiviews.org/) archives
+every 20 minutes. bgpipe reads its VRPs and ASPAs, and verifies the integrity
+hash of each, so you can validate against the RPKI state of any past moment:
+
+```bash
+# an RPKIviews snapshot (.tgz) works as is: only its first .ccr file is downloaded
+bgpipe --rpki https://josephine.sobornost.net/rpkidata/2026/10/25/rpki-20261025T000753Z.tgz \
+  -- read updates.20261025.0000.mrt -- rov -- aspa
+```
+
+A `.tgz` or `.tar.gz` source (a URL or a local file) is searched for its first
+`.ccr` file; for a URL the download stops there, so a snapshot of hundreds of
+megabytes costs only its first few.
 
 ### Actions for INVALID prefixes
 
