@@ -63,5 +63,6 @@ in CI (env CI set) missing docker is a failure instead.
 - BMP is tested in both roles of the bmp stage: as a station reading Netom's
   restream (bmp-tcp-out), and as an exporter feeding Rotonda (bmp-tcp-in).
   Set NETOM_IMAGE to test another Netom build.
-  Without docker, 13-bmp-loopback and 14-bmp-tls run the stage against itself.
+  Without docker, 13-bmp-loopback, 14-bmp-tls and 16-bmp-replay run the stage
+  against itself; the last one replays whole files and counts what arrives.
 - ExaBGP interop (exec --format=exa) is a possible later addition.
