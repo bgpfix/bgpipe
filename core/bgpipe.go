@@ -52,6 +52,8 @@ type Bgpipe struct {
 	wg_lread  sync.WaitGroup // stages that read from pipe L
 	wg_rwrite sync.WaitGroup // stages that write to pipe R
 	wg_rread  sync.WaitGroup // stages that read from pipe R
+	has_lread bool           // any stage reads from pipe L?
+	has_rread bool           // any stage reads from pipe R?
 }
 
 // NewBgpipe creates a new bgpipe instance using given
@@ -133,6 +135,14 @@ func (b *Bgpipe) Run() error {
 	// handle signals
 	go b.handleSignals()
 
+	// NB: close the outputs nobody reads now, as later it would race with the pipe
+	if !b.has_lread {
+		b.Pipe.L.CloseOutput()
+	}
+	if !b.has_rread {
+		b.Pipe.R.CloseOutput()
+	}
+
 	// start the pipeline and block
 	b.Pipe.Start() // will call b.Start
 	b.Pipe.Wait()  // until error or all processing is done
@@ -203,15 +213,20 @@ func (b *Bgpipe) onStart(ev *pipe.Event) bool {
 	}()
 
 	// wait for readers
+	// NB: drain the outputs instead of closing them, for the same reason
 	go func() {
 		b.wg_lread.Wait()
-		b.Debug().Msg("closing L output")
-		b.Pipe.L.CloseOutput()
+		b.Debug().Msg("draining L output")
+		for m := range b.Pipe.L.Out {
+			b.Pipe.PutMsg(m)
+		}
 	}()
 	go func() {
 		b.wg_rread.Wait()
-		b.Debug().Msg("closing R output")
-		b.Pipe.R.CloseOutput()
+		b.Debug().Msg("draining R output")
+		for m := range b.Pipe.R.Out {
+			b.Pipe.PutMsg(m)
+		}
 	}()
 
 	return false
