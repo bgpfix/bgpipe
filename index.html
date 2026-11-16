@@ -1670,7 +1670,7 @@ so the very same pipeline can sit inside a live BGP session.</p>
 </li>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 19V7H4v12zm0-16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-7 14v-2h5v2zm-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59z"/></svg></span> <strong>Scriptable Pipeline</strong></p>
-<p>Chain stages or pipe messages through external programs</p>
+<p>Chain stages, pipe messages through external programs, or run your <a href="exabgp/">ExaBGP scripts</a> unchanged</p>
 </li>
 <li>
 <p><span class="twemoji lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.9 17.39c-.26-.8-1.01-1.39-1.9-1.39h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.41a7.984 7.984 0 0 1 2.9 12.8M11 19.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1a2 2 0 0 0 2 2m1-16A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg></span> <strong>Live BGP Monitoring</strong></p>
@@ -1695,11 +1695,11 @@ so the very same pipeline can sit inside a live BGP session.</p>
 <li><strong>Fast</strong> - UPDATE parsing in ~175 ns with zero allocations; ~1M messages/s from MRT to JSON on one box</li>
 <li><strong>Hardened</strong> - all parsers are fuzzed: malformed input from a peer or a public feed can't crash the process</li>
 <li><strong>Safe by default</strong> - peer allow-lists, authenticated servers, and slow clients can never stall a session</li>
-<li><strong>Interop-tested</strong> - every change runs against GoBGP, BIRD, FRR, NLnet Labs Rotonda, and FastNetMon Netom</li>
+<li><strong>Interop-tested</strong> - every change runs against GoBGP, BIRD, FRR, ExaBGP, NLnet Labs Rotonda, and FastNetMon Netom</li>
 <li><strong>Transparent proxy</strong> - with <a href="stages/connect/#transparent-mode">TPROXY mode</a>, invisible even at the IP layer: no router reconfiguration</li>
 <li><strong>RPKI</strong> - origin validation (<a href="stages/rov/">rov</a>, RFC 6811) and route leak detection (<a href="stages/aspa/">aspa</a>, IETF draft-29) - before router vendors ship it</li>
 <li><strong>Route policy</strong> - prefix and rate <a href="stages/limit/">limits</a>; AS_PATH, community, MED, LOCAL_PREF and ORIGIN rewrites with <a href="stages/update/">update</a></li>
-<li><strong>Every format</strong> - <a href="json-format/">JSON</a> (incl. <a href="flowspec/">Flowspec</a>), <a href="mrt/">MRT</a> updates and RIB dumps, BMP, OpenBMP, ExaBGP, and raw BGP; gzip/bzip2/zstd; files, URLs, and pipes</li>
+<li><strong>Every format</strong> - <a href="json-format/">JSON</a> (incl. <a href="flowspec/">Flowspec</a>), <a href="mrt/">MRT</a> updates and RIB dumps, BMP, OpenBMP, <a href="exabgp/">ExaBGP</a> commands, and raw BGP; gzip/bzip2/zstd; files, URLs, and pipes</li>
 <li><strong>BMP</strong> - a <a href="stages/bmp/">station and exporter</a> over TCP or TLS: ADD-PATH per address family, RIB views, Peer Up/Down events, and statistics as metrics</li>
 <li><strong>Glue</strong> - a concise <a href="filters/">filter language</a>, message <a href="stages/tag/">tags</a>, external programs, WebSockets, TCP-MD5, and <a href="quickstart/#config-files">config files</a></li>
 <li><strong>Observable</strong> - live dashboard, Prometheus metrics, health checks, and pprof over the <a href="http-api/">HTTP API</a></li>

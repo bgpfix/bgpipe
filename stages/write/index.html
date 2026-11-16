@@ -1540,6 +1540,9 @@ automatically. Parent directories are created as needed. With <code>--append</co
 named pipe), data is written directly to the target instead.</p>
 <p>The output format is auto-detected from the file extension by default.
 For example, <code>output.json</code> selects JSON, <code>output.mrt</code> selects MRT.
+The known extensions are <code>.json</code>, <code>.jsonl</code> and <code>.txt</code> (JSON), <code>.mrt</code>, <code>.exa</code>
+(<a href="../../exabgp/">ExaBGP</a> commands), <code>.bmp</code>, <code>.obmp</code>, and <code>.raw</code>, <code>.bin</code>, <code>.bgp</code>
+(raw BGP); for any other name, use <code>--format</code>.
 Compression is also auto-detected: <code>.gz</code> (gzip), <code>.bz2</code> (bzip2),
 <code>.zst</code> / <code>.zstd</code> (Zstandard). Writing to standard output defaults to JSON;
 use <code>--format</code> to override.</p>

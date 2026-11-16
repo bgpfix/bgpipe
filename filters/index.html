@@ -2029,6 +2029,14 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <td><code>keepalive</code></td>
 <td><code>type == KEEPALIVE</code></td>
 </tr>
+<tr>
+<td><code>notify</code>, <code>notification</code></td>
+<td><code>type == NOTIFY</code></td>
+</tr>
+<tr>
+<td><code>refresh</code>, <code>route_refresh</code></td>
+<td><code>type == REFRESH</code></td>
+</tr>
 </tbody>
 </table>
 <p>Examples:</p>
@@ -2255,6 +2263,7 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </tr>
 </tbody>
 </table>
+<p><code>as_path</code>, <code>as_path_len</code> and <code>as_path_hops</code> are accepted as aliases.</p>
 <p><strong>Index rules:</strong></p>
 <ul>
 <li>Positive: <code>aspath[0]</code> is the first (leftmost) AS, <code>aspath[1]</code> is second, etc.</li>
