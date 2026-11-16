@@ -357,7 +357,7 @@ bgpipe \
 
 Stages: [listen](stages/listen.md), [exec](stages/exec.md), [connect](stages/connect.md), [stdin](stages/stdin.md), [stdout](stages/stdout.md)
 
-Use the `--format=exa` flag to read and write [ExaBGP](https://github.com/Exa-Networks/exabgp) line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.
+Use the `--format=exa` flag to read and write [ExaBGP](https://github.com/Exa-Networks/exabgp) line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools. See [ExaBGP](exabgp.md) for the supported commands, and for running an ExaBGP script under bgpipe.
 
 ```bash
 # Process BGP messages with an ExaBGP-compatible script
