@@ -40,6 +40,7 @@ type Limit struct {
 	limit_session int64 // max global prefix count
 	limit_origin  int64 // max prefix count for single origin
 	limit_block   int64 // max prefix count for IP block
+	counting      bool  // any of the count limits set? (else no need to track prefixes)
 
 	session *xsync.Map[nlri.Prefix, *limitPrefix] // session db
 	origin  *xsync.Map[uint32, *limitCounter]     // per-origin db
@@ -123,6 +124,7 @@ func (s *Limit) Attach() error {
 	s.limit_session = k.Int64("session")
 	s.limit_origin = k.Int64("origin")
 	s.limit_block = k.Int64("block")
+	s.counting = s.limit_session > 0 || s.limit_origin > 0 || s.limit_block > 0
 
 	s.blen6 = k.Int("block-length")
 	if s.blen6 < 0 || s.blen6 > 64 {
@@ -208,6 +210,11 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 		} else if s.isLong(p) {
 			s.Event("long", p.String(), origin)
 			return true
+		}
+
+		// NB: with length limits only, do not track the prefixes (a full table is 1M+)
+		if !s.counting {
+			return false
 		}
 
 		// get pp
@@ -312,6 +319,9 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 		if s.isShort(p) || s.isLong(p) {
 			u.Msg.Edit() // TODO: sure? why not check drop? FIXME
 			return true
+		}
+		if !s.counting {
+			return false
 		}
 
 		// remove from session

@@ -29,6 +29,8 @@ for different limits on IPv4 and IPv6.
 
 The stage tracks prefix state across the session lifetime, correctly handling
 both announcements and withdrawals (unless `--permanent` is set).
+With length limits only (`--min-length` / `--max-length`), no state is kept;
+the count limits need about 250 MB of memory per million prefixes.
 
 This stage supports bidirectional operation with `-LR`, aggregating counts
 from both directions. Without `-LR`, it tracks only the stage direction.

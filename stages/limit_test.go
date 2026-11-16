@@ -18,7 +18,7 @@ import (
 func newTestLimit() *Limit {
 	base := &core.StageBase{P: pipe.NewPipe(context.Background())}
 	base.P.Options.Logger = nil
-	s := &Limit{StageBase: base, ipv4: true, ipv6: true, blen4: 16, blen6: 32, limit_origin: 2, limit_block: 2}
+	s := &Limit{StageBase: base, ipv4: true, ipv6: true, blen4: 16, blen6: 32, limit_origin: 2, limit_block: 2, counting: true}
 	s.afs = map[afi.AS]bool{afi.AS_IPV4_UNICAST: true, afi.AS_IPV6_UNICAST: true}
 	s.session = xsync.NewMap[nlri.Prefix, *limitPrefix]()
 	s.origin = xsync.NewMap[uint32, *limitCounter]()
