@@ -5,8 +5,8 @@ docker containers: GoBGP, BIRD, FRR (BGP sessions in both directions, plus a
 fully transparent proxy scenario), StayRTR and rtrtr (RPKI ROV and ASPA over
 the RTR protocol, including live ROA revocation), a real-world replay of
 500 RouteViews UPDATEs re-marshaled into FRR, NLnet Labs Rotonda (BGP in, RIB
-and BMP in, RIB checked over its HTTP API), and FastNetMon Netom (BGP in,
-BMP restream read back by bgpipe).
+and BMP in, RIB checked over its HTTP API), FastNetMon Netom (BGP in,
+BMP restream read back by bgpipe), and ExaBGP (its API commands, both ways).
 
 Each test is a standalone shell script that doubles as a usage example: it
 shows the exact docker and bgpipe commands needed to wire bgpipe to a given
@@ -65,4 +65,6 @@ in CI (env CI set) missing docker is a failure instead.
   Set NETOM_IMAGE to test another Netom build.
   Without docker, 13-bmp-loopback, 14-bmp-tls and 16-bmp-replay run the stage
   against itself; the last one replays whole files and counts what arrives.
-- ExaBGP interop (exec --format=exa) is a possible later addition.
+- ExaBGP is tested in both roles: 96 feeds a real ExaBGP with commands written
+  by bgpipe and reads the routes back over BGP; 97 runs an ExaBGP-style API
+  script under bgpipe (exec --format exa) in place of ExaBGP.

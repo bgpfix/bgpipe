@@ -1,0 +1,9 @@
+# ExaBGP API commands, in the many spellings that ExaBGP accepts
+announce route 10.96.0.0/24 next-hop 192.0.2.1
+announce route 10.96.1.0/24 next-hop 192.0.2.1 as-path [65001 65002] med 50 community [65000:1 no-export]
+announce route 10.96.2.0/24 next-hop 192.0.2.1 as-path 65001 community 65000:2 large-community [ 65000:1:2 65000:3:4 ]
+announce ipv4 unicast 10.96.3.0/24 next-hop 192.0.2.1 origin incomplete
+announce route 2001:db8:96::/48 next-hop 2001:db8::1 as-path [ 65001 ]
+announce route 10.96.4.0/24 next-hop 192.0.2.1
+withdraw route 10.96.4.0/24 next-hop 192.0.2.1
+announce route 10.96.5.0/24 next-hop 192.0.2.1 local-preference 200

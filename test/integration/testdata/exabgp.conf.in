@@ -1,0 +1,17 @@
+process feed {
+	run /etc/exabgp/feed.sh;
+	encoder text;
+}
+
+neighbor @HOSTIP@ {
+	router-id 10.0.0.96;
+	local-as 65096;
+	peer-as 65000;
+	family {
+		ipv4 unicast;
+		ipv6 unicast;
+	}
+	api {
+		processes [ feed ];
+	}
+}
