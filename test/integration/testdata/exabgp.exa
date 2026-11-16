@@ -8,4 +8,9 @@ announce route 10.96.4.0/24 next-hop 192.0.2.1
 withdraw route 10.96.4.0/24 next-hop 192.0.2.1
 neighbor 192.0.2.9 announce route 10.96.6.0/24 next-hop 192.0.2.1 extended-community [target:65000:1 origin:192.0.2.1:2 0x4002fde800000001]
 announce route 10.96.7.0/24 next-hop 192.0.2.1 atomic-aggregate aggregator (65001:192.0.2.9)
+announce attributes next-hop 192.0.2.1 med 7 nlri 10.96.8.0/24 10.96.9.0/24
+announce flow route { match { destination 10.96.10.1/32; protocol tcp; destination-port [ =80 =443 ]; tcp-flags [ syn !ack ]; } then { discard; } }
+announce flow route destination 10.96.10.2/32 source 192.0.2.0/24 protocol udp port >1024&<2048 packet-length >=1000 rate-limit 9600
+announce flow route { match { destination 2001:db8:96::/48; next-header udp; destination-port =53; } then { redirect 65000:96; } }
+withdraw flow route destination 10.96.10.2/32 source 192.0.2.0/24 protocol udp port >1024&<2048 packet-length >=1000
 announce route 10.96.5.0/24 next-hop 192.0.2.1 local-preference 200

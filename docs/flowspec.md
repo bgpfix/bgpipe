@@ -194,5 +194,6 @@ Rate-limit UDP traffic from 198.51.100.0/24 to 10 Mbps and redirect to VRF:
 ## See Also
 
 - [JSON Format](json-format.md) - General BGP message JSON format
+- [ExaBGP](exabgp.md) - Flowspec rules as ExaBGP `flow route` commands
 - [Message Filters](filters.md) - Filter BGP messages
 - [bgpfix library](https://github.com/bgpfix/bgpfix) - The underlying Go library

@@ -66,5 +66,6 @@ in CI (env CI set) missing docker is a failure instead.
   Without docker, 13-bmp-loopback, 14-bmp-tls and 16-bmp-replay run the stage
   against itself; the last one replays whole files and counts what arrives.
 - ExaBGP is tested in both roles: 96 feeds a real ExaBGP with commands written
-  by bgpipe and reads the routes back over BGP; 97 runs an ExaBGP-style API
-  script under bgpipe (exec --format exa) in place of ExaBGP.
+  by bgpipe (routes and Flowspec rules) and reads them back over BGP; 97 runs
+  an ExaBGP-style API script under bgpipe (exec --format exa) in place of
+  ExaBGP, and 98 runs ExaBGP's own healthcheck tool that way.

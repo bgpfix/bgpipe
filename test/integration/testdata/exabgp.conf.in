@@ -10,6 +10,8 @@ neighbor @HOSTIP@ {
 	family {
 		ipv4 unicast;
 		ipv6 unicast;
+		ipv4 flow;
+		ipv6 flow;
 	}
 	api {
 		processes [ feed ];

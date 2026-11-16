@@ -68,7 +68,9 @@ bgpipe \
     -- connect 10.0.0.1
 ```
 
-Process with ExaBGP-compatible scripts:
+Process with ExaBGP-compatible scripts (see [ExaBGP](../exabgp.md); with
+`--format exa`, each command read is answered with a `done` or `error` line on
+the command's stdin, as ExaBGP does):
 
 ```bash
 bgpipe \
