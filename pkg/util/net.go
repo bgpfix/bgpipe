@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net"
 	"net/netip"
+	"sync/atomic"
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
@@ -48,6 +49,18 @@ func ConnPublish(s *core.StageBase, conn net.Conn) {
 	}
 }
 
+// countWriter counts the bytes written to W
+type countWriter struct {
+	W io.Writer
+	N atomic.Int64
+}
+
+func (c *countWriter) Write(p []byte) (int, error) {
+	n, err := c.W.Write(p)
+	c.N.Add(int64(n))
+	return n, err
+}
+
 // ConnBGP handles an opened BGP connection conn for stage s
 func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	closed_timeout := s.K.Duration("closed-timeout")
@@ -79,19 +92,18 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	}()
 
 	// variables for reader / writer
-	type retval struct {
-		n   int64
-		err error
-	}
-	rch := make(chan retval, 1)
-	wch := make(chan retval, 1)
+	// NB: count as we go, as one side may still be running when we return
+	rcnt := countWriter{W: in}
+	wcnt := countWriter{W: conn} // NB: writes through TLS, if any
+	rch := make(chan error, 1)
+	wch := make(chan error, 1)
 
 	// read from conn
 	go func() {
-		n, err := io.Copy(in, conn)
+		_, err := io.Copy(&rcnt, conn)
 		s.Trace().Err(err).Msg("connection reader returned")
 		tcp.CloseRead()
-		rch <- retval{n, err}
+		rch <- err
 
 		if closed_timeout > 0 {
 			time.Sleep(closed_timeout)
@@ -102,10 +114,10 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	// write to conn
 	go func() {
 		pipeline := s.P.LineFor(s.Dir.Flip())
-		n, err := io.Copy(conn, pipeline) // NB: writes through TLS, if any
+		_, err := io.Copy(&wcnt, pipeline)
 		s.Trace().Err(err).Msg("connection writer returned")
 		conn.(interface{ CloseWrite() error }).CloseWrite()
-		wch <- retval{n, err}
+		wch <- err
 
 		// NB: we're done writing: give the peer time to read it all and close its
 		// side (closing first would make its next packet RST away unread data)
@@ -116,7 +128,6 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 	}()
 
 	// wait for error on any side, or both sides EOF
-	var read, wrote int64
 	var err error
 	running := 2
 	for err == nil && running > 0 {
@@ -124,14 +135,12 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		case <-s.Ctx.Done():
 			err = context.Cause(s.Ctx)
 			running = 0
-		case r := <-rch:
-			read, err = r.n, r.err
+		case err = <-rch:
 			running--
 			if err == io.EOF {
 				err = nil
 			}
-		case w := <-wch:
-			wrote, err = w.n, w.err
+		case err = <-wch:
 			running--
 			if err == io.EOF {
 				err = nil
@@ -140,7 +149,7 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 		}
 	}
 
-	s.Info().Err(err).Int64("read", read).Int64("wrote", wrote).Msg("connection closed")
+	s.Info().Err(err).Int64("read", rcnt.N.Load()).Int64("wrote", wcnt.N.Load()).Msg("connection closed")
 	return err
 }
 

@@ -43,6 +43,7 @@ type Extio struct {
 
 	mode     Mode // extio mode of operation
 	Detected bool // auto-detected the data format?
+	ExaAck   bool // --format exa --read: answer each command with "done" or "error" in Output, like ExaBGP
 
 	opt_type   map[msg.Type]bool // --type
 	opt_skip   map[msg.Type]bool // --skip
@@ -344,6 +345,9 @@ func (eio *Extio) Attach() error {
 		k.Set("copy", true) // NB: for --explain
 	}
 
+	// NB: only API scripts want the replies; a filter would echo them back
+	eio.ExaAck = eio.ExaAck && opt_read
+
 	// not write-only? produce input to bgpipe
 	if !opt_write {
 		if eio.IsBidir {
@@ -479,11 +483,26 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 			read_err = m.Switch(msg.UPDATE).Update.FromJSON(buf)
 		case eio.opt_exa && exa.IsExaBytes(buf): // exabgp
 			x, err := exa.NewExaLine(string(buf))
+			if err == nil {
+				eio.exaSelf(x)
+				err = x.ToMsg(m)
+			}
 			if err != nil {
 				read_err = fmt.Errorf("exa: %w", err)
-				break
 			}
-			read_err = x.ToMsg(m)
+
+			// NB: ExaBGP scripts may wait for this after each command (eg. exabgp healthcheck)
+			if eio.ExaAck {
+				bb := eio.Pool.Get()
+				if err == nil {
+					bb.WriteString("done\n")
+				} else {
+					bb.WriteString("error\n")
+				}
+				if !util.Send(eio.Output, bb) {
+					eio.Pool.Put(bb)
+				}
+			}
 
 		default:
 			read_err = ErrFormat
@@ -518,6 +537,29 @@ func (eio *Extio) ReadSingle(buf []byte, cb pipe.CallbackFunc) (read_err error) 
 		return eio.InputR.WriteMsg(m)
 	default:
 		return eio.InputD.WriteMsg(m)
+	}
+}
+
+// exaSelf fills in what ExaBGP takes from its BGP session, if we have one:
+// the address for next-hop self, and our ASN for a route with no as-path (eBGP only)
+func (eio *Extio) exaSelf(x *exa.Exa) {
+	if x.Action != "announce" {
+		return
+	}
+
+	p := eio.P
+	addr, us, peer := "R_LOCAL_ADDR", p.R.Open.Load(), p.L.Open.Load()
+	if eio.InputD.Dir == meta.DIR_L {
+		addr, us, peer = "L_LOCAL_ADDR", peer, us
+	}
+
+	if x.NextHop == "self" {
+		if v, ok := p.KV.Load(addr); ok {
+			x.NextHop = fmt.Sprint(v)
+		}
+	}
+	if len(x.ASPath) == 0 && us != nil && peer != nil && us.GetASN() != peer.GetASN() {
+		x.ASPath = append(x.ASPath, us.GetASN())
 	}
 }
 

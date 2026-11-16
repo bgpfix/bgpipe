@@ -46,6 +46,7 @@ func NewExec(parent *core.StageBase) core.Stage {
 	f.Bool("keep-stdout", false, "keep running if stdout is closed")
 
 	s.eio = extio.NewExtio(parent, 0, false)
+	s.eio.ExaAck = true
 	return s
 }
 

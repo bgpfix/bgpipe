@@ -28,7 +28,7 @@ modifications only to messages matching a [filter](../filters.md).
 |--------|------|---------|-------------|
 | `--nexthop4` | string | | Set next-hop for IPv4 prefixes to this address |
 | `--nexthop6` | string | | Set next-hop for IPv6 prefixes to this address |
-| `--nexthop-self` | bool | `false` | Set next-hop to our own IP address (when available) |
+| `--nexthop-self` | bool | `false` | Set next-hop to our own IP address (when available). An IPv6 route with no next-hop at all, on an IPv4 session, gets the IPv4-mapped address |
 
 ### Communities
 
