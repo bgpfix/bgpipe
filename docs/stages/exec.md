@@ -69,8 +69,8 @@ bgpipe \
 ```
 
 Process with ExaBGP-compatible scripts (see [ExaBGP](../exabgp.md); with
-`--format exa`, each command read is answered with a `done` or `error` line on
-the command's stdin, as ExaBGP does):
+`--format exa --read`, each command read is answered with a `done` or `error`
+line on the command's stdin, as ExaBGP does):
 
 ```bash
 bgpipe \

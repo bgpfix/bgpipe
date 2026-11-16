@@ -60,8 +60,8 @@ the BGP session the commands are sent to:
 
 - `next-hop self` becomes the local address of the connection
 - a route with no `as-path` gets our ASN, if the peer is in another AS (eBGP)
-- [exec](stages/exec.md) answers each command with a `done` or `error` line on
-  the script's stdin, which ExaBGP scripts may wait for
+- [exec](stages/exec.md) `--read` answers each command with a `done` or `error`
+  line on the script's stdin, which ExaBGP scripts may wait for
 
 The first two need the session to be up: start the stage that reads the
 commands with `--wait ESTABLISHED`. With no session (eg. when converting

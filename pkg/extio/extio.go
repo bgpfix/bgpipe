@@ -43,7 +43,7 @@ type Extio struct {
 
 	mode     Mode // extio mode of operation
 	Detected bool // auto-detected the data format?
-	ExaAck   bool // --format exa: answer each command with "done" or "error" in Output, like ExaBGP
+	ExaAck   bool // --format exa --read: answer each command with "done" or "error" in Output, like ExaBGP
 
 	opt_type   map[msg.Type]bool // --type
 	opt_skip   map[msg.Type]bool // --skip
@@ -344,6 +344,9 @@ func (eio *Extio) Attach() error {
 	if eio.opt_copy {
 		k.Set("copy", true) // NB: for --explain
 	}
+
+	// NB: only API scripts want the replies; a filter would echo them back
+	eio.ExaAck = eio.ExaAck && opt_read
 
 	// not write-only? produce input to bgpipe
 	if !opt_write {
