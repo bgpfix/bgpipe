@@ -1516,6 +1516,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../exabgp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ExaBGP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../filters/" class="md-nav__link">
         
   
@@ -2129,7 +2156,7 @@
 </span></code></pre></div>
 <h2 id="exabgp-compatibility">ExaBGP compatibility<a class="headerlink" href="#exabgp-compatibility" title="Permanent link">&para;</a></h2>
 <p>Stages: <a href="../stages/listen/">listen</a>, <a href="../stages/exec/">exec</a>, <a href="../stages/connect/">connect</a>, <a href="../stages/stdin/">stdin</a>, <a href="../stages/stdout/">stdout</a></p>
-<p>Use the <code>--format=exa</code> flag to read and write <a href="https://github.com/Exa-Networks/exabgp">ExaBGP</a> line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools.</p>
+<p>Use the <code>--format=exa</code> flag to read and write <a href="https://github.com/Exa-Networks/exabgp">ExaBGP</a> line format instead of JSON. This allows integration with existing ExaBGP-based scripts and tools. See <a href="../exabgp/">ExaBGP</a> for the supported commands, and for running an ExaBGP script under bgpipe.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># Process BGP messages with an ExaBGP-compatible script</span>
 </span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>

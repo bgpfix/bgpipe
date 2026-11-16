@@ -1330,6 +1330,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../exabgp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ExaBGP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../filters/" class="md-nav__link">
         
   
@@ -1643,7 +1670,9 @@ all arguments up to the next <code>--</code> are passed to the command.</p>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>sed<span class="w"> </span>-ure<span class="w"> </span><span class="s1">'/"OPEN"/{ s/65055/65001/g }'</span><span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
-<p>Process with ExaBGP-compatible scripts:</p>
+<p>Process with ExaBGP-compatible scripts (see <a href="../../exabgp/">ExaBGP</a>; with
+<code>--format exa --read</code>, each command read is answered with a <code>done</code> or <code>error</code>
+line on the command's stdin, as ExaBGP does):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>listen<span class="w"> </span>:179<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>--format<span class="w"> </span>exa<span class="w"> </span>-LR<span class="w"> </span>-A<span class="w"> </span>/path/to/script.py<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>

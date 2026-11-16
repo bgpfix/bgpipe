@@ -1374,6 +1374,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../exabgp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ExaBGP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../filters/" class="md-nav__link">
         
   
@@ -1652,7 +1679,7 @@ modifications only to messages matching a <a href="../../filters/">filter</a>.</
 <td><code>--nexthop-self</code></td>
 <td>bool</td>
 <td><code>false</code></td>
-<td>Set next-hop to our own IP address (when available)</td>
+<td>Set next-hop to our own IP address (when available). An IPv6 route with no next-hop at all, on an IPv4 session, gets the IPv4-mapped address</td>
 </tr>
 </tbody>
 </table>
