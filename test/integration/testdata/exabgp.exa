@@ -6,4 +6,6 @@ announce ipv4 unicast 10.96.3.0/24 next-hop 192.0.2.1 origin incomplete
 announce route 2001:db8:96::/48 next-hop 2001:db8::1 as-path [ 65001 ]
 announce route 10.96.4.0/24 next-hop 192.0.2.1
 withdraw route 10.96.4.0/24 next-hop 192.0.2.1
+neighbor 192.0.2.9 announce route 10.96.6.0/24 next-hop 192.0.2.1 extended-community [target:65000:1 origin:192.0.2.1:2 0x4002fde800000001]
+announce route 10.96.7.0/24 next-hop 192.0.2.1 atomic-aggregate aggregator (65001:192.0.2.9)
 announce route 10.96.5.0/24 next-hop 192.0.2.1 local-preference 200

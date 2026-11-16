@@ -13,7 +13,7 @@ cp "$TESTDATA/exabgp-feed.sh" "$WORK/feed.sh"
 
 # what bgpipe makes of the commands must be good enough for ExaBGP
 "$BGPIPE" --log warn -- read "$TESTDATA/exabgp.exa" -- stdout --format exa >"$WORK/routes.exa"
-[ "$(wc -l <"$WORK/routes.exa")" -eq 8 ] || fail "expected 8 routes in routes.exa"
+[ "$(wc -l <"$WORK/routes.exa")" -eq 10 ] || fail "expected 10 routes in routes.exa"
 
 run_bgpipe --stdout -- listen "0.0.0.0:$LPORT" -- speaker --asn 65000 --id 10.0.0.3
 

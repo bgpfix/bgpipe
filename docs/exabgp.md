@@ -24,7 +24,9 @@ withdraw route PREFIX
 ```
 
 `ipv4 unicast` and `ipv6 unicast` are accepted in place of `route`. Empty lines
-and lines starting with `#` are skipped.
+and lines starting with `#` are skipped. A leading neighbor selector
+(`neighbor 192.0.2.1 announce route ...`) is accepted and ignored: a bgpipe
+pipeline is one BGP session, so run one bgpipe per neighbor.
 
 | Attribute | Example | Notes |
 |-----------|---------|-------|
@@ -35,25 +37,31 @@ and lines starting with `#` are skipped.
 | `local-preference` | `local-preference 200` | |
 | `community` | `community [ 65000:1 no-export ]` | Also `no-advertise`, `no-export-subconfed`, `no-peer`, `blackhole` |
 | `large-community` | `large-community [ 65000:1:2 ]` | |
+| `extended-community` | `extended-community [ target:65000:1 ]` | `target:` and `origin:` with an ASN or an IPv4 address, or any value as `0x` and 16 hex digits |
+| `atomic-aggregate` | `atomic-aggregate` | |
+| `aggregator` | `aggregator ( 65000:192.0.2.1 )` | |
+| `originator-id` | `originator-id 192.0.2.1` | |
+| `cluster-list` | `cluster-list [ 192.0.2.1 ]` | |
 
 Lists follow the ExaBGP syntax: brackets need no spaces around them
 (`[65001 65002]`), and a single value needs no brackets (`community 65000:1`).
 
 ## Differences from ExaBGP
 
-- **One session, no neighbor selectors.** A bgpipe pipeline is one BGP session,
-  so commands that start with `neighbor ...` are rejected. Run one bgpipe per
-  neighbor instead.
 - **`next-hop self`** leaves the next-hop unset. Add
   [update](stages/update.md) `--nexthop-self` (or `--nexthop4` / `--nexthop6`)
-  after the stage that reads the commands.
+  after the stage that reads the commands. As in ExaBGP, an IPv6 route on an
+  IPv4 session gets the IPv4-mapped address (`::ffff:192.0.2.2`).
 - **The AS path is sent as given.** ExaBGP prepends its own ASN on eBGP
   sessions when the command has no `as-path`; with bgpipe, write the path in the
   command, or add [update](stages/update.md) `--prepend ASN`.
-- **Other attributes are ignored on input** (eg. `extended-community`,
-  `aggregator`, `atomic-aggregate`, `label`), and attributes after
-  `withdraw route PREFIX` are accepted but not needed. AS sets are flattened.
-  Use the [JSON format](json-format.md) when you need every attribute.
+- **Other attributes are errors** (eg. `label`, `path-information`, `aigp`,
+  `attribute`), as are other commands (`announce flow`, `announce eor`,
+  `announce attributes ... nlri`, ...): bgpipe does not announce a route
+  without what was asked for. Add `--pardon` to skip such lines instead. Use
+  the [JSON format](json-format.md) when you need every attribute.
+- **Attributes after `withdraw route PREFIX`** are accepted but not needed.
+- **AS sets are flattened** into the AS sequence.
 - **Output is one command per prefix**, with the attributes listed above. Other
   message types (OPEN, KEEPALIVE, End-of-RIB) have no command and are skipped.
 

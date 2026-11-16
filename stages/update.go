@@ -393,6 +393,14 @@ func (s *Update) modifyNexthop(u *msg.Update) (modified bool) {
 		if !nexthop6.IsValid() && selfip.Is6() {
 			nexthop6 = selfip
 		}
+
+		// NB: an IPv6 route on an IPv4 session, with no next-hop at all (eg. ExaBGP next-hop self)?
+		// use our IPv4-mapped address, like ExaBGP: an empty next-hop would reset the session
+		if !nexthop6.IsValid() && selfip.Is4() {
+			if mp := u.ReachMP().Prefixes(); mp != nil && mp.IsIPv6() && !mp.NextHop.IsValid() {
+				nexthop6 = netip.AddrFrom16(selfip.As16())
+			}
+		}
 	}
 
 	// finally, update next-hops
