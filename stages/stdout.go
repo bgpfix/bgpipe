@@ -1,8 +1,10 @@
 package stages
 
 import (
+	"errors"
 	"math"
 	"os"
+	"syscall"
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
@@ -42,7 +44,13 @@ func (s *Stdout) Attach() error {
 }
 
 func (s *Stdout) Run() (err error) {
-	return s.eio.WriteStream(os.Stdout)
+	err = s.eio.WriteStream(os.Stdout)
+	if errors.Is(err, syscall.EPIPE) {
+		// NB: the reader is gone (eg. | head): stop quietly, as UNIX tools do
+		go s.P.Stop()
+		return nil
+	}
+	return err
 }
 
 func (s *Stdout) Stop() error {
