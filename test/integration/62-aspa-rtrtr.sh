@@ -12,7 +12,7 @@ run_daemon rtrtr 3323 \
 wait_tcp 127.0.0.1 "$PORT"
 
 # multi-peer feed style: peer ASN from the PEER_AS tag, explicit --role
-run_bgpipe --stdout --rpki "127.0.0.1:$PORT" \
+run_bgpipe --stdout --rpki "127.0.0.1:$PORT" --rpki-retry 2s \
 	-- read "$TESTDATA/aspa-updates.json" \
 	-- aspa --role customer --peer-tag PEER_AS
 

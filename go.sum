@@ -1,7 +1,7 @@
 github.com/VictoriaMetrics/metrics v1.45.0 h1:Tv8dZRAjkO90rBTxYrWOHUWFBHsAKdKcZYmS/Wbo2EU=
 github.com/VictoriaMetrics/metrics v1.45.0/go.mod h1:xDM82ULLYCYdFRgQ2JBxi8Uf1+8En1So9YUwlGTOqTc=
-github.com/bgpfix/bgpfix v0.25.1-0.20261116140312-a62517077a55 h1:qQd/NIidmahaCzF/fCNkhHdq3eR/7ohJEdX3CGGBBxs=
-github.com/bgpfix/bgpfix v0.25.1-0.20261116140312-a62517077a55/go.mod h1:bMrg/FHQbcn9PBnJgUPrhz2GtQzyLcRkKboIvun+9VQ=
+github.com/bgpfix/bgpfix v0.25.1-0.20261116174950-2cbb523c5cf7 h1:ugkP0wkSm/3nHAw/Kid4826qqBUhm7EG/8EX10bsZIc=
+github.com/bgpfix/bgpfix v0.25.1-0.20261116174950-2cbb523c5cf7/go.mod h1:bMrg/FHQbcn9PBnJgUPrhz2GtQzyLcRkKboIvun+9VQ=
 github.com/buger/jsonparser v1.6.1 h1:I0phFv0PlbLHnM7TZAVjZ2MJ2/eWRTDyuO7GLR98IEs=
 github.com/buger/jsonparser v1.6.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707 h1:2tV76y6Q9BB+NEBasnqvs7e49aEBFI8ejC89PSnWH+4=
