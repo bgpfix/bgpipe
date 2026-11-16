@@ -32,6 +32,9 @@ named pipe), data is written directly to the target instead.
 
 The output format is auto-detected from the file extension by default.
 For example, `output.json` selects JSON, `output.mrt` selects MRT.
+The known extensions are `.json`, `.jsonl` and `.txt` (JSON), `.mrt`, `.exa`
+([ExaBGP](../exabgp.md) commands), `.bmp`, `.obmp`, and `.raw`, `.bin`, `.bgp`
+(raw BGP); for any other name, use `--format`.
 Compression is also auto-detected: `.gz` (gzip), `.bz2` (bzip2),
 `.zst` / `.zstd` (Zstandard). Writing to standard output defaults to JSON;
 use `--format` to override.

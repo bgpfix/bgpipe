@@ -17,6 +17,7 @@ bgpipe sits between routers as a transparent proxy, auditing, filtering, and tra
 - Bidirectional BGP to JSON translation including Flowspec - pipe through jq, Python, anything
 - MRT file processing and conversion at scale, incl. RIB snapshots (table dumps)
 - Scriptable pipeline - chain stages or pipe through external programs, keep it in a config file
+- ExaBGP compatible - run ExaBGP scripts (incl. its healthcheck) unchanged, write routes and Flowspec rules as ExaBGP commands
 - Live BGP monitoring from RIPE RIS Live or RouteViews with real-time filters
 - BMP station and exporter - collect BMP from routers, or turn any BGP session or feed into a live BMP stream
 - Secure transport - add TCP-MD5 to sessions, proxy over encrypted WebSockets
@@ -69,7 +70,7 @@ Visit **[bgpipe.org](https://bgpipe.org)** for:
 
 - Report bugs and request features on [GitHub Issues](https://github.com/bgpfix/bgpipe/issues)
 - For collaboration inquiries, contact [bgpipe@bgpipe.org](mailto:bgpipe@bgpipe.org)
-- Integration tests against real BGP daemons (GoBGP, BIRD, FRR, StayRTR, rtrtr) live in [test/integration](test/integration/)
+- Integration tests against real BGP daemons (GoBGP, BIRD, FRR, ExaBGP, Rotonda, Netom, StayRTR, rtrtr) live in [test/integration](test/integration/)
 
 ## Author
 

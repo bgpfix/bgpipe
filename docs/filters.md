@@ -82,6 +82,8 @@ A filter is one or more expressions chained with `&&` (AND) and `||` (OR):
 | `update`    | `type == UPDATE`     |
 | `open`      | `type == OPEN`       |
 | `keepalive` | `type == KEEPALIVE`  |
+| `notify`, `notification` | `type == NOTIFY` |
+| `refresh`, `route_refresh` | `type == REFRESH` |
 
 Examples:
 
@@ -186,6 +188,8 @@ nexthop ~ 0.0.0.0/0            # any next-hop (always matches)
 | `as_peer`     | `==`, `<`, `<=`, `>`, `>=`  | Peer AS (first hop, index 0)    |
 | `aspath_len`  | `==`, `<`, `<=`, `>`, `>=`  | AS_PATH length (hop count)      |
 | `aspath_hops` | `==`, `<`, `<=`, `>`, `>=`  | Unique consecutive hops (ignores prepending) |
+
+`as_path`, `as_path_len` and `as_path_hops` are accepted as aliases.
 
 **Index rules:**
 

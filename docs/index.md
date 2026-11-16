@@ -179,7 +179,7 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 
 -   :material-console:{ .lg } **Scriptable Pipeline**
 
-    Chain stages or pipe messages through external programs
+    Chain stages, pipe messages through external programs, or run your [ExaBGP scripts](exabgp.md) unchanged
 
 -   :material-earth:{ .lg } **Live BGP Monitoring**
 
@@ -204,11 +204,11 @@ A single static binary, no dependencies - see the [Quick Start](quickstart.md) f
 - **Fast** - UPDATE parsing in ~175 ns with zero allocations; ~1M messages/s from MRT to JSON on one box
 - **Hardened** - all parsers are fuzzed: malformed input from a peer or a public feed can't crash the process
 - **Safe by default** - peer allow-lists, authenticated servers, and slow clients can never stall a session
-- **Interop-tested** - every change runs against GoBGP, BIRD, FRR, NLnet Labs Rotonda, and FastNetMon Netom
+- **Interop-tested** - every change runs against GoBGP, BIRD, FRR, ExaBGP, NLnet Labs Rotonda, and FastNetMon Netom
 - **Transparent proxy** - with [TPROXY mode](stages/connect.md#transparent-mode), invisible even at the IP layer: no router reconfiguration
 - **RPKI** - origin validation ([rov](stages/rov.md), RFC 6811) and route leak detection ([aspa](stages/aspa.md), IETF draft-29) - before router vendors ship it
 - **Route policy** - prefix and rate [limits](stages/limit.md); AS_PATH, community, MED, LOCAL_PREF and ORIGIN rewrites with [update](stages/update.md)
-- **Every format** - [JSON](json-format.md) (incl. [Flowspec](flowspec.md)), [MRT](mrt.md) updates and RIB dumps, BMP, OpenBMP, ExaBGP, and raw BGP; gzip/bzip2/zstd; files, URLs, and pipes
+- **Every format** - [JSON](json-format.md) (incl. [Flowspec](flowspec.md)), [MRT](mrt.md) updates and RIB dumps, BMP, OpenBMP, [ExaBGP](exabgp.md) commands, and raw BGP; gzip/bzip2/zstd; files, URLs, and pipes
 - **BMP** - a [station and exporter](stages/bmp.md) over TCP or TLS: ADD-PATH per address family, RIB views, Peer Up/Down events, and statistics as metrics
 - **Glue** - a concise [filter language](filters.md), message [tags](stages/tag.md), external programs, WebSockets, TCP-MD5, and [config files](quickstart.md#config-files)
 - **Observable** - live dashboard, Prometheus metrics, health checks, and pprof over the [HTTP API](http-api.md)
