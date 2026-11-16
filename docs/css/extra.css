@@ -11,3 +11,60 @@
 	--md-default-fg-color--light: #aaa;
 	--md-typeset-color: #eee;
 }
+
+/* landing page: sources -> processors -> sinks */
+.bgpipe-flow {
+	display: flex;
+	align-items: stretch;
+	gap: .6rem;
+	margin: 1.4em 0;
+}
+.bgpipe-flow .flow-col {
+	flex: 1 1 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	gap: .35rem;
+	padding: .7rem .8rem .8rem;
+	border: .05rem solid var(--md-default-fg-color--lightest);
+	border-radius: .4rem;
+}
+.bgpipe-flow .flow-wide {
+	flex-grow: 1.3;
+}
+.bgpipe-flow .flow-title {
+	flex-basis: 100%;
+	font-size: .62rem;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: var(--md-default-fg-color--light);
+}
+.bgpipe-flow a {
+	padding: .1rem .5rem;
+	font-family: var(--md-code-font-family);
+	font-size: .68rem;
+	color: var(--md-code-fg-color);
+	background: var(--md-code-bg-color);
+	border-radius: .2rem;
+}
+.bgpipe-flow a:hover {
+	color: var(--md-accent-fg-color);
+}
+.bgpipe-flow .flow-arrow {
+	flex: 0 0 1.2rem;
+	align-self: center;
+	width: 1.2rem;
+	height: 1.2rem;
+	background: var(--md-default-fg-color--light);
+	clip-path: polygon(0 40%, 55% 40%, 55% 10%, 100% 50%, 55% 90%, 55% 60%, 0 60%);
+}
+@media screen and (max-width: 44.9em) {
+	.bgpipe-flow {
+		flex-direction: column;
+		gap: .3rem;
+	}
+	.bgpipe-flow .flow-arrow {
+		transform: rotate(90deg);
+	}
+}

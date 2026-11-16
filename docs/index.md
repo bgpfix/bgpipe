@@ -12,14 +12,43 @@ The same pipeline works on MRT archives, BMP feeds from your routers, and live s
 Built on the [bgpfix](https://bgpfix.org/) library, written in [Go](https://go.dev/), and distributed under the MIT license.
 Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3634737.3657000) at the [Polish Academy of Sciences](https://www.iitis.pl/en).
 
-```
-  sources               processors                      sinks
-  listen   ─┐                                       ┌─▶  connect
-  read      │   grep · rov · aspa · limit · update  │    write
-  ris-live  ├─▶   tag · exec · pipe · metrics     ──┤    stdout
-  rv-live   │                                       │    websocket
-  bmp      ─┘                                       └─▶  bmp --write
-```
+<div class="bgpipe-flow">
+  <div class="flow-col">
+    <span class="flow-title">sources</span>
+    <a href="stages/listen/">listen</a>
+    <a href="stages/connect/">connect</a>
+    <a href="stages/read/">read</a>
+    <a href="stages/ris-live/">ris-live</a>
+    <a href="stages/rv-live/">rv-live</a>
+    <a href="stages/bmp/">bmp</a>
+  </div>
+  <div class="flow-arrow"></div>
+  <div class="flow-col flow-wide">
+    <span class="flow-title">processors</span>
+    <a href="stages/grep/">grep</a>
+    <a href="stages/grep/">drop</a>
+    <a href="stages/rov/">rov</a>
+    <a href="stages/aspa/">aspa</a>
+    <a href="stages/limit/">limit</a>
+    <a href="stages/update/">update</a>
+    <a href="stages/tag/">tag</a>
+    <a href="stages/head/">head</a>
+    <a href="stages/metrics/">metrics</a>
+    <a href="stages/exec/">exec</a>
+    <a href="stages/pipe/">pipe</a>
+    <a href="stages/websocket/">websocket</a>
+  </div>
+  <div class="flow-arrow"></div>
+  <div class="flow-col">
+    <span class="flow-title">sinks</span>
+    <a href="stages/connect/">connect</a>
+    <a href="stages/listen/">listen</a>
+    <a href="stages/write/">write</a>
+    <a href="stages/stdout/">stdout</a>
+    <a href="stages/websocket/">websocket</a>
+    <a href="stages/bmp/">bmp</a>
+  </div>
+</div>
 
 Each stage does one thing; chain them with `--`. Messages flow in both directions,
 so the very same pipeline can sit inside a live BGP session.
