@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
 	"github.com/dsnet/compress/bzip2"
@@ -239,7 +240,7 @@ func (s *Read) Run() error {
 			}
 		}
 
-		err := s.eio.ReadStream(s.rd, nil)
+		err := s.eio.ReadStream(s.rd, s.parse)
 		s.closeFile()
 		if err != nil {
 			return err
@@ -256,6 +257,15 @@ func (s *Read) Stop() error {
 }
 
 // setFile makes fh the current file, unless the stage is already stopping
+// parse parses UPDATEs here, in parallel to the pipe, which then skips them.
+// NB: on error, m is left as-is: the pipe parses it again, and reports the error
+func (s *Read) parse(m *msg.Msg) bool {
+	if m.Type == msg.UPDATE {
+		m.CopyData().Parse(s.P.Caps)
+	}
+	return true
+}
+
 func (s *Read) setFile(fh io.ReadCloser) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
