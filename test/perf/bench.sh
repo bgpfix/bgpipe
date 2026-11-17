@@ -44,12 +44,13 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"; git -C "$REPO" worktree prune' EXIT
 
 # the benchmark tasks: name -> bgpipe arguments, in ARGS
+# NB: write to a file, not /dev/null: releases before v0.23.0 can't
 TASKS="json mrt grep"
 task_args() {
 	case $1 in
-	json) ARGS=(-- read "$FILE" -- write --format json /dev/null) ;;
-	mrt) ARGS=(-- read "$FILE" -- write --format mrt /dev/null) ;;
-	grep) ARGS=(-- read "$FILE" -- grep 'prefix ~ 8.0.0.0/8 || aspath_len > 5' -- write --format json /dev/null) ;;
+	json) ARGS=(-- read "$FILE" -- write --format json "$TMP/out") ;;
+	mrt) ARGS=(-- read "$FILE" -- write --format mrt "$TMP/out") ;;
+	grep) ARGS=(-- read "$FILE" -- grep 'prefix ~ 8.0.0.0/8 || aspath_len > 5' -- write --format json "$TMP/out") ;;
 	esac
 }
 
