@@ -31,6 +31,7 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
     <a href="stages/rov/">rov</a>
     <a href="stages/aspa/">aspa</a>
     <a href="stages/limit/">limit</a>
+    <a href="stages/combine/">combine</a>
     <a href="stages/update/">update</a>
     <a href="stages/tag/">tag</a>
     <a href="stages/head/">head</a>

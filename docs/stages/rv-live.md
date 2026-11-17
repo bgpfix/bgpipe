@@ -50,6 +50,9 @@ but messages from different topics can interleave differently between runs.
 Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for `--stale` duration.
 
+The stream carries one prefix per UPDATE. To put the original UPDATEs back
+together, add [combine](combine.md): `bgpipe -o -- rv-live -- combine`.
+
 Different RouteViews peers may use 2-byte or 4-byte ASNs, and some send ADD-PATH
 Path Identifiers in their NLRI. bgpipe detects both automatically (see the global
 `--as4` and `--addpath` options).
@@ -110,6 +113,7 @@ bgpipe \
 ## See Also
 
 [ris-live](ris-live.md),
+[combine](combine.md),
 [read](read.md),
 [RouteViews](https://www.routeviews.org/),
 [Stages overview](index.md)
