@@ -128,13 +128,14 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 	}
 
 	// separate pprof server? overwrite m with a fresh mux, protected by --http-auth if given
+	var mw func(http.Handler) http.Handler
 	if pprofVal != "http" {
 		m = chi.NewMux()
 		if strings.TrimSpace(b.K.String("http-auth")) != "" {
-			mw, err := b.httpAuthMiddleware()
-			if err != nil {
+			var err error
+			if mw, err = b.httpAuthMiddleware(); err != nil {
 				return err
-			} else if mw != nil {
+			} else if mw != nil { // NB: nil with --http-open
 				m.Use(mw)
 			}
 		}
@@ -159,8 +160,8 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 	if err != nil {
 		return fmt.Errorf("could not bind --pprof %s: %w", pprofVal, err)
 	}
-	if ap, err := netip.ParseAddrPort(ln.Addr().String()); err == nil && !ap.Addr().IsLoopback() && strings.TrimSpace(b.K.String("http-auth")) == "" {
-		b.Warn().Msgf("pprof: listening on %s without --http-auth", ln.Addr())
+	if ap, err := netip.ParseAddrPort(ln.Addr().String()); err == nil && !ap.Addr().IsLoopback() && mw == nil {
+		b.Warn().Msgf("pprof: listening on %s without authentication", ln.Addr())
 	}
 
 	srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}

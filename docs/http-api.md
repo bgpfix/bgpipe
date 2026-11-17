@@ -54,8 +54,9 @@ bgpipe --http :8080 --http-auth '$BGPIPE_HTTP_AUTH' \
 ```
 
 NB: when `--pprof` is given a separate address (not `http`), that dedicated pprof server
-uses `--http-auth` if given, and otherwise runs without authentication: a bare `:port`
-binds to `127.0.0.1` only, and a non-loopback address without `--http-auth` logs a warning.
+uses `--http-auth` if given (unless `--http-open`), and otherwise runs without
+authentication: a bare `:port` binds to `127.0.0.1` only, and a non-loopback address
+without authentication logs a warning.
 
 ## Per-stage routes
 

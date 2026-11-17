@@ -137,3 +137,31 @@ func TestWriteModes(t *testing.T) {
 		t.Fatal("*.tmp target: renamed to x.json")
 	}
 }
+
+// publishNew never overwrites: the counter goes before the format extension
+func TestPublishNew(t *testing.T) {
+	for _, tc := range []struct{ name, want string }{
+		{"out.20260101.1500.json.gz", "out.20260101.1500.1.json.gz"},
+		{"updates.20260101.1500.bz2", "updates.20260101.1500.1.bz2"},
+		{"out.mrt", "out.1.mrt"},
+	} {
+		dir := t.TempDir()
+		dst := filepath.Join(dir, tc.name)
+		for i := range 2 {
+			src := filepath.Join(dir, "src")
+			if err := os.WriteFile(src, []byte{byte(i)}, 0644); err != nil {
+				t.Fatal(err)
+			}
+			got, err := publishNew(src, dst)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if want := filepath.Join(dir, tc.want); i == 1 && got != want {
+				t.Errorf("%s: got %s, want %s", tc.name, got, want)
+			}
+		}
+		if b, _ := os.ReadFile(dst); len(b) != 1 || b[0] != 0 {
+			t.Errorf("%s: overwritten", tc.name)
+		}
+	}
+}

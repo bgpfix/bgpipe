@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -271,7 +272,7 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64, tmp string) {
 		// publish the file by renaming to the target name
 		// NB: time-based paths must not overwrite eg. the file of a previous run
 		var err error
-		if s.pathTime(s.fpath, time.Now()) != s.fpath { // has $TIME or ${format}
+		if hasTimePlaceholder(s.fpath) {
 			tmp, err = publishNew(fpath, tmp)
 		} else {
 			err = os.Rename(fpath, tmp)
@@ -311,6 +312,9 @@ func publishNew(src, dst string) (string, error) {
 		base, cext = base[:len(base)-len(e)], e
 	}
 	fext := path.Ext(base)
+	if _, err := strconv.Atoi(strings.TrimPrefix(fext, ".")); err == nil {
+		fext = "" // NB: not a format, but eg. the end of $TIME
+	}
 	base = base[:len(base)-len(fext)]
 
 	for i := 0; i < 1000; i++ {

@@ -82,7 +82,7 @@ func NewBmp(parent *core.StageBase) core.Stage {
 	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
 	f.String("sys-name", "bgpipe", "sysName to send in export mode")
 	f.Int("buffer", 100_000, "export: max. queued messages per client before it is dropped")
-	f.Int("max-conns", 100, "with --listen: max. concurrent connections (0 means unlimited)")
+	f.Int("max-conns", 0, "with --listen: max. concurrent connections (0 means unlimited)")
 	f.Duration("idle", 0, "collect: close connections idle for this long (0 means never)")
 
 	return s
