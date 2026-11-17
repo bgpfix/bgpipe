@@ -140,9 +140,6 @@ func (s *Bmp) Attach() error {
 // Prepare connects an exporter before the pipeline starts, so it gets every UPDATE
 // (eg. in read file.mrt -- bmp --write)
 func (s *Bmp) Prepare() error {
-	if s.K.Int("max-conns") < 0 {
-		return fmt.Errorf("--max-conns must not be negative")
-	}
 	if s.listen || !s.write {
 		return nil
 	}
@@ -206,7 +203,6 @@ func (s *Bmp) Run() error {
 
 	var (
 		wg       sync.WaitGroup
-		backoff  time.Duration
 		active   atomic.Int64 // NB: s.nconns lags behind Accept
 		maxconns = int64(s.K.Int("max-conns"))
 	)
@@ -218,17 +214,11 @@ func (s *Bmp) Run() error {
 				return nil
 			}
 
-			// NB: eg. EMFILE must not kill the station; back off and retry
-			backoff = min(max(2*backoff, 5*time.Millisecond), time.Second)
-			s.Warn().Err(err).Msgf("accept failed, retrying in %s", backoff)
-			select {
-			case <-s.Ctx.Done():
-				return nil
-			case <-time.After(backoff):
-			}
+			// NB: eg. EMFILE must not kill the station
+			s.Warn().Err(err).Msg("accept failed, retrying")
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		backoff = 0
 
 		if !peerAllowed(s.peers, conn.RemoteAddr()) {
 			s.Warn().Msgf("%s: not in --peer, rejected", conn.RemoteAddr())
