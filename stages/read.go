@@ -297,17 +297,12 @@ type readAhead struct {
 }
 
 func newReadAhead(rd io.Reader) *readAhead {
-	ra := &readAhead{ch: make(chan []byte, 8), stop: make(chan struct{})}
+	ra := &readAhead{ch: make(chan []byte, 32), stop: make(chan struct{})}
 	go func() {
 		defer close(ra.ch)
 		for {
-			buf, n := make([]byte, 256*1024), 0
-			var err error
-			for n < len(buf) && err == nil {
-				var k int
-				k, err = rd.Read(buf[n:])
-				n += k
-			}
+			buf := make([]byte, 64*1024)
+			n, err := rd.Read(buf)
 			if n > 0 {
 				select {
 				case ra.ch <- buf[:n]:
