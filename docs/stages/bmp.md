@@ -21,12 +21,17 @@ In both roles the stage can connect to *ADDR*, or wait for connections on it
 with `--listen`. Routers usually connect to their station, so a typical
 station runs `bmp --listen :11019`, and a typical exporter `bmp --write
 station:11019`. With `--listen`, any number of peers can connect at the same
-time; use `--peer` to limit who can.
+time; use `--peer` to limit who can, and `--max-conns` how many. An error accepting
+a connection (eg. too many open files) is logged and retried, never fatal.
 
 NB: BMP has no authentication. A station injects whatever routes a connected
 peer sends, and an exporter sends the pipeline's routes to anyone who connects.
 Always use `--peer` with `--listen` (the stage warns without it), and TLS
-(`--cert`/`--key`, `--tls`) on untrusted networks.
+(`--cert`/`--key`, `--tls`) on untrusted networks. Each connection may buffer
+up to 1 MiB of a partial BMP message, so `--max-conns` also bounds memory.
+`--idle` closes connections that went silent (routers that send Statistics
+Reports periodically keep their session alive): use it with `--max-conns`, so
+that silent clients can't hold all the slots.
 
 To read or write BMP *files*, use [read](read.md) and [write](write.md) with
 `--format bmp`.
@@ -116,6 +121,8 @@ labels come from the routers. See [HTTP API](../http-api.md).
 | `--retry-max` | int | `0` | Maximum number of connection retries (0 means unlimited) |
 | `--sys-name` | string | `bgpipe` | sysName to send in export mode |
 | `--buffer` | int | `100000` | Export: max. queued messages per client before it is dropped |
+| `--max-conns` | int | `0` | With `--listen`: max. concurrent connections (0 means unlimited) |
+| `--idle` | duration | `0` | Collect: close connections that send nothing for this long (0 means never) |
 
 ## Examples
 

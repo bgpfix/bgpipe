@@ -54,7 +54,8 @@ bgpipe --http :8080 --http-auth '$BGPIPE_HTTP_AUTH' \
 ```
 
 NB: when `--pprof` is given a separate address (not `http`), that dedicated pprof server
-runs without authentication, since it is expected to be bound to a private interface.
+uses `--http-auth` if given (unless `--http-open`), and otherwise runs without
+authentication: a bare `:port` binds to `127.0.0.1` only.
 
 ## Per-stage routes
 
@@ -75,8 +76,10 @@ If two stages resolve to the same slug, the second is suffixed with its pipeline
 
 `--pprof http` mounts the standard `net/http/pprof` handlers under `/debug/pprof/` on the
 same `--http` listener (subject to the same auth). `--pprof :6060` instead starts a
-dedicated, unauthenticated pprof server on that address -- convenient for a quick
-`go tool pprof` session on a host you already trust:
+dedicated pprof server on `127.0.0.1:6060` (use eg. `--pprof 0.0.0.0:6060` for all
+interfaces) -- convenient for a quick `go tool pprof` session. The
+`/debug/pprof/cmdline` handler is never mounted, as the command line may hold secrets
+(eg. `--http-auth`, `--md5`).
 
 ```bash
 bgpipe --http :8080 --http-open --pprof http \

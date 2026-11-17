@@ -50,8 +50,9 @@ but messages from different topics can interleave differently between runs.
 Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for `--stale` duration.
 
-Different RouteViews peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
-encoding automatically (see the global `--as4` option).
+Different RouteViews peers may use 2-byte or 4-byte ASNs, and some send ADD-PATH
+Path Identifiers in their NLRI. bgpipe detects both automatically (see the global
+`--as4` and `--addpath` options).
 
 ## Options
 

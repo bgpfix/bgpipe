@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -180,7 +181,7 @@ func (s *Write) openFile() error {
 	} else {
 		// get target file path
 		target := s.fpath
-		if strings.Contains(s.fpath, "$") {
+		if hasTimePlaceholder(s.fpath) {
 			t := time.Now().UTC()
 			if s.every > 0 {
 				t = t.Truncate(s.every)
@@ -188,29 +189,27 @@ func (s *Write) openFile() error {
 			target = s.pathTime(s.fpath, t)
 		}
 
-		// write to .tmp and rename on close, unless appending, creating,
+		// create parent directories if they don't exist
+		fdir := path.Dir(target)
+		if err := os.MkdirAll(fdir, 0755); err != nil {
+			return fmt.Errorf("failed to create directories for %s: %w", target, err)
+		}
+
+		// write to a unique .tmp and rename on close, unless appending, creating,
 		// or the target is not a regular file (eg. /dev/null or a FIFO)
-		fpath := target + ".tmp"
-		if s.flags&(os.O_APPEND|os.O_EXCL) != 0 {
-			fpath = target
-		} else if fi, err := os.Stat(target); err == nil && !fi.Mode().IsRegular() {
-			fpath = target
-		} else {
+		// NB: unique, so a restart never truncates the .tmp of a crashed run
+		var fh *os.File
+		var err error
+		if fi, serr := os.Stat(target); s.flags&(os.O_APPEND|os.O_EXCL) != 0 || (serr == nil && !fi.Mode().IsRegular()) {
+			fh, err = os.OpenFile(target, s.flags, 0644)
+		} else if fh, err = os.CreateTemp(fdir, path.Base(target)+".*.tmp"); err == nil {
+			fh.Chmod(0644)
 			s.tmp = target
 		}
-
-		// create parent directories if they don't exist
-		fdir := path.Dir(fpath)
-		if err := os.MkdirAll(fdir, 0755); err != nil {
-			return fmt.Errorf("failed to create directories for %s: %w", fpath, err)
-		}
-
-		// try to open the new target
-		s.Debug().Msgf("%s: opening", fpath)
-		fh, err := os.OpenFile(fpath, s.flags, 0644)
 		if err != nil {
 			return err
 		}
+		s.Debug().Msgf("%s: opened", fh.Name())
 		s.fh = fh
 	}
 	fh := s.fh
@@ -271,9 +270,47 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64, tmp string) {
 
 	if n != 0 && tmp != "" {
 		// publish the file by renaming to the target name
-		if err := os.Rename(fpath, tmp); err != nil {
-			s.Warn().Err(err).Msgf("%s: rename error", fh.Name())
+		// NB: time-based paths must not overwrite eg. the file of a previous run
+		var err error
+		if hasTimePlaceholder(s.fpath) {
+			tmp, err = publishNew(fpath, tmp)
+		} else {
+			err = os.Rename(fpath, tmp)
 		}
+		if err != nil {
+			s.Warn().Err(err).Msgf("%s: rename error", fh.Name())
+		} else {
+			s.Debug().Msgf("%s: published", tmp)
+		}
+	}
+}
+
+// hasTimePlaceholder returns true if p has a $TIME or ${format} placeholder.
+func hasTimePlaceholder(p string) bool {
+	return strings.Contains(p, "$TIME") || reTimeFmt.MatchString(p)
+}
+
+// publishNew renames src to dst, or to dst with a counter if dst exists
+// (eg. "a.json.gz" -> "a.1.json.gz"). Returns the final path.
+func publishNew(src, dst string) (string, error) {
+	// split dst into base + format extension + compression extension
+	base, cext := dst, ""
+	switch e := path.Ext(base); e {
+	case ".gz", ".bz2", ".zst", ".zstd":
+		base, cext = base[:len(base)-len(e)], e
+	}
+	fext := path.Ext(base)
+	if _, err := strconv.Atoi(strings.TrimPrefix(fext, ".")); err == nil {
+		fext = "" // NB: not a format, but eg. the end of $TIME
+	}
+	base = base[:len(base)-len(fext)]
+
+	target := dst
+	for i := 1; ; i++ {
+		if _, err := os.Lstat(target); err != nil {
+			return target, os.Rename(src, target)
+		}
+		target = fmt.Sprintf("%s.%d%s%s", base, i, fext, cext)
 	}
 }
 

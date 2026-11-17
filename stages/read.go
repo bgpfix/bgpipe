@@ -197,6 +197,16 @@ func (s *Read) open() error {
 		s.rd = fh // no decompression, just use the file handle
 	}
 
+	// decompress in background, in parallel to parsing
+	if s.rd != fh {
+		ra := newReadAhead(s.rd)
+		s.rd = ra
+		s.mu.Lock()
+		dclose := s.close
+		s.close = func() { ra.Close(); dclose() }
+		s.mu.Unlock()
+	}
+
 	// need to detect data format?
 	if s.eio.DetectNeeded() {
 		// try from path, then from sample iff needed
@@ -276,4 +286,52 @@ func (s *Read) closeFile() {
 		s.fh.Close()
 		s.fh = nil
 	}
+}
+
+// readAhead reads from rd in background, up to a few chunks ahead
+type readAhead struct {
+	ch   chan []byte   // chunks read from rd
+	stop chan struct{} // closed on Close
+	cur  []byte        // unread part of the current chunk
+	err  error         // read error, valid after ch is closed
+}
+
+func newReadAhead(rd io.Reader) *readAhead {
+	ra := &readAhead{ch: make(chan []byte, 32), stop: make(chan struct{})}
+	go func() {
+		defer close(ra.ch)
+		for {
+			buf := make([]byte, 64*1024)
+			n, err := rd.Read(buf)
+			if n > 0 {
+				select {
+				case ra.ch <- buf[:n]:
+				case <-ra.stop:
+					return
+				}
+			}
+			if err != nil {
+				ra.err = err
+				return
+			}
+		}
+	}()
+	return ra
+}
+
+func (ra *readAhead) Read(p []byte) (int, error) {
+	for len(ra.cur) == 0 {
+		buf, ok := <-ra.ch
+		if !ok {
+			return 0, ra.err
+		}
+		ra.cur = buf
+	}
+	n := copy(p, ra.cur)
+	ra.cur = ra.cur[n:]
+	return n, nil
+}
+
+func (ra *readAhead) Close() {
+	close(ra.stop)
 }
