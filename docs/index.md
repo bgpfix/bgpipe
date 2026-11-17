@@ -18,6 +18,7 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
     <a href="stages/listen/">listen</a>
     <a href="stages/connect/">connect</a>
     <a href="stages/read/">read</a>
+    <a href="stages/stdin/">stdin</a>
     <a href="stages/ris-live/">ris-live</a>
     <a href="stages/rv-live/">rv-live</a>
     <a href="stages/bmp/">bmp</a>
