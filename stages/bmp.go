@@ -140,6 +140,9 @@ func (s *Bmp) Attach() error {
 // Prepare connects an exporter before the pipeline starts, so it gets every UPDATE
 // (eg. in read file.mrt -- bmp --write)
 func (s *Bmp) Prepare() error {
+	if s.K.Int("max-conns") < 0 {
+		return fmt.Errorf("--max-conns must not be negative")
+	}
 	if s.listen || !s.write {
 		return nil
 	}
@@ -204,8 +207,8 @@ func (s *Bmp) Run() error {
 	var (
 		wg       sync.WaitGroup
 		backoff  time.Duration
-		active   atomic.Int32 // NB: s.nconns lags behind Accept
-		maxconns = int32(s.K.Int("max-conns"))
+		active   atomic.Int64 // NB: s.nconns lags behind Accept
+		maxconns = int64(s.K.Int("max-conns"))
 	)
 	defer wg.Wait()
 	for {

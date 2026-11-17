@@ -61,7 +61,7 @@ else
 fi
 
 build() { # ref -> $TMP/bgpipe-ref
-	local ref="$1" bin="$TMP/bgpipe-$1"
+	local ref="$1" safe="${1//\//_}" bin="$TMP/bgpipe-${1//\//_}"
 	if [ "$ref" = "work" ]; then
 		cat >"$TMP/go.work" <<-EOF
 		go 1.26.0
@@ -70,8 +70,8 @@ build() { # ref -> $TMP/bgpipe-ref
 		EOF
 		(cd "$REPO" && GOWORK="$TMP/go.work" go build -o "$bin" .)
 	else
-		git -C "$REPO" worktree add -q --detach "$TMP/src-$ref" "$ref"
-		(cd "$TMP/src-$ref" && GOWORK=off go build -o "$bin" .)
+		git -C "$REPO" worktree add -q --detach "$TMP/src-$safe" "$ref"
+		(cd "$TMP/src-$safe" && GOWORK=off go build -o "$bin" .)
 	fi
 }
 
@@ -110,7 +110,7 @@ for ref in "$@"; do
 	for task in $TASKS; do
 		: >"$TMP/runs"
 		for _ in $(seq "$RUNS"); do
-			run "$TMP/bgpipe-$ref" "$task" >>"$TMP/runs"
+			run "$TMP/bgpipe-${ref//\//_}" "$task" >>"$TMP/runs"
 		done
 		read -r wall cpu rss gcs alloc <<<"$(for c in 1 2 3 4 5; do median $c <"$TMP/runs"; done | tr '\n' ' ')"
 		echo "| $ref | $task | $wall | $cpu | $rss | $gcs | $alloc |"

@@ -273,7 +273,7 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 		// has already moved past them, so they would never be delivered again
 		if errs := fetches.Errors(); len(errs) > 0 {
 			for _, e := range errs {
-				if e.Err == context.Canceled || e.Err == context.DeadlineExceeded {
+				if (e.Err == context.Canceled || e.Err == context.DeadlineExceeded) && fetches.NumRecords() == 0 {
 					return nil
 				}
 				s.Warn().Err(e.Err).Str("topic", e.Topic).Int32("partition", e.Partition).Msg("fetch error")

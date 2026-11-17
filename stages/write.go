@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/bgpfix/bgpfix/bmp"
 	"io"
+	"math/rand/v2"
 	"os"
 	"path"
 	"regexp"
@@ -180,7 +181,7 @@ func (s *Write) openFile() error {
 	} else {
 		// get target file path
 		target := s.fpath
-		if strings.Contains(s.fpath, "$") {
+		if hasTimePlaceholder(s.fpath) {
 			t := time.Now().UTC()
 			if s.every > 0 {
 				t = t.Truncate(s.every)
@@ -201,8 +202,7 @@ func (s *Write) openFile() error {
 		var err error
 		if fi, serr := os.Stat(target); s.flags&(os.O_APPEND|os.O_EXCL) != 0 || (serr == nil && !fi.Mode().IsRegular()) {
 			fh, err = os.OpenFile(target, s.flags, 0644)
-		} else if fh, err = os.CreateTemp(fdir, path.Base(target)+".*.tmp"); err == nil {
-			fh.Chmod(0644)
+		} else if fh, err = createTemp(fdir, path.Base(target)); err == nil {
 			s.tmp = target
 		}
 		if err != nil {
@@ -271,7 +271,7 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64, tmp string) {
 		// publish the file by renaming to the target name
 		// NB: time-based paths must not overwrite eg. the file of a previous run
 		var err error
-		if strings.Contains(s.fpath, "$") {
+		if s.pathTime(s.fpath, time.Now()) != s.fpath { // has $TIME or ${format}
 			tmp, err = publishNew(fpath, tmp)
 		} else {
 			err = os.Rename(fpath, tmp)
@@ -280,6 +280,23 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64, tmp string) {
 			s.Warn().Err(err).Msgf("%s: rename error", fh.Name())
 		} else {
 			s.Debug().Msgf("%s: published", tmp)
+		}
+	}
+}
+
+// hasTimePlaceholder returns true if p has a $TIME or ${format} placeholder.
+func hasTimePlaceholder(p string) bool {
+	return strings.Contains(p, "$TIME") || reTimeFmt.MatchString(p)
+}
+
+// createTemp creates a unique "<base>.<random>.tmp" in dir.
+// NB: unlike os.CreateTemp, the mode is 0644 subject to the process umask.
+func createTemp(dir, base string) (*os.File, error) {
+	for {
+		name := path.Join(dir, fmt.Sprintf("%s.%d.tmp", base, rand.Uint64()))
+		fh, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+		if !errors.Is(err, os.ErrExist) {
+			return fh, err
 		}
 	}
 }
@@ -312,6 +329,7 @@ func publishNew(src, dst string) (string, error) {
 		}
 
 		// hard links not supported? check and rename
+		// NB: racy (no-clobber is not atomic here), but only on such filesystems
 		if _, serr := os.Lstat(target); serr == nil {
 			continue
 		}
