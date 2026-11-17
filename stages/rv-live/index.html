@@ -1572,8 +1572,9 @@ parallel Kafka consumers in one consumer group. Messages from one topic stay in 
 but messages from different topics can interleave differently between runs.</p>
 <p>Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for <code>--stale</code> duration.</p>
-<p>Different RouteViews peers may use 2-byte or 4-byte ASNs. bgpipe detects 2-byte
-encoding automatically (see the global <code>--as4</code> option).</p>
+<p>Different RouteViews peers may use 2-byte or 4-byte ASNs, and some send ADD-PATH
+Path Identifiers in their NLRI. bgpipe detects both automatically (see the global
+<code>--as4</code> and <code>--addpath</code> options).</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

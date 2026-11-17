@@ -1610,11 +1610,16 @@
 with <code>--listen</code>. Routers usually connect to their station, so a typical
 station runs <code>bmp --listen :11019</code>, and a typical exporter <code>bmp --write
 station:11019</code>. With <code>--listen</code>, any number of peers can connect at the same
-time; use <code>--peer</code> to limit who can.</p>
+time; use <code>--peer</code> to limit who can, and <code>--max-conns</code> how many. An error accepting
+a connection (eg. too many open files) is logged and retried, never fatal.</p>
 <p>NB: BMP has no authentication. A station injects whatever routes a connected
 peer sends, and an exporter sends the pipeline's routes to anyone who connects.
 Always use <code>--peer</code> with <code>--listen</code> (the stage warns without it), and TLS
-(<code>--cert</code>/<code>--key</code>, <code>--tls</code>) on untrusted networks.</p>
+(<code>--cert</code>/<code>--key</code>, <code>--tls</code>) on untrusted networks. Each connection may buffer
+up to 1 MiB of a partial BMP message, so <code>--max-conns</code> also bounds memory.
+<code>--idle</code> closes connections that went silent (routers that send Statistics
+Reports periodically keep their session alive): use it with <code>--max-conns</code>, so
+that silent clients can't hold all the slots.</p>
 <p>To read or write BMP <em>files</em>, use <a href="../read/">read</a> and <a href="../write/">write</a> with
 <code>--format bmp</code>.</p>
 <h3 id="station">Station<a class="headerlink" href="#station" title="Permanent link">&para;</a></h3>
@@ -1799,6 +1804,18 @@ labels come from the routers. See <a href="../../http-api/">HTTP API</a>.</p>
 <td>int</td>
 <td><code>100000</code></td>
 <td>Export: max. queued messages per client before it is dropped</td>
+</tr>
+<tr>
+<td><code>--max-conns</code></td>
+<td>int</td>
+<td><code>0</code></td>
+<td>With <code>--listen</code>: max. concurrent connections (0 means unlimited)</td>
+</tr>
+<tr>
+<td><code>--idle</code></td>
+<td>duration</td>
+<td><code>0</code></td>
+<td>Collect: close connections that send nothing for this long (0 means never)</td>
 </tr>
 </tbody>
 </table>

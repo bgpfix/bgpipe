@@ -1533,9 +1533,13 @@ see every message.</p>
 </ul>
 <p>When <code>--every</code> is set, the stage rotates to a new file at the given interval.
 The minimum rotation interval is 60 seconds.</p>
-<p>Files are written atomically: data is first written to a <code>.tmp</code> file, then
-renamed to the final path on successful completion. Empty files are removed
-automatically. Parent directories are created as needed. With <code>--append</code> or
+<p>Files are written atomically: data is first written to a uniquely named
+<code>.tmp</code> file next to the target (eg. <code>out.json.123456.tmp</code>), then renamed to
+the final path on successful completion. Empty files are removed
+automatically. If <em>PATH</em> uses time placeholders and the target already exists
+(eg. after a restart within the same <code>--every</code> period), the file is published
+under a numbered name instead of overwriting it, eg. <code>out.20260101.1500.1.json.gz</code>.
+After a crash, the leftover <code>.tmp</code> files are kept as-is for manual recovery. Parent directories are created as needed. With <code>--append</code> or
 <code>--create</code>, and for targets that are not regular files (eg. <code>/dev/null</code> or a
 named pipe), data is written directly to the target instead.</p>
 <p>The output format is auto-detected from the file extension by default.

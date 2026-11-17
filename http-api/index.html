@@ -1656,7 +1656,8 @@ start unless you pick one of:</p>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">192</span>.0.2.1<span class="w"> </span>--<span class="w"> </span>rov<span class="w"> </span>--<span class="w"> </span>connect<span class="w"> </span><span class="m">10</span>.0.0.1
 </span></code></pre></div>
 <p>NB: when <code>--pprof</code> is given a separate address (not <code>http</code>), that dedicated pprof server
-runs without authentication, since it is expected to be bound to a private interface.</p>
+uses <code>--http-auth</code> if given (unless <code>--http-open</code>), and otherwise runs without
+authentication: a bare <code>:port</code> binds to <code>127.0.0.1</code> only.</p>
 <h2 id="per-stage-routes">Per-stage routes<a class="headerlink" href="#per-stage-routes" title="Permanent link">&para;</a></h2>
 <p>A stage can register its own routes under <code>/stage/&lt;name&gt;/</code>, where <code>&lt;name&gt;</code> is the stage's
 name (or command, for unnamed stages; use <code>@name</code> on the stage to set it explicitly). Stages
@@ -1692,8 +1693,10 @@ that currently expose a JSON summary:</p>
 <h2 id="profiling">Profiling<a class="headerlink" href="#profiling" title="Permanent link">&para;</a></h2>
 <p><code>--pprof http</code> mounts the standard <code>net/http/pprof</code> handlers under <code>/debug/pprof/</code> on the
 same <code>--http</code> listener (subject to the same auth). <code>--pprof :6060</code> instead starts a
-dedicated, unauthenticated pprof server on that address -- convenient for a quick
-<code>go tool pprof</code> session on a host you already trust:</p>
+dedicated pprof server on <code>127.0.0.1:6060</code> (use eg. <code>--pprof 0.0.0.0:6060</code> for all
+interfaces) -- convenient for a quick <code>go tool pprof</code> session. The
+<code>/debug/pprof/cmdline</code> handler is never mounted, as the command line may hold secrets
+(eg. <code>--http-auth</code>, <code>--md5</code>).</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bgpipe<span class="w"> </span>--http<span class="w"> </span>:8080<span class="w"> </span>--http-open<span class="w"> </span>--pprof<span class="w"> </span>http<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--<span class="w"> </span><span class="nb">read</span><span class="w"> </span>updates.mrt.gz<span class="w"> </span>--<span class="w"> </span>write<span class="w"> </span>output.json
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># then: go tool pprof http://localhost:8080/debug/pprof/profile</span>
