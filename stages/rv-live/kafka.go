@@ -269,6 +269,8 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 		}
 
 		// Handle errors
+		// NB: still process the records fetched along with the errors: the client
+		// has already moved past them, so they would never be delivered again
 		if errs := fetches.Errors(); len(errs) > 0 {
 			for _, e := range errs {
 				if e.Err == context.Canceled || e.Err == context.DeadlineExceeded {
@@ -276,11 +278,13 @@ func (s *RvLive) consume(ctx context.Context, client *kgo.Client) error {
 				}
 				s.Warn().Err(e.Err).Str("topic", e.Topic).Int32("partition", e.Partition).Msg("fetch error")
 			}
-			consecutiveErrors++
-			if consecutiveErrors >= 10 {
-				return fmt.Errorf("too many consecutive fetch errors (%d)", consecutiveErrors)
+			if fetches.NumRecords() == 0 {
+				consecutiveErrors++
+				if consecutiveErrors >= 10 {
+					return fmt.Errorf("too many consecutive fetch errors (%d)", consecutiveErrors)
+				}
+				continue
 			}
-			continue
 		}
 		consecutiveErrors = 0
 

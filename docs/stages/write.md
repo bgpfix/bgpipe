@@ -24,9 +24,13 @@ The *PATH* argument supports time-based placeholders for automatic file rotation
 When `--every` is set, the stage rotates to a new file at the given interval.
 The minimum rotation interval is 60 seconds.
 
-Files are written atomically: data is first written to a `.tmp` file, then
-renamed to the final path on successful completion. Empty files are removed
-automatically. Parent directories are created as needed. With `--append` or
+Files are written atomically: data is first written to a uniquely named
+`.tmp` file next to the target (eg. `out.json.123456.tmp`), then renamed to
+the final path on successful completion. Empty files are removed
+automatically. If *PATH* uses time placeholders and the target already exists
+(eg. after a restart within the same `--every` period), the file is published
+under a numbered name instead of overwriting it, eg. `out.20260101.1500.1.json.gz`.
+After a crash, the leftover `.tmp` files are kept as-is for manual recovery. Parent directories are created as needed. With `--append` or
 `--create`, and for targets that are not regular files (eg. `/dev/null` or a
 named pipe), data is written directly to the target instead.
 

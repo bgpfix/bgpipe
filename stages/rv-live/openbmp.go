@@ -78,13 +78,15 @@ func (s *RvLive) processRecord(record *kgo.Record, om *bmp.OpenBmp, bm *bmp.Bmp)
 		tags["COLLECTOR"] = col
 	}
 
+	// NB: own the data before parsing, the upper layer references it
+	m.CopyData()
+
 	// strip collector AS from AS_PATH?
 	if !s.keep_aspath {
 		s.fixPath(m, bm.Peer.AS)
 	}
 
 	// Write to pipe
-	m.CopyData()
 	return s.in.WriteMsg(m)
 }
 
@@ -92,7 +94,8 @@ func (s *RvLive) processRecord(record *kgo.Record, om *bmp.OpenBmp, bm *bmp.Bmp)
 // iff it is directly followed by peer_as in the same segment.
 func (s *RvLive) fixPath(m *msg.Msg, peer_as uint32) {
 	// need to parse as UPDATE first
-	if m.Type != msg.UPDATE || s.P.ParseMsg(m) != nil {
+	// NB: on error, leave m unparsed: the pipe will retry and report it (EVENT_PARSE)
+	if m.Type != msg.UPDATE || m.Parse(s.P.Caps) != nil {
 		return
 	}
 

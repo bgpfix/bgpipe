@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/netip"
 	"sync"
@@ -80,6 +82,8 @@ func NewBmp(parent *core.StageBase) core.Stage {
 	f.Int("retry-max", 0, "maximum number of connection retries (0 means unlimited)")
 	f.String("sys-name", "bgpipe", "sysName to send in export mode")
 	f.Int("buffer", 100_000, "export: max. queued messages per client before it is dropped")
+	f.Int("max-conns", 100, "with --listen: max. concurrent connections (0 means unlimited)")
+	f.Duration("idle", 0, "collect: close connections idle for this long (0 means never)")
 
 	return s
 }
@@ -197,22 +201,44 @@ func (s *Bmp) Run() error {
 		s.Warn().Msg("no --peer given: any host can connect")
 	}
 
-	var wg sync.WaitGroup
+	var (
+		wg       sync.WaitGroup
+		backoff  time.Duration
+		active   atomic.Int32 // NB: s.nconns lags behind Accept
+		maxconns = int32(s.K.Int("max-conns"))
+	)
 	defer wg.Wait()
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			if s.Ctx.Err() != nil || s.isStopped() {
+			if s.Ctx.Err() != nil || s.isStopped() || errors.Is(err, net.ErrClosed) {
 				return nil
 			}
-			return err
+
+			// NB: eg. EMFILE must not kill the station; back off and retry
+			backoff = min(max(2*backoff, 5*time.Millisecond), time.Second)
+			s.Warn().Err(err).Msgf("accept failed, retrying in %s", backoff)
+			select {
+			case <-s.Ctx.Done():
+				return nil
+			case <-time.After(backoff):
+			}
+			continue
 		}
+		backoff = 0
+
 		if !peerAllowed(s.peers, conn.RemoteAddr()) {
 			s.Warn().Msgf("%s: not in --peer, rejected", conn.RemoteAddr())
 			conn.Close()
 			continue
+		} else if maxconns > 0 && active.Load() >= maxconns {
+			s.Warn().Msgf("%s: too many connections (--max-conns %d), rejected", conn.RemoteAddr(), maxconns)
+			conn.Close()
+			continue
 		}
+		active.Add(1)
 		wg.Go(func() {
+			defer active.Add(-1)
 			if err := s.serve(conn, nil); err != nil {
 				s.Warn().Err(err).Msgf("%s: connection closed", conn.RemoteAddr())
 			}
@@ -232,6 +258,17 @@ func (s *Bmp) Stop() error {
 		s.dropLocked(conn, 5*time.Second) // NB: time to drain, then Termination
 	}
 	return nil
+}
+
+// idleReader reads from conn, failing if no data arrives within d
+type idleReader struct {
+	conn net.Conn
+	d    time.Duration
+}
+
+func (r *idleReader) Read(p []byte) (int, error) {
+	r.conn.SetReadDeadline(time.Now().Add(r.d))
+	return r.conn.Read(p)
 }
 
 func (s *Bmp) isStopped() bool {
@@ -262,7 +299,11 @@ func (s *Bmp) serve(conn net.Conn, st *station) error {
 		}
 		rd.Router = ip // NB: sysName replaces it, if sent
 		rd.OnBmp = func(bm *bmp.Bmp) { s.onBmp(bm, rd.Router, ip) }
-		_, err := rd.ReadFrom(conn)
+		var src io.Reader = conn
+		if d := s.K.Duration("idle"); d > 0 {
+			src = &idleReader{conn, d}
+		}
+		_, err := rd.ReadFrom(src)
 		s.Info().Msgf("%s: %d BMP messages, %d peers up, %d down", conn.RemoteAddr(),
 			rd.Stats.Parsed, rd.Stats.PeerUp, rd.Stats.PeerDown)
 		if s.Ctx.Err() != nil || s.isStopped() {

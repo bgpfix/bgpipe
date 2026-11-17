@@ -176,6 +176,7 @@ func (r *Rpki) rtrRun(addr string, usetls bool) {
 
 	var client *rtr.Client
 	aspa_warned := false // warn once per connection
+	expired := false     // data flushed after the RTR Expire Interval
 
 	client = rtr.NewClient(&rtr.Options{
 		Logger:  &b.Logger,
@@ -185,8 +186,9 @@ func (r *Rpki) rtrRun(addr string, usetls bool) {
 		OnASPA: cache.AddASPA,
 
 		OnEndOfData: func(sessid uint16, serial uint32) {
-			changed := !r.has || r.serial != serial || r.sessid != sessid
+			changed := !r.has || r.serial != serial || r.sessid != sessid || expired
 			r.serial, r.sessid, r.has = serial, sessid, true
+			expired = false
 			if changed {
 				cache.Apply()
 			}
@@ -245,6 +247,14 @@ func (r *Rpki) rtrRun(addr string, usetls bool) {
 		// version negotiation: reconnect immediately with the lower version
 		if errors.Is(err, rtr.ErrDowngrade) {
 			continue
+		}
+
+		// RFC 8210 section 6: stop using data older than the Expire Interval
+		if !expired && client.Expired() {
+			b.Warn().Str("rpki", addr).Msg("RTR data expired, flushing the RPKI cache")
+			cache.Flush()
+			cache.Apply()
+			expired = true
 		}
 
 		if sleep := time.Until(retry); sleep > time.Second {

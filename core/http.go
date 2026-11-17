@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -126,13 +127,21 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 		return fmt.Errorf("--pprof http requires --http")
 	}
 
-	// separate pprof server? overwrite m with a fresh mux
+	// separate pprof server? overwrite m with a fresh mux, protected by --http-auth if given
 	if pprofVal != "http" {
 		m = chi.NewMux()
+		if strings.TrimSpace(b.K.String("http-auth")) != "" {
+			mw, err := b.httpAuthMiddleware()
+			if err != nil {
+				return err
+			} else if mw != nil {
+				m.Use(mw)
+			}
+		}
 	}
 
+	// NB: no /debug/pprof/cmdline, it would reveal secrets given on the command line
 	m.HandleFunc("/debug/pprof/*", pprof.Index)
-	m.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	m.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	m.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	m.HandleFunc("/debug/pprof/trace", pprof.Trace)
@@ -142,10 +151,16 @@ func (b *Bgpipe) configurePprof(m *chi.Mux) error {
 		return nil
 	}
 
-	// start separate pprof server (no auth)
+	// start separate pprof server; NB: bind to loopback if no host given
+	if strings.HasPrefix(pprofVal, ":") {
+		pprofVal = "127.0.0.1" + pprofVal
+	}
 	ln, err := net.Listen("tcp", pprofVal)
 	if err != nil {
 		return fmt.Errorf("could not bind --pprof %s: %w", pprofVal, err)
+	}
+	if ap, err := netip.ParseAddrPort(ln.Addr().String()); err == nil && !ap.Addr().IsLoopback() && strings.TrimSpace(b.K.String("http-auth")) == "" {
+		b.Warn().Msgf("pprof: listening on %s without --http-auth", ln.Addr())
 	}
 
 	srv := &http.Server{Handler: m, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}

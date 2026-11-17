@@ -188,29 +188,27 @@ func (s *Write) openFile() error {
 			target = s.pathTime(s.fpath, t)
 		}
 
-		// write to .tmp and rename on close, unless appending, creating,
+		// create parent directories if they don't exist
+		fdir := path.Dir(target)
+		if err := os.MkdirAll(fdir, 0755); err != nil {
+			return fmt.Errorf("failed to create directories for %s: %w", target, err)
+		}
+
+		// write to a unique .tmp and rename on close, unless appending, creating,
 		// or the target is not a regular file (eg. /dev/null or a FIFO)
-		fpath := target + ".tmp"
-		if s.flags&(os.O_APPEND|os.O_EXCL) != 0 {
-			fpath = target
-		} else if fi, err := os.Stat(target); err == nil && !fi.Mode().IsRegular() {
-			fpath = target
-		} else {
+		// NB: unique, so a restart never truncates the .tmp of a crashed run
+		var fh *os.File
+		var err error
+		if fi, serr := os.Stat(target); s.flags&(os.O_APPEND|os.O_EXCL) != 0 || (serr == nil && !fi.Mode().IsRegular()) {
+			fh, err = os.OpenFile(target, s.flags, 0644)
+		} else if fh, err = os.CreateTemp(fdir, path.Base(target)+".*.tmp"); err == nil {
+			fh.Chmod(0644)
 			s.tmp = target
 		}
-
-		// create parent directories if they don't exist
-		fdir := path.Dir(fpath)
-		if err := os.MkdirAll(fdir, 0755); err != nil {
-			return fmt.Errorf("failed to create directories for %s: %w", fpath, err)
-		}
-
-		// try to open the new target
-		s.Debug().Msgf("%s: opening", fpath)
-		fh, err := os.OpenFile(fpath, s.flags, 0644)
 		if err != nil {
 			return err
 		}
+		s.Debug().Msgf("%s: opened", fh.Name())
 		s.fh = fh
 	}
 	fh := s.fh
@@ -271,10 +269,55 @@ func (s *Write) closeFile(wr io.WriteCloser, fh *os.File, n int64, tmp string) {
 
 	if n != 0 && tmp != "" {
 		// publish the file by renaming to the target name
-		if err := os.Rename(fpath, tmp); err != nil {
+		// NB: time-based paths must not overwrite eg. the file of a previous run
+		var err error
+		if strings.Contains(s.fpath, "$") {
+			tmp, err = publishNew(fpath, tmp)
+		} else {
+			err = os.Rename(fpath, tmp)
+		}
+		if err != nil {
 			s.Warn().Err(err).Msgf("%s: rename error", fh.Name())
+		} else {
+			s.Debug().Msgf("%s: published", tmp)
 		}
 	}
+}
+
+// publishNew renames src to dst, or to dst with a counter if dst exists
+// (eg. "a.json.gz" -> "a.1.json.gz"). Returns the final path.
+func publishNew(src, dst string) (string, error) {
+	// split dst into base + format extension + compression extension
+	base, cext := dst, ""
+	switch e := path.Ext(base); e {
+	case ".gz", ".bz2", ".zst", ".zstd":
+		base, cext = base[:len(base)-len(e)], e
+	}
+	fext := path.Ext(base)
+	base = base[:len(base)-len(fext)]
+
+	for i := 0; i < 1000; i++ {
+		target := dst
+		if i > 0 {
+			target = fmt.Sprintf("%s.%d%s%s", base, i, fext, cext)
+		}
+
+		// NB: os.Link fails if target exists, unlike os.Rename
+		err := os.Link(src, target)
+		switch {
+		case err == nil:
+			return target, os.Remove(src)
+		case errors.Is(err, os.ErrExist):
+			continue
+		}
+
+		// hard links not supported? check and rename
+		if _, serr := os.Lstat(target); serr == nil {
+			continue
+		}
+		return target, os.Rename(src, target)
+	}
+	return dst, fmt.Errorf("%s: too many existing files", dst)
 }
 
 func (s *Write) Run() error {

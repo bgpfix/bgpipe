@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/filter"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/go-chi/chi/v5"
 	"github.com/knadh/koanf/v2"
@@ -37,9 +37,14 @@ type Stage interface {
 	// Emits "START" just before, and "STOP" after stage operation is finished.
 	Run() error
 
-	// Stop is called when the stage is requested to stop (by an event),
-	// or after Run() exits (in order to clean-up).
-	// It should safely finish all I/O and make Run return if it's still running.
+	// Stop is called when the stage is requested to stop (eg. by an event) while Run()
+	// is still running. It must make Run return (eg. by calling StageBase.Cancel),
+	// possibly after safely finishing all I/O, otherwise Run gets cancelled after
+	// StageOptions.StopTimeout.
+	//
+	// NB: Stop is not called after Run returns by itself (eg. on end of input or
+	// when the pipe context is cancelled): put the clean-up code (eg. flushing
+	// buffered output) at the end of Run.
 	Stop() error
 
 	// RouteHTTP can register optional HTTP routes for this stage under /<stage-name>/*.
@@ -97,11 +102,11 @@ type StageBase struct {
 
 	// properties set during Attach()
 
-	IsFirst bool    // is the first stage in pipe? (the L peer)
-	IsLast  bool    // is the last stage in pipe? (the R peer)
-	IsRight bool    // write L->R msgs + capture L->R msgs?
-	IsLeft  bool    // write R->L msgs + capture R->L msgs?
-	IsBidir bool    // true iff IsRight && IsLeft
+	IsFirst bool     // is the first stage in pipe? (the L peer)
+	IsLast  bool     // is the last stage in pipe? (the R peer)
+	IsRight bool     // write L->R msgs + capture L->R msgs?
+	IsLeft  bool     // write R->L msgs + capture R->L msgs?
+	IsBidir bool     // true iff IsRight && IsLeft
 	Dir     meta.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
 
 	callbacks []*pipe.Callback // registered callbacks

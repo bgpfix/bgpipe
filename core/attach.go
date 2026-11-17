@@ -109,6 +109,15 @@ func (b *Bgpipe) AttachStages() error {
 		return fmt.Errorf("--as4: invalid value %q (need auto, on, or off)", v)
 	}
 
+	// ADD-PATH? (NB: session caps and per-message metadata take precedence)
+	switch v := k.String("addpath"); v {
+	case "auto", "":
+		p.Caps.Use(caps.CAP_ADDPATH_GUESS) // pseudo-capability: detect Path Ids in NLRI
+	case "off":
+	default:
+		return fmt.Errorf("--addpath: invalid value %q (need auto or off)", v)
+	}
+
 	// log events?
 	if evs := ParseEvents(k.Strings("events"), "START", "STOP", "READY", "PREPARE"); len(evs) > 0 {
 		b.Debug().Strs("events", evs).Msg("monitored events will be logged")
