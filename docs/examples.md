@@ -273,6 +273,9 @@ Put a complete customer-facing firewall in one readable file: RPKI and ASPA vali
 --kill limit/session                     # stop on prefix limit violation
 
 listen --peer 198.51.100.7 --md5 /etc/bgpipe/customer1.md5 :179
+drop 'bogon_prefix || bogon_asn'         # RFC 6890 prefixes, private/reserved ASNs
+drop 'aspath[*] == 174 || aspath[*] == 1299 || aspath[*] == 2914 || aspath[*] == 3356'
+                                         # a customer can't be the upstream of a Tier-1
 rov --invalid withdraw
 aspa --role customer --invalid withdraw
 limit --ipv4 --max-length 24 --session 1000
@@ -286,6 +289,8 @@ bgpipe -n -f /etc/bgpipe/customer1.conf   # check what will run
 bgpipe -f /etc/bgpipe/customer1.conf      # run it
 curl -s 127.0.0.1:8080/ready              # 200 once the session is up
 ```
+
+The two `drop` lines follow the ingress filters of [Everyday Practical BGP](https://archive.nanog.org/sites/default/files/Snijders_Everyday_Practical_Bgp.pdf) (Job Snijders, NANOG 67): bogons, and "peerlock-lite" -- extend the list with the other Tier-1 networks you don't sell transit to. NB: `drop` drops the whole UPDATE, including any other prefixes in it.
 
 Under systemd, `Restart=on-failure` with `RestartPreventExitStatus=2` restarts the session after network errors, but not after a configuration mistake (see [exit codes](quickstart.md#exit-codes)).
 
