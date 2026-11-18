@@ -23,7 +23,8 @@ Separate multiple events with commas, eg. `--events ESTABLISHED,limit/session`.
 | `stage/name` | the event `name` of a stage | `limit/session`, `listen/READY` |
 | `all` or `*` | all events | `--events all` |
 
-A stage is named after its command (eg. `listen`, `limit`). Mind the case: a
+A stage is named after its command (eg. [listen](stages/listen.md),
+[limit](stages/limit.md)). Mind the case: a
 lowercase name with no slash is a stage, so `--events established` waits for a
 stage called `established`. Write the BGP session events in capitals.
 
@@ -50,7 +51,7 @@ Every stage emits these, eg. `connect/READY`.
 
 | Event | When |
 |-------|------|
-| `PREPARE` | The stage starts preparing (eg. `connect` dials its peer, `listen` waits for one) |
+| `PREPARE` | The stage starts preparing (eg. [connect](stages/connect.md) dials its peer, [listen](stages/listen.md) waits for one) |
 | `READY` | The stage is prepared (eg. the TCP connection is up) |
 | `START` | The stage starts its work, once all stages started with it are ready |
 | `STOP` | The stage has stopped |
@@ -63,18 +64,18 @@ and `--kill`, and for all four in `--events`.
 | Event | Arguments | When | Stage |
 |-------|-----------|------|-------|
 | `limit/long` | prefix, origin AS | Prefix longer than `--max-length` | [limit](stages/limit.md#events) |
-| `limit/short` | prefix, origin AS | Prefix shorter than `--min-length` | limit |
-| `limit/session` | prefix, origin AS, count | Too many prefixes in the session (`--session`) | limit |
-| `limit/origin` | prefix, origin AS, count | Too many prefixes from one origin AS (`--origin`) | limit |
-| `limit/block` | prefix, origin AS, count | Too many prefixes in one IP block (`--block`) | limit |
+| `limit/short` | prefix, origin AS | Prefix shorter than `--min-length` | [limit](stages/limit.md#events) |
+| `limit/session` | prefix, origin AS, count | Too many prefixes in the session (`--session`) | [limit](stages/limit.md#events) |
+| `limit/origin` | prefix, origin AS, count | Too many prefixes from one origin AS (`--origin`) | [limit](stages/limit.md#events) |
+| `limit/block` | prefix, origin AS, count | Too many prefixes in one IP block (`--block`) | [limit](stages/limit.md#events) |
 | `bmp/peer-up` | router, peer IP, peer AS | A monitored peer is up | [bmp](stages/bmp.md#events) |
-| `bmp/peer-down` | router, peer IP, peer AS | A monitored peer is down | bmp |
+| `bmp/peer-down` | router, peer IP, peer AS | A monitored peer is down | [bmp](stages/bmp.md#events) |
 | `grep/`*name* | message | A message matches (`--event-match name`) or fails (`--event-fail name`) | [grep](stages/grep.md) |
 | `rov/`*name* | message | RPKI INVALID prefixes (`--event name`) | [rov](stages/rov.md) |
 | `aspa/`*name* | message | ASPA INVALID path (`--event name`) | [aspa](stages/aspa.md) |
 
-`grep`, `rov` and `aspa` emit events only if you name them, eg.
-`rov --event dropped` emits `rov/dropped`. Run `bgpipe STAGE -h` to see the
+[grep](stages/grep.md), [rov](stages/rov.md) and [aspa](stages/aspa.md) emit events only if you name
+them, eg. `rov --event dropped` emits `rov/dropped`. Run `bgpipe STAGE -h` to see the
 events of a stage.
 
 ## Examples
