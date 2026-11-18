@@ -2,7 +2,6 @@ package stages
 
 import (
 	"context"
-	"maps"
 	"slices"
 	"sync"
 	"time"
@@ -77,7 +76,7 @@ func (s *Combine) Attach() error {
 func (s *Combine) Run() error {
 	ticker := time.NewTicker(max(s.window/4, 10*time.Millisecond))
 	defer ticker.Stop()
-	upstream := s.upstream()
+	upstream := upstreamDone(s.StageBase)
 
 	for {
 		select {
@@ -93,12 +92,12 @@ func (s *Combine) Run() error {
 	}
 }
 
-// upstream returns a channel closed when all producers before s are done.
+// upstreamDone returns a channel closed when all producers before s are done.
 // NB: a stage is done after its input is drained, so s saw all its messages
-func (s *Combine) upstream() <-chan struct{} {
+func upstreamDone(s *core.StageBase) <-chan struct{} {
 	var ctxs []context.Context
 	for _, st := range append(slices.Clone(s.B.Stages), s.B.Autos...) {
-		if st == nil || st == s.StageBase || !st.Options.IsProducer {
+		if st == nil || st == s || !st.Options.IsProducer {
 			continue
 		}
 		if (s.IsRight && st.IsRight && st.Index < s.Index) || (s.IsLeft && st.IsLeft && st.Index > s.Index) {
@@ -123,7 +122,7 @@ func (s *Combine) upstream() <-chan struct{} {
 // onMsg takes m into a pending UPDATE, or sends its copy right after the pending ones.
 // Always drops m: the copies take its place.
 func (s *Combine) onMsg(m *msg.Msg) bool {
-	peer := combinePeerKey(m)
+	peer := peerKey(m)
 	key, pfx := s.classify(m)
 
 	s.mu.Lock()
@@ -177,46 +176,29 @@ func (s *Combine) onMsg(m *msg.Msg) bool {
 	return false
 }
 
-// classify returns the attributes key and prefixes of m, or an empty key if m can't be combined.
-// Only IPv4 and IPv6 unicast UPDATEs that only announce, or only withdraw, can be combined.
+// classify returns the attributes key and prefixes of m, or an empty key if m can't be combined
 func (s *Combine) classify(m *msg.Msg) (key string, pfx []nlri.Prefix) {
-	if m.Type != msg.UPDATE {
-		return "", nil
-	}
-	u := &m.Update
-	mpr, mpu := u.ReachMP(), u.UnreachMP()
-	v4, v6 := len(u.Reach)+len(u.Unreach) > 0, mpr != nil || mpu != nil
-
-	var buf []byte
-	switch {
-	case v4 && v6:
-		return "", nil
-	case len(u.Reach) > 0 && len(u.Unreach) == 0:
-		buf, pfx = append(buf, 'A', '4'), u.Reach
-	case len(u.Unreach) > 0 && len(u.Reach) == 0:
-		return "W4", u.Unreach
-	case mpr != nil && mpu == nil && mpr.AS == afi.AS_IPV6_UNICAST:
-		mp := mpr.Prefixes()
-		if mp == nil {
-			return "", nil
-		}
-		buf, pfx = append(buf, 'A', '6'), mp.Prefixes
-		buf = append(buf, mp.NextHop.AsSlice()...)
-		buf = append(buf, mp.LinkLocal.AsSlice()...)
-	case mpu != nil && mpr == nil && mpu.AS == afi.AS_IPV6_UNICAST:
-		if mp := mpu.Prefixes(); mp != nil {
-			return "W6", mp.Prefixes
-		}
-		return "", nil
-	default:
-		return "", nil
-	}
+	pfx, reach := unicastPrefixes(m)
 	if len(pfx) == 0 {
 		return "", nil
 	}
+	buf := []byte{'W', '4'}
+	if reach {
+		buf[0] = 'A'
+	}
+	if pfx[0].Addr().Is6() {
+		buf[1] = '6'
+	}
+	if !reach {
+		return string(buf), pfx
+	}
 
-	// the attributes, without MP_REACH (its next-hop is in buf already)
-	u.Attrs.Each(func(_ int, ac attrs.Code, at attrs.Attr) {
+	// the next-hop and attributes, without MP_REACH
+	if mp := m.Update.ReachMP().Prefixes(); mp != nil {
+		buf = append(buf, mp.NextHop.AsSlice()...)
+		buf = append(buf, mp.LinkLocal.AsSlice()...)
+	}
+	m.Update.Attrs.Each(func(_ int, ac attrs.Code, at attrs.Attr) {
 		if ac != attrs.ATTR_MP_REACH {
 			buf = at.Marshal(buf, s.P.Caps, m.Meta)
 		}
@@ -224,17 +206,37 @@ func (s *Combine) classify(m *msg.Msg) (key string, pfx []nlri.Prefix) {
 	return string(buf), pfx
 }
 
-// combinePeerKey identifies the peer of m by its direction and tags
-func combinePeerKey(m *msg.Msg) string {
-	tags := pipe.GetTags(m)
-	buf := []byte{byte(m.Dir)}
-	for _, k := range slices.Sorted(maps.Keys(tags)) {
-		buf = append(buf, k...)
-		buf = append(buf, '=')
-		buf = append(buf, tags[k]...)
-		buf = append(buf, '\n')
+// unicastPrefixes returns the prefixes of m and if they are announced, iff m is an UPDATE
+// that only announces, or only withdraws, IPv4 or IPv6 unicast prefixes
+func unicastPrefixes(m *msg.Msg) (pfx []nlri.Prefix, reach bool) {
+	if m.Type != msg.UPDATE {
+		return nil, false
 	}
-	return string(buf)
+	u := &m.Update
+	mpr, mpu := u.ReachMP(), u.UnreachMP()
+	switch {
+	case (mpr != nil || mpu != nil) && len(u.Reach)+len(u.Unreach) > 0:
+		return nil, false
+	case len(u.Reach) > 0 && len(u.Unreach) == 0:
+		return u.Reach, true
+	case len(u.Unreach) > 0 && len(u.Reach) == 0:
+		return u.Unreach, false
+	case mpr != nil && mpu == nil && mpr.AS == afi.AS_IPV6_UNICAST:
+		if mp := mpr.Prefixes(); mp != nil {
+			return mp.Prefixes, true
+		}
+	case mpu != nil && mpr == nil && mpu.AS == afi.AS_IPV6_UNICAST:
+		if mp := mpu.Prefixes(); mp != nil {
+			return mp.Prefixes, false
+		}
+	}
+	return nil, false
+}
+
+// peerKey identifies the BGP peer of m: its direction, collector and peer tags (if any)
+func peerKey(m *msg.Msg) string {
+	tags := pipe.GetTags(m)
+	return string(rune('0'+m.Dir)) + tags["COLLECTOR"] + "|" + tags["PEER_IP"] + "|" + tags["PEER_AS"]
 }
 
 // flush emits the UPDATEs of peers with the first one older than t (all if t is zero)

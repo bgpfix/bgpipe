@@ -28,6 +28,7 @@ bgpipe [OPTIONS] [--] STAGE1 [OPTIONS] [ARGS] [--] STAGE2 [OPTIONS] [ARGS] ...
 | [ris-live](ris-live.md) | Stream BGP updates from RIPE RIS Live |
 | [rov](rov.md) | Validate route origins using RPKI ROV |
 | [rv-live](rv-live.md) | Stream BGP updates from RouteViews via Kafka |
+| [smooth](smooth.md) | Hold announcements, send only the last one for each prefix |
 | [speaker](speaker.md) | Run a simple BGP speaker |
 | [stdin](stdin.md) | Read messages from standard input |
 | [stdout](stdout.md) | Write messages to standard output |

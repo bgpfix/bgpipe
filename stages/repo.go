@@ -23,6 +23,7 @@ var Repo = map[string]core.NewStage{
 	"ris-live":  NewRisLive,
 	"rov":       rpki.NewRov,
 	"rv-live":   rvlive.NewRvLive,
+	"smooth":    NewSmooth,
 	"speaker":   NewSpeaker,
 	"stdin":     NewStdin,
 	"stdout":    NewStdout,

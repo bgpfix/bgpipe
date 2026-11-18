@@ -23,9 +23,10 @@ after `--window`, or when adding a prefix would make it larger than
 `--max-size`. If a prefix changes again before that, the pending UPDATEs of its
 peer are sent first.
 
-A peer is identified by the message direction and all its [tags](../json-format.md)
-(eg. `PEER_IP` and `PEER_AS` from MRT, BMP or rv-live): UPDATEs with different
-tags are never combined. Only IPv4 and IPv6 unicast UPDATEs that only announce,
+A peer is identified by the message direction, and the `COLLECTOR`, `PEER_IP`
+and `PEER_AS` [tags](../json-format.md) (set by eg. read, bmp, rv-live and
+ris-live): only UPDATEs of the same peer are combined, and the combined UPDATE
+has the tags of the first one. Only IPv4 and IPv6 unicast UPDATEs that only announce,
 or only withdraw, prefixes are combined. All other messages (eg. KEEPALIVE,
 End-of-RIB, Flowspec) are passed on unchanged, after the pending UPDATEs of
 their peer, so the order of messages is kept.
@@ -58,5 +59,6 @@ bgpipe -- read updates.20240212.0745.bz2 -- combine --window 10s -- write combin
 ## See Also
 
 [rv-live](rv-live.md),
+[smooth](smooth.md),
 [update](update.md),
 [Stages overview](index.md)

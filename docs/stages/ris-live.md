@@ -98,6 +98,7 @@ bgpipe \
 ## See Also
 
 [rv-live](rv-live.md),
+[smooth](smooth.md),
 [read](read.md),
 [RIPE RIS Live](https://ris-live.ripe.net/),
 [Stages overview](index.md)
