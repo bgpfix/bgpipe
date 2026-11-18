@@ -19,10 +19,10 @@ exec 9>"$WORK/in.json"
 wait_cmd 10 "grep -q 'connected 127.0.0.1' '$WORK/export.log'"
 
 # peer and RIB view travel in message tags
-jq -c '.[5]={"PEER_IP":"192.0.2.7","PEER_AS":"65007","BMP_RIB":"in-post"}' "$TESTDATA/updates.json" >&9
+jq -c '.[5]={"PEER_IP":"192.0.2.7","PEER_AS":"65007","bmp/rib":"in-post"}' "$TESTDATA/updates.json" >&9
 wait_prefix 10 "192.0.2.0/24"
 wait_prefix 10 "10.99.0.0/16"
-wait_json 10 '.[4].reach==["198.51.100.0/24"] and .[5].PEER_IP=="192.0.2.7" and .[5].PEER_AS=="65007" and .[5].PEER_ID=="192.0.2.7" and .[5].BMP_RIB=="in-post" and .[5].ROUTER=="rtr1"'
+wait_json 10 '.[4].reach==["198.51.100.0/24"] and .[5].PEER_IP=="192.0.2.7" and .[5].PEER_AS=="65007" and .[5].PEER_ID=="192.0.2.7" and .[5]["bmp/rib"]=="in-post" and .[5].ROUTER=="rtr1"'
 
 # only UPDATEs travel as Route Monitoring
 echo '["R",9,"2026-07-13T00:00:09.000","KEEPALIVE",null,{}]' >&9

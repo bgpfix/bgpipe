@@ -20,7 +20,7 @@ type Mrai struct {
 	window time.Duration
 
 	mu    sync.Mutex
-	peers map[string]*mraiPeer
+	peers map[peer]*mraiPeer
 }
 
 // mraiPeer holds the pending announcements of a peer
@@ -33,7 +33,7 @@ type mraiPeer struct {
 }
 
 func NewMrai(parent *core.StageBase) core.Stage {
-	s := &Mrai{StageBase: parent, peers: make(map[string]*mraiPeer)}
+	s := &Mrai{StageBase: parent, peers: make(map[peer]*mraiPeer)}
 
 	o := &s.Options
 	o.Descr = "send prefix announcements at most once per time window (MRAI)"

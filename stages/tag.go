@@ -64,33 +64,20 @@ func (s *Tag) Attach() (err error) {
 }
 
 func (s *Tag) onmsg(m *msg.Msg) bool {
-	mx := pipe.UseContext(m)
-	n := len(mx.Tags)
-
-	// drop tags
+	t := m.UseTags()
 	if len(s.drop) > 0 && s.drop[0] == "*" {
-		mx.Tags = mx.Tags[:0]
+		t.Reset()
 	} else {
 		for _, tag := range s.drop {
-			mx.Tags.Set(tag, "")
+			t.Set(tag, "")
 		}
 	}
-	mod := len(mx.Tags) != n
-
-	// add SRC tag with source stage name
-	if s.src && mx.Input != nil && mx.Input.Name != "" {
-		mod = true
-		mx.Tags.Set("SRC", mx.Input.Name)
+	if mx := pipe.GetContext(m); s.src && mx != nil && mx.Input != nil {
+		t.Src = mx.Input.Name
 	}
-
-	// add tags
 	for k, v := range s.add {
-		mod = true
-		mx.Tags.Set(k, v)
+		t.Set(k, v)
 	}
-
-	if mod {
-		m.DropJSON() // NB: tags only, keep the wire as-is
-	}
+	m.DropJSON() // NB: tags only, keep the wire as-is
 	return true
 }

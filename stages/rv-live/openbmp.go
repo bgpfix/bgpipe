@@ -3,12 +3,10 @@ package rvlive
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/bmp"
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
@@ -58,24 +56,20 @@ func (s *RvLive) processRecord(record *kgo.Record, om *bmp.OpenBmp, bm *bmp.Bmp)
 	}
 
 	// add tags
-	tags := &pipe.UseContext(m).Tags
+	t := m.UseTags()
 	if bm.Peer.Address.IsValid() && !bm.Peer.Address.IsUnspecified() {
-		tags.Set("PEER_IP", bm.Peer.Address.String())
+		t.PeerIP = bm.Peer.Address
 	}
-	if bm.Peer.AS != 0 {
-		tags.Set("PEER_AS", strconv.FormatUint(uint64(bm.Peer.AS), 10))
-	}
+	t.PeerAS = bm.Peer.AS
 
 	// NB: routeviews collector is their internal BMP machine name (bmp*)
-	if om.CollectorName != "" {
-		tags.Set("RV_COLLECTOR", om.CollectorName)
-	}
+	t.Set("rv-live/collector", om.CollectorName)
 
 	// NB: routeviews puts BGP collector in the router name field
 	if om.RouterName != "" {
-		tags.Set("COLLECTOR", om.RouterName)
-	} else if col, _ := parseTopic(record.Topic); col != "" {
-		tags.Set("COLLECTOR", col)
+		t.Collector = om.RouterName
+	} else {
+		t.Collector, _ = parseTopic(record.Topic)
 	}
 
 	// NB: own the data before parsing, the upper layer references it

@@ -35,6 +35,7 @@ nav:
   - MRT files: mrt.md
   - ExaBGP: exabgp.md
   - Filtering: filters.md
+  - Tags: tags.md
   - HTTP API: http-api.md
   - Docker: docker.md
 

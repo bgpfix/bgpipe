@@ -1,11 +1,13 @@
 package stages
 
 import (
+	"net/netip"
 	"sync"
 	"time"
 
 	"github.com/bgpfix/bgpfix/afi"
 	"github.com/bgpfix/bgpfix/attrs"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -22,7 +24,7 @@ type Combine struct {
 	maxsize int           // max. size of a combined UPDATE
 
 	mu    sync.Mutex
-	peers map[string]*combinePeer // pending UPDATEs, by peer
+	peers map[peer]*combinePeer // pending UPDATEs, by peer
 }
 
 // combinePeer holds the pending UPDATEs of one peer
@@ -41,7 +43,7 @@ type combineGroup struct {
 }
 
 func NewCombine(parent *core.StageBase) core.Stage {
-	s := &Combine{StageBase: parent, peers: make(map[string]*combinePeer)}
+	s := &Combine{StageBase: parent, peers: make(map[peer]*combinePeer)}
 
 	o := &s.Options
 	o.Descr = "combine UPDATEs with the same attributes into one"
@@ -200,10 +202,19 @@ func unicastPrefixes(m *msg.Msg) (pfx []nlri.Prefix, reach bool) {
 	return nil, false
 }
 
-// peerKey identifies the BGP peer of m: its direction, collector and peer tags (if any)
-func peerKey(m *msg.Msg) string {
-	tags := pipe.GetTags(m)
-	return string(rune('0'+m.Dir)) + tags.Get("COLLECTOR") + "|" + tags.Get("PEER_IP") + "|" + tags.Get("PEER_AS")
+// peer identifies the BGP peer of a message: its direction, collector and peer tags (if any)
+type peer struct {
+	dir       meta.Dir
+	collector string
+	ip        netip.Addr
+	as        uint32
+}
+
+func peerKey(m *msg.Msg) peer {
+	if t := m.Tags; t != nil {
+		return peer{m.Dir, t.Collector, t.PeerIP, t.PeerAS}
+	}
+	return peer{dir: m.Dir}
 }
 
 // flush emits the UPDATEs of peers with the first one older than t (all if t is zero)
@@ -218,11 +229,11 @@ func (s *Combine) flush(t time.Time) {
 }
 
 // emit sends the pending UPDATEs of peer, in order. Must hold s.mu.
-func (s *Combine) emit(peer string, cp *combinePeer) {
+func (s *Combine) emit(key peer, cp *combinePeer) {
 	if cp == nil {
 		return
 	}
-	delete(s.peers, peer)
+	delete(s.peers, key)
 
 	for _, g := range cp.groups {
 		if u := &g.m.Update; len(g.add) > 0 {

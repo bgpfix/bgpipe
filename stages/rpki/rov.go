@@ -107,7 +107,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	s.cnt_msg.Inc()
 
 	u := &m.Update
-	tags := &pipe.UseContext(m).Tags
+	tags := m.UseTags()
 
 	// origin AS from AS_PATH
 	origin := u.AsPath().Origin()
@@ -164,12 +164,12 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 		if do_split {
 			m2 = s.P.GetMsg().Switch(msg.UPDATE)
 			m2.Time = m.Time
-			t2 = &pipe.UseContext(m2).Tags
-			for _, t := range *tags {
-				if !strings.HasPrefix(t.Key, "rov/") {
-					t2.Set(t.Key, t.Val)
+			t2 = m2.UseTags()
+			tags.Each(func(k, v string) {
+				if !strings.HasPrefix(k, "rov/") {
+					t2.Set(k, v)
 				}
-			}
+			})
 		}
 
 		if s.tag {

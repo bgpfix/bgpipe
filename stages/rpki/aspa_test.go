@@ -6,7 +6,6 @@ import (
 	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/stretchr/testify/require"
 )
 
@@ -147,13 +146,13 @@ func TestAspa_PeerTagFirstHopCheck(t *testing.T) {
 	// matching tag -> first-hop OK, path attested -> kept
 	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
-	pipe.UseContext(m).Tags.Set("PEER_AS", "65010")
+	m.UseTags().Set("PEER_AS", "65010")
 	require.True(t, s.validateMsg(m))
 
 	// mismatching tag -> first-hop check fails -> dropped
 	m2 := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m2, 65010, 65020)
-	pipe.UseContext(m2).Tags.Set("PEER_AS", "65099")
+	m2.UseTags().Set("PEER_AS", "65099")
 	require.False(t, s.validateMsg(m2))
 
 	// missing tag -> first-hop check disabled -> kept

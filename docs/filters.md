@@ -352,7 +352,7 @@ bogon_prefix || bogon_asn      # anything that must not be on the Internet
 | `tag`, `tags`   | `==`, `~`     | Pipeline metadata tags               |
 | `tag[KEY]`      | `==`, `~`     | Specific tag by key name             |
 
-Tags are key-value pairs attached to messages by the [`tag`](stages/tag.md) stage and other stages (e.g., `ris-live` adds `PEER_AS`, `PEER_IP`; `rov` adds `rov/status`).
+Tags are key-value pairs attached to messages by stages, eg. `PEER_AS` by `ris-live`, or `rov/status` by `rov`: see [Message Tags](tags.md) for the common ones.
 
 Tag filters work on **all message types** (not just UPDATEs).
 

@@ -331,11 +331,11 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 
 	// add metadata
 	msg.Time = ts
-	tags := &pipe.UseContext(msg).Tags
+	tags := msg.UseTags()
 	tags.Set("PEER_IP", peer_ip)
 	tags.Set("PEER_AS", peer_asn)
-	tags.Set("RIS_ID", id)
-	tags.Set("RIS_HOST", host)
+	tags.Set("ris-live/id", id)
+	tags.Set("ris-live/host", host)
 	if col, _, _ := strings.Cut(host, "."); len(col) > 0 {
 		tags.Set("COLLECTOR", col)
 	}

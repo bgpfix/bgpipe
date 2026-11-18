@@ -38,18 +38,10 @@ To read or write BMP *files*, use [read](read.md) and [write](write.md) with
 
 ### Station
 
-Each UPDATE is tagged with where it comes from:
-
-| Tag | Description |
-|-----|-------------|
-| `PEER_IP`, `PEER_AS` | The monitored BGP peer |
-| `PEER_ID` | BGP Identifier of the peer |
-| `BMP_RIB` | RIB view: `in-post`, `out-pre`, `out-post`, or `loc` (not set for pre-policy Adj-RIB-In) |
-| `PEER_RD` | Peer distinguisher (hex), if non-zero |
-| `PEER_TYPE` | `rd` or `local` for RD and local instance peers (not set for global peers) |
-| `ROUTER` | sysName of the monitored router (its IP address if not sent) |
-
-Use them in filters, eg. `--of 'tag[BMP_RIB] == loc'`.
+Each UPDATE is [tagged](../tags.md) with where it comes from: the monitored
+peer (`PEER_IP`, `PEER_AS`, `PEER_ID`), the router (`ROUTER`: its sysName, or
+IP address), and the RIB view and peer type (`bmp/rib`, `bmp/rd`, `bmp/type`).
+Use them in filters, eg. `--of 'tag[bmp/rib] == loc'`.
 
 The stage follows Peer Up and Peer Down notifications: ADD-PATH is taken per
 peer and address family, as negotiated in its BGP session, and the AS number
@@ -137,7 +129,7 @@ Post-policy routes only, archived as MRT:
 ```bash
 bgpipe \
     -- bmp --listen --peer 192.0.2.0/24 :11019 \
-    -- grep 'tag[BMP_RIB] == in-post' \
+    -- grep 'tag[bmp/rib] == in-post' \
     -- write --every 15m 'bmp.$TIME.mrt.gz'
 ```
 

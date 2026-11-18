@@ -12,8 +12,9 @@ bgpipe [...] -- tag [OPTIONS]
 
 The **tag** stage manipulates key-value pairs (tags) attached to BGP messages
 as they flow through the pipeline. Tags are metadata that travel with messages
-but are not part of the BGP wire format. They appear in the `meta` field of
-the [JSON representation](../json-format.md).
+but are not part of the BGP wire format. They appear as the last element of
+the [JSON representation](../json-format.md). See [Message Tags](../tags.md)
+for the common tags and naming conventions.
 
 Tags are useful for:
 
