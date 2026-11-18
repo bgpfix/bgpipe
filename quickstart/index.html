@@ -664,6 +664,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../stages/combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../stages/connect/" class="md-nav__link">
         
   
@@ -1008,6 +1036,34 @@
     
   
     rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
   
 
     
@@ -1422,6 +1478,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../http-api/" class="md-nav__link">
         
   
@@ -1730,8 +1813,8 @@
 </span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>      --no-ipv6[=true|false]       avoid IPv6 if possible
 </span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
 </span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>Common Options:
-</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>  -L, --left[=true|false]          operate in the L direction
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>  -R, --right[=true|false]         operate in the R direction
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>  -L, --left[=true|false]          read messages flowing left
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>  -R, --right[=true|false]         read messages flowing right
 </span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>  -A, --args[=true|false]          consume all CLI arguments till --
 </span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>  -W, --wait strings               wait for given event before starting
 </span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>  -S, --stop strings               stop after given event is handled
@@ -1741,7 +1824,7 @@
 </span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>      --rate-sample float          sample messages if over the rate limit
 </span></code></pre></div>
 <p>As you can see, the <code>connect</code> stage has its own set of options, such as <code>--timeout</code>, <code>--closed-timeout</code>, and <code>--md5</code>, which are specific to establishing a BGP connection. The common options, such as <code>-L</code>, <code>-R</code>, etc. are available for all stages and control how the stage operates in the pipeline context.</p>
-<p>By default, all stages operate in the <em>right</em> (<code>-R</code>) direction, meaning that they process BGP messages flowing from left to right. The direction controls which messages to capture for processing in a stage, and where to send new messages. However, if the last stage connects to a BGP endpoint, by default it will operate in the <em>left</em> (<code>-L</code>) direction, meaning it will send new messages to the left of the pipeline. Usually, the left-most and/or right-most stage is the one that connects to a BGP endpoint, while the other stages process messages in between. If you want bidirectional processing, use the <code>-L</code> and <code>-R</code> options together, ie. <code>-LR</code>.</p>
+<p>Messages flow through the pipeline in two directions: <em>right</em>, from the first stage towards the last, and <em>left</em>, the other way. A stage reads the messages flowing right, and writes new messages to the right. The ends of the pipeline, usually a BGP peer, a file, or a live stream, are the exceptions: the first stage reads the messages flowing left, and the last stage writes to the left. For example, in <code>bgpipe -- listen :179 -- connect 192.0.2.1</code>, the messages from the <code>listen</code> peer flow right, to <code>connect</code>, and the messages from the <code>connect</code> peer flow left, to <code>listen</code>. Use <code>-L</code>, <code>-R</code>, or <code>-LR</code> (both) to choose what a stage reads; see <a href="../stages/#direction">Direction</a> for details.</p>
 <p>For writing BGP message filters used by the <code>grep</code> and <code>drop</code> stages, see the dedicated <a href="../filters/">filter reference</a> with attributes, operators, and examples.</p>
 <h3 id="config-files">Config files<a class="headerlink" href="#config-files" title="Permanent link">&para;</a></h3>
 <p>Long pipelines are easier to read, diff, and keep secrets out of, in a file:

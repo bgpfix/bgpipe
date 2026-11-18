@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -851,6 +879,34 @@
     
   
     rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
   
 
     
@@ -1367,6 +1423,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1521,9 +1604,8 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bgpipe [...] -- stdout [OPTIONS]
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>The <strong>stdout</strong> stage writes BGP messages to standard output. It is a consumer
-stage that supports bidirectional operation with <code>-LR</code>; without <code>-LR</code>, it
-prints only messages in the stage direction.</p>
+<p>The <strong>stdout</strong> stage writes BGP messages to standard output. It prints the
+messages it reads (see <a href="../#direction">direction</a>), or both directions with <code>-LR</code>.</p>
 <p>The stage always mirrors messages - it never consumes them from the pipeline,
 so downstream stages still see every message that stdout prints.</p>
 <p>The default output format is JSON (one message per line). Use <code>--format</code> to

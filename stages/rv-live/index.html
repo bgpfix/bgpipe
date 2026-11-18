@@ -16,7 +16,7 @@
         <link rel="prev" href="../rov/">
       
       
-        <link rel="next" href="../speaker/">
+        <link rel="next" href="../mrai/">
       
       
         
@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -973,6 +1001,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../speaker/" class="md-nav__link">
         
   
@@ -1367,6 +1423,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1527,35 +1610,9 @@ its public Kafka stream. RouteViews collects BGP data from routers at
 major Internet exchange points and transit providers worldwide.</p>
 <p>The stream carries BGP messages in OpenBMP raw format. The stage parses
 BMP messages, extracts the inner BGP messages, and injects them into the
-pipeline with peer metadata as tags:</p>
-<table>
-<thead>
-<tr>
-<th>Tag</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>PEER_IP</code></td>
-<td>IP address of the BGP peer</td>
-</tr>
-<tr>
-<td><code>PEER_AS</code></td>
-<td>AS number of the BGP peer</td>
-</tr>
-<tr>
-<td><code>COLLECTOR</code></td>
-<td>RouteViews BGP collector name (e.g., <code>linx</code>)</td>
-</tr>
-<tr>
-<td><code>RV_COLLECTOR</code></td>
-<td>RouteViews internal BMP machine name (e.g., <code>bmp1</code>)</td>
-</tr>
-</tbody>
-</table>
-<p>These tags can be used in downstream <a href="../../filters/">filters</a>, for example:
-<code>tag[COLLECTOR] ~ "linx"</code> or <code>tag[PEER_AS] == 13335</code>.</p>
+pipeline <a href="../../tags/">tagged</a> with <code>PEER_IP</code>, <code>PEER_AS</code>, <code>COLLECTOR</code> (the
+RouteViews BGP collector, eg. <code>linx</code>) and <code>rv-live/collector</code> (the internal BMP
+machine, eg. <code>bmp1</code>), eg. for filters like <code>tag[COLLECTOR] == linx</code>.</p>
 <p>By default, the stage subscribes to all topics matching the pattern
 <code>^routeviews\..+\.bmp_raw$</code>, which covers all RouteViews collectors.
 Use <code>--collector</code> to select specific collectors by name prefix, or
@@ -1572,6 +1629,8 @@ parallel Kafka consumers in one consumer group. Messages from one topic stay in 
 but messages from different topics can interleave differently between runs.</p>
 <p>Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for <code>--stale</code> duration.</p>
+<p>The stream carries one prefix per UPDATE. To put the original UPDATEs back
+together, add <a href="../combine/">combine</a>: <code>bgpipe -o -- rv-live -- combine</code>.</p>
 <p>Different RouteViews peers may use 2-byte or 4-byte ASNs, and some send ADD-PATH
 Path Identifiers in their NLRI. bgpipe detects both automatically (see the global
 <code>--as4</code> and <code>--addpath</code> options).</p>
@@ -1687,6 +1746,7 @@ Path Identifiers in their NLRI. bgpipe detects both automatically (see the globa
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../ris-live/">ris-live</a>,
+<a href="../combine/">combine</a>,
 <a href="../read/">read</a>,
 <a href="https://www.routeviews.org/">RouteViews</a>,
 <a href="../">Stages overview</a></p>

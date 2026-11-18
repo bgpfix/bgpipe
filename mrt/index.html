@@ -505,6 +505,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../stages/combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../stages/connect/" class="md-nav__link">
         
   
@@ -849,6 +877,34 @@
     
   
     rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
   
 
     
@@ -1487,6 +1543,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../http-api/" class="md-nav__link">
         
   
@@ -1812,37 +1895,9 @@ follows the actual ASN encoding of each message, so unmodified messages with
 2-byte ASNs are written as <code>MESSAGE</code>, not <code>MESSAGE_AS4</code>.</p>
 <h2 id="update-dumps">Update dumps<a class="headerlink" href="#update-dumps" title="Permanent link">&para;</a></h2>
 <p>Update dumps contain complete BGP messages, so they are replayed as-is. Each
-message carries the session metadata from the MRT record as tags:</p>
-<table>
-<thead>
-<tr>
-<th>Tag</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>PEER_AS</code></td>
-<td>AS number of the peer the message came from</td>
-</tr>
-<tr>
-<td><code>PEER_IP</code></td>
-<td>IP address of that peer</td>
-</tr>
-<tr>
-<td><code>LOCAL_AS</code></td>
-<td>AS number of the collector</td>
-</tr>
-<tr>
-<td><code>LOCAL_IP</code></td>
-<td>collector IP address for this session</td>
-</tr>
-<tr>
-<td><code>INTERFACE</code></td>
-<td>interface index, when present</td>
-</tr>
-</tbody>
-</table>
+message carries the session metadata from the MRT record as <a href="../tags/">tags</a>:
+<code>PEER_AS</code> and <code>PEER_IP</code> (the peer), <code>LOCAL_AS</code> and <code>LOCAL_IP</code> (the collector),
+and <code>mrt/interface</code> (the interface index, when present).</p>
 <p>The record subtype determines how the embedded message is decoded: AS4 subtypes
 force 4-byte ASN parsing, ADD-PATH subtypes force Path Identifier parsing. This
 overrides any session capabilities, so archives decode correctly regardless of
@@ -1856,25 +1911,8 @@ NLRI, the entry's attributes become the message attributes, and the peer is
 recorded in tags. The result is a stream that looks exactly like a router
 receiving the full table from every peer at once.</p>
 <h3 id="peer-tags">Peer tags<a class="headerlink" href="#peer-tags" title="Permanent link">&para;</a></h3>
-<p>Every message from a table dump is tagged with its origin peer:</p>
-<table>
-<thead>
-<tr>
-<th>Tag</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>PEER_AS</code></td>
-<td>AS number of the peer this route came from</td>
-</tr>
-<tr>
-<td><code>PEER_IP</code></td>
-<td>IP address of that peer</td>
-</tr>
-</tbody>
-</table>
+<p>Every message from a table dump is <a href="../tags/">tagged</a> with its origin peer:
+<code>PEER_AS</code> and <code>PEER_IP</code>.</p>
 <p>Collectors typically hold 20-50 peers, and a full IPv4 table has around a
 million prefixes, so a single RIB dump expands to tens of millions of routes.
 All peers are streamed by default; select one with a

@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -851,6 +879,34 @@
     
   
     rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
   
 
     
@@ -1367,6 +1423,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1523,16 +1606,17 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
 <p>The <strong>tag</strong> stage manipulates key-value pairs (tags) attached to BGP messages
 as they flow through the pipeline. Tags are metadata that travel with messages
-but are not part of the BGP wire format. They appear in the <code>meta</code> field of
-the <a href="../../json-format/">JSON representation</a>.</p>
+but are not part of the BGP wire format. They appear as the last element of
+the <a href="../../json-format/">JSON representation</a>. See <a href="../../tags/">Message Tags</a>
+for the common tags and naming conventions.</p>
 <p>Tags are useful for:</p>
 <ul>
 <li>Annotating messages with pipeline context (e.g., source collector, timestamp)</li>
 <li>Passing information between stages (e.g., from <a href="../rov/">rov</a> to <a href="../grep/">grep</a>)</li>
 <li>Filtering based on custom criteria using <code>tag[key]</code> in <a href="../../filters/">filter expressions</a></li>
 </ul>
-<p>This stage supports bidirectional operation with <code>-LR</code>. Without <code>-LR</code>, it
-applies only to messages in the stage direction.</p>
+<p>It applies to the messages it reads (see <a href="../#direction">direction</a>), or to both
+directions with <code>-LR</code>.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

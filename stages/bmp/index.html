@@ -16,7 +16,7 @@
         <link rel="prev" href="../aspa/">
       
       
-        <link rel="next" href="../connect/">
+        <link rel="next" href="../combine/">
       
       
         
@@ -648,6 +648,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -992,6 +1020,34 @@
     
   
     rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
   
 
     
@@ -1406,6 +1462,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1623,42 +1706,10 @@ that silent clients can't hold all the slots.</p>
 <p>To read or write BMP <em>files</em>, use <a href="../read/">read</a> and <a href="../write/">write</a> with
 <code>--format bmp</code>.</p>
 <h3 id="station">Station<a class="headerlink" href="#station" title="Permanent link">&para;</a></h3>
-<p>Each UPDATE is tagged with where it comes from:</p>
-<table>
-<thead>
-<tr>
-<th>Tag</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>PEER_IP</code>, <code>PEER_AS</code></td>
-<td>The monitored BGP peer</td>
-</tr>
-<tr>
-<td><code>PEER_ID</code></td>
-<td>BGP Identifier of the peer</td>
-</tr>
-<tr>
-<td><code>BMP_RIB</code></td>
-<td>RIB view: <code>in-post</code>, <code>out-pre</code>, <code>out-post</code>, or <code>loc</code> (not set for pre-policy Adj-RIB-In)</td>
-</tr>
-<tr>
-<td><code>PEER_RD</code></td>
-<td>Peer distinguisher (hex), if non-zero</td>
-</tr>
-<tr>
-<td><code>PEER_TYPE</code></td>
-<td><code>rd</code> or <code>local</code> for RD and local instance peers (not set for global peers)</td>
-</tr>
-<tr>
-<td><code>ROUTER</code></td>
-<td>sysName of the monitored router (its IP address if not sent)</td>
-</tr>
-</tbody>
-</table>
-<p>Use them in filters, eg. <code>--of 'tag[BMP_RIB] == loc'</code>.</p>
+<p>Each UPDATE is <a href="../../tags/">tagged</a> with where it comes from: the monitored
+peer (<code>PEER_IP</code>, <code>PEER_AS</code>, <code>PEER_ID</code>), the router (<code>ROUTER</code>: its sysName, or
+IP address), and the RIB view and peer type (<code>bmp/rib</code>, <code>bmp/rd</code>, <code>bmp/type</code>).
+Use them in filters, eg. <code>--of 'tag[bmp/rib] == loc'</code>.</p>
 <p>The stage follows Peer Up and Peer Down notifications: ADD-PATH is taken per
 peer and address family, as negotiated in its BGP session, and the AS number
 size per peer. Peer Up and Peer Down also become events (see below), and
@@ -1826,7 +1877,7 @@ labels come from the routers. See <a href="../../http-api/">HTTP API</a>.</p>
 <p>Post-policy routes only, archived as MRT:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bgpipe<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--<span class="w"> </span>bmp<span class="w"> </span>--listen<span class="w"> </span>--peer<span class="w"> </span><span class="m">192</span>.0.2.0/24<span class="w"> </span>:11019<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[BMP_RIB] == in-post'</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--<span class="w"> </span>grep<span class="w"> </span><span class="s1">'tag[bmp/rib] == in-post'</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--<span class="w"> </span>write<span class="w"> </span>--every<span class="w"> </span>15m<span class="w"> </span><span class="s1">'bmp.$TIME.mrt.gz'</span>
 </span></code></pre></div>
 <p>Read a BMP restream (eg. Netom <code>bmp-tcp-out</code>) over TLS, reconnect when needed:</p>

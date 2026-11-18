@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -851,6 +879,34 @@
     
   
     rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
   
 
     
@@ -1367,6 +1423,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1522,10 +1605,9 @@
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
 <p>The <strong>stdin</strong> stage reads BGP messages from standard input and injects them
-into the pipeline. It is a producer stage that supports bidirectional
-operation with <code>-LR</code>: in that case, the direction of each message is taken from
-the input when available (for JSON, the <code>dir</code> field). Otherwise, messages are
-injected in the stage direction.</p>
+into the pipeline. With <code>-LR</code>, the input sets the direction of each message
+when it can (for JSON, the <code>dir</code> field); otherwise, the stage writes as
+described in <a href="../#direction">Direction</a>.</p>
 <p>The default input format is JSON (one message per line). Supported formats
 also include MRT (BGP4MP), raw BGP wire format, ExaBGP line format,
 BMP, and OpenBMP - select with <code>--format</code>.</p>

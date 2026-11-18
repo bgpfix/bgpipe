@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -990,6 +1018,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../speaker/" class="md-nav__link">
         
   
@@ -1384,6 +1440,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1570,6 +1653,9 @@ message per line and can:</p>
 <li><strong>Drop</strong>: simply not print a message to discard it</li>
 </ul>
 <p>The command's stderr is forwarded to the bgpipe log.</p>
+<p>The stage runs until the command exits. When the stages before it are done
+(eg. at the end of a file), or when bgpipe stops, the command's stdin is closed:
+it should finish, and whatever it still prints is passed on.</p>
 <p>The stage is both a producer and a consumer, and supports bidirectional
 operation with <code>-LR</code>.</p>
 <p>Use the <code>-A</code> / <code>--args</code> flag to pass arguments to the command. Without <code>-A</code>,
@@ -1586,18 +1672,6 @@ all arguments up to the next <code>--</code> are passed to the command.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><code>--keep-stdin</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Keep running if the command's stdin is closed</td>
-</tr>
-<tr>
-<td><code>--keep-stdout</code></td>
-<td>bool</td>
-<td><code>false</code></td>
-<td>Keep running if the command's stdout is closed</td>
-</tr>
 <tr>
 <td><code>--format</code></td>
 <td>string</td>

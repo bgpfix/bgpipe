@@ -16,7 +16,7 @@
         <link rel="prev" href="../exabgp/">
       
       
-        <link rel="next" href="../http-api/">
+        <link rel="next" href="../tags/">
       
       
         
@@ -505,6 +505,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../stages/combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../stages/connect/" class="md-nav__link">
         
   
@@ -849,6 +877,34 @@
     
   
     rv-live
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stages/mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
   
 
     
@@ -1479,6 +1535,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#bogons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bogons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tags" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1542,6 +1609,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1803,6 +1897,17 @@
     <span class="md-ellipsis">
       
         Communities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bogons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bogons
       
     </span>
   </a>
@@ -2486,6 +2591,41 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>com_large ~ "1234:5678:9"      # large community matching pattern
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>ext_community ~ "TARGET"       # has any Route Target extended community
 </span></code></pre></div>
+<h3 id="bogons">Bogons<a class="headerlink" href="#bogons" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Operators</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bogon_asn</code></td>
+<td>(none)</td>
+<td>An AS_PATH hop is a bogon ASN</td>
+</tr>
+<tr>
+<td><code>bogon_prefix</code></td>
+<td>(none)</td>
+<td>An announced prefix is within a bogon block</td>
+</tr>
+</tbody>
+</table>
+<p>Bogon ASNs must not be in the global routing table: <code>0</code>, <code>23456</code> (AS_TRANS),
+<code>64496</code>-<code>131071</code> (documentation, private, reserved), and <code>4200000000</code> and above
+(private) -- see <a href="https://datatracker.ietf.org/doc/html/rfc5398">RFC 5398</a>,
+<a href="https://datatracker.ietf.org/doc/html/rfc6996">RFC 6996</a> and
+<a href="https://datatracker.ietf.org/doc/html/rfc7300">RFC 7300</a>. The AS_PATH is merged
+with AS4_PATH first, so AS_TRANS from an old 2-byte speaker is not a bogon.</p>
+<p>Bogon prefixes are the special-purpose blocks of
+<a href="https://datatracker.ietf.org/doc/html/rfc6890">RFC 6890</a>, eg. <code>10.0.0.0/8</code>,
+<code>192.168.0.0/16</code>, <code>100.64.0.0/10</code>, <code>192.0.2.0/24</code>, <code>224.0.0.0/3</code>, <code>fc00::/7</code>,
+<code>2001:db8::/32</code>. A prefix matches if it is within a block: <code>0.0.0.0/0</code> does not.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>bogon_asn                      # eg. AS_PATH 20912 3269 65101 (a private ASN leaked)
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>bogon_prefix || bogon_asn      # anything that must not be on the Internet
+</span></code></pre></div>
 <h3 id="tags">Tags<a class="headerlink" href="#tags" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2508,7 +2648,7 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </tr>
 </tbody>
 </table>
-<p>Tags are key-value pairs attached to messages by the <a href="../stages/tag/"><code>tag</code></a> stage and other stages (e.g., <code>ris-live</code> adds <code>PEER_AS</code>, <code>PEER_IP</code>; <code>rov</code> adds <code>rov/status</code>).</p>
+<p>Tags are key-value pairs attached to messages by stages, eg. <code>PEER_AS</code> by <code>ris-live</code>, or <code>rov/status</code> by <code>rov</code>: see <a href="../tags/">Message Tags</a> for the common ones.</p>
 <p>Tag filters work on <strong>all message types</strong> (not just UPDATEs).</p>
 <table>
 <thead>
@@ -2537,10 +2677,10 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 </tbody>
 </table>
 <p>Examples:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>tag[rov/status] == INVALID     # RPKI validation failed
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>tag[PEER_AS] == "8218"         # from RIS peer AS8218
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>tags[region] ~ "^eu-"          # region tag starts with "eu-"
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>tag[rov/status] != VALID       # anything except VALID
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>tag[rov/status] == INVALID     # RPKI validation failed
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>tag[PEER_AS] == "8218"         # from RIS peer AS8218
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>tags[region] ~ "^eu-"          # region tag starts with "eu-"
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>tag[rov/status] != VALID       # anything except VALID
 </span></code></pre></div>
 <h3 id="message-metadata">Message Metadata<a class="headerlink" href="#message-metadata" title="Permanent link">&para;</a></h3>
 <p>These attributes work on <strong>all message types</strong> (not just UPDATEs).</p>
@@ -2573,11 +2713,11 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <p>The <code>time</code> attribute compares against timestamps. Values are parsed flexibly (e.g., <code>"2023-03-01"</code>, <code>"2023-03-01T12:30:45.000"</code>). The <code>~</code> operator matches against the ISO 8601 string representation.</p>
 <p>Without an operator, tests for a non-zero value.</p>
 <p>Examples:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>dir == L                       # messages from the left side
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>dir != R                       # not from the right side
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>seq &gt; 100                      # sequence number above 100
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>time &gt; "2023-01-01"            # after January 1, 2023
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>time ~ "^2023-03"              # any time in March 2023
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>dir == L                       # messages from the left side
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>dir != R                       # not from the right side
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>seq &gt; 100                      # sequence number above 100
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>time &gt; "2023-01-01"            # after January 1, 2023
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>time ~ "^2023-03"              # any time in March 2023
 </span></code></pre></div>
 <h3 id="json-path-extraction">JSON Path Extraction<a class="headerlink" href="#json-path-extraction" title="Permanent link">&para;</a></h3>
 <p>These attributes extract values from the message's JSON representation. The <code>json</code> attribute works on <strong>all message types</strong>, whereas the <code>attr</code> attribute works for UPDATEs only.</p>
@@ -2607,13 +2747,13 @@ They are used by the <a href="../stages/grep/"><code>grep</code></a> and <a href
 <p>Attribute names in <code>attr[...]</code> are case-insensitive and resolved against known BGP attribute codes (with or without <code>ATTR_</code> prefix).</p>
 <p>Without an operator, tests for the path's existence. Numeric comparisons (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>) parse the extracted value as a number.</p>
 <p>Examples:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>json[attrs.ORIGIN.value] == IGP        # ORIGIN is IGP
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>json[attrs.MED.value] &gt; 100            # MED value above 100
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>json[reach.0] ~ "10\."                 # first announced prefix starts with 10.
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>attr[ORIGIN] == IGP                    # same as json[attrs.ORIGIN.value] == IGP
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>attr[MED] &gt; 100                        # same as json[attrs.MED.value] &gt; 100
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>attr[COMMUNITY.0] ~ "^3356:"           # first community is from AS3356
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>attr[MP_REACH.af] == "IPV4/FLOWSPEC"   # MP_REACH address family
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>json[attrs.ORIGIN.value] == IGP        # ORIGIN is IGP
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>json[attrs.MED.value] &gt; 100            # MED value above 100
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>json[reach.0] ~ "10\."                 # first announced prefix starts with 10.
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>attr[ORIGIN] == IGP                    # same as json[attrs.ORIGIN.value] == IGP
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>attr[MED] &gt; 100                        # same as json[attrs.MED.value] &gt; 100
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>attr[COMMUNITY.0] ~ "^3356:"           # first community is from AS3356
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>attr[MP_REACH.af] == "IPV4/FLOWSPEC"   # MP_REACH address family
 </span></code></pre></div>
 <h2 id="operator-compatibility">Operator Compatibility<a class="headerlink" href="#operator-compatibility" title="Permanent link">&para;</a></h2>
 <p>Not all operators work with all attributes. This table summarizes:

@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -973,6 +1001,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../speaker/" class="md-nav__link">
         
   
@@ -1367,6 +1423,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1523,9 +1606,8 @@
 </span></code></pre></div>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
 <p>The <strong>read</strong> stage reads BGP messages from a local file, a remote HTTP/HTTPS
-URL, or standard input (use <code>-</code> as <em>PATH</em>) and injects them into the pipeline. It supports bidirectional operation
-with <code>-LR</code> and uses the data to set each message direction. Without <code>-LR</code>,
-messages are injected in the stage direction.</p>
+URL, or standard input (use <code>-</code> as <em>PATH</em>) and injects them into the pipeline. With <code>-LR</code>, the data sets the direction of each message (eg. the <code>dir</code> field of
+JSON); otherwise, the stage writes as described in <a href="../#direction">Direction</a>.</p>
 <p>The input format is auto-detected by default. Detection first tries the file
 extension (e.g., <code>.mrt</code> or <code>.json</code>), then falls back to sampling the file
 contents. Supported formats include JSON (one message per line), MRT,

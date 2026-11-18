@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -1075,6 +1103,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../speaker/" class="md-nav__link">
         
   
@@ -1469,6 +1525,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1630,9 +1713,14 @@ the rest. Both are the same stage with opposite default behavior.</p>
 <p>The <em>FILTER</em> argument is a BGP filter expression that tests message attributes
 such as prefix, AS path, communities, and tags. See the
 <a href="../../filters/">Message Filters</a> reference for complete syntax.</p>
-<p>This stage supports bidirectional operation with <code>-LR</code>. Without <code>-LR</code>, it
-processes only messages in the stage direction. It matches UPDATE messages by
+<p>It filters the messages it reads (see <a href="../#direction">direction</a>), or both
+directions with <code>-LR</code>. It matches UPDATE messages by
 default; non-UPDATE messages (OPEN, KEEPALIVE, NOTIFICATION) are dropped unless explicitly allowed.</p>
+<p>With <code>--withdraw</code>, an UPDATE that would be dropped is turned into a withdrawal
+of all its prefixes instead ("treat-as-withdraw", <a href="https://datatracker.ietf.org/doc/html/rfc7606">RFC 7606</a>),
+and withdrawals are never dropped.
+Use it on live BGP sessions: a dropped UPDATE may replace an earlier
+announcement of the same prefixes, which the peer would otherwise keep using.</p>
 <p>With <code>--keep</code>, the stage evaluates the filter but never drops messages.
 This requires at least one of <code>--event-match</code> or <code>--event-fail</code> so that
 the filter evaluation has a visible effect.</p>
@@ -1679,6 +1767,12 @@ filter. For example, <code>stdout --if 'ipv6'</code> prints only IPv6 updates.</
 <td>bool</td>
 <td><code>false</code></td>
 <td>Kill the process on filter failure</td>
+</tr>
+<tr>
+<td><code>--withdraw</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Withdraw the prefixes of a dropped UPDATE, instead of dropping it</td>
 </tr>
 </tbody>
 </table>

@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://bgpipe.org/stages/connect/">
       
       
-        <link rel="prev" href="../bmp/">
+        <link rel="prev" href="../combine/">
       
       
         <link rel="next" href="../grep/">
@@ -487,6 +487,34 @@
     
   
     bmp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
   
 
     
@@ -990,6 +1018,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../speaker/" class="md-nav__link">
         
   
@@ -1384,6 +1440,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1560,7 +1643,10 @@ at <em>ADDR</em>. It is both a producer and a consumer: it reads BGP messages fr
 the wire and writes pipeline messages to the remote peer.</p>
 <p>The <em>ADDR</em> argument specifies the target as <code>host</code>, <code>host:port</code>, or <code>[host]:port</code>.
 If no port is given, the default BGP port 179 is used.</p>
-<p>By default, <strong>connect</strong> messages flow left-to-right (<code>-R</code> direction), but if it is the last stage in the pipeline, it defaults to the left (<code>-L</code>) direction, so that incoming messages from the remote peer flow right-to-left through the pipeline.</p>
+<p>As the last stage, <strong>connect</strong> is the right end of the pipeline: it writes the
+messages from its peer to the left, and sends its peer whatever reaches the
+right end. As the first stage, it does the opposite. See
+<a href="../#direction">Direction</a>.</p>
 <p>As a shorthand, a bare IP address can be used as a stage name instead of
 writing <code>connect</code> explicitly:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bgpipe -o speaker -- 1.2.3.4

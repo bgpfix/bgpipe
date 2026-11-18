@@ -507,6 +507,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../combine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connect/" class="md-nav__link">
         
   
@@ -973,6 +1001,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../mrai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mrai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../speaker/" class="md-nav__link">
         
   
@@ -1367,6 +1423,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1529,39 +1612,9 @@ worldwide, providing a global view of Internet routing without requiring
 your own BGP peering sessions.</p>
 <p>The stage connects via Server-Sent Events (SSE) to the RIS Live endpoint,
 extracts raw BGP messages from the stream, and injects them into the pipeline.
-Each message is tagged with peer and collector metadata:</p>
-<table>
-<thead>
-<tr>
-<th>Tag</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>PEER_IP</code></td>
-<td>IP address of the BGP peer</td>
-</tr>
-<tr>
-<td><code>PEER_AS</code></td>
-<td>AS number of the BGP peer</td>
-</tr>
-<tr>
-<td><code>RIS_ID</code></td>
-<td>RIS collector peer ID</td>
-</tr>
-<tr>
-<td><code>RIS_HOST</code></td>
-<td>RIS collector hostname (e.g., <code>rrc01.ris.ripe.net</code>)</td>
-</tr>
-<tr>
-<td><code>COLLECTOR</code></td>
-<td>Short collector name derived from RIS_HOST (e.g., <code>rrc01</code>)</td>
-</tr>
-</tbody>
-</table>
-<p>These tags can be used in downstream <a href="../../filters/">filters</a>, for example:
-<code>tag[PEER_AS] == 13335</code> or <code>tag[RIS_HOST] ~ "rrc01"</code>.</p>
+Each message is <a href="../../tags/">tagged</a> with <code>PEER_IP</code>, <code>PEER_AS</code>, <code>COLLECTOR</code>
+(eg. <code>rrc01</code>), <code>ris-live/host</code> and <code>ris-live/id</code>, eg. for filters like
+<code>tag[PEER_AS] == 13335</code> or <code>tag[COLLECTOR] == rrc01</code>.</p>
 <p>Connection retries are enabled by default, and the wait before a reconnect
 resets after a session of over 30 seconds. The stage reconnects if the stream
 falls behind by more than <code>--delay-err</code>. Individual old messages from a backlogged
@@ -1651,6 +1704,7 @@ encoding automatically (see the global <code>--as4</code> option).</p>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p><a href="../rv-live/">rv-live</a>,
+<a href="../mrai/">mrai</a>,
 <a href="../read/">read</a>,
 <a href="https://ris-live.ripe.net/">RIPE RIS Live</a>,
 <a href="../">Stages overview</a></p>
