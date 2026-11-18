@@ -21,7 +21,7 @@ nav:
     - ris-live: stages/ris-live.md
     - rov: stages/rov.md
     - rv-live: stages/rv-live.md
-    - smooth: stages/smooth.md
+    - mrai: stages/mrai.md
     - speaker: stages/speaker.md
     - stdin: stages/stdin.md
     - stdout: stages/stdout.md

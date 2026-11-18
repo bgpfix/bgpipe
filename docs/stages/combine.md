@@ -59,6 +59,6 @@ bgpipe -- read updates.20240212.0745.bz2 -- combine --window 10s -- write combin
 ## See Also
 
 [rv-live](rv-live.md),
-[smooth](smooth.md),
+[mrai](mrai.md),
 [update](update.md),
 [Stages overview](index.md)

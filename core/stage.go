@@ -62,14 +62,15 @@ type StageOptions struct {
 
 	// these can be modified before Attach(), and even inside (with care)
 
-	IsProducer  bool          // produces messages? (= writes Line.Input?)
-	IsConsumer  bool          // consumes messages? (= reads Line.Out?)
-	IsStdin     bool          // reads from stdin?
-	IsStdout    bool          // writes to stdout?
-	Bidir       bool          // allow -LR (bidir mode)?
-	FilterIn    bool          // allow stage input filtering? (must have callbacks)
-	FilterOut   bool          // allow stage output filtering? (must have inputs)
-	StopTimeout time.Duration // timeout for Run to exit after Stop (default 3s, zero = default)
+	IsProducer   bool          // produces messages? (= writes Line.Input?)
+	IsConsumer   bool          // consumes messages? (= reads Line.Out?)
+	IsStdin      bool          // reads from stdin?
+	IsStdout     bool          // writes to stdout?
+	Bidir        bool          // allow -LR (bidir mode)?
+	FilterIn     bool          // allow stage input filtering? (must have callbacks)
+	FilterOut    bool          // allow stage output filtering? (must have inputs)
+	StopUpstream bool          // stop when the producers before it are done (eg. at the end of a file)
+	StopTimeout  time.Duration // timeout for Run to exit after Stop (default 3s, zero = default)
 }
 
 // StageBase represents a bgpipe stage base

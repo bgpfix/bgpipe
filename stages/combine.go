@@ -1,8 +1,6 @@
 package stages
 
 import (
-	"context"
-	"slices"
 	"sync"
 	"time"
 
@@ -15,7 +13,7 @@ import (
 )
 
 // Combine merges UPDATEs from the same peer, with the same attributes, into one UPDATE.
-// NB: all messages are sent again through s.in (as copies), to keep their order
+// NB: takes all messages and sends them again through s.in, to keep their order
 type Combine struct {
 	*core.StageBase
 	in *pipe.Input
@@ -35,11 +33,11 @@ type combinePeer struct {
 	pfx    map[nlri.Prefix]bool     // all pending prefixes
 }
 
-// combineGroup is one combined UPDATE: a copy of the first one, plus prefixes of the next ones
+// combineGroup is one combined UPDATE: the first one, plus the prefixes of the next ones
 type combineGroup struct {
 	m    *msg.Msg
-	add  []nlri.Prefix // prefixes to add to m
-	size int           // estimated size of m
+	add  []nlri.Prefix
+	size int // estimated size of m
 }
 
 func NewCombine(parent *core.StageBase) core.Stage {
@@ -50,6 +48,7 @@ func NewCombine(parent *core.StageBase) core.Stage {
 	o.IsProducer = true
 	o.FilterIn = true
 	o.Bidir = true
+	o.StopUpstream = true
 
 	f := o.Flags
 	f.DurationP("window", "w", time.Second, "max. time to hold an UPDATE")
@@ -76,51 +75,18 @@ func (s *Combine) Attach() error {
 func (s *Combine) Run() error {
 	ticker := time.NewTicker(max(s.window/4, 10*time.Millisecond))
 	defer ticker.Stop()
-	upstream := upstreamDone(s.StageBase)
-
 	for {
 		select {
 		case now := <-ticker.C:
 			s.flush(now.Add(-s.window))
-		case <-upstream:
-			s.flush(time.Time{}) // all input processed
-			return nil
 		case <-s.Ctx.Done():
 			s.flush(time.Time{})
-			return context.Cause(s.Ctx)
+			return nil
 		}
 	}
 }
 
-// upstreamDone returns a channel closed when all producers before s are done.
-// NB: a stage is done after its input is drained, so s saw all its messages
-func upstreamDone(s *core.StageBase) <-chan struct{} {
-	var ctxs []context.Context
-	for _, st := range append(slices.Clone(s.B.Stages), s.B.Autos...) {
-		if st == nil || st == s || !st.Options.IsProducer {
-			continue
-		}
-		if (s.IsRight && st.IsRight && st.Index < s.Index) || (s.IsLeft && st.IsLeft && st.Index > s.Index) {
-			ctxs = append(ctxs, st.Ctx)
-		}
-	}
-
-	done := make(chan struct{})
-	go func() {
-		for _, ctx := range ctxs {
-			select {
-			case <-ctx.Done():
-			case <-s.Ctx.Done():
-				return
-			}
-		}
-		close(done)
-	}()
-	return done
-}
-
-// onMsg takes m into a pending UPDATE, or sends its copy right after the pending ones.
-// Always drops m: the copies take its place.
+// onMsg takes m into a pending UPDATE, or sends it right after the pending ones
 func (s *Combine) onMsg(m *msg.Msg) bool {
 	peer := peerKey(m)
 	key, pfx := s.classify(m)
@@ -132,7 +98,8 @@ func (s *Combine) onMsg(m *msg.Msg) bool {
 	cp := s.peers[peer]
 	if key == "" {
 		s.emit(peer, cp)
-		s.send(s.P.CopyMsg(m))
+		pipe.UseContext(m).Take()
+		s.in.WriteMsg(m)
 		return false
 	}
 
@@ -151,7 +118,7 @@ func (s *Combine) onMsg(m *msg.Msg) bool {
 		cp.pfx[p] = true
 	}
 
-	// add to the pending UPDATE, if it fits
+	// add to the pending UPDATE, if it fits; drop m
 	size := 0
 	for _, p := range pfx {
 		size += 1 + (p.Bits()+7)/8
@@ -165,12 +132,12 @@ func (s *Combine) onMsg(m *msg.Msg) bool {
 		return false
 	}
 
-	// start a new pending UPDATE with a copy of m
-	c := s.P.CopyMsg(m)
-	if c == nil {
-		return false // can't marshal m
+	// start a new pending UPDATE with m
+	if m.Marshal(s.P.Caps) != nil {
+		return false
 	}
-	g := &combineGroup{m: c, size: c.Len()}
+	pipe.UseContext(m).Take()
+	g := &combineGroup{m: m, size: m.Len()}
 	cp.groups = append(cp.groups, g)
 	cp.bykey[key] = g
 	return false
@@ -258,22 +225,14 @@ func (s *Combine) emit(peer string, cp *combinePeer) {
 	delete(s.peers, peer)
 
 	for _, g := range cp.groups {
-		m, u := g.m, &g.m.Update
-		if len(g.add) > 0 && m.Parse(s.P.Caps) == nil {
+		if u := &g.m.Update; len(g.add) > 0 {
 			if u.HasReach() {
 				u.AddReach(g.add...)
 			} else {
 				u.AddUnreach(g.add...)
 			}
-			m.Edit()
+			g.m.Edit()
 		}
-		s.send(m)
-	}
-}
-
-// send writes m to s.in, if not nil
-func (s *Combine) send(m *msg.Msg) {
-	if m != nil {
-		s.in.WriteMsg(m)
+		s.in.WriteMsg(g.m)
 	}
 }

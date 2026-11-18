@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/bgpfix/bgpfix/pipe"
@@ -45,6 +46,9 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 
 	// enable callbacks and handlers
 	s.running.Store(true)
+	if s.Options.StopUpstream {
+		go s.stopUpstream()
+	}
 
 	// start Stage.Run in background
 	go func() {
@@ -79,6 +83,23 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	}()
 
 	return false
+}
+
+// stopUpstream stops s when all producers before it, in its direction, are done.
+// NB: a stage is done after its inputs are drained, so s saw all their messages
+func (s *StageBase) stopUpstream() {
+	for _, st := range append(slices.Clone(s.B.Stages), s.B.Autos...) {
+		if st == nil || st == s || !st.Options.IsProducer {
+			continue
+		} else if (s.IsRight && st.IsRight && st.Index < s.Index) || (s.IsLeft && st.IsLeft && st.Index > s.Index) {
+			select {
+			case <-st.Ctx.Done():
+			case <-s.Ctx.Done():
+				return
+			}
+		}
+	}
+	s.runStop(nil)
 }
 
 // runStop requests to stop Stage.Run; ev may be nil.
