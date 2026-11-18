@@ -321,6 +321,30 @@ com_large ~ "1234:5678:9"      # large community matching pattern
 ext_community ~ "TARGET"       # has any Route Target extended community
 ```
 
+### Bogons
+
+| Attribute      | Operators | Description                                                     |
+|----------------|-----------|-----------------------------------------------------------------|
+| `bogon_asn`    | (none)    | An AS_PATH hop is a bogon ASN                                   |
+| `bogon_prefix` | (none)    | An announced prefix is within a bogon block                     |
+
+Bogon ASNs must not be in the global routing table: `0`, `23456` (AS_TRANS),
+`64496`-`131071` (documentation, private, reserved), and `4200000000` and above
+(private) -- see [RFC 5398](https://datatracker.ietf.org/doc/html/rfc5398),
+[RFC 6996](https://datatracker.ietf.org/doc/html/rfc6996) and
+[RFC 7300](https://datatracker.ietf.org/doc/html/rfc7300). The AS_PATH is merged
+with AS4_PATH first, so AS_TRANS from an old 2-byte speaker is not a bogon.
+
+Bogon prefixes are the special-purpose blocks of
+[RFC 6890](https://datatracker.ietf.org/doc/html/rfc6890), eg. `10.0.0.0/8`,
+`192.168.0.0/16`, `100.64.0.0/10`, `192.0.2.0/24`, `224.0.0.0/3`, `fc00::/7`,
+`2001:db8::/32`. A prefix matches if it is within a block: `0.0.0.0/0` does not.
+
+```text
+bogon_asn                      # eg. AS_PATH 20912 3269 65101 (a private ASN leaked)
+bogon_prefix || bogon_asn      # anything that must not be on the Internet
+```
+
 ### Tags
 
 | Attribute       | Operators     | Description                          |

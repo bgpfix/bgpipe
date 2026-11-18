@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/VictoriaMetrics/metrics"
-	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
@@ -309,21 +307,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	case act_drop:
 		return false
 	case act_withdraw:
-		// move all reachable prefixes to withdrawn
-		reach := slices.Clone(u.Reach)
-		u.Reach = nil
-		if mpp := u.ReachMP().Prefixes(); mpp != nil {
-			reach = append(reach, mpp.Prefixes...)
-			mpp.Prefixes = nil
-		}
-		if len(reach) > 0 {
-			u.AddUnreach(reach...)
-		}
-		m.Edit() // NB: first, to invalidate the cached AllReach()
-		// NB: pure withdrawal must not carry path attributes (RFC 4271 section 4.3)
-		if !u.HasReach() {
-			u.Attrs.Filter(attrs.ATTR_MP_UNREACH)
-		}
+		u.Withdraw()
 	}
 
 	return true
