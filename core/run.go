@@ -81,11 +81,16 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	return false
 }
 
-// runStop requests to stop Stage.Run; ev may be nil
+// runStop requests to stop Stage.Run; ev may be nil.
+// If already stopping, waits until that is done.
 func (s *StageBase) runStop(ev *pipe.Event) bool {
-	if s == nil || s.stopped.Swap(true) {
-		return false // already stopped, or not started yet
+	if s == nil {
+		return false
+	} else if s.stopped.Swap(true) {
+		<-s.stopdone
+		return false
 	} else {
+		defer close(s.stopdone)
 		s.Debug().Stringer("ev", ev).Msg("stopping")
 	}
 

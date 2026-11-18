@@ -77,10 +77,11 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	started atomic.Bool   // true if already started
-	stopped atomic.Bool   // true if already stopped
-	running atomic.Bool   // true if stage running
-	done    chan struct{} // closed when Run returns
+	started  atomic.Bool   // true if already started
+	stopped  atomic.Bool   // true if already stopped
+	running  atomic.Bool   // true if stage running
+	done     chan struct{} // closed when Run returns
+	stopdone chan struct{} // closed when runStop is done
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage
@@ -164,6 +165,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Name = cmd
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 	s.done = make(chan struct{})
+	s.stopdone = make(chan struct{})
 
 	// CLI flags
 	so := &s.Options

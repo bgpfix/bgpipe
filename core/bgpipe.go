@@ -192,7 +192,7 @@ func (b *Bgpipe) handleSignals() {
 		case sig := <-ch:
 			signal.Reset() // NB: reset to default behavior after first signal
 			b.Warn().Stringer("signal", sig).Msg("signal received, stopping...")
-			b.Pipe.Stop()
+			b.stopStages() // NB: in order, so each stage drains into the next
 			return
 		}
 	}
