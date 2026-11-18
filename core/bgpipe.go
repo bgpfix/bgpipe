@@ -170,7 +170,7 @@ func (b *Bgpipe) Run() error {
 // eg. the --stdout output buffer is fully drained before process exit.
 func (b *Bgpipe) stopStages() {
 	for _, s := range b.Stages { // R flow: left to right
-		if s != nil && s.IsRight {
+		if s != nil && s.sends()&meta.DIR_R != 0 {
 			s.runStop(nil)
 		}
 	}

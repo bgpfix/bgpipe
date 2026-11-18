@@ -66,7 +66,6 @@ type StageOptions struct {
 	IsConsumer   bool          // consumes messages? (= reads Line.Out?)
 	IsStdin      bool          // reads from stdin?
 	IsStdout     bool          // writes to stdout?
-	IsTransit    bool          // re-sends the messages it takes, in their direction (default -R even if last)
 	Bidir        bool          // allow -LR (bidir mode)?
 	FilterIn     bool          // allow stage input filtering? (must have callbacks)
 	FilterOut    bool          // allow stage output filtering? (must have inputs)
@@ -105,12 +104,13 @@ type StageBase struct {
 
 	// properties set during Attach()
 
-	IsFirst bool     // is the first stage in pipe? (the L peer)
-	IsLast  bool     // is the last stage in pipe? (the R peer)
-	IsRight bool     // write L->R msgs + capture L->R msgs?
-	IsLeft  bool     // write R->L msgs + capture R->L msgs?
+	IsFirst bool     // is the first stage in pipe? (the L end)
+	IsLast  bool     // is the last stage in pipe? (the R end)
+	IsRight bool     // reads messages flowing right (L->R)?
+	IsLeft  bool     // reads messages flowing left (R->L)?
 	IsBidir bool     // true iff IsRight && IsLeft
-	Dir     meta.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
+	Dir     meta.Dir // the flows s reads (IsLeft/IsRight translated, can be DIR_LR)
+	Send    meta.Dir // where s sends new messages: away from its end if first/last, else Dir (LR if bidir)
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
@@ -180,8 +180,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Stage = newfunc(s)
 
 	// add global CLI flags
-	f.BoolP("left", "L", false, "operate in the L direction")
-	f.BoolP("right", "R", false, "operate in the R direction")
+	f.BoolP("left", "L", false, "process messages flowing left")
+	f.BoolP("right", "R", false, "process messages flowing right")
 	f.BoolP("args", "A", false, "consume all CLI arguments till --")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
@@ -202,25 +202,30 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 
 // wgAdd adds delta to B.wg* waitgroups related to s
 func (s *StageBase) wgAdd(delta int) {
-	o := &s.Options
-	if s.IsRight {
-		if o.IsProducer {
-			s.B.wg_rwrite.Add(delta)
-		}
-		if o.IsConsumer {
+	sends := s.sends()
+	if sends&meta.DIR_R != 0 {
+		s.B.wg_rwrite.Add(delta)
+	}
+	if sends&meta.DIR_L != 0 {
+		s.B.wg_lwrite.Add(delta)
+	}
+	if s.Options.IsConsumer { // NB: reads what reaches its end
+		if s.Send == meta.DIR_R {
 			s.B.wg_lread.Add(delta)
 			s.B.has_lread = true
-		}
-	}
-	if s.IsLeft {
-		if o.IsProducer {
-			s.B.wg_lwrite.Add(delta)
-		}
-		if o.IsConsumer {
+		} else {
 			s.B.wg_rread.Add(delta)
 			s.B.has_rread = true
 		}
 	}
+}
+
+// sends returns the directions of the messages s sends (its inputs)
+func (s *StageBase) sends() (d meta.Dir) {
+	for _, in := range s.inputs {
+		d |= in.Dir
+	}
+	return d
 }
 
 // Errorf wraps fmt.Errorf and adds a prefix with the stage name

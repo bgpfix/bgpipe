@@ -87,7 +87,7 @@ func (s *RisLive) Attach() error {
 		}
 	}
 
-	s.in = s.P.AddInput(s.Dir)
+	s.in = s.P.AddInput(s.Send)
 	return nil
 }
 

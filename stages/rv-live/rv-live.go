@@ -120,7 +120,7 @@ func (s *RvLive) Attach() error {
 		s.state = &rvState{Version: 1, Offsets: make(map[string]map[int32]int64)}
 	}
 
-	s.in = s.P.AddInput(s.Dir)
+	s.in = s.P.AddInput(s.Send)
 	return nil
 }
 

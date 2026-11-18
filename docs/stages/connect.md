@@ -17,7 +17,10 @@ the wire and writes pipeline messages to the remote peer.
 The *ADDR* argument specifies the target as `host`, `host:port`, or `[host]:port`.
 If no port is given, the default BGP port 179 is used.
 
-By default, **connect** messages flow left-to-right (`-R` direction), but if it is the last stage in the pipeline, it defaults to the left (`-L`) direction, so that incoming messages from the remote peer flow right-to-left through the pipeline.
+As the last stage, **connect** is the right end of the pipeline: it sends the
+messages from its peer to the left, and sends to its peer whatever reaches the
+right end. As the first stage, it is the left end, the other way round. See
+[Direction](index.md#direction).
 
 As a shorthand, a bare IP address can be used as a stage name instead of
 writing `connect` explicitly:

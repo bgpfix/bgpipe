@@ -43,8 +43,8 @@ Every stage accepts the following options:
 
 | Option | Description |
 |--------|-------------|
-| `-L`, `--left` | Operate in the L (left) direction |
-| `-R`, `--right` | Operate in the R (right) direction |
+| `-L`, `--left` | Process messages flowing left (see [Direction](#direction)) |
+| `-R`, `--right` | Process messages flowing right (see [Direction](#direction)) |
 | `-A`, `--args` | Consume all remaining CLI arguments until `--` |
 | `-W`, `--wait` *events* | Wait for given event(s) before starting |
 | `-S`, `--stop` *events* | Stop the stage after given event(s) |
@@ -68,9 +68,38 @@ Stages that support input or output filtering:
 
 ### Direction
 
-By default, stages operate in the **right** (`-R`) direction, processing messages
-flowing left-to-right. The last stage that connects to a BGP endpoint defaults
-to the **left** (`-L`) direction instead. Use `-LR` for bidirectional processing.
+Messages flow through the pipeline in two directions: **right**, from the first
+stage towards the last, and **left**, the other way. The first stage is the
+left end of the pipeline, and the last stage is the right end: eg. a BGP peer,
+a file, or a live stream. Two rules decide what each stage does:
+
+1. **What it processes.** By default, a stage processes the messages flowing
+   right. The first stage is the exception: nothing flows right into it, so it
+   gets the messages flowing left, ie. whatever reaches the left end. Use `-R`
+   or `-L` to choose the messages flowing right or left, or `-LR` for both.
+2. **Where it sends new messages.** The first and the last stage send their
+   messages into the pipeline, away from their end: the first to the right, the
+   last to the left. Any other stage sends in the direction it processes. With
+   `-LR`, messages keep their own direction (eg. the `dir` field of
+   [JSON](../json-format.md)), and stages that hold messages to send them later
+   (eg. [combine](combine.md), [mrai](mrai.md)) never change their direction.
+
+For example:
+
+| Pipeline | Stage | Processes | Sends |
+|----------|-------|-----------|-------|
+| `read in.mrt -- grep ... -- write out.json` | read | - | right |
+| | grep | flowing right | - |
+| | write | flowing right | - |
+| `connect 192.0.2.1 -- update ... -- connect 198.51.100.1` | first connect | flowing left, to its peer | right: from its peer |
+| | update | flowing right only (use `-LR` for both) | - |
+| | last connect | flowing right, to its peer | left: from its peer |
+| `read in.mrt -- exec ./filter.py` | exec | flowing right | left: the script output |
+| `ris-live -- combine` | combine | flowing right | right |
+
+With `-o` / `--stdout`, bgpipe prints the messages that reach either end of the
+pipeline. Use `-n` / `--explain` to see what each stage processes and sends,
+without running the pipeline.
 
 ## See Also
 

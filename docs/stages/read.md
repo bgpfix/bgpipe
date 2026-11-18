@@ -12,9 +12,9 @@ bgpipe [...] -- read [OPTIONS] -A PATH [PATH...]
 ## Description
 
 The **read** stage reads BGP messages from a local file, a remote HTTP/HTTPS
-URL, or standard input (use `-` as *PATH*) and injects them into the pipeline. It supports bidirectional operation
-with `-LR` and uses the data to set each message direction. Without `-LR`,
-messages are injected in the stage direction.
+URL, or standard input (use `-` as *PATH*) and injects them into the pipeline. With `-LR`, the data sets the direction of each message (eg. the `dir` field of
+JSON); otherwise, messages are sent as described in [Direction](index.md#direction):
+to the right as the first stage.
 
 The input format is auto-detected by default. Detection first tries the file
 extension (e.g., `.mrt` or `.json`), then falls back to sampling the file

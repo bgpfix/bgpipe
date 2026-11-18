@@ -124,15 +124,10 @@ func (s *Bmp) Attach() error {
 	if s.write {
 		s.Options.IsProducer = false
 		s.Options.FilterOut = false
-		cb := s.P.OnMsg(s.onMsg, s.Dir, msg.UPDATE) // NB: Route Monitoring carries UPDATEs only
-		if s.IsLast {
-			cb.Dir = meta.DIR_R // NB: as in write: the last stage takes what flows to it
-		} else if s.IsFirst {
-			cb.Dir = meta.DIR_L
-		}
+		s.P.OnMsg(s.onMsg, s.Dir, msg.UPDATE) // NB: Route Monitoring carries UPDATEs only
 	} else {
 		s.Options.FilterIn = false
-		s.in = s.P.AddInput(s.Dir)
+		s.in = s.P.AddInput(s.Send)
 	}
 	return nil
 }

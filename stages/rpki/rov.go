@@ -9,6 +9,7 @@ import (
 
 	"github.com/VictoriaMetrics/metrics"
 	"github.com/bgpfix/bgpfix/attrs"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -20,8 +21,8 @@ import (
 // Rov validates UPDATE messages using RPKI Route Origin Validation (RFC 6811)
 type Rov struct {
 	*core.StageBase
-	cache *rpki.Cache // shared RPKI cache, maintained by the core
-	split *pipe.Input // used for --invalid=split
+	cache *rpki.Cache    // shared RPKI cache, maintained by the core
+	split [4]*pipe.Input // used for --invalid=split, by direction
 
 	act    int    // action for INVALID prefixes
 	strict bool   // treat NOT_FOUND same as INVALID
@@ -89,7 +90,11 @@ func (s *Rov) Attach() error {
 
 	// need input for the split action?
 	if s.act == act_split {
-		s.split = s.P.AddInput(s.Dir)
+		for _, d := range []meta.Dir{meta.DIR_L, meta.DIR_R} {
+			if s.Dir&d != 0 {
+				s.split[d] = s.P.AddInput(d) // NB: keep the flow of the message
+			}
+		}
 	}
 
 	return nil
@@ -197,7 +202,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 		}
 
 		if do_split {
-			s.split.WriteMsg(m2)
+			s.split[m.Dir].WriteMsg(m2)
 			// tag the original (valid/not-found) message so downstream filters work
 			if s.tag {
 				switch {

@@ -86,7 +86,7 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	return false
 }
 
-// stopUpstream stops s when all producers that feed its callbacks are done.
+// stopUpstream stops s when all stages that send to its callbacks are done.
 // NB: a stage is done after its inputs are drained, so s saw all their messages
 // Does nothing if there are no such producers (eg. s is the source).
 func (s *StageBase) stopUpstream() {
@@ -99,9 +99,9 @@ func (s *StageBase) stopUpstream() {
 	}
 	n := 0
 	for _, st := range append(slices.Clone(s.B.Stages), s.B.Autos...) {
-		if st == nil || st == s || !st.Options.IsProducer {
+		if st == nil || st == s {
 			continue
-		} else if (dir&meta.DIR_R != 0 && st.IsRight && st.Index < s.Index) || (dir&meta.DIR_L != 0 && st.IsLeft && st.Index > s.Index) {
+		} else if sends := st.sends(); (dir&sends&meta.DIR_R != 0 && st.Index < s.Index) || (dir&sends&meta.DIR_L != 0 && st.Index > s.Index) {
 			select {
 			case <-st.stopdone:
 				n++

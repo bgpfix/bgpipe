@@ -47,7 +47,6 @@ func NewCombine(parent *core.StageBase) core.Stage {
 	o := &s.Options
 	o.Descr = "combine UPDATEs with the same attributes into one"
 	o.IsProducer = true
-	o.IsTransit = true
 	o.FilterIn = true
 	o.StopUpstream = true
 

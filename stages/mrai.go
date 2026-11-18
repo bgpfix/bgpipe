@@ -39,7 +39,6 @@ func NewMrai(parent *core.StageBase) core.Stage {
 	o.Descr = "send prefix announcements at most once per time window (MRAI)"
 	o.IsProducer = true
 	o.FilterIn = true
-	o.Bidir = true
 	o.StopUpstream = true
 
 	f := o.Flags
