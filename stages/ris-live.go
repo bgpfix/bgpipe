@@ -344,8 +344,3 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 	msg.CopyData()
 	return ts, s.in.WriteMsg(msg)
 }
-
-func (s *RisLive) Stop() error {
-	s.in.Close()
-	return nil
-}

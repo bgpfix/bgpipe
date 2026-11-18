@@ -163,8 +163,3 @@ func (s *RvLive) Run() error {
 
 	return context.Cause(s.Ctx)
 }
-
-func (s *RvLive) Stop() error {
-	s.in.Close()
-	return nil
-}
