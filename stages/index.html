@@ -1445,6 +1445,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../http-api/" class="md-nav__link">
         
   
@@ -1756,7 +1783,7 @@ Stages are composed left-to-right on the command line, separated by <code>--</co
 </tr>
 </tbody>
 </table>
-<p>In <code>--wait</code> and <code>--stop</code>, multiple events can be comma-separated. If you refer a stage name (e.g., <code>listen</code>), the event is expanded by appending <code>/READY</code> (e.g., <code>listen/READY</code>), which is emitted when the stage is ready to process messages (e.g., after accepting a new connection). You can also refer to custom events emitted by stages (e.g., <code>grep/match</code>).</p>
+<p>In <code>--wait</code> and <code>--stop</code>, separate multiple events with commas. A stage name stands for its <code>START</code> event in <code>--wait</code> (eg. <code>--wait listen</code>), and for its <code>STOP</code> event in <code>--stop</code>. See <a href="../events/">Events</a> for all event names.</p>
 <p>Stages that support input or output filtering:</p>
 <table>
 <thead>

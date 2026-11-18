@@ -1505,6 +1505,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../http-api/" class="md-nav__link">
         
   
@@ -1792,6 +1819,7 @@
 </span><span id="__span-3-48"><a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a>  write                  write messages to file
 </span></code></pre></div>
 <p>From the above output, you can learn the basic syntax of a <em>pipeline</em>, which is a sequence of <em>stages</em>. Usually the stages are separated by <code>--</code> characters; otherwise, <code>bgpipe</code> will try to separate the stages automatically, although this can lead to ambiguities for more complex pipelines. Global <code>bgpipe</code> options are specified before the first stage, and options for each stage are specified immediately after the stage name.</p>
+<p>The <code>--events</code> and <code>--kill</code> options, and the <code>--wait</code> and <code>--stop</code> stage options, take event names: eg. <code>ESTABLISHED</code> when the BGP session is up, or <code>limit/session</code> when a stage reports a problem. See <a href="../events/">Events</a> for all of them.</p>
 <p>A <em>stage</em> is a specific processing step in the pipeline, such as connecting to a BGP endpoint, filtering messages, or executing a command. You can think of it as a building block that performs a specific task in the overall message processing flow. For a catalog of stages and their options, see the <a href="../stages/">Stages overview</a> and the per-stage docs. In order to learn more about a specific stage, you can run <code>bgpipe &lt;stage&gt; -h</code>, for example:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ bgpipe connect -h
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Stage usage: connect [OPTIONS] ADDR

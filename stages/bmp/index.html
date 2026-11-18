@@ -1489,6 +1489,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../http-api/" class="md-nav__link">
         
   
@@ -1755,8 +1782,8 @@ for it.</p>
 </tr>
 </tbody>
 </table>
-<p>Use eg. <code>--events bmp/peer-down</code> on bgpipe to log them, or <code>exec</code> a script on
-them. After a Peer Down, all routes of that peer are implicitly withdrawn;
+<p>Use eg. <code>--events bmp/peer-down</code> on bgpipe to log them, or <code>--kill</code> to stop
+on them; see <a href="../../events/">Events</a>. After a Peer Down, all routes of that peer are implicitly withdrawn;
 the stage does not keep a RIB, so it does not send the withdrawals.</p>
 <h3 id="prometheus-metrics">Prometheus Metrics<a class="headerlink" href="#prometheus-metrics" title="Permanent link">&para;</a></h3>
 <p>Each Statistics Report counter or gauge is exported as:</p>
