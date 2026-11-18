@@ -6,7 +6,6 @@ import (
 
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 )
 
@@ -21,6 +20,7 @@ type Grep struct {
 	event_fail  string
 	kill_match  bool
 	kill_fail   bool
+	withdraw    bool
 }
 
 func NewGrep(parent *core.StageBase) core.Stage {
@@ -46,6 +46,7 @@ func NewGrep(parent *core.StageBase) core.Stage {
 	f.String("event-fail", "", "emit event on match fail")
 	f.Bool("kill-match", false, "kill the process on match success")
 	f.Bool("kill-fail", false, "kill the process on match fail")
+	f.Bool("withdraw", false, "withdraw the prefixes of dropped UPDATEs, instead of dropping them")
 
 	return s
 }
@@ -59,6 +60,7 @@ func (s *Grep) Attach() (err error) {
 	s.event_fail = k.String("event-fail")
 	s.kill_match = k.Bool("kill-match")
 	s.kill_fail = k.Bool("kill-fail")
+	s.withdraw = k.Bool("withdraw")
 
 	// check filter
 	s.filter, err = filter.NewFilter(k.String("filter"))
@@ -78,9 +80,8 @@ func (s *Grep) Attach() (err error) {
 
 func (s *Grep) check(m *msg.Msg) bool {
 	// evaluate the filter
-	mx := pipe.UseContext(m)
 	ev := s.evals.Get().(*filter.Eval)
-	ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
+	ev.Set(m, s.P.KV, s.P.Caps)
 	res := ev.Run(s.filter)
 	s.evals.Put(ev)
 
@@ -100,13 +101,20 @@ func (s *Grep) check(m *msg.Msg) bool {
 	}
 
 	// keep the message?
-	if s.keep {
+	if s.keep || res != s.invert {
 		return true
-	} else if s.invert {
-		return !res
-	} else {
-		return res
 	}
+
+	// NB: in a live session, a dropped UPDATE could leave its prefixes reachable
+	// over an older path: withdraw them instead (RFC 7606 treat-as-withdraw),
+	// and never drop withdrawals
+	if s.withdraw && m.Type == msg.UPDATE {
+		if m.Update.HasReach() {
+			m.Update.Withdraw()
+		}
+		return true
+	}
+	return false
 }
 
 func newEval() any { return filter.NewEval(false) }

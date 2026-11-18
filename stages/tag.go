@@ -2,7 +2,6 @@ package stages
 
 import (
 	"fmt"
-	"maps"
 	"slices"
 	"strings"
 
@@ -65,40 +64,20 @@ func (s *Tag) Attach() (err error) {
 }
 
 func (s *Tag) onmsg(m *msg.Msg) bool {
-	mx := pipe.GetContext(m) // can be nil
-	mod := false
-
-	// drop tags
-	if len(s.drop) > 0 && mx.HasTags() {
-		if s.drop[0] == "*" {
-			mod = mx.DropTags()
-		} else {
-			for _, tag := range s.drop {
-				if mx.DropTag(tag) {
-					mod = true
-				}
-			}
+	t := &m.Tags
+	if len(s.drop) > 0 && s.drop[0] == "*" {
+		t.Reset()
+	} else {
+		for _, tag := range s.drop {
+			t.Set(tag, "")
 		}
 	}
-
-	// add SRC tag with source stage name
-	if s.src && mx != nil {
-		if mx.Input != nil && mx.Input.Name != "" {
-			mod = true
-			tags := mx.UseTags()
-			tags["SRC"] = mx.Input.Name
-		}
+	if mx := pipe.GetContext(m); s.src && mx != nil && mx.Input != nil {
+		t.Src = mx.Input.Name
 	}
-
-	// add tags
-	if len(s.add) > 0 {
-		mod = true
-		tags := pipe.UseTags(m)
-		maps.Copy(tags, s.add)
+	for k, v := range s.add {
+		t.Set(k, v)
 	}
-
-	if mod {
-		m.DropJSON() // NB: tags only, keep the wire as-is
-	}
+	m.DropJSON() // NB: tags only, keep the wire as-is
 	return true
 }

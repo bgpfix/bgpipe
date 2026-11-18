@@ -13,8 +13,8 @@ bgpipe [...] -- head [OPTIONS]
 The **head** stage lets only the first *N* messages pass and then stops the
 pipeline. This is useful for sampling or quick tests against a live source.
 
-The message count is taken from messages seen in the stage direction (or both
-when using `-LR`). When the limit is reached, the stage passes that message and
+The message count is taken from the messages the stage reads (see
+[direction](index.md#direction); both directions with `-LR`). When the limit is reached, the stage passes that message and
 stops the pipeline.
 
 ## Options

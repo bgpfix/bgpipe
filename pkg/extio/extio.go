@@ -350,7 +350,7 @@ func (eio *Extio) Attach() error {
 
 	// not write-only? produce input to bgpipe
 	if !opt_write {
-		if eio.IsBidir {
+		if eio.Send == meta.DIR_LR {
 			eio.InputL = p.AddInput(meta.DIR_L)
 			eio.InputR = p.AddInput(meta.DIR_R)
 			if eio.IsLast {
@@ -358,7 +358,7 @@ func (eio *Extio) Attach() error {
 			} else {
 				eio.InputD = eio.InputR
 			}
-		} else if eio.IsLeft {
+		} else if eio.Send == meta.DIR_L {
 			eio.InputL = p.AddInput(meta.DIR_L)
 			eio.InputR = eio.InputL // redirect R messages to L
 			eio.InputD = eio.InputL
@@ -383,14 +383,7 @@ func (eio *Extio) Attach() error {
 	// not read-only? capture bgpipe output to eio.Output
 	if !opt_read {
 		eio.Callback = p.OnMsg(eio.OnMsg, eio.Dir)
-
-		// override capture direction?
 		cb := eio.Callback
-		if eio.IsLast {
-			cb.Dir = meta.DIR_R
-		} else if eio.IsFirst {
-			cb.Dir = meta.DIR_L
-		}
 
 		// override message types?
 		for t := range eio.opt_type {
@@ -726,7 +719,7 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 		m.Time = time.Now().UTC()
 	}
 	if eio.opt_notags {
-		pipe.UseContext(m).DropTags()
+		m.Tags.Reset()
 	}
 
 	// take it

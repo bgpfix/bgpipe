@@ -193,22 +193,14 @@ func (s *StageBase) attach() error {
 		s.IsLast = true
 	}
 
-	// left / right?
+	// which flows to read? by default, what flows right, except for
+	// the first stage (the L end), which only gets what flows left
 	s.IsLeft = k.Bool("left")
 	s.IsRight = k.Bool("right")
 	s.IsBidir = s.IsLeft && s.IsRight
-	if !s.IsLeft && !s.IsRight { // no explicit dir = apply a default
-		s.IsRight = true
-
-		// exceptions
-		if s.IsLast && s.Options.IsProducer {
-			s.IsRight = false
-		} else if s.IsFirst && !s.Options.IsProducer {
-			s.IsRight = false
-		}
-
-		// symmetry
-		s.IsLeft = !s.IsRight
+	if !s.IsLeft && !s.IsRight {
+		s.IsLeft = s.IsFirst && !s.IsLast
+		s.IsRight = !s.IsLeft
 	}
 
 	// set s.Dir
@@ -218,6 +210,18 @@ func (s *StageBase) attach() error {
 		s.Dir = meta.DIR_L
 	} else {
 		s.Dir = meta.DIR_R
+	}
+
+	// where to send new messages? away from its end, or in its flow
+	switch {
+	case s.IsBidir:
+		s.Send = meta.DIR_LR // NB: messages keep their own direction
+	case s.IsLast:
+		s.Send = meta.DIR_L
+	case s.IsFirst:
+		s.Send = meta.DIR_R
+	default:
+		s.Send = s.Dir
 	}
 
 	// call child attach, collect what was attached to

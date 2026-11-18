@@ -17,17 +17,9 @@ major Internet exchange points and transit providers worldwide.
 
 The stream carries BGP messages in OpenBMP raw format. The stage parses
 BMP messages, extracts the inner BGP messages, and injects them into the
-pipeline with peer metadata as tags:
-
-| Tag | Description |
-|-----|-------------|
-| `PEER_IP` | IP address of the BGP peer |
-| `PEER_AS` | AS number of the BGP peer |
-| `COLLECTOR` | RouteViews BGP collector name (e.g., `linx`) |
-| `RV_COLLECTOR` | RouteViews internal BMP machine name (e.g., `bmp1`) |
-
-These tags can be used in downstream [filters](../filters.md), for example:
-`tag[COLLECTOR] ~ "linx"` or `tag[PEER_AS] == 13335`.
+pipeline [tagged](../tags.md) with `PEER_IP`, `PEER_AS`, `COLLECTOR` (the
+RouteViews BGP collector, eg. `linx`) and `rv-live/collector` (the internal BMP
+machine, eg. `bmp1`), eg. for filters like `tag[COLLECTOR] == linx`.
 
 By default, the stage subscribes to all topics matching the pattern
 `^routeviews\..+\.bmp_raw$`, which covers all RouteViews collectors.
@@ -49,6 +41,9 @@ but messages from different topics can interleave differently between runs.
 
 Connection retries are enabled by default. The stage monitors data
 freshness and reconnects when no data arrives for `--stale` duration.
+
+The stream carries one prefix per UPDATE. To put the original UPDATEs back
+together, add [combine](combine.md): `bgpipe -o -- rv-live -- combine`.
 
 Different RouteViews peers may use 2-byte or 4-byte ASNs, and some send ADD-PATH
 Path Identifiers in their NLRI. bgpipe detects both automatically (see the global
@@ -110,6 +105,7 @@ bgpipe \
 ## See Also
 
 [ris-live](ris-live.md),
+[combine](combine.md),
 [read](read.md),
 [RouteViews](https://www.routeviews.org/),
 [Stages overview](index.md)

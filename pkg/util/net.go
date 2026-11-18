@@ -113,7 +113,7 @@ func ConnBGP(s *core.StageBase, conn net.Conn, in *pipe.Input) error {
 
 	// write to conn
 	go func() {
-		pipeline := s.P.LineFor(s.Dir.Flip())
+		pipeline := s.P.LineFor(s.Send.Flip()) // NB: what reaches our end
 		_, err := io.Copy(&wcnt, pipeline)
 		s.Trace().Err(err).Msg("connection writer returned")
 		conn.(interface{ CloseWrite() error }).CloseWrite()

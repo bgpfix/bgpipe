@@ -31,6 +31,8 @@ Started in 2023 as part of a [research project](https://dl.acm.org/doi/10.1145/3
     <a href="stages/rov/">rov</a>
     <a href="stages/aspa/">aspa</a>
     <a href="stages/limit/">limit</a>
+    <a href="stages/combine/">combine</a>
+    <a href="stages/mrai/">mrai</a>
     <a href="stages/update/">update</a>
     <a href="stages/tag/">tag</a>
     <a href="stages/head/">head</a>
@@ -105,11 +107,11 @@ Sample output:
         }
     },
     {
-        "PEER_IP":"196.60.9.188",
-        "PEER_AS":"199524",
         "COLLECTOR":"rrc19",
-        "RIS_HOST":"rrc19.ripe.net",
-        "RIS_ID":"196.60.9.188-019c479748f40019",
+        "PEER_AS":"199524",
+        "PEER_IP":"196.60.9.188",
+        "ris-live/host":"rrc19.ripe.net",
+        "ris-live/id":"196.60.9.188-019c479748f40019",
         "rov/201.49.180.0/23":"INVALID",
         "rov/201.49.181.0/24":"INVALID",
         "rov/status":"INVALID"
@@ -132,7 +134,7 @@ $ bgpipe -o -- listen --peer 198.51.100.7 :179 -- rov -- connect --wait listen 1
 
 # BMP station: collect from your routers, keep post-policy routes, archive as MRT
 $ bgpipe -- bmp --listen --peer 192.0.2.0/24 :11019 \
-    -- grep 'tag[BMP_RIB] == in-post' -- write --every 15m 'bmp.$TIME.mrt.gz'
+    -- grep 'tag[bmp/rib] == in-post' -- write --every 15m 'bmp.$TIME.mrt.gz'
 
 # turn RIPE RIS Live into a BMP feed for your own collector
 $ bgpipe -- ris-live -- bmp --write collector.example.net:11019

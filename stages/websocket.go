@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
 	"github.com/bgpfix/bgpipe/pkg/util"
@@ -335,8 +334,7 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 	// tag incoming messages with the remote addr
 	remote := conn.RemoteAddr().String()
 	cb := func(m *msg.Msg) bool {
-		tags := pipe.UseContext(m).UseTags()
-		tags["websocket/remote"] = remote
+		m.Tags.Set("websocket/remote", remote)
 		return true
 	}
 

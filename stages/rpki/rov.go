@@ -9,6 +9,7 @@ import (
 
 	"github.com/VictoriaMetrics/metrics"
 	"github.com/bgpfix/bgpfix/attrs"
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -20,8 +21,8 @@ import (
 // Rov validates UPDATE messages using RPKI Route Origin Validation (RFC 6811)
 type Rov struct {
 	*core.StageBase
-	cache *rpki.Cache // shared RPKI cache, maintained by the core
-	split *pipe.Input // used for --invalid=split
+	cache *rpki.Cache    // shared RPKI cache, maintained by the core
+	split [4]*pipe.Input // used for --invalid=split, by direction
 
 	act    int    // action for INVALID prefixes
 	strict bool   // treat NOT_FOUND same as INVALID
@@ -89,7 +90,11 @@ func (s *Rov) Attach() error {
 
 	// need input for the split action?
 	if s.act == act_split {
-		s.split = s.P.AddInput(s.Dir)
+		for _, d := range []meta.Dir{meta.DIR_L, meta.DIR_R} {
+			if s.Dir&d != 0 {
+				s.split[d] = s.P.AddInput(d) // NB: keep the flow of the message
+			}
+		}
 	}
 
 	return nil
@@ -107,7 +112,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	s.cnt_msg.Inc()
 
 	u := &m.Update
-	tags := pipe.UseTags(m)
+	tags := &m.Tags
 
 	// origin AS from AS_PATH
 	origin := u.AsPath().Origin()
@@ -125,7 +130,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 			s.cnt_valid.Inc()
 			valid = append(valid, p)
 			if s.tag {
-				tags["rov/"+p.String()] = "VALID"
+				tags.Set("rov/"+p.String(), "VALID")
 			}
 			return false
 
@@ -133,7 +138,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 			s.cnt_nf.Inc()
 			not_found = append(not_found, p)
 			if s.tag {
-				tags["rov/"+p.String()] = "NOT_FOUND"
+				tags.Set("rov/"+p.String(), "NOT_FOUND")
 			}
 			return false
 
@@ -164,18 +169,18 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 		if do_split {
 			m2 = s.P.GetMsg().Switch(msg.UPDATE)
 			m2.Time = m.Time
-			t2 = pipe.UseTags(m2)
-			for k, v := range tags {
+			t2 = &m2.Tags
+			tags.Each(func(k, v string) {
 				if !strings.HasPrefix(k, "rov/") {
-					t2[k] = v
+					t2.Set(k, v)
 				}
-			}
+			})
 		}
 
 		if s.tag {
-			t2["rov/status"] = "INVALID"
+			t2.Set("rov/status", "INVALID")
 			for _, p := range invalid {
-				t2["rov/"+p.String()] = "INVALID"
+				t2.Set("rov/"+p.String(), "INVALID")
 			}
 		}
 
@@ -197,14 +202,14 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 		}
 
 		if do_split {
-			s.split.WriteMsg(m2)
+			s.split[m.Dir].WriteMsg(m2)
 			// tag the original (valid/not-found) message so downstream filters work
 			if s.tag {
 				switch {
 				case len(valid) > 0:
-					tags["rov/status"] = "VALID"
+					tags.Set("rov/status", "VALID")
 				case len(not_found) > 0:
-					tags["rov/status"] = "NOT_FOUND"
+					tags.Set("rov/status", "NOT_FOUND")
 				}
 			}
 		}
@@ -215,10 +220,10 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	} else if s.tag {
 		switch {
 		case len(not_found) > 0:
-			tags["rov/status"] = "NOT_FOUND"
+			tags.Set("rov/status", "NOT_FOUND")
 			m.DropJSON()
 		case len(valid) > 0:
-			tags["rov/status"] = "VALID"
+			tags.Set("rov/status", "VALID")
 			m.DropJSON()
 		}
 	}

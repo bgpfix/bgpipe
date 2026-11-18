@@ -18,7 +18,7 @@ Each BGP message is a JSON array with 6 elements:
 | `[2]` | `time` | string     | Timestamp: `YYYY-MM-DDTHH:MM:SS.mmm` |
 | `[3]` | `type` | string     | Message type (see table below)                                |
 | `[4]` | `data` | object/string/null | Type-specific payload (see below)                    |
-| `[5]` | `meta` | object/null | Message tags (key-value map)              |
+| `[5]` | `tags` | object     | [Message tags](tags.md) (key-value map)   |
 
 ### Message Types
 

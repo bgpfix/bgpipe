@@ -12,6 +12,7 @@ import (
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 // concurrent callbacks (eg. several inputs) call the same Grep.check: no shared filter state
@@ -21,7 +22,7 @@ func TestGrepBothDirections(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := &Grep{filter: f}
+	s := &Grep{StageBase: &core.StageBase{P: p}, filter: f}
 	s.evals.New = newEval
 
 	mk := func(d meta.Dir, pfx string) *msg.Msg {
@@ -50,5 +51,26 @@ func TestGrepBothDirections(t *testing.T) {
 
 	if n := wrong.Load(); n != 0 {
 		t.Errorf("%d wrong verdicts", n)
+	}
+}
+
+// drop --withdraw turns a dropped announcement into a withdrawal
+func TestGrepWithdraw(t *testing.T) {
+	p := pipe.NewPipe(context.Background())
+	f, err := filter.NewFilter("prefix ~ 10.0.0.0/8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := &Grep{StageBase: &core.StageBase{P: p}, filter: f, invert: true, withdraw: true}
+	s.evals.New = newEval
+
+	m := msg.NewMsg().Switch(msg.UPDATE)
+	pipe.UseContext(m).Pipe = p
+	m.Update.AddReach(nlri.FromPrefix(netip.MustParsePrefix("10.1.0.0/16")))
+	if !s.check(m) {
+		t.Fatal("dropped")
+	}
+	if m.Update.HasReach() || len(m.Update.AllUnreach()) != 1 {
+		t.Errorf("not withdrawn: %s", m.GetJSON())
 	}
 }

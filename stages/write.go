@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/bgpfix/bgpfix/bmp"
 	"io"
 	"os"
 	"path"
@@ -14,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bgpfix/bgpfix/bmp"
 
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/bgpfix/bgpipe/pkg/extio"
@@ -315,8 +316,10 @@ func publishNew(src, dst string) (string, error) {
 }
 
 func (s *Write) Run() error {
-	// NB: writes are buffered and flushed when eio.Output is empty, saving a syscall per message
+	// NB: writes are buffered, and flushed at least every 100ms
 	bw := bufio.NewWriterSize(s.wr, 64*1024) // NB: s.wr opened in Prepare()
+	flush := time.NewTicker(100 * time.Millisecond)
+	defer flush.Stop()
 	defer func() {
 		bw.Flush()
 		s.closeFile(s.wr, s.fh, s.n, s.tmp)
@@ -358,9 +361,6 @@ func (s *Write) Run() error {
 		n, err := bw.Write(bb.B)
 		s.n += int64(n)
 		eio.Put(bb)
-		if err == nil && len(eio.Output) == 0 {
-			err = bw.Flush()
-		}
 		return err
 	}
 
@@ -371,6 +371,11 @@ func (s *Write) Run() error {
 				return nil // output channel closed
 			}
 			if err := writeBuf(bb); err != nil {
+				return err
+			}
+
+		case <-flush.C:
+			if err := bw.Flush(); err != nil {
 				return err
 			}
 

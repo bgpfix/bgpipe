@@ -35,15 +35,9 @@ follows the actual ASN encoding of each message, so unmodified messages with
 ## Update dumps
 
 Update dumps contain complete BGP messages, so they are replayed as-is. Each
-message carries the session metadata from the MRT record as tags:
-
-| Tag | Description |
-|-----|-------------|
-| `PEER_AS` | AS number of the peer the message came from |
-| `PEER_IP` | IP address of that peer |
-| `LOCAL_AS` | AS number of the collector |
-| `LOCAL_IP` | collector IP address for this session |
-| `INTERFACE` | interface index, when present |
+message carries the session metadata from the MRT record as [tags](tags.md):
+`PEER_AS` and `PEER_IP` (the peer), `LOCAL_AS` and `LOCAL_IP` (the collector),
+and `mrt/interface` (the interface index, when present).
 
 The record subtype determines how the embedded message is decoded: AS4 subtypes
 force 4-byte ASN parsing, ADD-PATH subtypes force Path Identifier parsing. This
@@ -63,12 +57,8 @@ receiving the full table from every peer at once.
 
 ### Peer tags
 
-Every message from a table dump is tagged with its origin peer:
-
-| Tag | Description |
-|-----|-------------|
-| `PEER_AS` | AS number of the peer this route came from |
-| `PEER_IP` | IP address of that peer |
+Every message from a table dump is [tagged](tags.md) with its origin peer:
+`PEER_AS` and `PEER_IP`.
 
 Collectors typically hold 20-50 peers, and a full IPv4 table has around a
 million prefixes, so a single RIB dump expands to tens of millions of routes.

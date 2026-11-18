@@ -111,8 +111,8 @@ Options:
       --no-ipv6[=true|false]       avoid IPv6 if possible
 
 Common Options:
-  -L, --left[=true|false]          operate in the L direction
-  -R, --right[=true|false]         operate in the R direction
+  -L, --left[=true|false]          read messages flowing left
+  -R, --right[=true|false]         read messages flowing right
   -A, --args[=true|false]          consume all CLI arguments till --
   -W, --wait strings               wait for given event before starting
   -S, --stop strings               stop after given event is handled
@@ -124,7 +124,7 @@ Common Options:
 
 As you can see, the `connect` stage has its own set of options, such as `--timeout`, `--closed-timeout`, and `--md5`, which are specific to establishing a BGP connection. The common options, such as `-L`, `-R`, etc. are available for all stages and control how the stage operates in the pipeline context.
 
-By default, all stages operate in the *right* (`-R`) direction, meaning that they process BGP messages flowing from left to right. The direction controls which messages to capture for processing in a stage, and where to send new messages. However, if the last stage connects to a BGP endpoint, by default it will operate in the *left* (`-L`) direction, meaning it will send new messages to the left of the pipeline. Usually, the left-most and/or right-most stage is the one that connects to a BGP endpoint, while the other stages process messages in between. If you want bidirectional processing, use the `-L` and `-R` options together, ie. `-LR`.
+Messages flow through the pipeline in two directions: *right*, from the first stage towards the last, and *left*, the other way. A stage reads the messages flowing right, and writes new messages to the right. The ends of the pipeline, usually a BGP peer, a file, or a live stream, are the exceptions: the first stage reads the messages flowing left, and the last stage writes to the left. For example, in `bgpipe -- listen :179 -- connect 192.0.2.1`, the messages from the `listen` peer flow right, to `connect`, and the messages from the `connect` peer flow left, to `listen`. Use `-L`, `-R`, or `-LR` (both) to choose what a stage reads; see [Direction](stages/index.md#direction) for details.
 
 For writing BGP message filters used by the `grep` and `drop` stages, see the dedicated [filter reference](filters.md) with attributes, operators, and examples.
 

@@ -19,9 +19,15 @@ The *FILTER* argument is a BGP filter expression that tests message attributes
 such as prefix, AS path, communities, and tags. See the
 [Message Filters](../filters.md) reference for complete syntax.
 
-This stage supports bidirectional operation with `-LR`. Without `-LR`, it
-processes only messages in the stage direction. It matches UPDATE messages by
+It filters the messages it reads (see [direction](index.md#direction)), or both
+directions with `-LR`. It matches UPDATE messages by
 default; non-UPDATE messages (OPEN, KEEPALIVE, NOTIFICATION) are dropped unless explicitly allowed.
+
+With `--withdraw`, an UPDATE that would be dropped is turned into a withdrawal
+of all its prefixes instead ("treat-as-withdraw", [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)),
+and withdrawals are never dropped.
+Use it on live BGP sessions: a dropped UPDATE may replace an earlier
+announcement of the same prefixes, which the peer would otherwise keep using.
 
 With `--keep`, the stage evaluates the filter but never drops messages.
 This requires at least one of `--event-match` or `--event-fail` so that
@@ -40,6 +46,7 @@ filter. For example, `stdout --if 'ipv6'` prints only IPv6 updates.
 | `--event-fail` | string | | Emit this event when a message does not match |
 | `--kill-match` | bool | `false` | Kill the process on filter match |
 | `--kill-fail` | bool | `false` | Kill the process on filter failure |
+| `--withdraw` | bool | `false` | Withdraw the prefixes of a dropped UPDATE, instead of dropping it |
 
 ## Examples
 

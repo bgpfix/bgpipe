@@ -100,7 +100,7 @@ func TestIntegration_ROV_WithdrawMovesInvalidToUnreach(t *testing.T) {
 	require.NotNil(t, got)
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(got.Update.AllReach()))
 	require.Equal(t, []string{"198.51.100.0/24"}, prefixStrings(got.Update.AllUnreach()))
-	require.Equal(t, "INVALID", pipe.UseTags(got)["rov/status"])
+	require.Equal(t, "INVALID", got.Tags.Get("rov/status"))
 }
 
 func TestIntegration_ROV_DropDiscardsMessage(t *testing.T) {
@@ -126,7 +126,7 @@ func TestIntegration_ROV_NotFoundPassesThrough(t *testing.T) {
 
 	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "NOT_FOUND", pipe.UseTags(got)["rov/status"])
+	require.Equal(t, "NOT_FOUND", got.Tags.Get("rov/status"))
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllReach()))
 }
 
@@ -145,7 +145,7 @@ func TestIntegration_ASPA_ValidPathPassesThrough(t *testing.T) {
 
 	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "VALID", pipe.UseTags(got)["aspa/status"])
+	require.Equal(t, "VALID", got.Tags.Get("aspa/status"))
 	require.Equal(t, []string{"203.0.113.0/24"}, prefixStrings(got.Update.AllReach()))
 }
 
@@ -164,7 +164,7 @@ func TestIntegration_ASPA_InvalidPath_WithdrawStripsReach(t *testing.T) {
 
 	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
+	require.Equal(t, "INVALID", got.Tags.Get("aspa/status"))
 	require.False(t, got.Update.HasReach())
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllUnreach()))
 	// NB: RFC 4271 section 4.3 - pure withdrawal must not carry path attributes
@@ -200,7 +200,7 @@ func TestIntegration_ASPA_InvalidPath_KeepTagsOnly(t *testing.T) {
 
 	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
+	require.Equal(t, "INVALID", got.Tags.Get("aspa/status"))
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllReach()))
 	require.False(t, got.Update.HasUnreach())
 }
@@ -220,7 +220,7 @@ func TestIntegration_ASPA_UnknownPathPassesThrough(t *testing.T) {
 
 	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "UNKNOWN", pipe.UseTags(got)["aspa/status"])
+	require.Equal(t, "UNKNOWN", got.Tags.Get("aspa/status"))
 	require.Equal(t, []string{"10.0.0.0/8"}, prefixStrings(got.Update.AllReach()))
 }
 
@@ -239,7 +239,7 @@ func TestIntegration_ASPA_FirstHopMismatchIsInvalid(t *testing.T) {
 
 	got := sendUpdate(t, s.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
+	require.Equal(t, "INVALID", got.Tags.Get("aspa/status"))
 	require.False(t, got.Update.HasReach())
 }
 
@@ -262,8 +262,8 @@ func TestIntegration_ROVValid_ASPAInvalid_BothActionsFire(t *testing.T) {
 
 	got := sendUpdate(t, rov.P, m, time.Second)
 	require.NotNil(t, got)
-	require.Equal(t, "VALID", pipe.UseTags(got)["rov/status"])
-	require.Equal(t, "INVALID", pipe.UseTags(got)["aspa/status"])
+	require.Equal(t, "VALID", got.Tags.Get("rov/status"))
+	require.Equal(t, "INVALID", got.Tags.Get("aspa/status"))
 	require.False(t, got.Update.HasReach())
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(got.Update.AllUnreach()))
 }

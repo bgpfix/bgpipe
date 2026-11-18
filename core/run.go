@@ -3,8 +3,10 @@ package core
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/pipe"
 )
 
@@ -45,6 +47,9 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 
 	// enable callbacks and handlers
 	s.running.Store(true)
+	if s.Options.StopUpstream {
+		go s.stopUpstream()
+	}
 
 	// start Stage.Run in background
 	go func() {
@@ -81,11 +86,45 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	return false
 }
 
-// runStop requests to stop Stage.Run; ev may be nil
+// stopUpstream stops s when all stages that send to its callbacks are done.
+// NB: a stage is done after its inputs are drained, so s saw all their messages
+// Does nothing if there are no such producers (eg. s is the source).
+func (s *StageBase) stopUpstream() {
+	var dir meta.Dir // directions s captures
+	for _, cb := range s.callbacks {
+		dir |= cb.Dir
+		if cb.Dir == 0 {
+			dir = meta.DIR_LR
+		}
+	}
+	n := 0
+	for _, st := range append(slices.Clone(s.B.Stages), s.B.Autos...) {
+		if st == nil || st == s {
+			continue
+		} else if sends := st.sends(); (dir&sends&meta.DIR_R != 0 && st.Index < s.Index) || (dir&sends&meta.DIR_L != 0 && st.Index > s.Index) {
+			select {
+			case <-st.stopdone:
+				n++
+			case <-s.Ctx.Done():
+				return
+			}
+		}
+	}
+	if n > 0 {
+		s.runStop(nil)
+	}
+}
+
+// runStop requests to stop Stage.Run; ev may be nil.
+// If already stopping, waits until that is done.
 func (s *StageBase) runStop(ev *pipe.Event) bool {
-	if s == nil || s.stopped.Swap(true) {
-		return false // already stopped, or not started yet
+	if s == nil {
+		return false
+	} else if s.stopped.Swap(true) {
+		<-s.stopdone
+		return false
 	} else {
+		defer close(s.stopdone)
 		s.Debug().Stringer("ev", ev).Msg("stopping")
 	}
 

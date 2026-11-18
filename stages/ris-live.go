@@ -87,7 +87,7 @@ func (s *RisLive) Attach() error {
 		}
 	}
 
-	s.in = s.P.AddInput(s.Dir)
+	s.in = s.P.AddInput(s.Send)
 	return nil
 }
 
@@ -331,21 +331,16 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 
 	// add metadata
 	msg.Time = ts
-	tags := pipe.UseContext(msg).UseTags()
-	tags["PEER_IP"] = peer_ip
-	tags["PEER_AS"] = peer_asn
-	tags["RIS_ID"] = id
-	tags["RIS_HOST"] = host
+	tags := &msg.Tags
+	tags.Set("PEER_IP", peer_ip)
+	tags.Set("PEER_AS", peer_asn)
+	tags.Set("ris-live/id", id)
+	tags.Set("ris-live/host", host)
 	if col, _, _ := strings.Cut(host, "."); len(col) > 0 {
-		tags["COLLECTOR"] = col
+		tags.Set("COLLECTOR", col)
 	}
 
 	// write to pipe
 	msg.CopyData()
 	return ts, s.in.WriteMsg(msg)
-}
-
-func (s *RisLive) Stop() error {
-	s.in.Close()
-	return nil
 }

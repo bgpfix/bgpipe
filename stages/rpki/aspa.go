@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/VictoriaMetrics/metrics"
-	"github.com/bgpfix/bgpfix/attrs"
 	"github.com/bgpfix/bgpfix/caps"
 	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
@@ -228,7 +226,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	}
 
 	u := &m.Update
-	tags := pipe.UseTags(m)
+	tags := &m.Tags
 
 	if !u.HasReach() {
 		return true // withdrawal-only, no AS_PATH to validate
@@ -244,7 +242,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	asn := peer.asn
 	if s.peer_tag != "" {
 		asn = 0
-		if v, err := strconv.ParseUint(tags[s.peer_tag], 10, 32); err == nil {
+		if v, err := strconv.ParseUint(tags.Get(s.peer_tag), 10, 32); err == nil {
 			asn = uint32(v)
 		}
 	}
@@ -275,19 +273,19 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	case rpki.ASPA_VALID:
 		s.cnt_valid.Inc()
 		if s.tag {
-			tags["aspa/status"] = "VALID"
+			tags.Set("aspa/status", "VALID")
 		}
 	case rpki.ASPA_UNKNOWN:
 		s.cnt_unk.Inc()
 		if s.tag {
-			tags["aspa/status"] = "UNKNOWN"
+			tags.Set("aspa/status", "UNKNOWN")
 		}
 	case rpki.ASPA_INVALID:
 		s.cnt_inv.Inc()
 		if s.tag {
-			tags["aspa/status"] = "INVALID"
+			tags.Set("aspa/status", "INVALID")
 			if failCAS != 0 {
-				tags["aspa/invalid-hop"] = fmt.Sprintf("%d %d", failCAS, failPAS)
+				tags.Set("aspa/invalid-hop", fmt.Sprintf("%d %d", failCAS, failPAS))
 			}
 		}
 	}
@@ -309,21 +307,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	case act_drop:
 		return false
 	case act_withdraw:
-		// move all reachable prefixes to withdrawn
-		reach := slices.Clone(u.Reach)
-		u.Reach = nil
-		if mpp := u.ReachMP().Prefixes(); mpp != nil {
-			reach = append(reach, mpp.Prefixes...)
-			mpp.Prefixes = nil
-		}
-		if len(reach) > 0 {
-			u.AddUnreach(reach...)
-		}
-		m.Edit() // NB: first, to invalidate the cached AllReach()
-		// NB: pure withdrawal must not carry path attributes (RFC 4271 section 4.3)
-		if !u.HasReach() {
-			u.Attrs.Filter(attrs.ATTR_MP_UNREACH)
-		}
+		u.Withdraw()
 	}
 
 	return true

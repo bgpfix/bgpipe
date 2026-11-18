@@ -59,7 +59,7 @@ func (s *Listen) Attach() error {
 	}
 	s.peers = peers
 
-	s.in = s.P.AddInput(s.Dir)
+	s.in = s.P.AddInput(s.Send)
 	return nil
 }
 

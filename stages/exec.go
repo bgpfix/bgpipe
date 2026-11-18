@@ -3,9 +3,7 @@ package stages
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os/exec"
 	"time"
@@ -40,10 +38,7 @@ func NewExec(parent *core.StageBase) core.Stage {
 	o.FilterIn = true
 	o.FilterOut = true
 	o.Bidir = true
-
-	f := o.Flags
-	f.Bool("keep-stdin", false, "keep running if stdin is closed")
-	f.Bool("keep-stdout", false, "keep running if stdout is closed")
+	o.StopUpstream = true
 
 	s.eio = extio.NewExtio(parent, 0, false)
 	s.eio.ExaAck = true
@@ -88,84 +83,35 @@ func (s *Exec) Prepare() (err error) {
 	return s.cmd_exec.Start()
 }
 
-// Stop stops the flow of data
+// Stop closes the command stdin: it should finish, and its output is still read
 func (s *Exec) Stop() error {
 	s.eio.OutputClose()
-	s.eio.InputClose()
 	return nil
 }
 
-// Run runs the data flow
-func (s *Exec) Run() (err error) {
-	// start stdout reader
-	stdout_reader_done := make(chan error, 1)
-	stdout_ok := s.K.Bool("keep-stdout")
-	go s.stdoutReader(stdout_reader_done)
-
-	// start stderr reader
-	stderr_reader_done := make(chan error, 1)
-	go s.stderrReader(stderr_reader_done)
-
-	// start stdin writer
-	stdin_writer_done := make(chan error, 1)
-	stdin_ok := s.K.Bool("keep-stdin")
-	go s.stdinWriter(stdin_writer_done)
-
-	// cleanup on exit
-	defer func() {
-		// wait for the command
-		s.cmd_exec.Cancel()
-		cmd_err := s.cmd_exec.Wait()
-		s.Err(cmd_err).Msg("command terminated")
-
-		// escalate the error?
-		if cmd_err != nil && err == nil {
-			err = cmd_err
-		}
+// Run feeds the command and reads its output, until it exits
+func (s *Exec) Run() error {
+	go s.stderrReader()
+	go func() {
+		s.eio.WriteStream(s.cmd_in) // NB: until Stop, or the command stops reading
+		s.cmd_in.Close()
 	}()
 
-	// wait
-	for {
-		select {
-		case err := <-stdout_reader_done:
-			s.Debug().Err(err).Msg("stdout reader done")
-			if err == nil {
-				if stdout_ok {
-					stdout_reader_done = nil
-					continue // it's fine
-				} else {
-					err = io.EOF // it shouldn't end
-				}
-			}
-			return fmt.Errorf("stdout closed: %w", err)
-		case err := <-stdin_writer_done:
-			s.Debug().Err(err).Msg("stdin writer done")
-			if err == nil {
-				if stdin_ok {
-					stdin_writer_done = nil
-					continue // it's fine
-				} else {
-					err = io.EOF
-				}
-			}
-			return fmt.Errorf("stdin closed: %w", err)
-		case err := <-stderr_reader_done:
-			s.Debug().Err(err).Msg("stderr reader done")
-			stderr_reader_done = nil // continue, ignore stderr
-		case <-s.Ctx.Done():
-			err := context.Cause(s.Ctx)
-			s.Debug().Err(err).Msg("context cancel")
-			return err
-		}
+	rerr := s.eio.ReadStream(s.cmd_out, nil)
+	if rerr != nil {
+		s.cmd_exec.Process.Kill() // NB: it may block writing to us
 	}
+	err := s.cmd_exec.Wait() // NB: after all output is read
+	s.Err(err).Msg("command terminated")
+	if s.Ctx.Err() != nil {
+		return nil // stopped
+	} else if rerr != nil {
+		return rerr
+	}
+	return err
 }
 
-func (s *Exec) stdoutReader(done chan error) {
-	done <- s.eio.ReadStream(s.cmd_out, nil)
-	close(done)
-}
-
-func (s *Exec) stderrReader(done chan error) {
+func (s *Exec) stderrReader() {
 	// NB: log long lines in chunks, never stop reading (would block the child)
 	in := bufio.NewReaderSize(s.cmd_err, 64*1024)
 	for {
@@ -174,18 +120,7 @@ func (s *Exec) stderrReader(done chan error) {
 			s.Info().Msg(string(bytes.TrimRight(line, "\r\n")))
 		}
 		if err != nil && err != bufio.ErrBufferFull {
-			if err == io.EOF {
-				err = nil
-			}
-			done <- err
-			close(done)
 			return
 		}
 	}
-}
-
-func (s *Exec) stdinWriter(done chan error) {
-	done <- s.eio.WriteStream(s.cmd_in)
-	s.cmd_in.Close()
-	close(done)
 }

@@ -16,8 +16,8 @@ or scrub communities, prepend or clean the AS_PATH, set MED, LOCAL_PREF and
 ORIGIN, and drop unwanted attributes. Non-UPDATE messages pass through
 unchanged.
 
-This stage supports bidirectional operation with `-LR`. Without `-LR`, it
-applies only to messages in the stage direction. Combine with `--if` to apply
+It modifies the messages it reads (see [direction](index.md#direction)), or both
+directions with `-LR`. Combine with `--if` to apply
 modifications only to messages matching a [filter](../filters.md).
 
 ## Options

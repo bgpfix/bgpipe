@@ -19,18 +19,9 @@ your own BGP peering sessions.
 
 The stage connects via Server-Sent Events (SSE) to the RIS Live endpoint,
 extracts raw BGP messages from the stream, and injects them into the pipeline.
-Each message is tagged with peer and collector metadata:
-
-| Tag | Description |
-|-----|-------------|
-| `PEER_IP` | IP address of the BGP peer |
-| `PEER_AS` | AS number of the BGP peer |
-| `RIS_ID` | RIS collector peer ID |
-| `RIS_HOST` | RIS collector hostname (e.g., `rrc01.ris.ripe.net`) |
-| `COLLECTOR` | Short collector name derived from RIS_HOST (e.g., `rrc01`) |
-
-These tags can be used in downstream [filters](../filters.md), for example:
-`tag[PEER_AS] == 13335` or `tag[RIS_HOST] ~ "rrc01"`.
+Each message is [tagged](../tags.md) with `PEER_IP`, `PEER_AS`, `COLLECTOR`
+(eg. `rrc01`), `ris-live/host` and `ris-live/id`, eg. for filters like
+`tag[PEER_AS] == 13335` or `tag[COLLECTOR] == rrc01`.
 
 Connection retries are enabled by default, and the wait before a reconnect
 resets after a session of over 30 seconds. The stage reconnects if the stream
@@ -98,6 +89,7 @@ bgpipe \
 ## See Also
 
 [rv-live](rv-live.md),
+[mrai](mrai.md),
 [read](read.md),
 [RIPE RIS Live](https://ris-live.ripe.net/),
 [Stages overview](index.md)

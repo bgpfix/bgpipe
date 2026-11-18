@@ -27,6 +27,10 @@ message per line and can:
 
 The command's stderr is forwarded to the bgpipe log.
 
+The stage runs until the command exits. When the stages before it are done
+(eg. at the end of a file), or when bgpipe stops, the command's stdin is closed:
+it should finish, and whatever it still prints is passed on.
+
 The stage is both a producer and a consumer, and supports bidirectional
 operation with `-LR`.
 
@@ -38,8 +42,6 @@ all arguments up to the next `--` are passed to the command.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--keep-stdin` | bool | `false` | Keep running if the command's stdin is closed |
-| `--keep-stdout` | bool | `false` | Keep running if the command's stdout is closed |
 | `--format` | string | `json` | Data format: `json`, `raw`, `mrt`, `exa`, `bmp`, or `obmp` |
 | `--type` | strings | | Process only messages of given type(s) |
 | `--skip` | strings | | Skip messages of given type(s) |

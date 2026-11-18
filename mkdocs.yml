@@ -7,6 +7,7 @@ nav:
     - Overview: stages/index.md
     - aspa: stages/aspa.md
     - bmp: stages/bmp.md
+    - combine: stages/combine.md
     - connect: stages/connect.md
     - drop: stages/grep.md
     - exec: stages/exec.md
@@ -20,6 +21,7 @@ nav:
     - ris-live: stages/ris-live.md
     - rov: stages/rov.md
     - rv-live: stages/rv-live.md
+    - mrai: stages/mrai.md
     - speaker: stages/speaker.md
     - stdin: stages/stdin.md
     - stdout: stages/stdout.md
@@ -33,6 +35,7 @@ nav:
   - MRT files: mrt.md
   - ExaBGP: exabgp.md
   - Filtering: filters.md
+  - Tags: tags.md
   - HTTP API: http-api.md
   - Docker: docker.md
 

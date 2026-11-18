@@ -22,7 +22,10 @@ accepted. By default *any* source address may connect first, so in production
 always restrict it with `--peer` (and ideally `--md5`): connections from other
 addresses are rejected and logged, and the stage keeps listening.
 
-By default, **listen** messages flow left-to-right (`-R` direction), but if it is the last stage in the pipeline, it defaults to the left (`-L`) direction, so that incoming messages flow right-to-left.
+As the last stage, **listen** is the right end of the pipeline: it writes the
+messages from its peer to the left, and sends its peer whatever reaches the
+right end. As the first stage, it does the opposite. See
+[Direction](index.md#direction).
 
 ## Options
 

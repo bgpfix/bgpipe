@@ -65,5 +65,5 @@ func (s *Speaker) Attach() error {
 		so.LocalId = netip.MustParseAddr("0.0.0.1")
 	}
 
-	return spk.Attach(s.P, s.Dir)
+	return spk.Attach(s.P, s.Send)
 }

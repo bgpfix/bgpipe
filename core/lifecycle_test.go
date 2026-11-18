@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/pipe"
 )
@@ -461,7 +462,7 @@ func TestBgpipe_AutoStdoutDrained(t *testing.T) {
 // --- Direction resolution tests ---
 
 func TestStage_DirectionDefaults(t *testing.T) {
-	// middle stage = -R, last producer = -L
+	// reads: first = -L, others = -R; sends: away from the end, else in its flow
 	repo := map[string]NewStage{"test": newDummyStage}
 	b := newTestBgpipe(repo)
 	b.AddStage(1, "test")
@@ -470,23 +471,27 @@ func TestStage_DirectionDefaults(t *testing.T) {
 	if err := b.AttachStages(); err != nil {
 		t.Fatal(err)
 	}
-
-	// first stage is a producer -> default -R (because not last)
-	s1 := b.Stages[1]
-	if !s1.IsRight || s1.IsLeft {
-		t.Fatalf("first producer: expected -R, got IsRight=%v IsLeft=%v", s1.IsRight, s1.IsLeft)
+	for i, want := range []struct{ dir, send meta.Dir }{
+		1: {meta.DIR_L, meta.DIR_R},
+		2: {meta.DIR_R, meta.DIR_R},
+		3: {meta.DIR_R, meta.DIR_L},
+	} {
+		if i == 0 {
+			continue
+		}
+		if s := b.Stages[i]; s.Dir != want.dir || s.Send != want.send {
+			t.Errorf("stage %d: got Dir=%s Send=%s, want %s %s", i, s.Dir, s.Send, want.dir, want.send)
+		}
 	}
 
-	// middle stage (index 2)
-	s2 := b.Stages[2]
-	if !s2.IsRight || s2.IsLeft {
-		t.Fatalf("middle stage: expected -R, got IsRight=%v IsLeft=%v", s2.IsRight, s2.IsLeft)
+	// a stage alone is the R end
+	b = newTestBgpipe(repo)
+	b.AddStage(1, "test")
+	if err := b.AttachStages(); err != nil {
+		t.Fatal(err)
 	}
-
-	// last stage is a producer -> should be -L
-	s3 := b.Stages[3]
-	if s3.IsRight || !s3.IsLeft {
-		t.Fatalf("last producer: expected -L, got IsRight=%v IsLeft=%v", s3.IsRight, s3.IsLeft)
+	if s := b.Stages[1]; s.Dir != meta.DIR_R || s.Send != meta.DIR_L {
+		t.Errorf("single stage: got Dir=%s Send=%s", s.Dir, s.Send)
 	}
 }
 

@@ -62,14 +62,15 @@ type StageOptions struct {
 
 	// these can be modified before Attach(), and even inside (with care)
 
-	IsProducer  bool          // produces messages? (= writes Line.Input?)
-	IsConsumer  bool          // consumes messages? (= reads Line.Out?)
-	IsStdin     bool          // reads from stdin?
-	IsStdout    bool          // writes to stdout?
-	Bidir       bool          // allow -LR (bidir mode)?
-	FilterIn    bool          // allow stage input filtering? (must have callbacks)
-	FilterOut   bool          // allow stage output filtering? (must have inputs)
-	StopTimeout time.Duration // timeout for Run to exit after Stop (default 3s, zero = default)
+	IsProducer   bool          // produces messages? (= writes Line.Input?)
+	IsConsumer   bool          // consumes messages? (= reads Line.Out?)
+	IsStdin      bool          // reads from stdin?
+	IsStdout     bool          // writes to stdout?
+	Bidir        bool          // allow -LR (bidir mode)?
+	FilterIn     bool          // allow stage input filtering? (must have callbacks)
+	FilterOut    bool          // allow stage output filtering? (must have inputs)
+	StopUpstream bool          // stop when the producers before it are done (eg. at the end of a file)
+	StopTimeout  time.Duration // timeout for Run to exit after Stop (default 3s, zero = default)
 }
 
 // StageBase represents a bgpipe stage base
@@ -77,10 +78,11 @@ type StageBase struct {
 	zerolog.Logger // logger with stage name
 	Stage          // the real implementation
 
-	started atomic.Bool   // true if already started
-	stopped atomic.Bool   // true if already stopped
-	running atomic.Bool   // true if stage running
-	done    chan struct{} // closed when Run returns
+	started  atomic.Bool   // true if already started
+	stopped  atomic.Bool   // true if already stopped
+	running  atomic.Bool   // true if stage running
+	done     chan struct{} // closed when Run returns
+	stopdone chan struct{} // closed when runStop is done
 
 	Ctx    context.Context         // stage context
 	Cancel context.CancelCauseFunc // cancel to stop the stage
@@ -102,12 +104,13 @@ type StageBase struct {
 
 	// properties set during Attach()
 
-	IsFirst bool     // is the first stage in pipe? (the L peer)
-	IsLast  bool     // is the last stage in pipe? (the R peer)
-	IsRight bool     // write L->R msgs + capture L->R msgs?
-	IsLeft  bool     // write R->L msgs + capture R->L msgs?
+	IsFirst bool     // is the first stage in pipe? (the L end)
+	IsLast  bool     // is the last stage in pipe? (the R end)
+	IsRight bool     // reads messages flowing right (L->R)?
+	IsLeft  bool     // reads messages flowing left (R->L)?
 	IsBidir bool     // true iff IsRight && IsLeft
-	Dir     meta.Dir // target direction (IsLeft/IsRight translated, can be DIR_LR)
+	Dir     meta.Dir // the flows s reads (IsLeft/IsRight translated, can be DIR_LR)
+	Send    meta.Dir // where s writes new messages: away from its end if first/last, else Dir (LR if bidir)
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
@@ -164,6 +167,7 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Name = cmd
 	s.Logger = s.B.With().Str("stage", s.Name).Logger()
 	s.done = make(chan struct{})
+	s.stopdone = make(chan struct{})
 
 	// CLI flags
 	so := &s.Options
@@ -176,8 +180,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Stage = newfunc(s)
 
 	// add global CLI flags
-	f.BoolP("left", "L", false, "operate in the L direction")
-	f.BoolP("right", "R", false, "operate in the R direction")
+	f.BoolP("left", "L", false, "read messages flowing left")
+	f.BoolP("right", "R", false, "read messages flowing right")
 	f.BoolP("args", "A", false, "consume all CLI arguments till --")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")
@@ -198,25 +202,30 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 
 // wgAdd adds delta to B.wg* waitgroups related to s
 func (s *StageBase) wgAdd(delta int) {
-	o := &s.Options
-	if s.IsRight {
-		if o.IsProducer {
-			s.B.wg_rwrite.Add(delta)
-		}
-		if o.IsConsumer {
+	sends := s.sends()
+	if sends&meta.DIR_R != 0 {
+		s.B.wg_rwrite.Add(delta)
+	}
+	if sends&meta.DIR_L != 0 {
+		s.B.wg_lwrite.Add(delta)
+	}
+	if s.Options.IsConsumer { // NB: reads what reaches its end
+		if s.Send == meta.DIR_R {
 			s.B.wg_lread.Add(delta)
 			s.B.has_lread = true
-		}
-	}
-	if s.IsLeft {
-		if o.IsProducer {
-			s.B.wg_lwrite.Add(delta)
-		}
-		if o.IsConsumer {
+		} else {
 			s.B.wg_rread.Add(delta)
 			s.B.has_rread = true
 		}
 	}
+}
+
+// sends returns the directions of the messages s sends (its inputs)
+func (s *StageBase) sends() (d meta.Dir) {
+	for _, in := range s.inputs {
+		d |= in.Dir
+	}
+	return d
 }
 
 // Errorf wraps fmt.Errorf and adds a prefix with the stage name

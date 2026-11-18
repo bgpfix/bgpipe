@@ -11,10 +11,9 @@ bgpipe [...] -- stdin [OPTIONS]
 ## Description
 
 The **stdin** stage reads BGP messages from standard input and injects them
-into the pipeline. It is a producer stage that supports bidirectional
-operation with `-LR`: in that case, the direction of each message is taken from
-the input when available (for JSON, the `dir` field). Otherwise, messages are
-injected in the stage direction.
+into the pipeline. With `-LR`, the input sets the direction of each message
+when it can (for JSON, the `dir` field); otherwise, the stage writes as
+described in [Direction](index.md#direction).
 
 The default input format is JSON (one message per line). Supported formats
 also include MRT (BGP4MP), raw BGP wire format, ExaBGP line format,
