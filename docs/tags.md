@@ -40,7 +40,7 @@ invalid value (eg. `PEER_AS` of `abc`) is dropped.
 
 | Tag | Description | Set by |
 |-----|-------------|--------|
-| `rov/status`, `rov/PREFIX` | RPKI ROV result: `VALID`, `INVALID`, `NOT_FOUND` | [rov](stages/rov.md#tags) |
+| `rov/status`, `rov/<prefix>` | RPKI ROV result: `VALID`, `INVALID`, `NOT_FOUND` (eg. `rov/192.0.2.0/24`) | [rov](stages/rov.md#tags) |
 | `aspa/status`, `aspa/invalid-hop` | ASPA verification result | [aspa](stages/aspa.md#tags) |
 | `bmp/rib` | RIB view: `in-post`, `out-pre`, `out-post`, or `loc` (not set for pre-policy Adj-RIB-In) | [bmp](stages/bmp.md) |
 | `bmp/rd` | Peer distinguisher (hex), for RD and local instance peers, or if non-zero | bmp |
