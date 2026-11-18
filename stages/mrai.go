@@ -101,7 +101,7 @@ func (s *Mrai) onMsg(m *msg.Msg) bool {
 		sp.clock = m.Time
 	}
 
-	pipe.UseContext(m).Take()
+	pipe.Take(m)
 	switch {
 	case len(pfx) == 0: // eg. End-of-RIB, KEEPALIVE, mixed UPDATE: keep the order
 		s.emit(sp)

@@ -100,7 +100,7 @@ func (s *Combine) onMsg(m *msg.Msg) bool {
 	cp := s.peers[peer]
 	if key == "" {
 		s.emit(peer, cp)
-		pipe.UseContext(m).Take()
+		pipe.Take(m)
 		s.in.WriteMsg(m)
 		return false
 	}
@@ -138,7 +138,7 @@ func (s *Combine) onMsg(m *msg.Msg) bool {
 	if m.Marshal(s.P.Caps) != nil {
 		return false
 	}
-	pipe.UseContext(m).Take()
+	pipe.Take(m)
 	g := &combineGroup{m: m, size: m.Len()}
 	cp.groups = append(cp.groups, g)
 	cp.bykey[key] = g
@@ -169,7 +169,7 @@ func (s *Combine) classify(m *msg.Msg) (key string, pfx []nlri.Prefix) {
 	}
 	m.Update.Attrs.Each(func(_ int, ac attrs.Code, at attrs.Attr) {
 		if ac != attrs.ATTR_MP_REACH {
-			buf = at.Marshal(buf, s.P.Caps, m.Meta)
+			buf = at.Marshal(buf, s.P.Caps, &m.Meta)
 		}
 	})
 	return string(buf), pfx
@@ -211,10 +211,7 @@ type peer struct {
 }
 
 func peerKey(m *msg.Msg) peer {
-	if t := m.Tags; t != nil {
-		return peer{m.Dir, t.Collector, t.PeerIP, t.PeerAS}
-	}
-	return peer{dir: m.Dir}
+	return peer{m.Dir, m.Tags.Collector, m.Tags.PeerIP, m.Tags.PeerAS}
 }
 
 // flush emits the UPDATEs of peers with the first one older than t (all if t is zero)

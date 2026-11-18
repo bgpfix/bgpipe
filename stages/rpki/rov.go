@@ -107,7 +107,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	s.cnt_msg.Inc()
 
 	u := &m.Update
-	tags := m.UseTags()
+	tags := &m.Tags
 
 	// origin AS from AS_PATH
 	origin := u.AsPath().Origin()
@@ -164,7 +164,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 		if do_split {
 			m2 = s.P.GetMsg().Switch(msg.UPDATE)
 			m2.Time = m.Time
-			t2 = m2.UseTags()
+			t2 = &m2.Tags
 			tags.Each(func(k, v string) {
 				if !strings.HasPrefix(k, "rov/") {
 					t2.Set(k, v)

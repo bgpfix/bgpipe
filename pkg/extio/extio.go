@@ -726,9 +726,7 @@ func (eio *Extio) checkMsg(m *msg.Msg) bool {
 		m.Time = time.Now().UTC()
 	}
 	if eio.opt_notags {
-		if t := m.Tags; t != nil {
-			t.Reset()
-		}
+		m.Tags.Reset()
 	}
 
 	// take it

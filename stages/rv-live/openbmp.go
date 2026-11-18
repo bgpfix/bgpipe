@@ -56,7 +56,7 @@ func (s *RvLive) processRecord(record *kgo.Record, om *bmp.OpenBmp, bm *bmp.Bmp)
 	}
 
 	// add tags
-	t := m.UseTags()
+	t := &m.Tags
 	if bm.Peer.Address.IsValid() && !bm.Peer.Address.IsUnspecified() {
 		t.PeerIP = bm.Peer.Address
 	}

@@ -226,7 +226,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	}
 
 	u := &m.Update
-	tags := m.UseTags()
+	tags := &m.Tags
 
 	if !u.HasReach() {
 		return true // withdrawal-only, no AS_PATH to validate

@@ -12,7 +12,6 @@ import (
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 	"github.com/go-chi/chi/v5"
 )
@@ -119,9 +118,8 @@ func (s *Metrics) onMsg(m *msg.Msg) bool {
 
 	// evaluate filter rules
 	if len(s.rules) > 0 {
-		mx := pipe.UseContext(m)
 		ev := s.evals.Get().(*filter.Eval)
-		ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps)
+		ev.Set(m, s.P.KV, s.P.Caps)
 		for i := range s.rules {
 			if ev.Run(s.rules[i].filter) {
 				s.rules[i].counter.Inc()

@@ -331,7 +331,7 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 
 	// add metadata
 	msg.Time = ts
-	tags := msg.UseTags()
+	tags := &msg.Tags
 	tags.Set("PEER_IP", peer_ip)
 	tags.Set("PEER_AS", peer_asn)
 	tags.Set("ris-live/id", id)

@@ -76,7 +76,7 @@ func TestRov_KeepTagsOnly(t *testing.T) {
 	require.True(t, s.validateMsg(m))
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(m.Update.AllReach()))
 	require.False(t, m.Update.HasUnreach())
-	tags := m.UseTags()
+	tags := &m.Tags
 	require.Equal(t, "INVALID", tags.Get("rov/status"))
 	require.Equal(t, "INVALID", tags.Get("rov/192.0.2.0/24"))
 }

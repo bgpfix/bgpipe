@@ -64,7 +64,7 @@ func (s *Tag) Attach() (err error) {
 }
 
 func (s *Tag) onmsg(m *msg.Msg) bool {
-	t := m.UseTags()
+	t := &m.Tags
 	if len(s.drop) > 0 && s.drop[0] == "*" {
 		t.Reset()
 	} else {

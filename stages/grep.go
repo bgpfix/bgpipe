@@ -6,7 +6,6 @@ import (
 
 	"github.com/bgpfix/bgpfix/filter"
 	"github.com/bgpfix/bgpfix/msg"
-	"github.com/bgpfix/bgpfix/pipe"
 	"github.com/bgpfix/bgpipe/core"
 )
 
@@ -81,9 +80,8 @@ func (s *Grep) Attach() (err error) {
 
 func (s *Grep) check(m *msg.Msg) bool {
 	// evaluate the filter
-	mx := pipe.UseContext(m)
 	ev := s.evals.Get().(*filter.Eval)
-	ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps)
+	ev.Set(m, s.P.KV, s.P.Caps)
 	res := ev.Run(s.filter)
 	s.evals.Put(ev)
 

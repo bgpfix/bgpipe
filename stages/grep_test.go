@@ -12,6 +12,7 @@ import (
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
+	"github.com/bgpfix/bgpipe/core"
 )
 
 // concurrent callbacks (eg. several inputs) call the same Grep.check: no shared filter state
@@ -21,7 +22,7 @@ func TestGrepBothDirections(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := &Grep{filter: f}
+	s := &Grep{StageBase: &core.StageBase{P: p}, filter: f}
 	s.evals.New = newEval
 
 	mk := func(d meta.Dir, pfx string) *msg.Msg {
@@ -60,7 +61,7 @@ func TestGrepWithdraw(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := &Grep{filter: f, invert: true, withdraw: true}
+	s := &Grep{StageBase: &core.StageBase{P: p}, filter: f, invert: true, withdraw: true}
 	s.evals.New = newEval
 
 	m := msg.NewMsg().Switch(msg.UPDATE)
