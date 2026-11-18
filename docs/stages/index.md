@@ -43,8 +43,8 @@ Every stage accepts the following options:
 
 | Option | Description |
 |--------|-------------|
-| `-L`, `--left` | Process messages flowing left (see [Direction](#direction)) |
-| `-R`, `--right` | Process messages flowing right (see [Direction](#direction)) |
+| `-L`, `--left` | Read messages flowing left (see [Direction](#direction)) |
+| `-R`, `--right` | Read messages flowing right (see [Direction](#direction)) |
 | `-A`, `--args` | Consume all remaining CLI arguments until `--` |
 | `-W`, `--wait` *events* | Wait for given event(s) before starting |
 | `-S`, `--stop` *events* | Stop the stage after given event(s) |
@@ -69,36 +69,38 @@ Stages that support input or output filtering:
 ### Direction
 
 Messages flow through the pipeline in two directions: **right**, from the first
-stage towards the last, and **left**, the other way. The first stage is the
-left end of the pipeline, and the last stage is the right end: eg. a BGP peer,
-a file, or a live stream. Two rules decide what each stage does:
+stage towards the last, and **left**, the other way.
 
-1. **What it processes.** By default, a stage processes the messages flowing
-   right. The first stage is the exception: nothing flows right into it, so it
-   gets the messages flowing left, ie. whatever reaches the left end. Use `-R`
-   or `-L` to choose the messages flowing right or left, or `-LR` for both.
-2. **Where it sends new messages.** The first and the last stage send their
-   messages into the pipeline, away from their end: the first to the right, the
-   last to the left. Any other stage sends in the direction it processes. With
-   `-LR`, messages keep their own direction (eg. the `dir` field of
-   [JSON](../json-format.md)), and stages that hold messages to send them later
-   (eg. [combine](combine.md), [mrai](mrai.md)) never change their direction.
+A stage reads the messages flowing right, and writes new messages to the right.
+The ends of the pipeline (eg. a BGP peer, a file, or a live stream) are the
+exceptions:
+
+- The first stage reads the messages flowing left, since nothing flows right
+  into it.
+- The last stage writes to the left, back into the pipeline.
+
+Use `-L`, `-R`, or `-LR` to choose what a stage reads: the messages flowing
+left, right, or both. A stage in the middle writes in the direction it reads;
+the first and the last stage always write away from their end. With `-LR`, each
+message keeps its own direction (eg. the `dir` field of
+[JSON](../json-format.md)). Stages that hold messages and write them later (eg.
+[combine](combine.md), [mrai](mrai.md)) keep their direction too.
 
 For example:
 
-| Pipeline | Stage | Processes | Sends |
-|----------|-------|-----------|-------|
+| Pipeline | Stage | Reads | Writes |
+|----------|-------|-------|--------|
 | `read in.mrt -- grep ... -- write out.json` | read | - | right |
-| | grep | flowing right | - |
-| | write | flowing right | - |
-| `connect 192.0.2.1 -- update ... -- connect 198.51.100.1` | first connect | flowing left, to its peer | right: from its peer |
-| | update | flowing right only (use `-LR` for both) | - |
-| | last connect | flowing right, to its peer | left: from its peer |
-| `read in.mrt -- exec ./filter.py` | exec | flowing right | left: the script output |
-| `ris-live -- combine` | combine | flowing right | right |
+| | grep | right | - |
+| | write | right | - |
+| `connect 192.0.2.1 -- update ... -- connect 198.51.100.1` | first connect | left: to its peer | right: from its peer |
+| | update | right only (`-LR` for both) | - |
+| | last connect | right: to its peer | left: from its peer |
+| `read in.mrt -- exec ./filter.py` | exec | right | left: the script output |
+| `ris-live -- combine` | combine | right | right |
 
 With `-o` / `--stdout`, bgpipe prints the messages that reach either end of the
-pipeline. Use `-n` / `--explain` to see what each stage processes and sends,
+pipeline. Use `-n` / `--explain` to see what each stage reads and writes,
 without running the pipeline.
 
 ## See Also

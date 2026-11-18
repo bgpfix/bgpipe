@@ -10,9 +10,8 @@ bgpipe [...] -- stdout [OPTIONS]
 
 ## Description
 
-The **stdout** stage writes BGP messages to standard output. It is a consumer
-stage that supports bidirectional operation with `-LR`; without `-LR`, it
-prints only messages in the stage direction.
+The **stdout** stage writes BGP messages to standard output. It prints the
+messages it reads (see [direction](index.md#direction)), or both directions with `-LR`.
 
 The stage always mirrors messages - it never consumes them from the pipeline,
 so downstream stages still see every message that stdout prints.

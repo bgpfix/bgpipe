@@ -22,8 +22,8 @@ Tags are useful for:
 - Passing information between stages (e.g., from [rov](rov.md) to [grep](grep.md))
 - Filtering based on custom criteria using `tag[key]` in [filter expressions](../filters.md)
 
-This stage supports bidirectional operation with `-LR`. Without `-LR`, it
-applies only to messages in the stage direction.
+It applies to the messages it reads (see [direction](index.md#direction)), or to both
+directions with `-LR`.
 
 ## Options
 

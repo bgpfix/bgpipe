@@ -32,8 +32,8 @@ both announcements and withdrawals (unless `--permanent` is set).
 With length limits only (`--min-length` / `--max-length`), no state is kept;
 the count limits need about 250 MB of memory per million prefixes.
 
-This stage supports bidirectional operation with `-LR`, aggregating counts
-from both directions. Without `-LR`, it tracks only the stage direction.
+It counts the messages it reads (see [direction](index.md#direction)); with `-LR`,
+it adds up both directions.
 
 ## Options
 

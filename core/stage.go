@@ -110,7 +110,7 @@ type StageBase struct {
 	IsLeft  bool     // reads messages flowing left (R->L)?
 	IsBidir bool     // true iff IsRight && IsLeft
 	Dir     meta.Dir // the flows s reads (IsLeft/IsRight translated, can be DIR_LR)
-	Send    meta.Dir // where s sends new messages: away from its end if first/last, else Dir (LR if bidir)
+	Send    meta.Dir // where s writes new messages: away from its end if first/last, else Dir (LR if bidir)
 
 	callbacks []*pipe.Callback // registered callbacks
 	handlers  []*pipe.Handler  // registered handlers
@@ -180,8 +180,8 @@ func (b *Bgpipe) NewStage(cmd string) *StageBase {
 	s.Stage = newfunc(s)
 
 	// add global CLI flags
-	f.BoolP("left", "L", false, "process messages flowing left")
-	f.BoolP("right", "R", false, "process messages flowing right")
+	f.BoolP("left", "L", false, "read messages flowing left")
+	f.BoolP("right", "R", false, "read messages flowing right")
 	f.BoolP("args", "A", false, "consume all CLI arguments till --")
 	f.StringSliceP("wait", "W", []string{}, "wait for given event before starting")
 	f.StringSliceP("stop", "S", []string{}, "stop after given event is handled")

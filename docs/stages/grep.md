@@ -19,8 +19,8 @@ The *FILTER* argument is a BGP filter expression that tests message attributes
 such as prefix, AS path, communities, and tags. See the
 [Message Filters](../filters.md) reference for complete syntax.
 
-This stage supports bidirectional operation with `-LR`. Without `-LR`, it
-processes only messages in the stage direction. It matches UPDATE messages by
+It filters the messages it reads (see [direction](index.md#direction)), or both
+directions with `-LR`. It matches UPDATE messages by
 default; non-UPDATE messages (OPEN, KEEPALIVE, NOTIFICATION) are dropped unless explicitly allowed.
 
 With `--withdraw`, an UPDATE that would be dropped is turned into a withdrawal
