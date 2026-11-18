@@ -88,6 +88,8 @@ Supported stages (run <stage> -h to get its help)
 
 From the above output, you can learn the basic syntax of a *pipeline*, which is a sequence of *stages*. Usually the stages are separated by `--` characters; otherwise, `bgpipe` will try to separate the stages automatically, although this can lead to ambiguities for more complex pipelines. Global `bgpipe` options are specified before the first stage, and options for each stage are specified immediately after the stage name.
 
+The `--events` and `--kill` options, and the `--wait` and `--stop` stage options, take event names: eg. `ESTABLISHED` when the BGP session is up, or `limit/session` when a stage reports a problem. See [Events](events.md) for all of them.
+
 A *stage* is a specific processing step in the pipeline, such as connecting to a BGP endpoint, filtering messages, or executing a command. You can think of it as a building block that performs a specific task in the overall message processing flow. For a catalog of stages and their options, see the [Stages overview](stages/index.md) and the per-stage docs. In order to learn more about a specific stage, you can run `bgpipe <stage> -h`, for example:
 
 ```

@@ -144,7 +144,7 @@ These can be used in downstream [filters](../filters.md).
 | `--invalid` | string | `withdraw` | Action for INVALID prefixes: `withdraw`, `filter`, `drop`, `split`, `keep` |
 | `--strict` | bool | `false` | Treat NOT_FOUND as INVALID |
 | `--tag` | bool | `true` | Add `rov/status` and `rov/<prefix>` tags |
-| `--event` | string | | Emit named event on INVALID prefixes |
+| `--event` | string | | Emit named event on INVALID prefixes (see [Events](../events.md)) |
 | `--no-wait` | bool | `false` | Start before the RPKI cache is ready |
 
 ### Prometheus Metrics

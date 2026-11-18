@@ -36,6 +36,7 @@ nav:
   - ExaBGP: exabgp.md
   - Filtering: filters.md
   - Tags: tags.md
+  - Events: events.md
   - HTTP API: http-api.md
   - Docker: docker.md
 

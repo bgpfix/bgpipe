@@ -63,7 +63,8 @@ The stage emits events prefixed with `limit/` when limits are violated:
 | `limit/block` | Per-block prefix count exceeds `--block` |
 
 Use `--events limit/session` on bgpipe to log these events, or
-`--kill limit/session` to terminate the session when a limit is hit.
+`--kill limit/session` to terminate the session when a limit is hit. See
+[Events](../events.md).
 
 ## Examples
 
@@ -100,4 +101,5 @@ bgpipe \
 [grep](grep.md),
 [rov](rov.md),
 [Kirin Attack](https://kirin-attack.github.io/),
+[Events](../events.md),
 [Stages overview](index.md)

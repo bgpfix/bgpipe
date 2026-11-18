@@ -84,4 +84,5 @@ fill them in from `PEER_IP`, `PEER_AS`, `LOCAL_IP` and `LOCAL_AS`, which
 
 [JSON format](json-format.md),
 [Message Filters](filters.md),
+[Events](events.md),
 [tag](stages/tag.md)

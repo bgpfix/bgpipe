@@ -42,7 +42,7 @@ filter. For example, `stdout --if 'ipv6'` prints only IPv6 updates.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--keep` | bool | `false` | Evaluate the filter but never drop (requires `--event-*`) |
-| `--event-match` | string | | Emit this event when a message matches |
+| `--event-match` | string | | Emit this event when a message matches (see [Events](../events.md)) |
 | `--event-fail` | string | | Emit this event when a message does not match |
 | `--kill-match` | bool | `false` | Kill the process on filter match |
 | `--kill-fail` | bool | `false` | Kill the process on filter failure |

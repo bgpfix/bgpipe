@@ -79,7 +79,7 @@ For INVALID paths, the failing hop is reported in `aspa/invalid-hop` as
 |--------|------|---------|-------------|
 | `--invalid` | string | `withdraw` | Action for INVALID paths: `withdraw`, `drop`, `keep` |
 | `--tag` | bool | `true` | Add `aspa/status` and `aspa/invalid-hop` tags |
-| `--event` | string | | Emit named event on INVALID paths |
+| `--event` | string | | Emit named event on INVALID paths (see [Events](../events.md)) |
 | `--role` | string | (required) | Peer's BGP role: `provider`, `customer`, `peer`, `rs`, `rs-client`, or `auto` (see above) |
 | `--peer-tag` | string | | Read the peer ASN from given message tag (eg. `PEER_AS`) instead of OPEN |
 | `--first-hop` | bool | `true` | Check that `path[0]` equals the neighbor ASN; disable for collector feeds ([RFC 7947](https://datatracker.ietf.org/doc/html/rfc7947)) |

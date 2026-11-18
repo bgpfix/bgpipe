@@ -78,8 +78,8 @@ To write a BMP session to a file instead, use [write](write.md) with
 | `bmp/peer-up` | router, peer IP, peer AS | Peer Up notification from a router |
 | `bmp/peer-down` | router, peer IP, peer AS | Peer Down notification from a router |
 
-Use eg. `--events bmp/peer-down` on bgpipe to log them, or `exec` a script on
-them. After a Peer Down, all routes of that peer are implicitly withdrawn;
+Use eg. `--events bmp/peer-down` on bgpipe to log them, or `--kill` to stop
+on them; see [Events](../events.md). After a Peer Down, all routes of that peer are implicitly withdrawn;
 the stage does not keep a RIB, so it does not send the withdrawals.
 
 ### Prometheus Metrics
