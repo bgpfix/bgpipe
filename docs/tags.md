@@ -68,9 +68,17 @@ from a given source, or to drop tags that should not be stored:
 bgpipe -- read updates.mrt -- tag --add source=rv2 --drop mrt/interface -- write updates.json
 ```
 
-When reading JSON, tags are read back from the last element of each message;
-`write --format mrt` and `bmp --write` use the well-known tags to fill in the
-peer headers.
+Tags are saved in JSON files, and restored when such a file is read:
+
+```bash
+bgpipe -- ris-live -- write ris.json
+bgpipe -- read ris.json -- grep 'tag[COLLECTOR] == rrc01'
+```
+
+MRT and BMP have no place for tags, except the peer headers: the
+[write](stages/write.md) stage with MRT output, and [bmp --write](stages/bmp.md),
+fill them in from `PEER_IP`, `PEER_AS`, `LOCAL_IP` and `LOCAL_AS`, which
+[read](stages/read.md) and [bmp](stages/bmp.md) restore from there.
 
 ## See Also
 
