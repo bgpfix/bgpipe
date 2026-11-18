@@ -381,7 +381,7 @@ func (s *Bmp) dropLocked(conn net.Conn, wait time.Duration) {
 // peerUp returns the Peer Up for b, made from m: if its peer is the live BGP
 // neighbor, use the real OPENs; else return nil, to have it synthesized.
 func (s *Bmp) peerUp(b *bmp.Bmp, m *msg.Msg) *bmp.PeerUp {
-	if _, ok := pipe.GetTags(m)["PEER_IP"]; ok {
+	if pipe.GetTags(m).Get("PEER_IP") != "" {
 		return nil // not a live session
 	}
 

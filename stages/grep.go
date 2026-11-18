@@ -83,7 +83,7 @@ func (s *Grep) check(m *msg.Msg) bool {
 	// evaluate the filter
 	mx := pipe.UseContext(m)
 	ev := s.evals.Get().(*filter.Eval)
-	ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
+	ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.Tags)
 	res := ev.Run(s.filter)
 	s.evals.Put(ev)
 

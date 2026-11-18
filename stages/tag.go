@@ -2,7 +2,6 @@ package stages
 
 import (
 	"fmt"
-	"maps"
 	"slices"
 	"strings"
 
@@ -65,36 +64,29 @@ func (s *Tag) Attach() (err error) {
 }
 
 func (s *Tag) onmsg(m *msg.Msg) bool {
-	mx := pipe.GetContext(m) // can be nil
-	mod := false
+	mx := pipe.UseContext(m)
+	n := len(mx.Tags)
 
 	// drop tags
-	if len(s.drop) > 0 && mx.HasTags() {
-		if s.drop[0] == "*" {
-			mod = mx.DropTags()
-		} else {
-			for _, tag := range s.drop {
-				if mx.DropTag(tag) {
-					mod = true
-				}
-			}
+	if len(s.drop) > 0 && s.drop[0] == "*" {
+		mx.Tags = mx.Tags[:0]
+	} else {
+		for _, tag := range s.drop {
+			mx.Tags.Set(tag, "")
 		}
 	}
+	mod := len(mx.Tags) != n
 
 	// add SRC tag with source stage name
-	if s.src && mx != nil {
-		if mx.Input != nil && mx.Input.Name != "" {
-			mod = true
-			tags := mx.UseTags()
-			tags["SRC"] = mx.Input.Name
-		}
+	if s.src && mx.Input != nil && mx.Input.Name != "" {
+		mod = true
+		mx.Tags.Set("SRC", mx.Input.Name)
 	}
 
 	// add tags
-	if len(s.add) > 0 {
+	for k, v := range s.add {
 		mod = true
-		tags := pipe.UseTags(m)
-		maps.Copy(tags, s.add)
+		mx.Tags.Set(k, v)
 	}
 
 	if mod {

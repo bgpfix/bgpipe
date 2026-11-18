@@ -107,7 +107,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	s.cnt_msg.Inc()
 
 	u := &m.Update
-	tags := pipe.UseTags(m)
+	tags := &pipe.UseContext(m).Tags
 
 	// origin AS from AS_PATH
 	origin := u.AsPath().Origin()
@@ -125,7 +125,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 			s.cnt_valid.Inc()
 			valid = append(valid, p)
 			if s.tag {
-				tags["rov/"+p.String()] = "VALID"
+				tags.Set("rov/"+p.String(), "VALID")
 			}
 			return false
 
@@ -133,7 +133,7 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 			s.cnt_nf.Inc()
 			not_found = append(not_found, p)
 			if s.tag {
-				tags["rov/"+p.String()] = "NOT_FOUND"
+				tags.Set("rov/"+p.String(), "NOT_FOUND")
 			}
 			return false
 
@@ -164,18 +164,18 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 		if do_split {
 			m2 = s.P.GetMsg().Switch(msg.UPDATE)
 			m2.Time = m.Time
-			t2 = pipe.UseTags(m2)
-			for k, v := range tags {
-				if !strings.HasPrefix(k, "rov/") {
-					t2[k] = v
+			t2 = &pipe.UseContext(m2).Tags
+			for _, t := range *tags {
+				if !strings.HasPrefix(t.Key, "rov/") {
+					t2.Set(t.Key, t.Val)
 				}
 			}
 		}
 
 		if s.tag {
-			t2["rov/status"] = "INVALID"
+			t2.Set("rov/status", "INVALID")
 			for _, p := range invalid {
-				t2["rov/"+p.String()] = "INVALID"
+				t2.Set("rov/"+p.String(), "INVALID")
 			}
 		}
 
@@ -202,9 +202,9 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 			if s.tag {
 				switch {
 				case len(valid) > 0:
-					tags["rov/status"] = "VALID"
+					tags.Set("rov/status", "VALID")
 				case len(not_found) > 0:
-					tags["rov/status"] = "NOT_FOUND"
+					tags.Set("rov/status", "NOT_FOUND")
 				}
 			}
 		}
@@ -215,10 +215,10 @@ func (s *Rov) validateMsg(m *msg.Msg) bool {
 	} else if s.tag {
 		switch {
 		case len(not_found) > 0:
-			tags["rov/status"] = "NOT_FOUND"
+			tags.Set("rov/status", "NOT_FOUND")
 			m.DropJSON()
 		case len(valid) > 0:
-			tags["rov/status"] = "VALID"
+			tags.Set("rov/status", "VALID")
 			m.DropJSON()
 		}
 	}

@@ -331,13 +331,13 @@ func (s *RisLive) process(buf []byte) (ts time.Time, _ error) {
 
 	// add metadata
 	msg.Time = ts
-	tags := pipe.UseContext(msg).UseTags()
-	tags["PEER_IP"] = peer_ip
-	tags["PEER_AS"] = peer_asn
-	tags["RIS_ID"] = id
-	tags["RIS_HOST"] = host
+	tags := &pipe.UseContext(msg).Tags
+	tags.Set("PEER_IP", peer_ip)
+	tags.Set("PEER_AS", peer_asn)
+	tags.Set("RIS_ID", id)
+	tags.Set("RIS_HOST", host)
 	if col, _, _ := strings.Cut(host, "."); len(col) > 0 {
-		tags["COLLECTOR"] = col
+		tags.Set("COLLECTOR", col)
 	}
 
 	// write to pipe

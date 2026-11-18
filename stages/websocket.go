@@ -335,8 +335,8 @@ func (s *Websocket) connReader(conn *websocket.Conn, done chan error) error {
 	// tag incoming messages with the remote addr
 	remote := conn.RemoteAddr().String()
 	cb := func(m *msg.Msg) bool {
-		tags := pipe.UseContext(m).UseTags()
-		tags["websocket/remote"] = remote
+		tags := &pipe.UseContext(m).Tags
+		tags.Set("websocket/remote", remote)
 		return true
 	}
 

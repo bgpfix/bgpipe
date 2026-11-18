@@ -25,7 +25,7 @@ func TestRov_WithdrawsOnlyInvalidPrefixes(t *testing.T) {
 	require.True(t, s.validateMsg(m))
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(m.Update.AllReach()))
 	require.Equal(t, []string{"198.51.100.0/24"}, prefixStrings(m.Update.AllUnreach()))
-	require.Equal(t, "INVALID", pipe.UseTags(m)["rov/status"])
+	require.Equal(t, "INVALID", pipe.GetTags(m).Get("rov/status"))
 }
 
 func TestRov_PureIPv6WithdrawalDropsPathAttrs(t *testing.T) {
@@ -77,7 +77,7 @@ func TestRov_KeepTagsOnly(t *testing.T) {
 	require.True(t, s.validateMsg(m))
 	require.Equal(t, []string{"192.0.2.0/24"}, prefixStrings(m.Update.AllReach()))
 	require.False(t, m.Update.HasUnreach())
-	tags := pipe.UseTags(m)
-	require.Equal(t, "INVALID", tags["rov/status"])
-	require.Equal(t, "INVALID", tags["rov/192.0.2.0/24"])
+	tags := &pipe.UseContext(m).Tags
+	require.Equal(t, "INVALID", tags.Get("rov/status"))
+	require.Equal(t, "INVALID", tags.Get("rov/192.0.2.0/24"))
 }

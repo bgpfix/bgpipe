@@ -147,13 +147,13 @@ func TestAspa_PeerTagFirstHopCheck(t *testing.T) {
 	// matching tag -> first-hop OK, path attested -> kept
 	m := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m, 65010, 65020)
-	pipe.UseTags(m)["PEER_AS"] = "65010"
+	pipe.UseContext(m).Tags.Set("PEER_AS", "65010")
 	require.True(t, s.validateMsg(m))
 
 	// mismatching tag -> first-hop check fails -> dropped
 	m2 := newReachUpdate(meta.DIR_R, "192.0.2.0/24")
 	setAsPathSeq(m2, 65010, 65020)
-	pipe.UseTags(m2)["PEER_AS"] = "65099"
+	pipe.UseContext(m2).Tags.Set("PEER_AS", "65099")
 	require.False(t, s.validateMsg(m2))
 
 	// missing tag -> first-hop check disabled -> kept

@@ -121,7 +121,7 @@ func (s *Metrics) onMsg(m *msg.Msg) bool {
 	if len(s.rules) > 0 {
 		mx := pipe.UseContext(m)
 		ev := s.evals.Get().(*filter.Eval)
-		ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.GetTags())
+		ev.Set(m, mx.Pipe.KV, mx.Pipe.Caps, mx.Tags)
 		for i := range s.rules {
 			if ev.Run(s.rules[i].filter) {
 				s.rules[i].counter.Inc()

@@ -203,7 +203,7 @@ func unicastPrefixes(m *msg.Msg) (pfx []nlri.Prefix, reach bool) {
 // peerKey identifies the BGP peer of m: its direction, collector and peer tags (if any)
 func peerKey(m *msg.Msg) string {
 	tags := pipe.GetTags(m)
-	return string(rune('0'+m.Dir)) + tags["COLLECTOR"] + "|" + tags["PEER_IP"] + "|" + tags["PEER_AS"]
+	return string(rune('0'+m.Dir)) + tags.Get("COLLECTOR") + "|" + tags.Get("PEER_IP") + "|" + tags.Get("PEER_AS")
 }
 
 // flush emits the UPDATEs of peers with the first one older than t (all if t is zero)

@@ -226,7 +226,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	}
 
 	u := &m.Update
-	tags := pipe.UseTags(m)
+	tags := &pipe.UseContext(m).Tags
 
 	if !u.HasReach() {
 		return true // withdrawal-only, no AS_PATH to validate
@@ -242,7 +242,7 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	asn := peer.asn
 	if s.peer_tag != "" {
 		asn = 0
-		if v, err := strconv.ParseUint(tags[s.peer_tag], 10, 32); err == nil {
+		if v, err := strconv.ParseUint(tags.Get(s.peer_tag), 10, 32); err == nil {
 			asn = uint32(v)
 		}
 	}
@@ -273,19 +273,19 @@ func (s *Aspa) validateMsg(m *msg.Msg) bool {
 	case rpki.ASPA_VALID:
 		s.cnt_valid.Inc()
 		if s.tag {
-			tags["aspa/status"] = "VALID"
+			tags.Set("aspa/status", "VALID")
 		}
 	case rpki.ASPA_UNKNOWN:
 		s.cnt_unk.Inc()
 		if s.tag {
-			tags["aspa/status"] = "UNKNOWN"
+			tags.Set("aspa/status", "UNKNOWN")
 		}
 	case rpki.ASPA_INVALID:
 		s.cnt_inv.Inc()
 		if s.tag {
-			tags["aspa/status"] = "INVALID"
+			tags.Set("aspa/status", "INVALID")
 			if failCAS != 0 {
-				tags["aspa/invalid-hop"] = fmt.Sprintf("%d %d", failCAS, failPAS)
+				tags.Set("aspa/invalid-hop", fmt.Sprintf("%d %d", failCAS, failPAS))
 			}
 		}
 	}

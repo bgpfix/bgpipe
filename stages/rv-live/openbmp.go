@@ -58,24 +58,24 @@ func (s *RvLive) processRecord(record *kgo.Record, om *bmp.OpenBmp, bm *bmp.Bmp)
 	}
 
 	// add tags
-	tags := pipe.UseContext(m).UseTags()
+	tags := &pipe.UseContext(m).Tags
 	if bm.Peer.Address.IsValid() && !bm.Peer.Address.IsUnspecified() {
-		tags["PEER_IP"] = bm.Peer.Address.String()
+		tags.Set("PEER_IP", bm.Peer.Address.String())
 	}
 	if bm.Peer.AS != 0 {
-		tags["PEER_AS"] = strconv.FormatUint(uint64(bm.Peer.AS), 10)
+		tags.Set("PEER_AS", strconv.FormatUint(uint64(bm.Peer.AS), 10))
 	}
 
 	// NB: routeviews collector is their internal BMP machine name (bmp*)
 	if om.CollectorName != "" {
-		tags["RV_COLLECTOR"] = om.CollectorName
+		tags.Set("RV_COLLECTOR", om.CollectorName)
 	}
 
 	// NB: routeviews puts BGP collector in the router name field
 	if om.RouterName != "" {
-		tags["COLLECTOR"] = om.RouterName
+		tags.Set("COLLECTOR", om.RouterName)
 	} else if col, _ := parseTopic(record.Topic); col != "" {
-		tags["COLLECTOR"] = col
+		tags.Set("COLLECTOR", col)
 	}
 
 	// NB: own the data before parsing, the upper layer references it
