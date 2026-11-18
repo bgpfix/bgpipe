@@ -7,7 +7,6 @@ import (
 
 	"github.com/bgpfix/bgpfix/afi"
 	"github.com/bgpfix/bgpfix/attrs"
-	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/msg"
 	"github.com/bgpfix/bgpfix/nlri"
 	"github.com/bgpfix/bgpfix/pipe"
@@ -48,8 +47,8 @@ func NewCombine(parent *core.StageBase) core.Stage {
 	o := &s.Options
 	o.Descr = "combine UPDATEs with the same attributes into one"
 	o.IsProducer = true
+	o.IsTransit = true
 	o.FilterIn = true
-	o.Bidir = true
 	o.StopUpstream = true
 
 	f := o.Flags
@@ -139,7 +138,7 @@ func (s *Combine) onMsg(m *msg.Msg) bool {
 		return false
 	}
 	pipe.Take(m)
-	g := &combineGroup{m: m, size: m.Len()}
+	g := &combineGroup{m: m, size: m.Len() + 1} // +1: MP attributes may need the extended length
 	cp.groups = append(cp.groups, g)
 	cp.bykey[key] = g
 	return false
@@ -204,14 +203,14 @@ func unicastPrefixes(m *msg.Msg) (pfx []nlri.Prefix, reach bool) {
 
 // peer identifies the BGP peer of a message: its direction, collector and peer tags (if any)
 type peer struct {
-	dir       meta.Dir
-	collector string
-	ip        netip.Addr
-	as        uint32
+	collector, router, rib, rd string
+	ip                         netip.Addr
+	as                         uint32
 }
 
 func peerKey(m *msg.Msg) peer {
-	return peer{m.Dir, m.Tags.Collector, m.Tags.PeerIP, m.Tags.PeerAS}
+	t := &m.Tags
+	return peer{t.Collector, t.Router, t.Get("bmp/rib"), t.Get("bmp/rd"), t.PeerIP, t.PeerAS}
 }
 
 // flush emits the UPDATEs of peers with the first one older than t (all if t is zero)

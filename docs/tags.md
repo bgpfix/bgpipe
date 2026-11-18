@@ -34,7 +34,7 @@ invalid value (eg. `PEER_AS` of `abc`) is dropped.
 | `SRC` | Name of the stage the message came from | [tag --src](stages/tag.md) |
 
 [combine](stages/combine.md) and [mrai](stages/mrai.md) identify a BGP peer by
-`COLLECTOR`, `PEER_IP` and `PEER_AS`.
+`COLLECTOR`, `ROUTER`, `PEER_IP` and `PEER_AS` (and the BMP view: `bmp/rib`, `bmp/rd`).
 
 ## Stage Tags
 

@@ -98,14 +98,17 @@ func (s *Exec) Run() error {
 	}()
 
 	rerr := s.eio.ReadStream(s.cmd_out, nil)
+	if rerr != nil {
+		s.cmd_exec.Process.Kill() // NB: it may block writing to us
+	}
 	err := s.cmd_exec.Wait() // NB: after all output is read
 	s.Err(err).Msg("command terminated")
 	if s.Ctx.Err() != nil {
 		return nil // stopped
-	} else if err != nil {
-		return err
+	} else if rerr != nil {
+		return rerr
 	}
-	return rerr
+	return err
 }
 
 func (s *Exec) stderrReader() {

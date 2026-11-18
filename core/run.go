@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/bgpfix/bgpfix/meta"
 	"github.com/bgpfix/bgpfix/pipe"
 )
 
@@ -85,17 +86,24 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 	return false
 }
 
-// stopUpstream stops s when all producers before it, in its direction, are done.
+// stopUpstream stops s when all producers that feed its callbacks are done.
 // NB: a stage is done after its inputs are drained, so s saw all their messages
 // Does nothing if there are no such producers (eg. s is the source).
 func (s *StageBase) stopUpstream() {
+	var dir meta.Dir // directions s captures
+	for _, cb := range s.callbacks {
+		dir |= cb.Dir
+		if cb.Dir == 0 {
+			dir = meta.DIR_LR
+		}
+	}
 	n := 0
 	for _, st := range append(slices.Clone(s.B.Stages), s.B.Autos...) {
 		if st == nil || st == s || !st.Options.IsProducer {
 			continue
-		} else if (s.IsRight && st.IsRight && st.Index < s.Index) || (s.IsLeft && st.IsLeft && st.Index > s.Index) {
+		} else if (dir&meta.DIR_R != 0 && st.IsRight && st.Index < s.Index) || (dir&meta.DIR_L != 0 && st.IsLeft && st.Index > s.Index) {
 			select {
-			case <-st.Ctx.Done():
+			case <-st.stopdone:
 				n++
 			case <-s.Ctx.Done():
 				return

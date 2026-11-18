@@ -23,8 +23,8 @@ after `--window`, or when adding a prefix would make it larger than
 `--max-size`. If a prefix changes again before that, the pending UPDATEs of its
 peer are sent first.
 
-A peer is identified by the message direction, and the `COLLECTOR`, `PEER_IP`
-and `PEER_AS` [tags](../json-format.md) (set by eg. read, bmp, rv-live and
+A peer is identified by the `COLLECTOR`, `ROUTER`, `PEER_IP`, `PEER_AS`,
+`bmp/rib` and `bmp/rd` [tags](../tags.md) (set by eg. read, bmp, rv-live and
 ris-live): only UPDATEs of the same peer are combined, and the combined UPDATE
 has the tags of the first one. Only IPv4 and IPv6 unicast UPDATEs that only announce,
 or only withdraw, prefixes are combined. All other messages (eg. KEEPALIVE,

@@ -66,6 +66,7 @@ type StageOptions struct {
 	IsConsumer   bool          // consumes messages? (= reads Line.Out?)
 	IsStdin      bool          // reads from stdin?
 	IsStdout     bool          // writes to stdout?
+	IsTransit    bool          // re-sends the messages it takes, in their direction (default -R even if last)
 	Bidir        bool          // allow -LR (bidir mode)?
 	FilterIn     bool          // allow stage input filtering? (must have callbacks)
 	FilterOut    bool          // allow stage output filtering? (must have inputs)

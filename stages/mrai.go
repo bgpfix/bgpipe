@@ -101,6 +101,11 @@ func (s *Mrai) onMsg(m *msg.Msg) bool {
 		sp.clock = m.Time
 	}
 
+	// window over? send what it held, before m
+	if len(sp.msgs) > 0 && !sp.clock.Before(sp.since.Add(s.window)) {
+		s.emit(sp)
+	}
+
 	pipe.Take(m)
 	switch {
 	case len(pfx) == 0: // eg. End-of-RIB, KEEPALIVE, mixed UPDATE: keep the order
@@ -113,16 +118,12 @@ func (s *Mrai) onMsg(m *msg.Msg) bool {
 		s.in.WriteMsg(m)
 	default: // announcement: hold
 		if len(sp.msgs) == 0 {
-			sp.since = m.Time
+			sp.since = sp.clock
 		}
 		sp.msgs = append(sp.msgs, m)
 		for _, p := range pfx {
 			sp.last[p] = m
 		}
-	}
-
-	if len(sp.msgs) > 0 && !sp.clock.Before(sp.since.Add(s.window)) {
-		s.emit(sp)
 	}
 	return false
 }

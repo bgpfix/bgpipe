@@ -106,9 +106,12 @@ func (s *Grep) check(m *msg.Msg) bool {
 	}
 
 	// NB: in a live session, a dropped UPDATE could leave its prefixes reachable
-	// over an older path: withdraw them instead (RFC 7606 treat-as-withdraw)
-	if s.withdraw && m.Type == msg.UPDATE && m.Update.HasReach() {
-		m.Update.Withdraw()
+	// over an older path: withdraw them instead (RFC 7606 treat-as-withdraw),
+	// and never drop withdrawals
+	if s.withdraw && m.Type == msg.UPDATE {
+		if m.Update.HasReach() {
+			m.Update.Withdraw()
+		}
 		return true
 	}
 	return false

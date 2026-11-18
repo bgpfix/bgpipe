@@ -169,7 +169,12 @@ func (b *Bgpipe) Run() error {
 // (see StageOptions.StopTimeout). Auto-added stages go last, so that
 // eg. the --stdout output buffer is fully drained before process exit.
 func (b *Bgpipe) stopStages() {
-	for _, s := range b.Stages {
+	for _, s := range b.Stages { // R flow: left to right
+		if s != nil && s.IsRight {
+			s.runStop(nil)
+		}
+	}
+	for _, s := range slices.Backward(b.Stages) { // L flow: right to left
 		s.runStop(nil)
 	}
 	for _, s := range b.Autos {

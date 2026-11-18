@@ -201,7 +201,7 @@ func (s *StageBase) attach() error {
 		s.IsRight = true
 
 		// exceptions
-		if s.IsLast && s.Options.IsProducer {
+		if s.IsLast && s.Options.IsProducer && !s.Options.IsTransit {
 			s.IsRight = false
 		} else if s.IsFirst && !s.Options.IsProducer {
 			s.IsRight = false

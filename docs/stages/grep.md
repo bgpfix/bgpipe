@@ -24,7 +24,8 @@ processes only messages in the stage direction. It matches UPDATE messages by
 default; non-UPDATE messages (OPEN, KEEPALIVE, NOTIFICATION) are dropped unless explicitly allowed.
 
 With `--withdraw`, an UPDATE that would be dropped is turned into a withdrawal
-of all its prefixes instead ("treat-as-withdraw", [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)).
+of all its prefixes instead ("treat-as-withdraw", [RFC 7606](https://datatracker.ietf.org/doc/html/rfc7606)),
+and withdrawals are never dropped.
 Use it on live BGP sessions: a dropped UPDATE may replace an earlier
 announcement of the same prefixes, which the peer would otherwise keep using.
 
