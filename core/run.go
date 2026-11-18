@@ -87,19 +87,24 @@ func (s *StageBase) runStart(ev *pipe.Event) bool {
 
 // stopUpstream stops s when all producers before it, in its direction, are done.
 // NB: a stage is done after its inputs are drained, so s saw all their messages
+// Does nothing if there are no such producers (eg. s is the source).
 func (s *StageBase) stopUpstream() {
+	n := 0
 	for _, st := range append(slices.Clone(s.B.Stages), s.B.Autos...) {
 		if st == nil || st == s || !st.Options.IsProducer {
 			continue
 		} else if (s.IsRight && st.IsRight && st.Index < s.Index) || (s.IsLeft && st.IsLeft && st.Index > s.Index) {
 			select {
 			case <-st.Ctx.Done():
+				n++
 			case <-s.Ctx.Done():
 				return
 			}
 		}
 	}
-	s.runStop(nil)
+	if n > 0 {
+		s.runStop(nil)
+	}
 }
 
 // runStop requests to stop Stage.Run; ev may be nil.

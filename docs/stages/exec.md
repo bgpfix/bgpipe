@@ -38,8 +38,6 @@ all arguments up to the next `--` are passed to the command.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--keep-stdin` | bool | `false` | Keep running if the command's stdin is closed |
-| `--keep-stdout` | bool | `false` | Keep running if the command's stdout is closed |
 | `--format` | string | `json` | Data format: `json`, `raw`, `mrt`, `exa`, `bmp`, or `obmp` |
 | `--type` | strings | | Process only messages of given type(s) |
 | `--skip` | strings | | Skip messages of given type(s) |
