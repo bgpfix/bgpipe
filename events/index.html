@@ -1714,7 +1714,8 @@ to start or stop stages at the right moment, or to kill the session.</p>
 </tr>
 </tbody>
 </table>
-<p>A stage is named after its command (eg. <code>listen</code>, <code>limit</code>). Mind the case: a
+<p>A stage is named after its command (eg. <a href="../stages/listen/">listen</a>,
+<a href="../stages/limit/">limit</a>). Mind the case: a
 lowercase name with no slash is a stage, so <code>--events established</code> waits for a
 stage called <code>established</code>. Write the BGP session events in capitals.</p>
 <h2 id="bgp-session-events">BGP Session Events<a class="headerlink" href="#bgp-session-events" title="Permanent link">&para;</a></h2>
@@ -1781,7 +1782,7 @@ stage called <code>established</code>. Write the BGP session events in capitals.
 <tbody>
 <tr>
 <td><code>PREPARE</code></td>
-<td>The stage starts preparing (eg. <code>connect</code> dials its peer, <code>listen</code> waits for one)</td>
+<td>The stage starts preparing (eg. <a href="../stages/connect/">connect</a> dials its peer, <a href="../stages/listen/">listen</a> waits for one)</td>
 </tr>
 <tr>
 <td><code>READY</code></td>
@@ -1820,25 +1821,25 @@ and <code>--kill</code>, and for all four in <code>--events</code>.</p>
 <td><code>limit/short</code></td>
 <td>prefix, origin AS</td>
 <td>Prefix shorter than <code>--min-length</code></td>
-<td>limit</td>
+<td><a href="../stages/limit/#events">limit</a></td>
 </tr>
 <tr>
 <td><code>limit/session</code></td>
 <td>prefix, origin AS, count</td>
 <td>Too many prefixes in the session (<code>--session</code>)</td>
-<td>limit</td>
+<td><a href="../stages/limit/#events">limit</a></td>
 </tr>
 <tr>
 <td><code>limit/origin</code></td>
 <td>prefix, origin AS, count</td>
 <td>Too many prefixes from one origin AS (<code>--origin</code>)</td>
-<td>limit</td>
+<td><a href="../stages/limit/#events">limit</a></td>
 </tr>
 <tr>
 <td><code>limit/block</code></td>
 <td>prefix, origin AS, count</td>
 <td>Too many prefixes in one IP block (<code>--block</code>)</td>
-<td>limit</td>
+<td><a href="../stages/limit/#events">limit</a></td>
 </tr>
 <tr>
 <td><code>bmp/peer-up</code></td>
@@ -1850,7 +1851,7 @@ and <code>--kill</code>, and for all four in <code>--events</code>.</p>
 <td><code>bmp/peer-down</code></td>
 <td>router, peer IP, peer AS</td>
 <td>A monitored peer is down</td>
-<td>bmp</td>
+<td><a href="../stages/bmp/#events">bmp</a></td>
 </tr>
 <tr>
 <td><code>grep/</code><em>name</em></td>
@@ -1872,8 +1873,8 @@ and <code>--kill</code>, and for all four in <code>--events</code>.</p>
 </tr>
 </tbody>
 </table>
-<p><code>grep</code>, <code>rov</code> and <code>aspa</code> emit events only if you name them, eg.
-<code>rov --event dropped</code> emits <code>rov/dropped</code>. Run <code>bgpipe STAGE -h</code> to see the
+<p><a href="../stages/grep/">grep</a>, <a href="../stages/rov/">rov</a> and <a href="../stages/aspa/">aspa</a> emit events only if you name
+them, eg. <code>rov --event dropped</code> emits <code>rov/dropped</code>. Run <code>bgpipe STAGE -h</code> to see the
 events of a stage.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Log the session coming up, and every prefix limit violation:</p>
