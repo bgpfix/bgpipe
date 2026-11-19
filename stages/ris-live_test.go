@@ -71,6 +71,23 @@ func TestRisLiveFallsBehind(t *testing.T) {
 	require.ErrorContains(t, s.stream(resp), "delay too high")
 }
 
+// a stream that delivers only old messages must end after the grace period
+func TestRisLiveOnlyBacklog(t *testing.T) {
+	s := newTestRis(t)
+	s.delay_err = time.Second
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		for range 3 {
+			io.WriteString(w, keepalive(time.Now().Add(-10*time.Second)))
+			w.(http.Flusher).Flush()
+			time.Sleep(600 * time.Millisecond)
+		}
+	}))
+	defer srv.Close()
+	resp, err := http.Get(srv.URL)
+	require.NoError(t, err)
+	require.ErrorContains(t, s.stream(resp), "delay too high")
+}
+
 // any connection error must be retried with --retry, not end the pipeline
 func TestRisLiveRetriesConnectErrors(t *testing.T) {
 	srv := httptest.NewServer(http.NotFoundHandler())

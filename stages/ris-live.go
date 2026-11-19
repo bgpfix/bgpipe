@@ -191,8 +191,12 @@ func (s *RisLive) stream(resp *http.Response) error {
 	scanner.Buffer(nil, 1024*1024)
 
 	// read lines
-	// NB: skip the check for backlogged messages older than --delay-err from the start
-	last_ts := time.Now().Add(-s.delay_err).Unix()
+	// NB: measure the delay using the newest timestamp seen so far (so one lagging peer does not matter),
+	// but only after --delay-err from the start (so a backlog can flush first)
+	var (
+		grace   = time.Now().Add(s.delay_err)
+		last_ts time.Time
+	)
 	for (rt.Reset(s.timeout_read) || true) && scanner.Scan() {
 		// skip empty lines
 		line := bytes.TrimSpace(scanner.Bytes())
@@ -214,11 +218,15 @@ func (s *RisLive) stream(resp *http.Response) error {
 			continue // skipped
 		}
 
-		// need to check the timestamp?
-		if s.delay_err > 0 && ts.Unix() > last_ts {
-			last_ts = ts.Unix()
-			if delay := time.Since(ts); delay > s.delay_err {
-				return fmt.Errorf("message delay too high: %s", delay)
+		// need to check the delay?
+		if s.delay_err > 0 {
+			if ts.After(last_ts) {
+				last_ts = ts
+			}
+			if now := time.Now(); now.After(grace) {
+				if delay := now.Sub(last_ts); delay > s.delay_err {
+					return fmt.Errorf("message delay too high: %s", delay)
+				}
 			}
 		}
 	}
