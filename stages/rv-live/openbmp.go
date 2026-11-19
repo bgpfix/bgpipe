@@ -109,7 +109,9 @@ func (s *RvLive) fixPath(m *msg.Msg, peer_as uint32) {
 	seg.List = seg.List[1:]
 
 	// update the message
+	// NB: asp has the complete path now, AS4_PATH would contradict it
 	m.Update.Attrs.Set(attrs.ATTR_ASPATH, asp)
+	m.Update.Attrs.Drop(attrs.ATTR_AS4PATH)
 	m.Edit()
 }
 

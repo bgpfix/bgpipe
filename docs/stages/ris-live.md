@@ -26,7 +26,8 @@ Each message is [tagged](../tags.md) with `PEER_IP`, `PEER_AS`, `COLLECTOR`
 Connection retries are enabled by default, and the wait before a reconnect
 resets after a session of over 30 seconds. The stage reconnects if the stream
 falls behind by more than `--delay-err`. Individual old messages from a backlogged
-peer do not count. Errors reported by RIS Live, for example when the client
+peer do not count, and the check starts `--delay-err` after connecting, which lets
+an initial backlog flush. Errors reported by RIS Live, for example when the client
 reads too slowly, appear in the log.
 
 Use `--sub` to pass a
