@@ -71,3 +71,112 @@ func TestLimitCountersEvicted(t *testing.T) {
 		t.Errorf("block slot not released")
 	}
 }
+
+// an UPDATE that announces and withdraws the same prefix must keep it counted (RFC 4271 4.3)
+func TestLimitReachUnreachSamePrefix(t *testing.T) {
+	pfx := func(p string) nlri.Prefix { return nlri.FromPrefix(netip.MustParsePrefix(p)) }
+
+	// mp sets an IPv4 MP_REACH or MP_UNREACH attribute
+	mp := func(m *msg.Msg, code attrs.Code, p nlri.Prefix, as ...afi.AS) {
+		a := m.Update.Attrs.Use(code).(*attrs.MP)
+		a.AS = afi.AS_IPV4_UNICAST
+		if len(as) > 0 {
+			a.AS = as[0]
+		}
+		v := attrs.NewMPPrefixes(a).(*attrs.MPPrefixes)
+		if code == attrs.ATTR_MP_REACH {
+			v.NextHop = netip.MustParseAddr("192.0.2.1")
+		}
+		v.Prefixes = append(v.Prefixes, p)
+		a.Value = v
+	}
+
+	cases := []struct {
+		name string
+		p, q string
+		make func(p nlri.Prefix) *msg.Msg
+	}{
+		{"ipv4", "10.0.0.0/24", "10.1.0.0/24", func(p nlri.Prefix) *msg.Msg {
+			m := limitUpdate(true, p.String(), 65000)
+			m.Update.AddUnreach(p)
+			return m
+		}},
+		{"ipv6", "2001:db8::/48", "2001:db9::/48", func(p nlri.Prefix) *msg.Msg {
+			m := limitUpdate(true, p.String(), 65000)
+			m.Update.AddUnreach(p)
+			return m
+		}},
+		{"mp-reach+withdrawn", "10.0.0.0/24", "10.1.0.0/24", func(p nlri.Prefix) *msg.Msg {
+			m := limitUpdate(false, p.String(), 0)
+			m.Update.Attrs.Use(attrs.ATTR_ASPATH).(*attrs.Aspath).FromJSON([]byte("[100,65000]"))
+			mp(m, attrs.ATTR_MP_REACH, p)
+			return m
+		}},
+		{"reach+mp-unreach", "10.0.0.0/24", "10.1.0.0/24", func(p nlri.Prefix) *msg.Msg {
+			m := limitUpdate(true, p.String(), 65000)
+			mp(m, attrs.ATTR_MP_UNREACH, p)
+			return m
+		}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := newTestLimit()
+			s.limit_session, s.limit_origin, s.limit_block = 1, 0, 0
+
+			// P announced and withdrawn at once: announcement kept, withdrawal dropped
+			m := tc.make(pfx(tc.p))
+			if !s.onMsg(m) || len(m.Update.AllReach()) != 1 || len(m.Update.AllUnreach()) != 0 {
+				t.Fatalf("P: reach=%v unreach=%v", m.Update.AllReach(), m.Update.AllUnreach())
+			}
+			if n := s.session.Size(); n != 1 {
+				t.Errorf("P: session=%d, want 1", n)
+			}
+
+			// Q the same way: over the session limit, only the withdrawal goes through
+			m = tc.make(pfx(tc.q))
+			if !s.onMsg(m) || len(m.Update.AllReach()) != 0 || len(m.Update.AllUnreach()) != 1 {
+				t.Errorf("Q: reach=%v unreach=%v", m.Update.AllReach(), m.Update.AllUnreach())
+			}
+
+			// a plain withdrawal still frees the slot
+			s.onMsg(limitUpdate(false, tc.p, 0))
+			if !s.onMsg(limitUpdate(true, tc.q, 65000)) {
+				t.Errorf("Q: slot not released")
+			}
+		})
+	}
+
+	// origin and block counters stay in sync with an already accepted prefix
+	s := newTestLimit()
+	for range 3 {
+		m := limitUpdate(true, "10.0.0.0/24", 65000)
+		m.Update.AddUnreach(pfx("10.0.0.0/24"))
+		s.onMsg(m)
+	}
+	if n, o, b := s.session.Size(), s.origin.Size(), s.block.Size(); n != 1 || o != 1 || b != 1 {
+		t.Errorf("re-announced: session=%d origin=%d block=%d, want 1/1/1", n, o, b)
+	}
+	s.onMsg(limitUpdate(false, "10.0.0.0/24", 0))
+	if n, o, b := s.session.Size(), s.origin.Size(), s.block.Size(); n+o+b != 0 {
+		t.Errorf("withdrawn: session=%d origin=%d block=%d, want 0", n, o, b)
+	}
+
+	// an announcement in another address family does not cancel the withdrawal
+	s = newTestLimit()
+	s.onMsg(limitUpdate(true, "10.0.0.0/24", 65000))
+	for _, inMP := range []bool{false, true} {
+		m := limitUpdate(false, "10.0.0.0/24", 0)
+		if inMP {
+			m.Update.Unreach = nil
+			mp(m, attrs.ATTR_MP_UNREACH, pfx("10.0.0.0/24"))
+		}
+		mp(m, attrs.ATTR_MP_REACH, pfx("10.0.0.0/24"), afi.AS_IPV4_MULTICAST)
+		kept := s.onMsg(m)
+		if !kept || len(m.Update.AllReach()) != 1 || len(m.Update.AllUnreach()) != 1 || s.session.Size() != 0 {
+			t.Errorf("multicast announcement, unicast withdrawal (MP=%v): kept=%v reach=%v unreach=%v session=%d",
+				inMP, kept, m.Update.AllReach(), m.Update.AllUnreach(), s.session.Size())
+		}
+		s.onMsg(limitUpdate(true, "10.0.0.0/24", 65000))
+	}
+}
