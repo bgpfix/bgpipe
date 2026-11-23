@@ -313,6 +313,32 @@ func (s *Limit) checkReach(u *msg.Update) (before, after int) {
 }
 
 func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
+	// prefixes still announced in u, per address family: they take precedence over
+	// withdrawals (RFC 4271 4.3), so must stay counted, as the receiver will keep them
+	type afPrefix struct {
+		as afi.AS
+		p  nlri.Prefix
+	}
+	var reach map[afPrefix]bool
+	if s.counting && (len(u.Unreach) > 0 || u.UnreachMP() != nil) {
+		n, mp := len(u.Reach), u.ReachMP().Prefixes()
+		if mp != nil {
+			n += len(mp.Prefixes)
+		}
+		if n > 0 {
+			reach = make(map[afPrefix]bool, n)
+		}
+		for _, p := range u.Reach {
+			reach[afPrefix{afi.AS_IPV4_UNICAST, p}] = true
+		}
+		if mp != nil {
+			for _, p := range mp.Prefixes {
+				reach[afPrefix{mp.AS, p}] = true
+			}
+		}
+	}
+	var as afi.AS // address family of the withdrawals being processed
+
 	// drops p from u if violates the rules
 	dropUnreach := func(p nlri.Prefix) (drop bool) {
 		// too long or short?
@@ -322,6 +348,12 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 		}
 		if !s.counting {
 			return false
+		}
+
+		// also announced? drop the withdrawal, so the receiver keeps the route counted
+		if reach[afPrefix{as, p}] {
+			u.Msg.Edit()
+			return true
 		}
 
 		// remove from session
@@ -368,6 +400,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 
 	// prefixes in the non-MP IPv4 part?
 	if s.ipv4 {
+		as = afi.AS_IPV4_UNICAST
 		before += len(u.Unreach)
 		u.Unreach = slices.DeleteFunc(u.Unreach, dropUnreach)
 		after += len(u.Unreach)
@@ -375,6 +408,7 @@ func (s *Limit) checkUnreach(u *msg.Update) (before, after int) {
 
 	// prefixes in the MP part?
 	if mp := u.UnreachMP().Prefixes(); mp != nil && s.afs[mp.AS] {
+		as = mp.AS
 		before += len(mp.Prefixes)
 		mp.Prefixes = slices.DeleteFunc(mp.Prefixes, dropUnreach)
 		after += len(mp.Prefixes)
